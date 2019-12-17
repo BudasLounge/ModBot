@@ -87,7 +87,7 @@ class ModuleHandler {
                     if(command_args.length - 1 >= current_module.commands.get(spec_command).num_args) {
                         current_module.commands.get(spec_command).execute(message, command_args);
                     } else {
-                        this.invalid_syntax(current_module, message, command_args);
+                        this.invalid_syntax(current_module, spec_command, message);
                     }
                 } else {
                     message.channel.send("The module '" + spec_module + "' has no command '" + spec_command + "'.");
@@ -111,7 +111,7 @@ class ModuleHandler {
                         if(command_args.length - 1 >= current_module.commands.get(command_args[0]).num_args) {
                             current_module.commands.get(command_args[0]).execute(message, command_args);
                         } else {
-                            this.invalid_syntax(current_module, message, command_args);
+                            this.invalid_syntax(current_module, command_args[0], message);
                         }
                     }
                 }
@@ -123,9 +123,9 @@ class ModuleHandler {
         }
     }
 
-    invalid_syntax(current_module, message, command_args) {
+    invalid_syntax(current_module, command, message) {
         var prefix = current_module.config.command_prefix;
-        message.channel.send("Invalid syntax! Syntax: " + prefix + current_module.commands.get(command_args[0]).syntax);
+        message.channel.send("Not enough arguments! Syntax: `" + prefix + current_module.commands.get(command).syntax + "`");
     }
 }
 
