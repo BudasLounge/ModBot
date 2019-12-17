@@ -35,7 +35,7 @@ class ModuleHandler {
             var command_files = fs.readdirSync(commands_dir).filter(file => file.endsWith('.js'));
 
             for (var file of command_files) {
-                var command = require(commands_dir + file);
+                var command = require("./" + commands_dir + file);
 
                 if(this.registered_commands.includes(command.name)) {
                     current_module.commands.set(current_module.name + ":" + command.name, command);
