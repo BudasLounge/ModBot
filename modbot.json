@@ -4,5 +4,6 @@
     "bot_activity": {
         "name": "Being a Robot",
         "type": "PLAYING"
-    }
+    },
+    "modules_folder": "modules"
 }
