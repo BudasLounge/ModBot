@@ -26,6 +26,7 @@ function authClient() {
     var token;
 
     try {
+        console.log(config.token_file);
         token = fs.readFileSync(config.token_file).toString();
     } catch (error) {
         console.error(error);
