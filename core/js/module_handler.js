@@ -11,13 +11,14 @@ class ModuleHandler {
     discover_modules(modules_folder) {
         this.modules = new Discord.Collection();
 
+        console.log("Discovering Modules in: " + modules_folder);
         var module_folders = fs.readdirSync(modules_folder, { withFileTypes: true });
         for(var folder of module_folders) {
             if(folder.isDirectory() && fs.existsSync(modules_folder + "/" + folder.name + "/bot_module.json")) {
                 var module_config = JSON.parse(fs.readFileSync(modules_folder + "/" + folder.name + "/bot_module.json"));
                 var the_module = {
                     config: module_config,
-                    location: modules_folder + "/" + folder.name + "/"
+                    location: this.program_path + modules_folder + "/" + folder.name + "/"
                 };
 
                 this.modules.set(the_module.config.name, the_module);
@@ -33,10 +34,11 @@ class ModuleHandler {
             current_module.commands = new Discord.Collection();
             
             var commands_dir = current_module.location + current_module.config.commands_directory + "/";
+            console.log("Discovering Commands in: " + commands_dir);
             var command_files = fs.readdirSync(commands_dir).filter(file => file.endsWith('.js'));
 
             for (var file of command_files) {
-                var command = require(this.program_path + commands_dir + file);
+                var command = require(commands_dir + file);
 
                 if(this.registered_commands.includes(command.name)) {
                     current_module.commands.set(current_module.name + ":" + command.name, command);

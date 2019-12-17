@@ -10,7 +10,7 @@ var config = JSON.parse(fs.readFileSync('modbot.json'));
 var ModuleHandler = require('./core/js/module_handler.js');
 
 var modules = new ModuleHandler(__dirname);
-modules.discover_modules(config.modules_folder);
+modules.discover_modules(__dirname + config.modules_folder);
 modules.discover_commands();
 
 authClient();
