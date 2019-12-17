@@ -14,9 +14,7 @@ console.log("Program running!");
 var ModuleHandler = require('./core/js/module_handler.js');
 
 var modules = new ModuleHandler(__dirname);
-console.log("Discovering Modules...");
-modules.discover_modules(__dirname + config.modules_folder);
-console.log("Discovering Commands...");
+modules.discover_modules(__dirname + "/" + config.modules_folder);
 modules.discover_commands();
 
 authClient();
