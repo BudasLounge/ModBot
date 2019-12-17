@@ -2,6 +2,6 @@ module.exports = {
     name: 'ping',
     description: 'Ping!',
     execute(message, args) {
-        message.channel.send('Admin Pong.');
+        message.channel.send('Minecraft Pong.');
     }
 };

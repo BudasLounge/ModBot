@@ -1,6 +1,6 @@
 {
-    "name": "admin",
-    "display_name": "Admin",
+    "name": "dnd",
+    "display_name": "Dungeons & Dragons",
     "version": "1.0.0",
     "enabled": true,
     "commands_directory": "commands",

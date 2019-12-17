@@ -1,6 +1,6 @@
 {
-    "name": "admin",
-    "display_name": "Admin",
+    "name": "minecraft",
+    "display_name": "Minecraft",
     "version": "1.0.0",
     "enabled": true,
     "commands_directory": "commands",

@@ -46,11 +46,12 @@ class ModuleHandler {
             for (var file of command_files) {
                 var command = require(commands_dir + file);
 
-                if(this.registered_commands.includes(command.name)) {
+                current_module.commands.set(command.name, command);
+                /*if(this.registered_commands.includes(command.name)) {
                     current_module.commands.set(current_module.name + ":" + command.name, command);
                 } else {
                     current_module.commands.set(command.name, command);
-                }
+                }*/
             }
         }
 
