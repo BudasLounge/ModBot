@@ -5,11 +5,13 @@ class ModuleHandler {
     constructor(program_path) {
         this.program_path = program_path;
         this.modules = null;
+        this.disabled_modules = null;
         this.registered_commands = null;
     }
 
     discover_modules(modules_folder) {
         this.modules = new Discord.Collection();
+        this.disabled_modules = new Discord.Collection();
 
         console.log("Discovering Modules in: " + modules_folder);
         var module_folders = fs.readdirSync(modules_folder, { withFileTypes: true });
@@ -21,7 +23,28 @@ class ModuleHandler {
                     location: modules_folder + "/" + folder.name + "/"
                 };
 
-                this.modules.set(the_module.config.name, the_module);
+                if(the_module.config.enabled) {
+                    this.modules.set(the_module.config.name, the_module);
+                } else {
+                    this.disabled_modules.set(the_module.config.name, the_module);
+                }
+            }
+        }
+
+        if(this.modules.size() > 0) {
+            console.log("Discovered " + this.modules.size() + " active modules and " + this.disabled_modules.size() + " inactive modules:");
+            for(var current_module_name of Array.from(this.modules.keys())) {
+                console.log("  + " + current_module_name);
+            }
+            
+            for(var current_module_name of Array.from(this.disabled_modules.keys())) {
+                console.log("  - " + current_module_name);
+            }
+        } else {
+            console.log("No active modules found! Please enable at least one module for this bot to have any purpose!");
+            console.log("Discovered " + this.disabled_modules.size() + " inactive modules:");
+            for(var current_module_name of Array.from(this.disabled_modules.keys())) {
+                console.log("  - " + current_module_name);
             }
         }
     }
