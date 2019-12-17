@@ -61,13 +61,13 @@ class ModuleHandler {
             }
 
             for(var current_module_name of Array.from(this.disabled_modules.keys())) {
-                console.log("  - " + this.modules.get(current_module_name).config.display_name);
+                console.log("  - " + this.disabled_modules.get(current_module_name).config.display_name);
             }
         } else {
             console.log("No active modules found! Please enable at least one module for this bot to have any purpose!");
             console.log("Discovered " + this.disabled_modules.size + " inactive modules:");
             for(var current_module_name of Array.from(this.disabled_modules.keys())) {
-                console.log("  - " + this.modules.get(current_module_name).config.display_name);
+                console.log("  - " + this.disabled_modules.get(current_module_name).config.display_name);
             }
         }
     }
