@@ -95,10 +95,10 @@ class ModuleHandler {
             var matched_prefix = false;
 
             for(var current_module_name of Array.from(this.modules.keys())) {
-                matched_prefix = true;
                 var current_module = this.modules.get(current_module_name);
 
                 if(message.content.startsWith(current_module.config.command_prefix)) {
+                    matched_prefix = true;
                     command_args[0] = command_args[0].substring(current_module.config.command_prefix.length);
 
                     if(current_module.commands.has(command_args[0])) {
