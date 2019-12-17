@@ -1,10 +1,11 @@
 {
-    "name": "ModBot",
-    "description": "A modular, modifiable moderator for Discord",
-    "author": "Andrew Graber & JR Buda",
-    "dependencies": {
-        "axios": "^0.19.0",
-        "request": "^2.88.0",
-        "discord.js": "^11.5.1"
-    }
+  "name": "ModBot",
+  "version": "1.0.0",
+  "description": "A modular, modifiable moderator for Discord",
+  "author": "Andrew Graber & JR Buda",
+  "dependencies": {
+    "axios": "^0.19.0",
+    "discord.js": "^11.5.1",
+    "request": "^2.88.0"
+  }
 }
