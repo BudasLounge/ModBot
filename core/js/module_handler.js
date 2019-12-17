@@ -2,7 +2,8 @@ var Discord = require('discord.js');
 var fs = require('fs');
 
 class ModuleHandler {
-    varructor() {
+    constructor(program_path) {
+        this.program_path = program_path;
         this.modules = null;
         this.registered_commands = null;
     }
@@ -35,7 +36,7 @@ class ModuleHandler {
             var command_files = fs.readdirSync(commands_dir).filter(file => file.endsWith('.js'));
 
             for (var file of command_files) {
-                var command = require("./" + commands_dir + file);
+                var command = require(this.program_path + commands_dir + file);
 
                 if(this.registered_commands.includes(command.name)) {
                     current_module.commands.set(current_module.name + ":" + command.name, command);
