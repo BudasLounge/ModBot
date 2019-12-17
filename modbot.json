@@ -1,0 +1,8 @@
+{
+    "token_file": "../token.txt",
+    "default_channel": "650871820538347520",
+    "bot_activity": {
+        "name": "Being a Robot",
+        "type": "PLAYING"
+    }
+}
