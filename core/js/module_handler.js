@@ -84,7 +84,11 @@ class ModuleHandler {
             if(this.modules.has(spec_module)) {
                 var current_module = this.modules.get(spec_module);
                 if(current_module.commands.has(spec_command)) {
-                    current_module.commands.get(spec_command).execute(message, command_args);
+                    if(command_args.length - 1 >= current_module.commands.get(spec_command).num_args) {
+                        current_module.commands.get(spec_command).execute(message, command_args);
+                    } else {
+                        this.invalid_syntax(current_module, message, command_args);
+                    }
                 } else {
                     message.channel.send("The module '" + spec_module + "' has no command '" + spec_command + "'.");
                 }
@@ -113,6 +117,11 @@ class ModuleHandler {
                 message.channel.send("Sorry, I couldn't find that command!");
             }
         }
+    }
+
+    invalid_syntax(current_module, message, command_args) {
+        var prefix = current_module.config.command_prefix;
+        message.channel.send("Invalid syntax! Syntax: " + prefix + current_module.commands.get(command_args[0]).syntax);
     }
 }
 
