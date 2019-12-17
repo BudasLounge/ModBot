@@ -18,7 +18,7 @@ class ModuleHandler {
                 var module_config = JSON.parse(fs.readFileSync(modules_folder + "/" + folder.name + "/bot_module.json"));
                 var the_module = {
                     config: module_config,
-                    location: this.program_path + modules_folder + "/" + folder.name + "/"
+                    location: modules_folder + "/" + folder.name + "/"
                 };
 
                 this.modules.set(the_module.config.name, the_module);
