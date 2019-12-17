@@ -1,8 +1,8 @@
-const Discord = require('discord.js');
-const fs = require('fs');
+var Discord = require('discord.js');
+var fs = require('fs');
 
 class ModuleHandler {
-    constructor() {
+    varructor() {
         this.modules = null;
         this.registered_commands = null;
     }
@@ -10,7 +10,7 @@ class ModuleHandler {
     discover_modules(modules_folder) {
         this.modules = new Discord.Collection();
 
-        const module_folders = fs.readdirSync(modules_folder, { withFileTypes: true });
+        var module_folders = fs.readdirSync(modules_folder, { withFileTypes: true });
         for(var folder of module_folders) {
             if(folder.isDirectory() && fs.existsSync(modules_folder + "/" + folder.name + "/bot_module.json")) {
                 var module_config = JSON.parse(fs.readFileSync(modules_folder + "/" + folder.name + "/bot_module.json"));
@@ -35,7 +35,7 @@ class ModuleHandler {
             var command_files = fs.readdirSync(commands_dir).filter(file => file.endsWith('.js'));
 
             for (var file of command_files) {
-                const command = require(commands_dir + file);
+                var command = require(commands_dir + file);
 
                 if(this.registered_commands.includes(command.name)) {
                     current_module.commands.set(current_module.name + ":" + command.name, command);

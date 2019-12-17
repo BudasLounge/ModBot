@@ -1,13 +1,13 @@
-const fs = require('fs');
-const axios = require('axios');
-const request = require('request');
+var fs = require('fs');
+var axios = require('axios');
+var request = require('request');
 
-const Discord = require('discord.js');
-const client = new Discord.Client();
+var Discord = require('discord.js');
+var client = new Discord.Client();
 
-const config = JSON.parse(fs.readFileSync('modbot.json'));
+var config = JSON.parse(fs.readFileSync('modbot.json'));
 
-const ModuleHandler = require('./core/js/module_handler.js');
+var ModuleHandler = require('./core/js/module_handler.js');
 
 var modules = new ModuleHandler();
 modules.discover_modules();
