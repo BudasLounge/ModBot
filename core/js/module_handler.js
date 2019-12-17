@@ -31,7 +31,7 @@ class ModuleHandler {
             var current_module = this.modules.get(current_module_name);
             current_module.commands = new Discord.Collection();
             
-            var commands_dir = current_module.location + current_module.config.commands + "/";
+            var commands_dir = current_module.location + current_module.config.commands_directory + "/";
             var command_files = fs.readdirSync(commands_dir).filter(file => file.endsWith('.js'));
 
             for (var file of command_files) {
