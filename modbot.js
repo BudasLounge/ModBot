@@ -5,6 +5,8 @@ var request = require('request');
 var Discord = require('discord.js');
 var client = new Discord.Client();
 
+console.log("Program Running First!");
+
 var config = JSON.parse(fs.readFileSync('modbot.json'));
 
 console.log("Program running!");
