@@ -31,18 +31,18 @@ class ModuleHandler {
             }
         }
 
-        if(this.modules.size() > 0) {
-            console.log("Discovered " + this.modules.size() + " active modules and " + this.disabled_modules.size() + " inactive modules:");
+        if(this.modules.size > 0) {
+            console.log("Discovered " + this.modules.size + " active modules and " + this.disabled_modules.size + " inactive modules:");
             for(var current_module_name of Array.from(this.modules.keys())) {
                 console.log("  + " + current_module_name);
             }
-            
+
             for(var current_module_name of Array.from(this.disabled_modules.keys())) {
                 console.log("  - " + current_module_name);
             }
         } else {
             console.log("No active modules found! Please enable at least one module for this bot to have any purpose!");
-            console.log("Discovered " + this.disabled_modules.size() + " inactive modules:");
+            console.log("Discovered " + this.disabled_modules.size + " inactive modules:");
             for(var current_module_name of Array.from(this.disabled_modules.keys())) {
                 console.log("  - " + current_module_name);
             }
