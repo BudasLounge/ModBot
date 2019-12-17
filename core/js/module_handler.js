@@ -108,7 +108,11 @@ class ModuleHandler {
 
                     if(current_module.commands.has(command_args[0])) {
                         found_command = true;
-                        current_module.commands.get(command_args[0]).execute(message, command_args);
+                        if(command_args.length - 1 >= current_module.commands.get(command_args[0]).num_args) {
+                            current_module.commands.get(command_args[0]).execute(message, command_args);
+                        } else {
+                            this.invalid_syntax(current_module, message, command_args);
+                        }
                     }
                 }
             }
