@@ -7,6 +7,8 @@ var client = new Discord.Client();
 
 var config = JSON.parse(fs.readFileSync('modbot.json'));
 
+console.log("Program running!");
+
 var ModuleHandler = require('./core/js/module_handler.js');
 
 var modules = new ModuleHandler(__dirname);
