@@ -2,7 +2,7 @@
     "name": "admin",
     "display_name": "Admin",
     "version": "1.0.0",
-    "enabled": true,
+    "enabled": false,
     "commands_directory": "commands",
     "command_prefix": "/"
 }
