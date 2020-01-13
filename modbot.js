@@ -18,7 +18,13 @@ authClient();
 client.on('ready', () => {
     console.log("I am ready!");
     var channel = client.channels.get(config.default_channel);
-    channel.send('I am online! NOOT');
+
+    if(fs.existsSync("updated.txt")) {
+        channel.send('I have been updated!');
+        fs.unlinkSync("updated.txt");
+    } else {
+        channel.sendMessage('I have restarted!');
+    }
     client.user.setActivity(config.bot_activity.name, { type: config.bot_activity.type });
 });
 
