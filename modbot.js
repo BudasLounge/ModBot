@@ -20,10 +20,10 @@ client.on('ready', () => {
     var channel = client.channels.get(config.default_channel);
 
     if(fs.existsSync("updated.txt")) {
-        channel.send('I have been updated!');
+        channel.send(config.startup_messages.update);
         fs.unlinkSync("updated.txt");
     } else {
-        channel.sendMessage('I have restarted!');
+        channel.sendMessage(config.startup_messages.restart);
     }
     client.user.setActivity(config.bot_activity.name, { type: config.bot_activity.type });
 });
