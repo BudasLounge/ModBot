@@ -2,8 +2,8 @@
     "token_file": "../token.txt",
     "default_channel": "650871820538347520",
     "startup_messages": {
-        "update": "I have been updated! 1",
-        "restart": "I have restarted! 2"
+        "update": "I have been updated!",
+        "restart": "I have restarted!"
     },
     "bot_activity": {
         "name": "Being a Robot",
