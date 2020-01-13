@@ -18,7 +18,7 @@ authClient();
 client.on('ready', () => {
     console.log("I am ready!");
     var channel = client.channels.get(config.default_channel);
-    channel.send('I am online! TEST');
+    channel.send('I am online! NOOT');
     client.user.setActivity(config.bot_activity.name, { type: config.bot_activity.type });
 });
 
