@@ -6,7 +6,6 @@ class ModuleHandler {
         this.program_path = program_path;
         this.modules = null;
         this.disabled_modules = null;
-        this.registered_commands = null;
     }
 
     discover_modules(modules_folder) {
@@ -33,7 +32,6 @@ class ModuleHandler {
     }
 
     discover_commands() {
-        this.registered_commands = [];
 
         for(var current_module_name of Array.from(this.modules.keys())) {
             var current_module = this.modules.get(current_module_name);
@@ -45,13 +43,7 @@ class ModuleHandler {
 
             for (var file of command_files) {
                 var command = require(commands_dir + file);
-
                 current_module.commands.set(command.name, command);
-                /*if(this.registered_commands.includes(command.name)) {
-                    current_module.commands.set(current_module.name + ":" + command.name, command);
-                } else {
-                    current_module.commands.set(command.name, command);
-                }*/
             }
         }
 
@@ -85,7 +77,11 @@ class ModuleHandler {
                 var current_module = this.modules.get(spec_module);
                 if(current_module.commands.has(spec_command)) {
                     if(command_args.length - 1 >= current_module.commands.get(spec_command).num_args) {
-                        current_module.commands.get(spec_command).execute(message, command_args);
+                        if(current_module.is_core) {
+                            current_module.commands.get(spec_command).execute(message, command_args, this);
+                        } else {
+                            current_module.commands.get(spec_command).execute(message, command_args);
+                        }
                     } else {
                         this.invalid_syntax(current_module, spec_command, message);
                     }
@@ -109,7 +105,11 @@ class ModuleHandler {
                     if(current_module.commands.has(command_args[0])) {
                         found_command = true;
                         if(command_args.length - 1 >= current_module.commands.get(command_args[0]).num_args) {
-                            current_module.commands.get(command_args[0]).execute(message, command_args);
+                            if(current_module.is_core) {
+                                current_module.commands.get(command_args[0]).execute(message, command_args, this);
+                            } else {
+                                current_module.commands.get(command_args[0]).execute(message, command_args);
+                            }
                         } else {
                             this.invalid_syntax(current_module, command_args[0], message);
                         }
