@@ -15,7 +15,7 @@ module.exports = {
             output += "Enabled Modules:\n";
             for(var current_module_name of Array.from(mod_handler.modules.keys())) {
                 var current_module = mod_handler.modules.get(current_module_name);
-                output += "  - " + current_module.config.name + "\n";
+                output += "  - " + current_module.config.name + " (" + current_module.config.display_name + ")\n";
                 num_mods++;
             }
 
@@ -33,7 +33,7 @@ module.exports = {
             output += "Disabled Modules:\n";
             for(var current_module_name of Array.from(mod_handler.disabled_modules.keys())) {
                 var current_module = mod_handler.diabled_modules.get(current_module_name);
-                output += "  - " + current_module.config.name + "\n";
+                output += "  - " + current_module.config.name + " (" + current_module.config.display_name + ")\n";
                 num_mods++;
             }
 
