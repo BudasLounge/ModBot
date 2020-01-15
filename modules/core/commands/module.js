@@ -4,7 +4,7 @@ module.exports = {
     description: 'Reloads all modules and their commands/config files.',
     syntax: 'reload',
     num_args: 0,
-    execute(message, args, mod_handler) {
+    async execute(message, args, mod_handler) {
         var api = new APIClient();
         var respServers = await api.get('server', {
             _limit: 1
