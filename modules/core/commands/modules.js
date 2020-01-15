@@ -32,7 +32,7 @@ module.exports = {
             var num_mods = 0;
             output += "Disabled Modules:\n";
             for(var current_module_name of Array.from(mod_handler.disabled_modules.keys())) {
-                var current_module = mod_handler.diabled_modules.get(current_module_name);
+                var current_module = mod_handler.disabled_modules.get(current_module_name);
                 output += "  - " + current_module.config.name + " (" + current_module.config.display_name + ")\n";
                 num_mods++;
             }
