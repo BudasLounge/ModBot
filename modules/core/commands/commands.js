@@ -28,6 +28,7 @@ module.exports = {
                     if(current_command.syntax.length < longest_syntax.length) {
                         for(var i=current_command.syntax.length; i < longest_syntax.length; i++) {
                             output += " ";
+                            message.channel.send("Adding a space");
                         }
                     }
 
