@@ -102,6 +102,9 @@ class ModuleHandler {
                     matched_prefix = true;
                     command_args[0] = command_args[0].substring(current_module.config.command_prefix.length);
 
+                    console.log(current_module.commands);
+                    console.log(command_args[0]);
+
                     if(current_module.commands.has(command_args[0])) {
                         found_command = true;
                         if(command_args.length - 1 >= current_module.commands.get(command_args[0]).num_args) {
