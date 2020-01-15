@@ -19,6 +19,8 @@ module.exports = {
                     }
                 }
 
+                message.channel.send("Longest syntax: " + longest_syntax);
+
                 var desc_space = 134 - longest_syntax.length - longest_module_name.length;
 
                 for(var current_command_name of Array.from(selected_module.commands.keys())) {
