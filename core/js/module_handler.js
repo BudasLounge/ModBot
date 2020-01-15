@@ -100,13 +100,11 @@ class ModuleHandler {
 
                 if(message.content.startsWith(current_module.config.command_prefix)) {
                     matched_prefix = true;
-                    command_args[0] = command_args[0].substring(current_module.config.command_prefix.length);
+                    command_name = command_args[0].substring(current_module.config.command_prefix.length);
 
-                    console.log(current_module.commands);
-                    console.log(command_args[0]);
-
-                    if(current_module.commands.has(command_args[0])) {
+                    if(current_module.commands.has(command_name)) {
                         found_command = true;
+                        command_args[0] = command_name;
                         if(command_args.length - 1 >= current_module.commands.get(command_args[0]).num_args) {
                             if(current_module.config.is_core) {
                                 current_module.commands.get(command_args[0]).execute(message, command_args, this);
@@ -116,6 +114,7 @@ class ModuleHandler {
                         } else {
                             this.invalid_syntax(current_module, command_args[0], message);
                         }
+                        break;
                     }
                 }
             }
