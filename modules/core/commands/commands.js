@@ -65,7 +65,6 @@ module.exports = {
 
                     output += "\n";
                 }
-                output += "\n";
             }
             output += "```";
             message.channel.send(output);
