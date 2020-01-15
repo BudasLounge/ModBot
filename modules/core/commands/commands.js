@@ -22,7 +22,6 @@ module.exports = {
         } else {
             for(var current_module_name of Array.from(mod_handler.modules.keys())) {
                 var current_module = mod_handler.modules.get(current_module_name);
-                output += "Commands from module '" + current_module.config.display_name + "':\n";
                 for(var current_command_name of Array.from(current_module.commands.keys())) {
                     var current_command = current_module.commands.get(current_command_name);
                     output += current_command.syntax + " | " + current_module.config.display_name + " | " + current_command.description + "\n";
