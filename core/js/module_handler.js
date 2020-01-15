@@ -36,7 +36,7 @@ class ModuleHandler {
         for(var current_module_name of Array.from(this.modules.keys())) {
             var current_module = this.modules.get(current_module_name);
             current_module.commands = new Discord.Collection();
-            
+
             var commands_dir = current_module.location + current_module.config.commands_directory + "/";
             console.log("Discovering Commands in: " + commands_dir + " ...");
             var command_files = fs.readdirSync(commands_dir).filter(file => file.endsWith('.js'));
@@ -77,7 +77,7 @@ class ModuleHandler {
                 var current_module = this.modules.get(spec_module);
                 if(current_module.commands.has(spec_command)) {
                     if(command_args.length - 1 >= current_module.commands.get(spec_command).num_args) {
-                        if(current_module.is_core) {
+                        if(current_module.config.is_core) {
                             current_module.commands.get(spec_command).execute(message, command_args, this);
                         } else {
                             current_module.commands.get(spec_command).execute(message, command_args);
@@ -105,7 +105,7 @@ class ModuleHandler {
                     if(current_module.commands.has(command_args[0])) {
                         found_command = true;
                         if(command_args.length - 1 >= current_module.commands.get(command_args[0]).num_args) {
-                            if(current_module.is_core) {
+                            if(current_module.config.is_core) {
                                 current_module.commands.get(command_args[0]).execute(message, command_args, this);
                             } else {
                                 current_module.commands.get(command_args[0]).execute(message, command_args);
