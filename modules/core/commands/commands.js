@@ -20,11 +20,50 @@ module.exports = {
                 message.channel.send("Sorry, I couldn't find that module!");
             }
         } else {
+            var longest_syntax = "";
+            var longest_module_name = "";
+            for(var current_module_name of Array.from(mod_handler.modules.keys())) {
+                var current_module = mod_handler.modules.get(current_module_name);
+                if(current_module.config.display_name.length > longest_module_name.length) {
+                    longest_module_name = current_module.config.display_name;
+                }
+                for(var current_command_name of Array.from(current_module.commands.keys())) {
+                    var current_command = current_module.commands.get(current_command_name);
+                    if(current_command.syntax.length > longest_syntax) {
+                        longest_syntax = current_command.syntax;
+                    }
+                }
+            }
+
+            var desc_space = 134 - longest_syntax.length - longest_module_name.length;
+
             for(var current_module_name of Array.from(mod_handler.modules.keys())) {
                 var current_module = mod_handler.modules.get(current_module_name);
                 for(var current_command_name of Array.from(current_module.commands.keys())) {
                     var current_command = current_module.commands.get(current_command_name);
-                    output += current_command.syntax + " | " + current_module.config.display_name + " | " + current_command.description + "\n";
+                    
+                    output += current_command.syntax;
+                    if(current_command.syntax.length < longest_syntax.length) {
+                        for(var i=current_command.syntax.length; i < longest_syntax.length; i++) {
+                            output += " ";
+                        }
+                    }
+
+                    output += " | " + current_module.config.display_name;
+                    if(current_module.config.display_name.length < longest_module_name.length) {
+                        for(var i=current_module.config.display_name.length; i < longest_module_name.length; i++) {
+                            output += " ";
+                        }
+                    }
+
+                    output += " | ";
+                    if(current_command.description.length > desc_space) {
+                        var new_desc = current_command.description.substring(0, desc_space - 3) + "...";
+                    } else {
+                        output += current_command.description;
+                    }
+
+                    output += "\n";
                 }
                 output += "\n";
             }
