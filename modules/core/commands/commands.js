@@ -58,7 +58,7 @@ module.exports = {
 
                     output += " | ";
                     if(current_command.description.length > desc_space) {
-                        var new_desc = current_command.description.substring(0, desc_space - 3) + "...";
+                        output += current_command.description.substring(0, desc_space - 3) + "...";
                     } else {
                         output += current_command.description;
                     }
