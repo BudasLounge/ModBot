@@ -11,10 +11,16 @@ module.exports = {
         }
 
         if(module_type == "enabled" || module_type == "all") {
+            var num_mods = 0;
             output += "Enabled Modules:\n";
             for(var current_module_name of Array.from(mod_handler.modules.keys())) {
                 var current_module = mod_handler.modules.get(current_module_name);
                 output += "  - " + current_module.config.name + "\n";
+                num_mods++;
+            }
+
+            if(num_mods == 0) {
+                output += "  (None)\n";
             }
         }
 
@@ -23,10 +29,16 @@ module.exports = {
         }
 
         if(module_type == "disabled" || module_type == "all") {
+            var num_mods = 0;
             output += "Disabled Modules:\n";
             for(var current_module_name of Array.from(mod_handler.disabled_modules.keys())) {
                 var current_module = mod_handler.diabled_modules.get(current_module_name);
                 output += "  - " + current_module.config.name + "\n";
+                num_mods++;
+            }
+
+            if(num_mods == 0) {
+                output += "  (None)\n";
             }
         }
 
