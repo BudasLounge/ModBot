@@ -14,6 +14,7 @@ module.exports = {
                 var longest_module_name = module_name;
                 for(var current_command_name of Array.from(selected_module.commands.keys())) {
                     var current_command = selected_module.commands.get(current_command_name);
+                    message.channel.send(current_command.syntax);
                     if(current_command.syntax.length > longest_syntax) {
                         longest_syntax = current_command.syntax;
                     }
