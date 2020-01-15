@@ -100,7 +100,7 @@ class ModuleHandler {
 
                 if(message.content.startsWith(current_module.config.command_prefix)) {
                     matched_prefix = true;
-                    command_name = command_args[0].substring(current_module.config.command_prefix.length);
+                    var command_name = command_args[0].substring(current_module.config.command_prefix.length);
 
                     if(current_module.commands.has(command_name)) {
                         found_command = true;
