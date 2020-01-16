@@ -1,4 +1,5 @@
 var axios = require('axios');
+var fs = require('fs');
 
 /**
  * Class that provides a simple wrapper around Axios to make interacting with the LabsAPI easier.
@@ -21,7 +22,7 @@ class APIClient {
 	async check_for_token() {
 		this.token = Cookies.get('api_token');
 		console.log("Cookie is: " + this.token);
-		
+
 		//If there is not an active token stored in the browser, begin process of obtaining a new token
 		if(this.token == null) {
 			console.log("Running token pull");
@@ -50,7 +51,7 @@ class APIClient {
 			history.pushState(null, '', window.location.origin + window.location.pathname);
 			var respToken = await this.get_token(temp_key); //Exchange temp_key for an access token
 			this.fill_token(respToken.token);
-			
+
 			//Dispatch event to let page know APIClient is ready to make calls
 			var event = new CustomEvent('ApiReady', {
 				detail: {
@@ -69,7 +70,7 @@ class APIClient {
 		this.token = token;
 		Cookies.set('api_token', token, {expires: 1, path: ''});
 	}
-	
+
 	/**
 	 * Builds the URL for a specific resource of form: [this.api_url][resource].php
 	 * @param {string} resource - The name of the resource to build URL for
@@ -114,7 +115,7 @@ class APIClient {
 			throw error; //Usually happens when the server responds with a non-2xx HTTP response code.
 		}
 	}
-	
+
 	/**
 	 * The get, post, put, and delete methods are provided for ease of access, so that all of these methods can be abstracted
 	 * to accept essentially the same parameters. This is only necessary because Axios does not support sending a request body
@@ -129,7 +130,7 @@ class APIClient {
 
 	/**
 	 * Used for obtaining information about a specific resource instance or listing instances of a resource. Can be ordered and filtered as well.
-	 * 
+	 *
 	 * An async wrapper for axios.get(). This function should be placed inside a try/catch block, as it will throw any errors that come
 	 * its way. It is not necessary to include an access token in the 'params' object, as it will be added before the API call is made.
 	 * It is also worth mentioning that any response code from the server that is not in the 2xx range will be thrown as an error. To see
@@ -157,16 +158,16 @@ class APIClient {
 			this.error_handler(error);
 		}
 	}
-	
+
 	/**
 	 * Used for creating a new instance of a resource.
-	 * 
+	 *
 	 * An async wrapper for axios.post(). This function should be placed inside a try/catch block, as it will throw any errors that come
 	 * its way. It is not necessary to include an access token in the 'params' object, as it will be added before the API call is made.
 	 * It is also worth mentioning that any response code from the server that is not in the 2xx range will be thrown as an error. To see
 	 * the server's response in this case, look at 'error.response'. When the server responds, this function will fire an ApiGET event containing
 	 * the resource and params passed to it, as well as the server's response.
-	 * 
+	 *
 	 * @param {string} resource - A string containing the name of the resource for which to make a request -- will autmatically be built into a URL.
 	 * @param {Object} params - An object containing parameters
 	 * @return {Object} The data section of the LabsAPI server's response
@@ -189,7 +190,7 @@ class APIClient {
 			this.error_handler(error);
 		}
 	}
-	
+
 	async put(resource, data) {
 		try {
 			data._token = this.token;
@@ -208,7 +209,7 @@ class APIClient {
 			this.error_handler(error);
 		}
 	}
-	
+
 	async delete(resource, data) {
 		try {
 			data._token = this.token;
