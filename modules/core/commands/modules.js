@@ -73,7 +73,7 @@ module.exports = {
             }
 
             if(num_mods == 0) {
-                output += " (None)\n";
+                output += "  (None)\n";
             }
 
             output += "\n";
