@@ -24,7 +24,7 @@ module.exports = {
 
             for(var current_module of respEnabled.enabled_modules) {
                 var respModule = await api.get('module', {
-                    module_id: current_module.module_id
+                    module_id: parseInt(current_module.module_id)
                 });
 
                 if(!mod_handler.modules.has(respModule.modules[0].name)) {
@@ -58,7 +58,7 @@ module.exports = {
                 var module_enabled = false;
                 for(var module_id of respEnabled.enabled_modules) {
                     var respModule = await api.get('module', {
-                        module_id: module_id
+                        module_id: parseInt(module_id)
                     });
 
                     if(respModule.modules[0].name == current_module.config.name) {
