@@ -146,14 +146,6 @@ class APIClient {
 			params._token = this.token;
 			params._api_url = this.access_url;
 			var resp = await axios.get(this.buildUrl(resource), { params });
-			var event = new CustomEvent('ApiGET', {
-				detail: {
-					resource_type: resource,
-					request_params: params,
-					response: resp.data
-				}
-			});
-			document.dispatchEvent(event);
 			return resp.data;
 		} catch(error) {
 			this.error_handler(error);
@@ -178,14 +170,6 @@ class APIClient {
 			data._token = this.token;
 			data._api_url = this.access_url;
 			var resp = await axios.post(this.buildUrl(resource), data);
-			var event = new CustomEvent('ApiPOST', {
-				detail: {
-					resource_type: resource,
-					request_params: data,
-					response: resp.data
-				}
-			});
-			document.dispatchEvent(event);
 			return resp.data;
 		} catch(error) {
 			this.error_handler(error);
@@ -197,14 +181,6 @@ class APIClient {
 			data._token = this.token;
 			data._api_url = this.access_url;
 			var resp = await axios.put(this.buildUrl(resource), data);
-			var event = new CustomEvent('ApiPUT', {
-				detail: {
-					resource_type: resource,
-					request_params: data,
-					response: resp.data
-				}
-			});
-			document.dispatchEvent(event);
 			return resp.data;
 		} catch(error) {
 			this.error_handler(error);
@@ -216,14 +192,6 @@ class APIClient {
 			data._token = this.token;
 			data._api_url = this.access_url;
 			var resp = await axios.delete(this.buildUrl(resource), { data });
-			var event = new CustomEvent('ApiDELETE', {
-				detail: {
-					resource_type: resource,
-					request_params: data,
-					response: resp.data
-				}
-			});
-			document.dispatchEvent(event);
 			return resp.data;
 		} catch(error) {
 			this.error_handler(error);
