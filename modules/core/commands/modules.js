@@ -22,7 +22,7 @@ module.exports = {
                 server_id: message.channel.guild.id
             });
 
-            for(var current_module of respEnabled.modules) {
+            for(var current_module of respEnabled.enabled_modules) {
                 var respModule = await api.get('module', {
                     module_id: current_module.module_id
                 });
@@ -56,7 +56,7 @@ module.exports = {
             for(var current_module_name of Array.from(mod_handler.modules.keys())) {
                 var current_module = mod_handler.modules.get(current_module_name);
                 var module_enabled = false;
-                for(var module_id of respEnabled) {
+                for(var module_id of respEnabled.enabled_modules) {
                     var respModule = await api.get('module', {
                         module_id: module_id
                     });
