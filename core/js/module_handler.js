@@ -1,6 +1,6 @@
 var Discord = require('discord.js');
 var fs = require('fs');
-var APIClient = require('APIClient.js');
+var APIClient = require('./APIClient.js');
 
 class ModuleHandler {
     constructor(program_path) {
