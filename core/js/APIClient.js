@@ -16,8 +16,7 @@ class APIClient {
 	 */
 	constructor() {
 		this.api_url = "https://www.purdue.edu/itap/itpm-ls/labs/api/";
-        console.log(__dirname);
-		this.token = fs.readFileSync("../../../api_token.txt").toString();
+		this.token = fs.readFileSync(__dirname + "/../../../api_token.txt").toString();
 	}
 
 	async check_for_token() {
