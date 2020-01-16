@@ -107,12 +107,10 @@ class APIClient {
 
 	error_handler(error) {
 		if(error.hasOwnProperty("response") && error.response.hasOwnProperty("status") && error.response.status == 401) {
-			handleError("A request sent to the Labs API could not be authorized. This is usually due to an expired or outdated token. Would you like to reset your API Token?<br><button style='margin-top: 0.5em;' onclick='ignoreError(this); api.token_pull();'>Reset Token</button><button style='margin-left: 0.5em;' onclick='ignoreError(this);'>Ignore</button>");
+            console.log("Unauthorized Error!");
+            console.error(error.response);
 		} else {
-			if(error.hasOwnProperty("response")) {
-				handleError("A request sent to the Labs API returned with an error. Please report this issue to the TSLAs:<br><pre>" + JSON.stringify(error.response, null, 2) + "</pre><br><button style='margin-top: 0.5em;' onclick='copyText(this.parentNode.getElementsByTagName(\"pre\")[0].innerText);'>Copy Error</button><button style='margin-left: 0.5em;' onclick='ignoreError(this);'>Ignore</button>");
-			}
-			throw error; //Usually happens when the server responds with a non-2xx HTTP response code.
+			console.error(error);
 		}
 	}
 
