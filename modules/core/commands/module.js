@@ -55,7 +55,7 @@ module.exports = {
             } else {
                 console.log("Deleting link: " + respEnabled.enabled_modules[0].link_id);
                 var respDelete = await api.delete('enabled_module', {
-                    link_id: parseInt(respEnabled.enabled_modules[0].link_id);
+                    link_id: parseInt(respEnabled.enabled_modules[0].link_id)
                 });
                 message.channel.send("Successfully disabled module on this server!");
             }
