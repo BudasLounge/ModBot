@@ -26,7 +26,7 @@ module.exports = {
 
             if(respEnabled.enabled_modules.length == 0) {
                 var respCreate = await api.post('enabled_module', {
-                    module_id: target_module_id,
+                    module_id: parseInt(target_module_id),
                     server_id: message.channel.guild.id
                 });
                 message.channel.send("Successfully enabled module on this server!");
@@ -53,8 +53,9 @@ module.exports = {
             if(respEnabled.enabled_modules.length == 0) {
                 message.channel.send("That module is already disabled on this server!");
             } else {
+                console.log("Deleting link: " + respEnabled.enabled_modules[0].link_id);
                 var respDelete = await api.delete('enabled_module', {
-                    link_id: respEnabled.enabled_modules[0].link_id
+                    link_id: parseInt(respEnabled.enabled_modules[0].link_id);
                 });
                 message.channel.send("Successfully disabled module on this server!");
             }
