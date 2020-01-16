@@ -3,6 +3,7 @@ module.exports = {
     description: 'Provides a list of commands, optionally just the ones from a specific module',
     syntax: 'commands [module_name]',
     num_args: 0,
+    args_to_lower: false,
     execute(message, args, mod_handler) {
         var output = '```';
         if(args.length > 1) {
@@ -23,7 +24,7 @@ module.exports = {
 
                 for(var current_command_name of Array.from(selected_module.commands.keys())) {
                     var current_command = selected_module.commands.get(current_command_name);
-                    
+
                     output += current_command.syntax;
                     if(current_command.syntax.length < longest_syntax.length) {
                         for(var i=current_command.syntax.length; i < longest_syntax.length; i++) {
@@ -74,7 +75,7 @@ module.exports = {
                 var current_module = mod_handler.modules.get(current_module_name);
                 for(var current_command_name of Array.from(current_module.commands.keys())) {
                     var current_command = current_module.commands.get(current_command_name);
-                    
+
                     output += current_command.syntax;
                     if(current_command.syntax.length < longest_syntax.length) {
                         for(var i=current_command.syntax.length; i < longest_syntax.length; i++) {

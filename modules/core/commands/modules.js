@@ -3,6 +3,7 @@ module.exports = {
     description: 'Provides information about the modules ModBot has loaded. Optional second argument to filter modules. Default is \'all\'',
     syntax: 'modules [enabled|disabled|all]',
     num_args: 0,
+    args_to_lower: false,
     execute(message, args, mod_handler) {
         var output = '```';
         var module_type = "all";
