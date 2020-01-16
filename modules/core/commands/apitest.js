@@ -1,8 +1,8 @@
 var APIClient = require('../../../core/js/APIClient.js');
 module.exports = {
-    name: 'module',
-    description: 'Reloads all modules and their commands/config files.',
-    syntax: 'reload',
+    name: 'apitest',
+    description: 'Testing API',
+    syntax: 'apitest',
     num_args: 0,
     args_to_lower: false,
     async execute(message, args, mod_handler) {
