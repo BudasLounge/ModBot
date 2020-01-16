@@ -61,8 +61,6 @@ module.exports = {
                         module_id: parseInt(enabled_mod.module_id)
                     });
 
-                    console.log(respModule);
-
                     if(respModule.modules[0].name == current_module.config.name) {
                         module_enabled = true;
                     }
