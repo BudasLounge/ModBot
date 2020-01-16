@@ -17,7 +17,7 @@ class APIClient {
 	constructor() {
 		this.api_url = "ModBot Server";
 		this.token = fs.readFileSync(__dirname + "/../../../api_token.txt").toString();
-        console.log(this.token);
+        console.log("API TOKEN:" + this.token);
 	}
 
 	async check_for_token() {
