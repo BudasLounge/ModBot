@@ -15,7 +15,8 @@ class APIClient {
 	 * access token. Once the APIClient has a token, it will fire an 'ApiReady' event on document.
 	 */
 	constructor() {
-		this.api_url = "ModBot Server";
+        this.api_url = "https://budaslounge.com/api/";
+		this.access_url = "ModBot Server";
         console.log(__dirname + "/../../../api_token.txt");
 		this.token = fs.readFileSync(__dirname + "/../../../api_token.txt", "utf8");
         console.log("API TOKEN:" + this.token);
@@ -143,7 +144,7 @@ class APIClient {
 	async get(resource, params) {
 		try {
 			params._token = this.token;
-			params._api_url = this.api_url;
+			params._api_url = this.access_url;
 			var resp = await axios.get(this.buildUrl(resource), { params });
 			var event = new CustomEvent('ApiGET', {
 				detail: {
@@ -175,7 +176,7 @@ class APIClient {
 	async post(resource, data) {
 		try {
 			data._token = this.token;
-			data._api_url = this.api_url;
+			data._api_url = this.access_url;
 			var resp = await axios.post(this.buildUrl(resource), data);
 			var event = new CustomEvent('ApiPOST', {
 				detail: {
@@ -194,7 +195,7 @@ class APIClient {
 	async put(resource, data) {
 		try {
 			data._token = this.token;
-			data._api_url = this.api_url;
+			data._api_url = this.access_url;
 			var resp = await axios.put(this.buildUrl(resource), data);
 			var event = new CustomEvent('ApiPUT', {
 				detail: {
@@ -213,7 +214,7 @@ class APIClient {
 	async delete(resource, data) {
 		try {
 			data._token = this.token;
-			data._api_url = this.api_url;
+			data._api_url = this.access_url;
 			var resp = await axios.delete(this.buildUrl(resource), { data });
 			var event = new CustomEvent('ApiDELETE', {
 				detail: {
