@@ -1,5 +1,6 @@
 var Discord = require('discord.js');
 var fs = require('fs');
+var APIClient = require('../../../core/js/APIClient.js');
 
 class ModuleHandler {
     constructor(program_path) {
@@ -65,7 +66,8 @@ class ModuleHandler {
         }
     }
 
-    handle_command(message) {
+    async handle_command(message) {
+        var api = new APIClient();
         if(message.author.bot) return; //Ignore messages from bots
 
         var command_args = message.content.split(" ");
@@ -75,6 +77,25 @@ class ModuleHandler {
             var spec_command = command_args[0].substring(command_args[0].indexOf(":") + 1);
             if(this.modules.has(spec_module)) {
                 var current_module = this.modules.get(spec_module);
+                var respModule = await api.get('module', {
+                    name: current_module.config.name
+                });
+
+                if(respModule.modules.length == 0) {
+                    message.channel.send("That module could not be found!");
+                    return;
+                }
+
+                var respEnabled = await api.get('enabled_module', {
+                    server_id: message.channel.guild.id,
+                    module_id: parseInt(respModule.modules[0].module_id)
+                });
+
+                if(respEnabled.enabled_modules.length == 0) {
+                    message.channel.send("That module is disabled on this server!");
+                    return;
+                }
+
                 if(current_module.commands.has(spec_command)) {
                     if(command_args.length - 1 >= current_module.commands.get(spec_command).num_args) {
                         var current_command = current_module.commands.get(spec_command);
@@ -114,6 +135,19 @@ class ModuleHandler {
                     var command_name = command_args[0].substring(current_module.config.command_prefix.length);
 
                     if(current_module.commands.has(command_name)) {
+                        var respModule = await api.get('module', {
+                            name: current_module.config.name
+                        });
+
+                        var respEnabled = await api.get('enabled_module', {
+                            server_id: message.channel.guild.id,
+                            module_id: parseInt(respModule.modules[0].module_id)
+                        });
+
+                        if(respEnabled.enabled_modules.length == 0) {
+                            continue;
+                        }
+
                         found_command = true;
                         command_args[0] = command_name;
                         if(command_args.length - 1 >= current_module.commands.get(command_args[0]).num_args) {
