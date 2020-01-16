@@ -79,9 +79,19 @@ class ModuleHandler {
                     if(command_args.length - 1 >= current_module.commands.get(spec_command).num_args) {
                         var current_command = current_module.commands.get(spec_command);
                         if(current_module.config.is_core) {
-                            current_command.execute(message, current_command.args_to_lower ? command_args.toLowerCase() : command_args, this);
+                            if(current_command.args_to_lower) {
+                                for(var i=0; i < command_args.length; i++) {
+                                    command_args[i] = command_args[i].toLowerCase();
+                                }
+                            }
+                            current_command.execute(message, command_args, this);
                         } else {
-                            current_command.execute(message, current_command.args_to_lower ? command_args.toLowerCase() : command_args);
+                            if(current_command.args_to_lower) {
+                                for(var i=0; i < command_args.length; i++) {
+                                    command_args[i] = command_args[i].toLowerCase();
+                                }
+                            }
+                            current_command.execute(message, command_args);
                         }
                     } else {
                         this.invalid_syntax(current_module, spec_command, message);
@@ -109,9 +119,19 @@ class ModuleHandler {
                         if(command_args.length - 1 >= current_module.commands.get(command_args[0]).num_args) {
                             var current_command = current_module.commands.get(command_args[0]);
                             if(current_module.config.is_core) {
-                                current_command.execute(message, current_command.args_to_lower ? command_args.toLowerCase() : command_args, this);
+                                if(current_command.args_to_lower) {
+                                    for(var i=0; i < command_args.length; i++) {
+                                        command_args[i] = command_args[i].toLowerCase();
+                                    }
+                                }
+                                current_command.execute(message, command_args, this);
                             } else {
-                                current_command.execute(message, current_command.args_to_lower ? command_args.toLowerCase() : command_args);
+                                if(current_command.args_to_lower) {
+                                    for(var i=0; i < command_args.length; i++) {
+                                        command_args[i] = command_args[i].toLowerCase();
+                                    }
+                                }
+                                current_command.execute(message, command_args);
                             }
                         } else {
                             this.invalid_syntax(current_module, command_args[0], message);
