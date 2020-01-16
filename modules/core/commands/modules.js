@@ -67,6 +67,7 @@ module.exports = {
                 }
                 if(!module_enabled) {
                     output += "  - " + current_module.config.name + " (" + current_module.config.display_name + ")\n";
+                    num_mods++;
                 }
             }
 
