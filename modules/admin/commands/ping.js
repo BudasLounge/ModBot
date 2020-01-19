@@ -4,7 +4,7 @@ module.exports = {
     syntax: 'ping [arbitrary argument for testing]',
     num_args: 1,
     args_to_lower: true,
-    execute(message, args) {
+    execute(message, args, api) {
         var output = "Here's your message in lowercase: ";
         for(var arg of args) {
           output += arg;

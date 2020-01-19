@@ -5,8 +5,7 @@ module.exports = {
     syntax: 'apitest',
     num_args: 0,
     args_to_lower: false,
-    async execute(message, args, mod_handler) {
-        var api = new APIClient();
+    async execute(message, args, api, mod_handler) {
         var respServers = await api.get('server', {
             _limit: 1
         });

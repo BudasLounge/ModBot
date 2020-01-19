@@ -1,12 +1,10 @@
-var APIClient = require('../../../core/js/APIClient.js');
 module.exports = {
     name: 'module',
     description: 'Enable or disable a module, or check whether the module is enabled.',
     syntax: 'module <enable|disable|status> <module>',
     num_args: 2,
     args_to_lower: true,
-    async execute(message, args, mod_handler) {
-        var api = new APIClient();
+    async execute(message, args, api, mod_handler) {
         if(args[1] == "enable") {
             var respModule = await api.get('module', {
                 name: args[2]

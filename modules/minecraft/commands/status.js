@@ -3,7 +3,7 @@ module.exports ={
     description: 'Finds the status of a minecraft server',
     syntax: 'status "name of server"',
     num_args: 1,
-    execute(message, args, mod_handler){
+    execute(message, args, api, mod_handler){
         for(var server in serverlist.servers){
             if(server == messageArr[1]){
                 getServerStatus(serverlist.servers[server].displayname, serverlist.servers[server].port, serverlist.servers[server].ip, message.channel);
@@ -13,6 +13,7 @@ module.exports ={
         message.channel.send("Could not find a server with name: "+messageArr[1]);
     }
 };
+
 function getServerStatus(server, port, ip, channel){
     var url = 'http://mcapi.us/server/status?ip='+ip+'&port=' + port;
     request(url, function(err, response, body) {

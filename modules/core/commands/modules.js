@@ -5,8 +5,7 @@ module.exports = {
     syntax: 'modules [enabled|disabled|all]',
     num_args: 0,
     args_to_lower: false,
-    async execute(message, args, mod_handler) {
-        var api = new APIClient();
+    async execute(message, args, api, mod_handler) {
         var output = '```';
         var module_type = "all";
         if(args.length > 1) {

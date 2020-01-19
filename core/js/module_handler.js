@@ -105,14 +105,14 @@ class ModuleHandler {
                                     command_args[i] = command_args[i].toLowerCase();
                                 }
                             }
-                            current_command.execute(message, command_args, this);
+                            current_command.execute(message, command_args, api, this);
                         } else {
                             if(current_command.args_to_lower) {
                                 for(var i=0; i < command_args.length; i++) {
                                     command_args[i] = command_args[i].toLowerCase();
                                 }
                             }
-                            current_command.execute(message, command_args);
+                            current_command.execute(message, command_args, api);
                         }
                     } else {
                         this.invalid_syntax(current_module, spec_command, message);
@@ -158,14 +158,14 @@ class ModuleHandler {
                                         command_args[i] = command_args[i].toLowerCase();
                                     }
                                 }
-                                current_command.execute(message, command_args, this);
+                                current_command.execute(message, command_args, api, this);
                             } else {
                                 if(current_command.args_to_lower) {
                                     for(var i=0; i < command_args.length; i++) {
                                         command_args[i] = command_args[i].toLowerCase();
                                     }
                                 }
-                                current_command.execute(message, command_args);
+                                current_command.execute(message, command_args, api);
                             }
                         } else {
                             this.invalid_syntax(current_module, command_args[0], message);

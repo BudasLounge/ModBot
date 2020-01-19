@@ -6,7 +6,7 @@ module.exports = {
     syntax: 'reload',
     num_args: 0,
     args_to_lower: false,
-    execute(message, args, mod_handler) {
+    execute(message, args, api, mod_handler) {
         var config = JSON.parse(fs.readFileSync(mod_handler.program_path + '/modbot.json'));
         mod_handler.discover_modules(mod_handler.program_path + "/" + config.modules_folder);
         mod_handler.discover_commands();

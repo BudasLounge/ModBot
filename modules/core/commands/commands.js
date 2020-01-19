@@ -4,7 +4,7 @@ module.exports = {
     syntax: 'commands [module_name]',
     num_args: 0,
     args_to_lower: false,
-    execute(message, args, mod_handler) {
+    execute(message, args, api, mod_handler) {
         var output = '```';
         if(args.length > 1) {
             var module_name = args[1];
