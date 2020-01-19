@@ -8,7 +8,22 @@ module.exports = {
         var output = '```';
         if(args.length > 1) {
             var module_name = args[1];
-            if(mod_handler.modules.has(module_name)) {
+            
+            var respGetModule = await api.get('module', {
+                name: module_name
+            });
+
+            if(respGetModule.modules.length <= 0) {
+                message.channel.send("Sorry, that module doesn't exist in the server-specific registries!");
+                return;
+            }
+
+            var respModEnabled = await api.get('enabled_module', {
+                module_id: parseInt(respGetModule.modules[0].module_id),
+                server_id: message.guild.id
+            });
+            
+            if(mod_handler.modules.has(module_name) && respModEnabled.enabled_modules.length > 0) {
                 var selected_module = mod_handler.modules.get(module_name);
 
                 var longest_syntax = "";
@@ -58,13 +73,30 @@ module.exports = {
             var longest_module_name = "";
             for(var current_module_name of Array.from(mod_handler.modules.keys())) {
                 var current_module = mod_handler.modules.get(current_module_name);
-                if(current_module.config.display_name.length > longest_module_name.length) {
-                    longest_module_name = current_module.config.display_name;
+                
+                var respModule = await api.get('module', {
+                    name: current_module_name
+                });
+
+                if(respModule.modules.length <= 0) {
+                    message.channel.send("Oops, something went wrong!");
+                    return;
                 }
-                for(var current_command_name of Array.from(current_module.commands.keys())) {
-                    var current_command = current_module.commands.get(current_command_name);
-                    if(current_command.syntax.length > longest_syntax.length) {
-                        longest_syntax = current_command.syntax;
+
+                var respModEnabled = await api.get('enabled_module', {
+                    module_id: parseInt(respModule.modules[0].module_id)
+                });
+
+                if(respModEnabled.enabled_modules.length > 0) {
+                    if(current_module.config.display_name.length > longest_module_name.length) {
+                        longest_module_name = current_module.config.display_name;
+                    }
+
+                    for(var current_command_name of Array.from(current_module.commands.keys())) {
+                        var current_command = current_module.commands.get(current_command_name);
+                        if(current_command.syntax.length > longest_syntax.length) {
+                            longest_syntax = current_command.syntax;
+                        }
                     }
                 }
             }
@@ -73,31 +105,47 @@ module.exports = {
 
             for(var current_module_name of Array.from(mod_handler.modules.keys())) {
                 var current_module = mod_handler.modules.get(current_module_name);
-                for(var current_command_name of Array.from(current_module.commands.keys())) {
-                    var current_command = current_module.commands.get(current_command_name);
 
-                    output += current_command.syntax;
-                    if(current_command.syntax.length < longest_syntax.length) {
-                        for(var i=current_command.syntax.length; i < longest_syntax.length; i++) {
-                            output += " ";
+                var respModule = await api.get('module', {
+                    name: current_module_name
+                });
+
+                if(respModule.modules.length <= 0) {
+                    message.channel.send("Oops, something went wrong!");
+                    return;
+                }
+
+                var respModEnabled = await api.get('enabled_module', {
+                    module_id: parseInt(respModule.modules[0].module_id)
+                });
+
+                if(respModEnabled.enabled_modules.length > 0) {
+                    for(var current_command_name of Array.from(current_module.commands.keys())) {
+                        var current_command = current_module.commands.get(current_command_name);
+
+                        output += current_command.syntax;
+                        if(current_command.syntax.length < longest_syntax.length) {
+                            for(var i=current_command.syntax.length; i < longest_syntax.length; i++) {
+                                output += " ";
+                            }
                         }
-                    }
 
-                    output += " | " + current_module.config.display_name;
-                    if(current_module.config.display_name.length < longest_module_name.length) {
-                        for(var i=current_module.config.display_name.length; i < longest_module_name.length; i++) {
-                            output += " ";
+                        output += " | " + current_module.config.display_name;
+                        if(current_module.config.display_name.length < longest_module_name.length) {
+                            for(var i=current_module.config.display_name.length; i < longest_module_name.length; i++) {
+                                output += " ";
+                            }
                         }
-                    }
 
-                    output += " | ";
-                    if(current_command.description.length > desc_space) {
-                        output += current_command.description.substring(0, desc_space - 3) + "...";
-                    } else {
-                        output += current_command.description;
-                    }
+                        output += " | ";
+                        if(current_command.description.length > desc_space) {
+                            output += current_command.description.substring(0, desc_space - 3) + "...";
+                        } else {
+                            output += current_command.description;
+                        }
 
-                    output += "\n";
+                        output += "\n";
+                    }
                 }
             }
             output += "```";
