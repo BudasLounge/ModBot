@@ -13,7 +13,7 @@ module.exports ={
         } 
         console.log(respServer);
         message.channel.send("ran status command...");
-        message.channel.send(respServer.short_name);
+        message.channel.send(respServer.servers[0].short_name);
     }
 };
 
