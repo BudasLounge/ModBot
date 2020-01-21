@@ -8,7 +8,7 @@ module.exports ={
             short_name: args[1]
         });
         message.channel.send("ran status command...");
-        message.channel.send(respServer);
+        message.channel.send(respServer.short_name);
     }
 };
 
