@@ -1,5 +1,4 @@
-#!/bin/bash
-
+echo "added gits"
 function gits() {
     git pull
     git add .
