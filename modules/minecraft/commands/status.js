@@ -4,9 +4,13 @@ module.exports ={
     syntax: 'status "name of server"',
     num_args: 1,
     async execute(message, args, api, mod_handler){
-        respServer = api.get("minecraft_server", {
-            short_name: args[1]
-        });
+        try{
+            respServer = api.get("minecraft_server", {
+                short_name: args[1]
+            });
+        } catch(error){
+            console.error(error);
+        } 
         console.log(respServer);
         message.channel.send("ran status command...");
         message.channel.send(respServer.short_name);
