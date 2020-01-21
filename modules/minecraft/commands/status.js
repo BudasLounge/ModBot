@@ -12,9 +12,9 @@ module.exports ={
             console.error(error);
         } 
         console.log(respServer);
-        console.log(respServer.servers[0]);
+        console.log(respServer.minecraft_servers[0]);
         message.channel.send("ran status command...");
-        message.channel.send(respServer.servers[0].short_name);
+        message.channel.send(respServer.minecraft_servers[0].short_name);
     }
 };
 
