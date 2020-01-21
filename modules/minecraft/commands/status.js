@@ -3,14 +3,11 @@ module.exports ={
     description: 'Finds the status of a minecraft server',
     syntax: 'status "name of server"',
     num_args: 1,
-    execute(message, args, api, mod_handler){
-        for(var server in serverlist.servers){
-            if(server == messageArr[1]){
-                getServerStatus(serverlist.servers[server].displayname, serverlist.servers[server].port, serverlist.servers[server].ip, message.channel);
-                return;
-            }
-        }
-        message.channel.send("Could not find a server with name: "+messageArr[1]);
+    async execute(message, args, api, mod_handler){
+        respServer = api.get("MinecraftServers", {
+            short_name: args[1]
+        });
+        message.channel.send(respServer);
     }
 };
 
