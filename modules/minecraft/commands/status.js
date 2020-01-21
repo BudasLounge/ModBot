@@ -7,6 +7,7 @@ module.exports ={
         respServer = api.get("minecraft_server", {
             short_name: args[1]
         });
+        console.log(respServer);
         message.channel.send("ran status command...");
         message.channel.send(respServer.short_name);
     }
