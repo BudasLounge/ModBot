@@ -4,7 +4,7 @@ module.exports ={
     syntax: 'status "name of server"',
     num_args: 1,
     async execute(message, args, api, mod_handler){
-        respServer = api.get("MinecraftServers", {
+        respServer = api.get("minecraft_server", {
             short_name: args[1]
         });
         message.channel.send(respServer);
