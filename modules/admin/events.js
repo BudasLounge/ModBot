@@ -1,10 +1,9 @@
-function onTypingStart(channel, user) {
-    channel.send("Whatcha typin' there, " + user.username + "?");
+function onMessageReactionAdd(messageReaction, user) {
+    messageReaction.message.channel.send("[Admin] A reaction was added!")
 }
 
 function register_handlers(event_registry) {
-    console.log("Registering Event Handlers!");
-    event_registry.register('typingStart', onTypingStart);
+    event_registry.register('messageReactionAdd', onMessageReactionAdd);
 }
 
 module.exports = register_handlers;

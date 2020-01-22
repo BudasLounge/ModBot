@@ -20,58 +20,6 @@ class APIClient {
 		this.token = fs.readFileSync(__dirname + "/../../../api_token.txt", "utf8");
 	}
 
-	async check_for_token() {
-		this.token = Cookies.get('api_token');
-		console.log("Cookie is: " + this.token);
-
-		//If there is not an active token stored in the browser, begin process of obtaining a new token
-		if(this.token == null) {
-			console.log("Running token pull");
-			await this.token_pull();
-		} else {
-			//Dispatch event to let page know APIClient is ready to make calls
-			var event = new CustomEvent('ApiReady', {
-				detail: {
-					status: "ready"
-				}
-			});
-			document.dispatchEvent(event);
-		}
-	}
-
-	async token_pull() {
-		Cookies.remove('api_token', {path: ''});
-
-		var url = window.location.href;
-		if(url.indexOf("?temp_key=") < 0) {
-			var api_auth = this.api_url + "auth/cas_auth.php";
-			var redirect = domain + "/itap/itpm-ls/labs/dashboard/index.php";
-			window.location.replace(api_auth + "?redirect=" + redirect);
-		} else {
-			var temp_key = url.substring(url.indexOf("?temp_key=") + 10);
-			history.pushState(null, '', window.location.origin + window.location.pathname);
-			var respToken = await this.get_token(temp_key); //Exchange temp_key for an access token
-			this.fill_token(respToken.token);
-
-			//Dispatch event to let page know APIClient is ready to make calls
-			var event = new CustomEvent('ApiReady', {
-				detail: {
-					status: "ready"
-				}
-			});
-			document.dispatchEvent(event);
-		}
-	}
-
-	/**
-	 * Places the token into this object and fires an ApiTOKEN event. Also stores the api token into a cookie.
-	 * @param {string} token - The string containing the LabsAPI access token. Should start with 'LABS-' and contain 64 randomly generated numbers and/or letters (upper and lowercase)
-	 */
-	fill_token(token) {
-		this.token = token;
-		Cookies.set('api_token', token, {expires: 1, path: ''});
-	}
-
 	/**
 	 * Builds the URL for a specific resource of form: [this.api_url][resource].php
 	 * @param {string} resource - The name of the resource to build URL for
@@ -82,30 +30,11 @@ class APIClient {
 	}
 
 	/**
-	 * Makes a call to auth/get_token.php endpoint to exchange a temporary key for an actual access token to the API. The access token will last 24 hours after retrieval.
-	 * @param {string} temp_key_str - The temporary key given to us by the CAS auth popup (see {@link APIClient#do_key_grab}). Passed to get_token to exchange for a token.
-	 * @return {Object} an object containing the data section of the server's response messge.
+	 * Generic error handler for get, post, put, and delete functions. Abstracted out to reduce redundant code, and to make
+	 * it easier to change.
+	 *
+	 * @param error The error that was thrown
 	 */
-	async get_token(temp_key_str) {
-		try {
-			var resp = await axios.post(this.api_url + 'auth/get_token.php', {
-				scopes: ["available"],
-				temp_key: temp_key_str,
-				alias: user_id
-			});
-			return resp.data;
-		} catch (error) {
-			console.error(error);
-		}
-	}
-
-	/**
-	 * Opens the CAS authentication popup and stores it in a variable named auth_win (this variable needs to be declared before calling this function)
-	 */
-	popup_auth_win() {
-		auth_win = window.open(this.api_url + 'auth/cas_auth.php', '_blank', "toolbar,scrollbars,resizable,top=100,left=100,width=400,height=400"); //Open Authorization Window
-	}
-
 	error_handler(error) {
 		if(error.hasOwnProperty("response") && error.response.hasOwnProperty("status") && error.response.status == 401) {
             console.log("Unauthorized Error!");
