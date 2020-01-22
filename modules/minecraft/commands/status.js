@@ -11,11 +11,12 @@ module.exports ={
         } catch(error){
             console.error(error);
         } 
-        getServerStatus(respServer.minecraft_servers[0].short_name, )
+        getServerStatus(respServer.minecraft_servers[0].display_name, respServer.minecraft_servers[0].port, respServer.minecraft_servers[0].numeric_ip, message.channel);
     }
 };
 
 function getServerStatus(server, port, ip, channel){
+    const request = require('request');
     var url = 'http://mcapi.us/server/status?ip='+ip+'&port=' + port;
     request(url, function(err, response, body) {
         if(err) {
