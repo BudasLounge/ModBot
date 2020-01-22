@@ -1,5 +1,5 @@
 function onMessageReactionAdd(messageReaction, user) {
-    messageReaction.message.channel.send("[Admin] A reaction was added!")
+    messageReaction.message.channel.send("[D&D] A reaction was added!")
 }
 
 function register_handlers(event_registry) {
