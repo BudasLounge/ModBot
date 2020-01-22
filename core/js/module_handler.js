@@ -2,13 +2,33 @@ var Discord = require('discord.js');
 var fs = require('fs');
 var APIClient = require('./APIClient.js');
 
+/**
+ * The ModuleHandler class is the meat and bones of ModBot's modular system. This class handles discovering modules, loading modules,
+ * checking configs, discovering commands within each module, and running commands.
+ */
 class ModuleHandler {
+
+    /**
+     * Constructor for ModuleHandler
+     *
+     * @param {string} program_path The absolute path to the root directory of ModBot
+     */
     constructor(program_path) {
         this.program_path = program_path;
         this.modules = null;
         this.disabled_modules = null;
     }
 
+    /**
+     * As the name says, discovers modules.
+     *
+     * Takes the path of the folder containing modules as a parameter. Checks each directory within the
+     * given folder to see if it is a valid module. If the directory contains a bot_module.json file, this function will create the module
+     * and register it with this ModuleHandler (by adding it to this.modules). Note that if a module's config has the module globally disabled,
+     * it will be added to this.disabled_modules instead. Globally disabled modules will not have their commands or event handlers loaded.
+     *
+     * @param {string} modules_folder The location of the folder containing the modules for this bot.
+     */
     discover_modules(modules_folder) {
         this.modules = new Discord.Collection();
         this.disabled_modules = new Discord.Collection();
@@ -32,6 +52,13 @@ class ModuleHandler {
         }
     }
 
+    /**
+     * Discovers commands within each module.
+     *
+     * For each enabled module found, this function will check the module's config file for the directory containing
+     * command files. This directory should contain one .js file for each command to be added. The command files require
+     * a specific format, so make sure to look at one as an example.
+     */
     discover_commands() {
 
         for(var current_module_name of Array.from(this.modules.keys())) {
@@ -66,6 +93,24 @@ class ModuleHandler {
         }
     }
 
+    /**
+     * This function is in charge of handling commands (discovering what command was called, and from which module, then executing the command)
+     *
+     * This function takes a message as its only parameter. It will loop through all the enabled modules and check the registered command prefix
+     * for that module. If the registered prefix for the module matches the beginning of the message, that module will be checked to see if it
+     * has a command with the name of the command that was run. If a command is found, this function will check the number of arguments provided
+     * to the command to see if it matches the amount of arguments required for that command. If so, its execute() function will be run.
+     *
+     * If the module that the command belongs to is registered as a core module, this ModuleHandler will be passed as a parameter to the execute()
+     * function. This allows core modules to access the internals of ModBot.
+     *
+     * Additionally, if the message given is of the format "//[module]:[command]", this function will ONLY check the provided module for the command
+     * to run. This is helpful for commands from different modules that use the same name, because normally the bot would just pick the command from
+     * the first module found to run.
+     *
+     * One more thing: every command will be passed an instance of APIClient(), which allows the commands an easy way to get access to the API. For more
+     * information on how to structure a command file, look at one of the existing commands (I reccommend ping, since it's simple).
+     */
     async handle_command(message) {
         var api = new APIClient();
         if(message.author.bot) return; //Ignore messages from bots
@@ -181,6 +226,13 @@ class ModuleHandler {
         }
     }
 
+    /**
+     * This function is called when a command is run, but not enough arguments are provided.
+     *
+     * @param current_module The module this command belongs to
+     * @param command The command that was matched to the message
+     * @param message The message the user sent containing this command
+     */
     invalid_syntax(current_module, command, message) {
         var prefix = current_module.config.command_prefix;
         message.channel.send("Not enough arguments! Syntax: `" + prefix + current_module.commands.get(command).syntax + "`");
