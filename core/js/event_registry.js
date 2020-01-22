@@ -24,6 +24,7 @@ class EventRegistry {
         for(var current_module_name of Array.from(mod_handler.modules.keys())) {
             var current_module = mod_handler.modules.get(current_module_name);
             if(current_module.config.event_handler) {
+                console.log("Registering Event Handlers for module: " + current_module_name);
                 var handler_init = require(current_module.location + current_module.config.event_handler);
                 handler_init(this);
             }
