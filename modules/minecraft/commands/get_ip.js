@@ -5,6 +5,22 @@ module.exports = {
     num_args: 1,
     args_to_lower: true,
     execute(message, args, api) {
-        message.channel.send('returning data');
+        try{
+            respServer = await api.get("minecraft_server", {
+                short_name: args[1]
+            });
+        }catch(error){
+            console.error(error);
+        }
+        if(!respServer.minecraft_servers[0]){
+            message.channel.send("short_name not found...checking display_name");
+            try{
+                respServer = await api.get("minecraft_server", {
+                    display_name: args[1]
+                });
+            }catch(error2){
+                console.error(error2);
+            }
+        }
     }
 };
