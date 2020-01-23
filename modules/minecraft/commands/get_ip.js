@@ -14,6 +14,7 @@ module.exports = {
         }
         if(!respServer.minecraft_servers[0]){
             message.channel.send("short_name not found...checking display_name");
+            
             try{
                 respServer = await api.get("minecraft_server", {
                     display_name: args[1]
