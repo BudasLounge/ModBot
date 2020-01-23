@@ -23,5 +23,6 @@ module.exports = {
                 console.error(error2);
             }
         }
+        message.channel.send(respServer.minecraft_servers[0].server_ip);
     }
 };
