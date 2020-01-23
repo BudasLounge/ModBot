@@ -4,7 +4,7 @@ module.exports = {
     syntax: 'ip [server name]',
     num_args: 1,
     args_to_lower: true,
-    execute(message, args, api) {
+    async execute(message, args, api) {
         try{
             respServer = await api.get("minecraft_server", {
                 short_name: args[1]
