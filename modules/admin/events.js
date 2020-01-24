@@ -1,4 +1,4 @@
-var api = require("../js/APIClient.js");
+var api = require("../../core/js/APIClient.js");
 
 
 function onMessageReactionAdd(messageReaction, user) {
