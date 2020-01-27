@@ -23,7 +23,7 @@ module.exports = {
             }
         }
         if(respServer.minecraft_servers[0]){
-            message.channel.send("The IP of " + respServer.minecraft_servers[0].display_name + " is: **" + respServer.minecraft_servers[0].server_ip + "**");
+            message.channel.send("The IP of " + respServer.minecraft_servers[0].display_name + "(" + respServer.minecraft_servers[0].short_name + ")" + " is: **" + respServer.minecraft_servers[0].server_ip + "**");
         }else{
             message.channel.send("That server could not be found...");
         }
