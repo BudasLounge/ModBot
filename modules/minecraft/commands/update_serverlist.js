@@ -6,14 +6,22 @@ module.exports = {
     args_to_lower: true,
     async execute(message, args, api) {
         var respServer;
-        respServer = await api.get("minecraft_server", {
-            short_name: args[1]
-        });
+        try{
+            respServer = await api.get("minecraft_server", {
+                short_name: args[1]
+            });
+        }catch(err){
+            console.error(err);
+        }
         if(!respServer.minecraft_servers[0]){
             message.channel.send("No server with that short_hand...checking display_name");
-            respServer = await api.get("minecraft_server", {
-                sdisplay_name: args[1]
-            });
+            try{
+                respServer = await api.get("minecraft_server", {
+                    sdisplay_name: args[1]
+                });
+            }catch(err2){
+                console.error(err2);
+            }
         }
         if(respServer.minecraft_servers[0]){
             message.channel.send("Found one!");
