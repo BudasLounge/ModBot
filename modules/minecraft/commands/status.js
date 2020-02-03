@@ -3,7 +3,7 @@ module.exports ={
     description: 'Finds the status of a minecraft server',
     syntax: 'status "name of server"',
     num_args: 1,
-    async execute(message, args, api, mod_handler){
+    async execute(message, args, api){
         try{
             respServer = await api.get("minecraft_server", {
                 short_name: args[1]
