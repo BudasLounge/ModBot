@@ -6,7 +6,7 @@
         "restart": "I have restarted!"
     },
     "bot_activity": {
-        "name": "the world's tiniest violin",
+        "name": "in the matrix",
         "type": "PLAYING"
     },
     "modules_folder": "modules"
