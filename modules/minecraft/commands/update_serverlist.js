@@ -8,13 +8,13 @@ module.exports = {
         var respServer = await api.get("minecraft_server", {
             short_name: args[1]
         });
-        if(!respServer[0]){
+        if(!respServer.minecraft_servers[0]){
             message.channel.send("No server with that short_hand...checking display_name");
             respServer = await api.get("minecraft_server", {
                 sdisplay_name: args[1]
             });
         }
-        if(respServer[0]){
+        if(respServer.minecraft_servers[0]){
             message.channel.send("Found one!");
         }else{
             message.channel.send("Nothing found...");
