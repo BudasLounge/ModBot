@@ -5,6 +5,7 @@ module.exports = {
     num_args: 1,
     args_to_lower: true,
     async execute(message, args, api) {
+        var respServer;
         try{
             respServer = await api.get("minecraft_server", {
                 short_name: args[1]
@@ -14,7 +15,6 @@ module.exports = {
         }
         if(!respServer.minecraft_servers[0]){
             message.channel.send("short_name not found...checking display_name");
-
             try{
                 respServer = await api.get("minecraft_server", {
                     display_name: args[1]
@@ -23,6 +23,10 @@ module.exports = {
                 console.error(error2);
             }
         }
-        message.channel.send(respServer.minecraft_servers[0].server_ip);
+        if(respServer.minecraft_servers[0]){
+            message.channel.send("The IP of " + respServer.minecraft_servers[0].display_name + "(" + respServer.minecraft_servers[0].short_name + ")" + " is: **" + respServer.minecraft_servers[0].server_ip + "**");
+        }else{
+            message.channel.send("That server could not be found...");
+        }
     }
 };
