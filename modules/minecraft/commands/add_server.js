@@ -19,6 +19,9 @@ module.exports = {
         if(!respServer.minecraft_servers[0]){
             message.channel.send("Found nothing!");
         }
+        else{
+            message.channel.send("I found: \n" + respServer.minecraft_servers[0]);
+        }
         console.log("exiting");
     }
 };
