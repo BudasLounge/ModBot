@@ -17,10 +17,18 @@ module.exports = {
         } 
         console.log("running if");
         if(!respServer.minecraft_servers[0]){
-            message.channel.send("Found nothing!");
+            message.channel.send("Adding server " + args[1] + " to the database, here we goooooooo");
+            await api.put("minecraft_server", {
+                display_name: args[1],
+                short_name: args[2],
+                server_ip: args[3],
+                port: args[4],
+                status_api_port: args[5],
+                numeric_ip: args[6]
+            });
         }
         else{
-            message.channel.send("I found: \n" + respServer.minecraft_servers[0]);
+            message.channel.send("I found a server with that server_ip already, try again");
         }
         console.log("exiting");
     }
