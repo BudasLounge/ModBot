@@ -21,5 +21,6 @@ module.exports ={
             output += "numeric ip: " + respServer.minecraft_servers[i].numeric_ip + ":" + respServer.minecraft_servers[i].port + "\n";
             output += "------------------------------\n";
         }
+        message.channel.send(output);
     }
 };
