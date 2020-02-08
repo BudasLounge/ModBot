@@ -1,7 +1,7 @@
 var ApiClient = require("../../core/js/APIClient.js");
 var api = new ApiClient();
 function onMessageReactionAdd(messageReaction, user) {
-    messageReaction.message.channel.send("[Admin] A reaction was added!")
+    //messageReaction.message.channel.send("[Admin] A reaction was added!")
 }
 
 async function onUserJoin(member){

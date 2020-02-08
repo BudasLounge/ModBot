@@ -4,6 +4,7 @@ module.exports ={
     syntax: 'showAll',
     num_args: 0,
     async execute(message, args, api){
+        console.log(">>display_all_servers");
         try{
             respServer = await api.get("minecraft_server", {
                 
@@ -22,5 +23,6 @@ module.exports ={
         }
         output += "------------------------------";
         message.channel.send(output);
+        console.log("<<display_all_servers");
     }
 };
