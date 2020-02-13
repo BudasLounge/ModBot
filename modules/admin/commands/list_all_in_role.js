@@ -5,7 +5,7 @@ module.exports = {
     num_args: 1,
     args_to_lower: false,
     async execute(message, args, api) {
-        role = message.guild.roles.find(role => role.name.toLowerCase() === args[1]);
+        role = message.guild.roles.find(role => role.name === args[1]);
 		if(args[1] == "everyone") return message.reply("I don't like listing everyone, sorry!");
 		var strLength = 0;
 		var messageString = "";
@@ -16,7 +16,7 @@ module.exports = {
 			strLength += args[i].length;
 			messageString += args[i];
 			//Check to see if a role exists using that begins with the collective messageString
-			role = message.guild.roles.find(role => role.name.toLowerCase().includes(messageString));
+			role = message.guild.roles.find(role => role.name.includes(messageString));
 			if(!role){
 				//If role not found then return to string from previous iteration
 				messageString = messageString.substring(0, strLength - args[i].length - 1);
@@ -27,7 +27,7 @@ module.exports = {
 			strLength ++;
 		counter++;
 		}
-		role = message.guild.roles.find(role => role.name.toLowerCase() === messageString.trim());
+		role = message.guild.roles.find(role => role.name === messageString.trim());
 		if (!role) return message.reply("There is not such a role!");
 		for(let j = counter; j>=0; j--){
 			args.shift();
