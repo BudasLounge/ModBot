@@ -14,20 +14,20 @@ module.exports ={
             console.error(error);
         }
         console.log(respServer.minecraft_servers.length + " servers found...");
-        var output = "```";
-        //var output = "";
+        //var output = "```";
+        var output = "";
+        const ListEmbed = new Discord.RichEmbed()
+        .setTitle("List of all minecraft servers: ");
         for(var i = 0;i<respServer.minecraft_servers.length;i++){
-            output += "------------------------------\n";
-            output += respServer.minecraft_servers[i].display_name + " server info:\n";
-            output += "short name: " + respServer.minecraft_servers[i].short_name + "\n";
-            output += "server ip: " + respServer.minecraft_servers[i].server_ip + "\n";
-            output += "numeric ip: " + respServer.minecraft_servers[i].numeric_ip + ":" + respServer.minecraft_servers[i].port + "\n";
+            var nextItem = "";
+            nextItem += "short name: " + respServer.minecraft_servers[i].short_name + "\n";
+            nextItem += "server ip: " + respServer.minecraft_servers[i].server_ip + "\n";
+            nextItem += "numeric ip: " + respServer.minecraft_servers[i].numeric_ip + ":" + respServer.minecraft_servers[i].port;
+
+            ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:", nextItem);
         }
-        output += "------------------------------```";
-        //const ListEmbed = new Discord.RichEmbed()
-        //.setTitle("List of all minecraft servers: ")
-        //.setDescription(output);
-        message.channel.send(output);
+        //output += "------------------------------```";
+        message.channel.send(ListEmbed);
         console.log("<<display_all_servers");
     }
 };
