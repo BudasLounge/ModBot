@@ -3,7 +3,7 @@ module.exports = {
     description: 'Used to display all users who have the identified role',
     syntax: 'list_role [role]',
     num_args: 1,
-    args_to_lower: false,
+    args_to_lower: true,
     async execute(message, args, api) {
         const Discord = require('discord.js');
         role = message.guild.roles.find(role => role.name.toLowerCase() === args[1]);
