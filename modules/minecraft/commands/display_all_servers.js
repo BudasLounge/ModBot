@@ -17,6 +17,7 @@ module.exports ={
         //var output = "```";
         var output = "";
         const ListEmbed = new Discord.RichEmbed()
+        .setColor("#f92f03")
         .setTitle("List of all minecraft servers: ");
         for(var i = 0;i<respServer.minecraft_servers.length;i++){
             var nextItem = "";
