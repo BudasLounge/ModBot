@@ -15,6 +15,7 @@ module.exports ={
         }
         console.log(respServer.minecraft_servers.length + " servers found...");
         //var output = "```";
+        var output = "";
         for(var i = 0;i<respServer.minecraft_servers.length;i++){
             output += "------------------------------\n";
             output += respServer.minecraft_servers[i].display_name + " server info:\n";
