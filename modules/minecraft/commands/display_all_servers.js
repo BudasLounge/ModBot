@@ -14,8 +14,6 @@ module.exports ={
             console.error(error);
         }
         console.log(respServer.minecraft_servers.length + " servers found...");
-        //var output = "```";
-        var output = "";
         const ListEmbed = new Discord.RichEmbed()
         .setColor("#f92f03")
         .setTitle("List of all minecraft servers: ");
@@ -27,7 +25,6 @@ module.exports ={
 
             ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:", nextItem);
         }
-        //output += "------------------------------```";
         message.channel.send(ListEmbed);
         console.log("<<display_all_servers");
     }
