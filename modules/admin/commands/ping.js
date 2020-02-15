@@ -2,7 +2,7 @@ module.exports = {
     name: 'ping',
     description: 'Sends a message back. Used to test if the bot is working.',
     syntax: 'ping [arbitrary argument for testing]',
-    num_args: 1,
+    num_args: 0,
     args_to_lower: true,
     execute(message, args, api) {
         var output = "Here's your message in lowercase: ";
