@@ -7,7 +7,7 @@ module.exports = {
     execute(message, args, api) {
         var output = "Here's your message in lowercase: ";
         for(var arg of args) {
-          output += arg;
+          output += " " + arg;
         }
         message.channel.send(output);
     }
