@@ -1,7 +1,7 @@
 module.exports ={
-    name: 'listmc',
+    name: 'statusall',
     description: 'Shows all servers and their information',
-    syntax: 'listmc',
+    syntax: 'statusall',
     num_args: 0,
     async execute(message, args, api){
         const Discord = require('discord.js');
