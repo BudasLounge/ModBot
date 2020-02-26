@@ -50,4 +50,5 @@ async function getServerStatus(server, port, ip, channel){
         console.log("Returning message: "+status);
         return status;
     });
+    //var response = await request.get(url);
 }

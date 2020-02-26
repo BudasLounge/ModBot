@@ -13,10 +13,11 @@ class ModuleHandler {
      *
      * @param {string} program_path The absolute path to the root directory of ModBot
      */
-    constructor(program_path) {
+    constructor(program_path, state_manager) {
         this.program_path = program_path;
         this.modules = null;
         this.disabled_modules = null;
+        this.state_manager = state_manager;
     }
 
     /**
@@ -150,14 +151,28 @@ class ModuleHandler {
                                     command_args[i] = command_args[i].toLowerCase();
                                 }
                             }
-                            current_command.execute(message, command_args, api, this);
+
+                            if(current_command.has_state) {
+                                var state = this.state_manager.get_state(message.author.id, current_module.name + ":" + current_command.name);
+                                current_command.execute(message, command_args, api, state, this);
+                                this.state_manager.save_state(state);
+                            } else {
+                                current_command.execute(message, command_args, api, this);
+                            }
                         } else {
                             if(current_command.args_to_lower) {
                                 for(var i=0; i < command_args.length; i++) {
                                     command_args[i] = command_args[i].toLowerCase();
                                 }
                             }
-                            current_command.execute(message, command_args, api);
+
+                            if(current_command.has_state) {
+                                var state = this.state_manager.get_state(message.author.id, current_module.name + ":" + current_command.name);
+                                current_command.execute(message, command_args, api, state);
+                                this.state_manager.save_state(state);
+                            } else {
+                                current_command.execute(message, command_args, api);
+                            }
                         }
                     } else {
                         this.invalid_syntax(current_module, spec_command, message);
@@ -203,14 +218,28 @@ class ModuleHandler {
                                         command_args[i] = command_args[i].toLowerCase();
                                     }
                                 }
-                                current_command.execute(message, command_args, api, this);
+
+                                if(current_command.has_state) {
+                                    var state = this.state_manager.get_state(message.author.id, current_module.name + ":" + current_command.name);
+                                    current_command.execute(message, command_args, api, state, this);
+                                    this.state_manager.save_state(state);
+                                } else {
+                                    current_command.execute(message, command_args, api, this);
+                                }
                             } else {
                                 if(current_command.args_to_lower) {
                                     for(var i=0; i < command_args.length; i++) {
                                         command_args[i] = command_args[i].toLowerCase();
                                     }
                                 }
-                                current_command.execute(message, command_args, api);
+
+                                if(current_command.has_state) {
+                                    var state = this.state_manager.get_state(message.author.id, current_module.name + ":" + current_command.name);
+                                    current_command.execute(message, command_args, api, state);
+                                    this.state_manager.save_state(state);
+                                } else {
+                                    current_command.execute(message, command_args, api);
+                                }
                             }
                         } else {
                             this.invalid_syntax(current_module, command_args[0], message);

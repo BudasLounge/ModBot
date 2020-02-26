@@ -9,8 +9,11 @@ var config = JSON.parse(fs.readFileSync('modbot.json'));
 
 var ModuleHandler = require('./core/js/module_handler.js');
 var EventRegistry = require('./core/js/event_registry.js');
+var StateManager = require('./core/js/state_manager.js');
 
-var modules = new ModuleHandler(__dirname);
+var state_manager = new StateManager();
+
+var modules = new ModuleHandler(__dirname, state_manager);
 modules.discover_modules(__dirname + "/" + config.modules_folder);
 modules.discover_commands();
 
