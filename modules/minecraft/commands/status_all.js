@@ -19,12 +19,12 @@ module.exports ={
         .setTitle("List of all minecraft servers: ");
         for(var i = 0;i<respServer.minecraft_servers.length;i++){
             var nextItem = "";
-            nextItem += getServerStatus(respServer.minecraft_servers[i].short_name, respServer.minecraft_servers[i].port, respServer.minecraft_servers[i].numeric_ip);
-            
+            //nextItem += getServerStatus(respServer.minecraft_servers[i].short_name, respServer.minecraft_servers[i].port, respServer.minecraft_servers[i].numeric_ip);
+            nextItem += getServerState(respServer.minecraft_servers[i].short_name, respServer.minecraft_servers[i].port, respServer.minecraft_servers[i].numeric_ip);
             //console.log(nextItem);
             ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:", nextItem);
         }
-        getServerState(respServer.minecraft_servers[0].short_name, respServer.minecraft_servers[0].port, respServer.minecraft_servers[0].numeric_ip);
+        
         message.channel.send(ListEmbed);
         console.log("<<display_all_servers_status");
     }
