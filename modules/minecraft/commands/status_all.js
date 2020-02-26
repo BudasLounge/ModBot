@@ -60,7 +60,17 @@ async function getServerState(server, port, ip){
     var axios = require('axios');
     var url = 'http://mcapi.us/server/status?ip='+ip+'&port=' + port;
     var response = await axios.get(url);
-    //response = JSON.parse(response.body);
-    console.log(response.data);
+    response = response.data;
+    var status
+    if(response.online) {
+        status = '**'+server+'** server is **online**  -  ';
+        if(response.players.now) {
+            status += '**' + response.players.now + '** people are playing!';
+        } else {
+            status += '*Nobody is playing!*';
+        }
+    }
+    console.log("Returning message: "+status);
+    return status;
 }
 //http://mcapi.us/server/status?ip=104.218.144.200&port=11160
