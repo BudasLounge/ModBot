@@ -20,7 +20,7 @@ module.exports ={
         for(var i = 0;i<respServer.minecraft_servers.length;i++){
             var nextItem = "";
             //nextItem += getServerStatus(respServer.minecraft_servers[i].short_name, respServer.minecraft_servers[i].port, respServer.minecraft_servers[i].numeric_ip);
-            nextItem += getServerState(respServer.minecraft_servers[i].short_name, respServer.minecraft_servers[i].port, respServer.minecraft_servers[i].numeric_ip);
+            nextItem += await getServerState(respServer.minecraft_servers[i].short_name, respServer.minecraft_servers[i].port, respServer.minecraft_servers[i].numeric_ip);
             //console.log(nextItem);
             ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:", nextItem);
         }
