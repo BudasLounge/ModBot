@@ -58,5 +58,6 @@ async function getServerState(server, port, ip){
     const request = require('request');
     var url = 'http://mcapi.us/server/status?ip='+ip+'&port=' + port;
     var response = await request.get(url);
+    response = JSON.parse(response);
     console.log(response.online);
 }
