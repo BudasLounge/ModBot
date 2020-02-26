@@ -19,7 +19,8 @@ module.exports ={
         .setTitle("List of all minecraft servers: ");
         for(var i = 0;i<respServer.minecraft_servers.length;i++){
             var nextItem = "";
-            nextItem += getServerStatus(respServer.minecraft_servers[i].short_name, respServer.minecraft_servers[i].port, respServer.minecraft_servers[i].numeric_ip)
+            nextItem += getServerStatus(respServer.minecraft_servers[i].short_name, respServer.minecraft_servers[i].port, respServer.minecraft_servers[i].numeric_ip);
+            getServerState(respServer.minecraft_servers[i].short_name, respServer.minecraft_servers[i].port, respServer.minecraft_servers[i].numeric_ip);
             console.log(nextItem);
             ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:", nextItem);
         }
@@ -51,4 +52,11 @@ async function getServerStatus(server, port, ip, channel){
         return status;
     });
     //var response = await request.get(url);
+}
+
+async function getServerState(server, port, ip){
+    const request = require('request');
+    var url = 'http://mcapi.us/server/status?ip='+ip+'&port=' + port;
+    var response = await request.get(url);
+    console.log(response);
 }
