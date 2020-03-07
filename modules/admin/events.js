@@ -1,7 +1,9 @@
 var ApiClient = require("../../core/js/APIClient.js");
 var api = new ApiClient();
+const Discord = require('discord.js');
+var client = new Discord.Client();
 function onMessageReactionAdd(messageReaction, user) {
-    //messageReaction.message.channel.send("[Admin] A reaction was added!")
+    messageReaction.message.channel.get("650871820538347520").send("[Admin] A reaction was added!")
 }
 
 async function onUserJoin(member){
@@ -24,7 +26,7 @@ async function parseRaw(packet) {
     if (!['MESSAGE_REACTION_ADD', 'MESSAGE_REACTION_REMOVE'].includes(packet.t)) return;
     console.log(packet);
     // Grab the channel to check the message from
-    /*const channel = client.channels.get(packet.d.channel_id);
+    const channel = client.channels.get(packet.d.channel_id);
     // There's no need to emit if the message is cached, because the event will fire anyway for that
     if (channel.messages.has(packet.d.message_id)) return;
     // Since we have confirmed the message is not cached, let's fetch it
@@ -39,10 +41,10 @@ async function parseRaw(packet) {
         if (packet.t === 'MESSAGE_REACTION_ADD') {
             client.emit('messageReactionAdd', reaction, client.users.get(packet.d.user_id));
         }
-        if (packet.t === 'MESSAGE_REACTION_REMOVE') {
+        /*if (packet.t === 'MESSAGE_REACTION_REMOVE') {
             client.emit('messageReactionRemove', reaction, client.users.get(packet.d.user_id));
-        }
-    });*/
+        }*/
+    });
 }
 
 function register_handlers(event_registry) {

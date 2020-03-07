@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 var fs = require('fs');
 var axios = require('axios');
 var request = require('request');
@@ -46,4 +47,57 @@ function authClient() {
 
 client.on('message', (message) => {
     modules.handle_command(message);
+=======
+var fs = require('fs');
+var axios = require('axios');
+var request = require('request');
+
+var Discord = require('discord.js');
+var client = new Discord.Client();
+
+var config = JSON.parse(fs.readFileSync('modbot.json'));
+
+var ModuleHandler = require('./core/js/module_handler.js');
+var EventRegistry = require('./core/js/event_registry.js');
+var StateManager = require('./core/js/state_manager.js');
+
+var state_manager = new StateManager();
+
+var modules = new ModuleHandler(__dirname, state_manager);
+modules.discover_modules(__dirname + "/" + config.modules_folder);
+modules.discover_commands();
+
+var event_registry = new EventRegistry(client);
+event_registry.discover_event_handlers(modules);
+
+authClient();
+
+client.on('ready', () => {
+    console.log("I am ready!");
+    var channel = client.channels.get(config.default_channel);
+
+    if(fs.existsSync("updated.txt")) {
+        channel.send(config.startup_messages.update);
+        fs.unlinkSync("updated.txt");
+    } else {
+        channel.sendMessage(config.startup_messages.restart);
+    }
+    client.user.setActivity(config.bot_activity.name, { type: config.bot_activity.type });
+});
+
+function authClient() {
+    var token;
+
+    try {
+        token = fs.readFileSync(config.token_file).toString();
+    } catch (error) {
+        console.error(error);
+    }
+
+    client.login(token);
+}
+
+client.on('message', (message) => {
+    modules.handle_command(message);
+>>>>>>> 8c84cdf4a3ea4d4b4515872ecaf233313c3efde0
 });
