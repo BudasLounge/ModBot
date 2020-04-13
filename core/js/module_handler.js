@@ -195,9 +195,13 @@ class ModuleHandler {
                     var command_name = command_args[0].substring(current_module.config.command_prefix.length);
 
                     if(current_module.commands.has(command_name)) {
+                        try{
                         var respModule = await api.get('module', {
                             name: current_module.config.name
                         });
+                    }catch(err1){
+                        console.error(err1.response);
+                    }
 
                         var respEnabled = await api.get('enabled_module', {
                             server_id: message.channel.guild.id,
