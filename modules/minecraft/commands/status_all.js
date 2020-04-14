@@ -9,7 +9,7 @@ module.exports ={
         console.log(">>display_all_servers_status");
         try{
             respServer = await api.get("minecraft_server", {
-                
+                _limit: 20
             });
         } catch(error){
             console.error(error);
