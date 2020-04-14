@@ -12,7 +12,7 @@ module.exports ={
                 _limit: 20
             });
         } catch(error){
-            console.error(error);
+            console.error(error.response);
         }
         console.log(respServer.minecraft_servers.length + " servers found...");
         const ListEmbed = new Discord.RichEmbed()
