@@ -153,7 +153,7 @@ class ModuleHandler {
                             }
 
                             if(current_command.has_state) {
-                                var state = this.state_manager.get_state(message.author.id, current_module.name + ":" + current_command.name);
+                                var state = this.state_manager.get_state(message.author.id, current_module.config.name + ":" + current_command.name);
                                 current_command.execute(message, command_args, api, state, this);
                                 this.state_manager.save_state(state);
                             } else {
@@ -167,7 +167,7 @@ class ModuleHandler {
                             }
 
                             if(current_command.has_state) {
-                                var state = this.state_manager.get_state(message.author.id, current_module.name + ":" + current_command.name);
+                                var state = this.state_manager.get_state(message.author.id, current_module.config.name + ":" + current_command.name);
                                 current_command.execute(message, command_args, api, state);
                                 this.state_manager.save_state(state);
                             } else {
@@ -224,7 +224,7 @@ class ModuleHandler {
                                 }
 
                                 if(current_command.has_state) {
-                                    var state = this.state_manager.get_state(message.author.id, current_module.name + ":" + current_command.name);
+                                    var state = this.state_manager.get_state(message.author.id, current_module.config.name + ":" + current_command.name);
                                     current_command.execute(message, command_args, api, state, this);
                                     this.state_manager.save_state(state);
                                 } else {
@@ -238,7 +238,7 @@ class ModuleHandler {
                                 }
 
                                 if(current_command.has_state) {
-                                    var state = this.state_manager.get_state(message.author.id, current_module.name + ":" + current_command.name);
+                                    var state = this.state_manager.get_state(message.author.id, current_module.config.name + ":" + current_command.name);
                                     current_command.execute(message, command_args, api, state);
                                     this.state_manager.save_state(state);
                                 } else {
