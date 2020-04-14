@@ -5,8 +5,9 @@ module.exports ={
     num_args: 1,
     args_to_lower: true,
     async execute(message, args, api){
+        var respServer;
         try{
-            var respServer = await api.get("minecraft_server", {
+            respServer = await api.get("minecraft_server", {
                 short_name: args[1]
             });
         } catch(error){
