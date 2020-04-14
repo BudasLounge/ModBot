@@ -7,6 +7,7 @@ module.exports ={
     async execute(message, args, api){
         const Discord = require('discord.js');
         console.log(">>display_all_servers_status");
+        var respServer;
         try{
             respServer = await api.get("minecraft_server", {
                 _limit: 20
