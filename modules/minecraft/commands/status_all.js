@@ -3,6 +3,7 @@ module.exports ={
     description: 'Shows all servers and their information',
     syntax: 'statusall',
     num_args: 0,
+    
     async execute(message, args, api){
         const Discord = require('discord.js');
         console.log(">>display_all_servers_status");
