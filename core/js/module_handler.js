@@ -67,6 +67,7 @@ class ModuleHandler {
             current_module.commands = new Discord.Collection();
 
             var commands_dir = current_module.location + current_module.config.commands_directory + "/";
+            
             console.log("Discovering Commands in: " + commands_dir + " ...");
             var command_files = fs.readdirSync(commands_dir).filter(file => file.endsWith('.js'));
 
