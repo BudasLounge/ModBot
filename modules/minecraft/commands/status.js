@@ -12,6 +12,7 @@ module.exports ={
         } catch(error){
             console.error(error);
         } 
+        console.log(respServer);
         getServerStatus(respServer.minecraft_servers[0].display_name, respServer.minecraft_servers[0].port, respServer.minecraft_servers[0].numeric_ip, message.channel);
     }
 };
