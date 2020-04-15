@@ -1,7 +1,7 @@
 module.exports = {
     name: 'add_server',
     description: 'Used to add a new minecraft server to the database',
-    syntax: 'add_server [display_name] [short_name] [server_ip] [port] [status_api_port] [numeric_ip] [pack version]',
+    syntax: 'add_server [display_name] [short_name] [server_ip] [port] [status_api_port] [numeric_ip] [mc_version] [pack version]',
     num_args: 6,
     args_to_lower: true,
     async execute(message, args, api) {
@@ -25,7 +25,8 @@ module.exports = {
                     port: args[4],
                     status_api_port: args[5],
                     numeric_ip: args[6],
-                    pack_version: args[7]
+                    mc_version: args[7],
+                    pack_version: args[8]
                 });
             }catch(err){
                 console.error(err);
