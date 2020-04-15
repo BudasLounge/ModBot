@@ -19,7 +19,7 @@ module.exports ={
         const ListEmbed = new Discord.RichEmbed()
         .setColor("#f92f03")
         .setTitle(respServer.minecraft_servers[0].display_name + " status: ");
-        ListEmbed.addField(item);
+        ListEmbed.addField("status: ", item);
         message.channel.send(ListEmbed);
     }
 };
