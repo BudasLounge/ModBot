@@ -18,8 +18,7 @@ module.exports ={
         var item = await getServerState(respServer.minecraft_servers[0].display_name, respServer.minecraft_servers[0].port, respServer.minecraft_servers[0].numeric_ip, message.channel);
         const ListEmbed = new Discord.RichEmbed()
         .setColor("#f92f03")
-        .setTitle("List of all minecraft servers: ");
-        ListEmbed.addField(respServer.minecraft_servers[0].display_name + " server info:", item);
+        .setTitle(respServer.minecraft_servers[0].display_name + " status: ");
         message.channel.send(ListEmbed);
     }
 };
