@@ -15,12 +15,16 @@ module.exports ={
             console.error(error);
         } 
         console.log(respServer);
-        var item = await getServerState(respServer.minecraft_servers[0].display_name, respServer.minecraft_servers[0].port, respServer.minecraft_servers[0].numeric_ip, message.channel);
-        const ListEmbed = new Discord.RichEmbed()
-        .setColor("#f92f03")
-        .setTitle(respServer.minecraft_servers[0].display_name + " status: ");
-        ListEmbed.addField("status: ", item);
-        message.channel.send(ListEmbed);
+        if(respServer.minecraft_servers[0]){
+            var item = await getServerState(respServer.minecraft_servers[0].display_name, respServer.minecraft_servers[0].port, respServer.minecraft_servers[0].numeric_ip, message.channel);
+            const ListEmbed = new Discord.RichEmbed()
+            .setColor("#f92f03")
+            .setTitle(respServer.minecraft_servers[0].display_name + " status: ");
+            ListEmbed.addField("status: ", item);
+            message.channel.send(ListEmbed);
+        }else{
+            message.channel.send("Sorry, couldn't find a server with that shortname, try /listmc for a list of all servers.");
+        }
     }
 };
 /*
