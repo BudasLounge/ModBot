@@ -23,7 +23,7 @@ module.exports ={
         message.channel.send(ListEmbed);
     }
 };
-
+/*
 function getServerStatus(server, port, ip, channel){
     const request = require('request');
     var url = 'http://mcapi.us/server/status?ip='+ip+'&port=' + port;
@@ -46,7 +46,7 @@ function getServerStatus(server, port, ip, channel){
         channel.send(status);
     });
 }
-
+*/
 async function getServerState(server, port, ip){
     var axios = require('axios');
     var url = 'http://mcapi.us/server/status?ip='+ip+'&port=' + port;

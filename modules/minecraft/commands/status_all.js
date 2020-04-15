@@ -32,7 +32,7 @@ module.exports ={
     }
 };
 
-
+/*
 async function getServerStatus(server, port, ip, channel){
     
     const request = require('request');
@@ -57,7 +57,7 @@ async function getServerStatus(server, port, ip, channel){
     });
     //var response = await request.get(url);
 }
-
+*/
 async function getServerState(server, port, ip){
     var axios = require('axios');
     var url = 'http://mcapi.us/server/status?ip='+ip+'&port=' + port;
