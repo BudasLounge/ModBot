@@ -7,6 +7,7 @@ function onMessageReactionAdd(messageReaction, user) {
 }
 
 async function onUserJoin(member){
+	var respServer;
     try{
         respServer = await api.get("discord_server", {
             server_id: member.guild.id
