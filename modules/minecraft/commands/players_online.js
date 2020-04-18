@@ -16,6 +16,7 @@ module.exports = {
         } catch(error2){
             console.error(error2);
         }
+        
         var msg = "";
         var respPlayers = await axios.get("http://192.168.1.2:" + respServer.minecraft_servers[0].status_api_port + "/player-list", {});
         console.log(respPlayers);
