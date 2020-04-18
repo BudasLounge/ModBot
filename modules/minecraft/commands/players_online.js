@@ -6,6 +6,7 @@ module.exports = {
     args_to_lower: true,
     async execute(message, args, api) {
         const axios = require('axios');
+        const Discord = require('discord.js');
         console.log(">>players_online");
 	try {
         var respServer;
@@ -17,7 +18,10 @@ module.exports = {
             console.error(error2);
         }
 
-        var msg = "";
+        const ListEmbed = new Discord.RichEmbed()
+        .setColor("#f92f03")
+        .setTitle("List of all players on " + respServer.minecraft_servers[0].display_name + ": ");
+        var msg
         var respPlayers = await axios.get("http://192.168.1.2:" + respServer.minecraft_servers[0].status_api_port + "/player-list", {});
         console.log(respPlayers);
         var isOne = respPlayers.data.players.length == 1;
@@ -30,7 +34,8 @@ module.exports = {
                 msg += "\n  - " + player.username;
             }
         }
-        message.channel.send(msg);
+        ListEmbed.addField("Players online: ", msg);
+        message.channel.send(ListEmbed);
 	} catch (error) {
 		console.error(error);
 	}
