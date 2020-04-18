@@ -5,7 +5,7 @@ module.exports = {
     num_args: 1,
     args_to_lower: true,
     async execute(message, args, api) {
-        const axios = require(axios.js);
+        const axios = require(axios);
         console.log(">>players_online");
 	try {
         var respServer;
