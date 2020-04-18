@@ -21,7 +21,7 @@ module.exports = {
         var respPlayers = await axios.get("http://192.168.1.2:" + respServer.minecraft_servers[0].status_api_port + "/player-list", {});
         console.log(respPlayers);
         var isOne = respPlayers.data.players.length == 1;
-        msg += "There " + (isOne ? "is" : "are") + " " + respPlayers.data.players.length + (isOne ? " player" : " players") + " on " + serverlist.servers[server].displayname + " server";
+        msg += "There " + (isOne ? "is" : "are") + " " + respPlayers.data.players.length + (isOne ? " player" : " players") + " on " + respServer.minecraft_servers[0].display_name + " server";
         if(respPlayers.data.players.length == 0) {
             msg += ".";
         } else {
