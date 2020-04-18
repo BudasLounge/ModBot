@@ -5,7 +5,7 @@ module.exports = {
     num_args: 1,
     args_to_lower: true,
     async execute(message, args, api) {
-        const axios = require(axios);
+        const axios = require('axios');
         console.log(">>players_online");
 	try {
         var respServer;
@@ -16,7 +16,7 @@ module.exports = {
         } catch(error2){
             console.error(error2);
         }
-        
+
         var msg = "";
         var respPlayers = await axios.get("http://192.168.1.2:" + respServer.minecraft_servers[0].status_api_port + "/player-list", {});
         console.log(respPlayers);
