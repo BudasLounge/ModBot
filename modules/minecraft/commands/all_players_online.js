@@ -22,6 +22,7 @@ module.exports = {
             .setColor("#f92f03")
             .setTitle("List of all players on all servers:");
         for(var i = 0;i<respServer.minecraft_servers.length;i++){
+            if(respServer.minecraft_servers[i].status_api_port != "None"){
             var msg = "Players: ";
             var respPlayers = await axios.get("http://192.168.1.2:" + respServer.minecraft_servers[i].status_api_port + "/player-list", {});
             console.log(respPlayers);
@@ -36,6 +37,7 @@ module.exports = {
                 }
             }
             ListEmbed.addField(num_players, msg);
+        }
         }
         message.channel.send(ListEmbed);
 	} catch (error) {
