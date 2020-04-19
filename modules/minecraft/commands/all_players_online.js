@@ -17,7 +17,7 @@ module.exports = {
         } catch(error2){
             console.error(error2);
         }
-        for(var i =0;I<respServer.minecraft_servers.length;i++){
+        for(var i = 0;i<respServer.minecraft_servers.length;i++){
             const ListEmbed = new Discord.RichEmbed()
             .setColor("#f92f03")
             .setTitle("List of all players on " + respServer.minecraft_servers[i].display_name + ": ");
