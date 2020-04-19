@@ -18,17 +18,17 @@ module.exports = {
         } catch(error2){
             console.error(error2);
         }
-        for(var i = 0;i<respServer.minecraft_servers.length;i++){
-            const ListEmbed = new Discord.RichEmbed()
+        const ListEmbed = new Discord.RichEmbed()
             .setColor("#f92f03")
-            .setTitle("List of all players on " + respServer.minecraft_servers[i].display_name + ": ");
+            .setTitle("List of all players on all servers:");
+        for(var i = 0;i<respServer.minecraft_servers.length;i++){
             var msg = "Players: ";
             var respPlayers = await axios.get("http://192.168.1.2:" + respServer.minecraft_servers[i].status_api_port + "/player-list", {});
             console.log(respPlayers);
             var isOne = respPlayers.data.players.length == 1;
             var num_players = "There " + (isOne ? "is" : "are") + " " + respPlayers.data.players.length + (isOne ? " player" : " players") + " on " + respServer.minecraft_servers[i].display_name + " server";
             if(respPlayers.data.players.length == 0) {
-                msg += ".";
+                msg += "no players here!";
             } else {
                 msg += ":";
                 for(var player of respPlayers.data.players) {
