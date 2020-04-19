@@ -12,7 +12,7 @@ module.exports = {
         var respServer;
         try{
             respServer = await api.get("minecraft_server", {
-                
+                _limit:20
             });
             console.log(respServer);
         } catch(error2){
