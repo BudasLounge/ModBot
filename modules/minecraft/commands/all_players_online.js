@@ -36,8 +36,8 @@ module.exports = {
                 }
             }
             ListEmbed.addField(num_players, msg);
-            message.channel.send(ListEmbed);
         }
+        message.channel.send(ListEmbed);
 	} catch (error) {
 		console.error(error);
     }
