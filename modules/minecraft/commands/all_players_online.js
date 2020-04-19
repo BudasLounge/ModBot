@@ -7,7 +7,7 @@ module.exports = {
     async execute(message, args, api) {
         const axios = require('axios');
         const Discord = require('discord.js');
-        console.log(">>players_online");
+        console.log(">>all_players_online");
 	try {
         var respServer;
         try{
@@ -39,6 +39,7 @@ module.exports = {
         }
 	} catch (error) {
 		console.error(error);
-	}
+    }
+    console.log("<<all_players_online");
 }
 };
