@@ -14,6 +14,7 @@ module.exports = {
             respServer = await api.get("minecraft_server", {
                 
             });
+            console.log(respServer);
         } catch(error2){
             console.error(error2);
         }
