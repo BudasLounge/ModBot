@@ -2,7 +2,7 @@ module.exports = {
     name: 'updatesl',
     description: 'Used to update parts of the minecraft server list',
     syntax: 'updatesl [server name] [whats updating] [new value]',
-    num_args: 3,
+    num_args: 1,
     args_to_lower: true,
     async execute(message, args, api) {
         var respServer;
