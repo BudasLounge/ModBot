@@ -32,6 +32,8 @@ module.exports = {
             } catch(err3){
                 console.error(err3);
             }
+            console.log(respUpdate + "\n AND THE REST>>\n" + respUpdate.minecraft_servers[0]);
+
         }else{
             message.channel.send("Nothing found...");
         }
