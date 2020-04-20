@@ -23,6 +23,8 @@ module.exports ={
             nextItem += "short name: " + respServer.minecraft_servers[i].short_name + "\n";
             nextItem += "server ip: " + respServer.minecraft_servers[i].server_ip + "\n";
             nextItem += "numeric ip: " + respServer.minecraft_servers[i].numeric_ip + ":" + respServer.minecraft_servers[i].port;
+            nextItem += "minecraft version: " + respServer.minecraft_servers[i].mc_version;
+            nextItem += "pack version: " + respServer.minecraft_servers[i].pack_version;
 
             ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:", nextItem);
         }
