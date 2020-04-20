@@ -26,7 +26,7 @@ module.exports = {
         if(respServer.minecraft_servers[0]){
             message.channel.send("Found one!");
             try{
-                var data = {};
+                var data = {short_name: respServer.minecraft_servers[0].short_name};
                 data[args[2]] = args[3];
                 var respUpdate = await api.put("minecraft_server", data);
             } catch(err3){
