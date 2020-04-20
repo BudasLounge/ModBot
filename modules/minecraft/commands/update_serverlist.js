@@ -17,7 +17,7 @@ module.exports = {
             message.channel.send("No server with that short_hand...checking display_name");
             try{
                 respServer = await api.get("minecraft_server", {
-                    sdisplay_name: args[1]
+                    display_name: args[1]
                 });
             }catch(err2){
                 console.error(err2);
