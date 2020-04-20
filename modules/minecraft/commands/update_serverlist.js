@@ -2,7 +2,7 @@ module.exports = {
     name: 'updatesl',
     description: 'Used to update parts of the minecraft server list',
     syntax: 'updatesl [server name] [whats updating] [new value]',
-    num_args: 1,
+    num_args: 3,
     args_to_lower: true,
     async execute(message, args, api) {
         var respServer;
@@ -25,8 +25,17 @@ module.exports = {
         }
         if(respServer.minecraft_servers[0]){
             message.channel.send("Found one!");
+            try{
+                var respUpdate = await api.put("minecraft_server", {
+                    args[1]: args[2]
+                });
+            } catch(err3){
+                console.error(err3);
+            }
         }else{
             message.channel.send("Nothing found...");
         }
+
+
     }
 };
