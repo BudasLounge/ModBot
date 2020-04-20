@@ -23,7 +23,7 @@ module.exports = {
                 console.error(err2);
             }
         }
-        if(respServer.minecraft_servers[0]){
+        /*if(respServer.minecraft_servers[0]){
             message.channel.send("Found one!");
             try{
                 var respUpdate = await api.put("minecraft_server", {
@@ -34,7 +34,7 @@ module.exports = {
             }
         }else{
             message.channel.send("Nothing found...");
-        }
+        }*/
 
 
     }
