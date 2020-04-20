@@ -17,25 +17,28 @@ module.exports = {
         } catch(error2){
             console.error(error2);
         }
-
-        const ListEmbed = new Discord.RichEmbed()
-        .setColor("#f92f03")
-        .setTitle("List of all players on " + respServer.minecraft_servers[0].display_name + ": ");
-        var msg = "Players: ";
-        var respPlayers = await axios.get("http://192.168.1.2:" + respServer.minecraft_servers[0].status_api_port + "/player-list", {});
-        console.log(respPlayers);
-        var isOne = respPlayers.data.players.length == 1;
-        var num_players = "There " + (isOne ? "is" : "are") + " " + respPlayers.data.players.length + (isOne ? " player" : " players") + " on " + respServer.minecraft_servers[0].display_name + " server";
-        if(respPlayers.data.players.length == 0) {
-            msg += ".";
-        } else {
-            msg += ":";
-            for(var player of respPlayers.data.players) {
-                msg += "\n  - " + player.username;
+        if(respServer.minecraft_servers[0].status_api_port.toLowerCase() != "none"){
+            const ListEmbed = new Discord.RichEmbed()
+            .setColor("#f92f03")
+            .setTitle("List of all players on " + respServer.minecraft_servers[0].display_name + ": ");
+            var msg = "Players: ";
+            var respPlayers = await axios.get("http://192.168.1.2:" + respServer.minecraft_servers[0].status_api_port + "/player-list", {});
+            console.log(respPlayers);
+            var isOne = respPlayers.data.players.length == 1;
+            var num_players = "There " + (isOne ? "is" : "are") + " " + respPlayers.data.players.length + (isOne ? " player" : " players") + " on " + respServer.minecraft_servers[0].display_name + " server";
+            if(respPlayers.data.players.length == 0) {
+                msg += ".";
+            } else {
+                msg += ":";
+                for(var player of respPlayers.data.players) {
+                    msg += "\n  - " + player.username;
+                }
             }
+            ListEmbed.addField(num_players, msg);
+            message.channel.send(ListEmbed);
+        }else{
+            message.channel.send("That server doesn't appear to have status_api mod installed!");
         }
-        ListEmbed.addField(num_players, msg);
-        message.channel.send(ListEmbed);
 	} catch (error) {
 		console.error(error);
 	}
