@@ -26,11 +26,12 @@ module.exports = {
         if(respServer.minecraft_servers[0]){
             message.channel.send("Found one!");
             try{
+                var argument2 = args[2];
                 var data = {short_name: respServer.minecraft_servers[0].short_name};
                 data[args[2]] = args[3];
                 var respUpdate = await api.put("minecraft_server", data);
                 console.log(respUpdate);
-                console.log(respServer.minecraft_servers[0].args[2] + " was changed to " + respUpdate.minecraft_server.args[2]);
+                console.log(respServer.minecraft_servers[0].argument2 + " was changed to " + respUpdate.minecraft_server.argument2);
             } catch(err3){
                 console.error(err3);
             }
