@@ -25,15 +25,15 @@ module.exports = {
         }
         if(respServer.minecraft_servers[0]){
             message.channel.send("Found one!");
-            var respUpdate;
             try{
                 var data = {short_name: respServer.minecraft_servers[0].short_name};
                 data[args[2]] = args[3];
-                respUpdate = await api.put("minecraft_server", data);
+                var respUpdate = await api.put("minecraft_server", data);
+                console.log(respUpdate + "\n AND THE REST>>\n" + respUpdate.minecraft_servers[0]);
             } catch(err3){
                 console.error(err3);
             }
-            console.log(respUpdate + "\n AND THE REST>>\n" + respUpdate.minecraft_servers[0]);
+            
 
         }else{
             message.channel.send("Nothing found...");
