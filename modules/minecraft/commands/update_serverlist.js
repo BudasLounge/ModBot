@@ -57,8 +57,6 @@ module.exports = {
             } catch(err3){
                 console.error(err3);
             }
-            
-
         }else{
             message.channel.send("Nothing found...");
         }
