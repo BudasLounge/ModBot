@@ -29,7 +29,7 @@ module.exports = {
                 var data = {short_name: respServer.minecraft_servers[0].short_name};
                 data[args[2]] = args[3];
                 var respUpdate = await api.put("minecraft_server", data);
-                console.log(respUpdate + "\n AND THE REST>>\n" + respUpdate.minecraft_servers[0]);
+                console.log(respUpdate);
             } catch(err3){
                 console.error(err3);
             }
