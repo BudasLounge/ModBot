@@ -27,7 +27,7 @@ module.exports = {
             message.channel.send("Found one!");
             try{
                 var respUpdate = await api.put("minecraft_server", {
-                    args[1]: args[2]
+                    args[2]: args[3]
                 });
             } catch(err3){
                 console.error(err3);
