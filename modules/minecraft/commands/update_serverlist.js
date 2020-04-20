@@ -51,7 +51,7 @@ module.exports = {
                     changedInfo += "mc_version: " + respUpdate.minecraft_server.mc_version + "\n";
                     changedInfo += "pack_version: " + respUpdate.minecraft_server.pack_version;
 
-                    ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:", changedInfo);
+                    ListEmbed.addField("A post function update: ", changedInfo);
                     message.channel.send(ListEmbed);
                 }
             } catch(err3){
