@@ -17,7 +17,9 @@ module.exports = {
         } catch(error2){
             console.error(error2);
         }
+        console.log("Found a server!");
         if(respServer.minecraft_servers[0].status_api_port.toLowerCase() != "none"){
+            console.log("Making listEmbed now!");
             const ListEmbed = new Discord.RichEmbed()
             .setColor("#f92f03")
             .setTitle("List of all players on " + respServer.minecraft_servers[0].display_name + ": ");
@@ -41,6 +43,7 @@ module.exports = {
         }
 	} catch (error) {
 		console.error(error);
-	}
+    }
+    console.log("<<players_online");
 }
 };
