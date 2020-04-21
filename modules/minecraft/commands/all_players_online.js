@@ -20,7 +20,7 @@ module.exports = {
         }
         const ListEmbed = new Discord.RichEmbed()
             .setColor("#f92f03")
-            .setTitle("List of all players on all servers:");
+            .setTitle("List of all players on all online servers:");
         for(var i = 0;i<respServer.minecraft_servers.length;i++){
             if(respServer.minecraft_servers[i].status_api_port.toLowerCase() != "none"){
                 var status = await getServerState(respServer.minecraft_servers[i].display_name, respServer.minecraft_servers[i].port, respServer.minecraft_servers[i].numeric_ip, message.channel);
