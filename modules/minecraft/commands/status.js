@@ -56,7 +56,7 @@ async function getServerState(server, port, ip){
     var url = 'http://mcapi.us/server/status?ip='+ip+'&port=' + port;
     var response = await axios.get(url);
     response = response.data;
-    var status = '*'+server+' server is currently offline*'
+    var status = '*'+server+' server is currently offline*';
     if(response.online) {
         status = '**'+server+'** server is **online**  -  ';
         if(response.players.now) {
