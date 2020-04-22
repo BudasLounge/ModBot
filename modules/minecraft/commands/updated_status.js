@@ -22,13 +22,13 @@ module.exports ={
                 message.channel.send(ServerStatus);
                 return ServerStatus;
             }
-            else if (typeof res.players.online === 0) { 
+            else if ( res.players.online === 0) { 
                 var ServerStatusNoOne = ' server is **online**  -  *Nobody is playing!*'; 
                 console.log(ServerStatusNoOne);
                 message.channel.send(ServerStatusNoOne);
                 return ServerStatusNoOne;
             }
-            else if (!(typeof res.players.online === 0)) { 
+            else if (!( res.players.online === 0)) { 
                 var ServerStatusSomeone =  ' server is **online**  -  **'+res.players.online+'** people are playing!'; 
                 console.log(ServerStatusSomeone); 
                 message.channel.send(ServerStatusSomeone);
