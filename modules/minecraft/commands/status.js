@@ -13,8 +13,7 @@ module.exports ={
                     console.error(err);
             } else {
                     // Success!
-                    message.channel.send(res);
-                    console.log(res);
+                    console.log(res.version);
             }
         }, 3000);
         var respServer;
