@@ -16,6 +16,7 @@ module.exports ={
             console.error(error);
         } 
         var status = mcping(respServer.minecraft_servers[0].server_ip, respServer.minecraft_servers[0].port, function(err, res) {
+            console.log("players online: " + res.players.online);
             if (!(typeof err === 'undefined' || err === null)) {
                 var ServerStatus = ' server is currently offline';
                 console.log(ServerStatus);
