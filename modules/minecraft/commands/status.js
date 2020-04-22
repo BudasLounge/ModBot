@@ -6,17 +6,6 @@ module.exports ={
     args_to_lower: true,
     async execute(message, args, api){
         const Discord = require('discord.js');
-        const mcping = require('mc-ping-updated');
-        var stat = mcping('budaslounge.com', 11180, function(err, res) {
-            if (err) {
-                    // Some kind of error
-                    console.error(err);
-            } else {
-                    // Success!
-                    //console.log(res.version);
-            }
-        }, 3000);
-        console.log("This is stat: " + stat);
         var respServer;
         try{
             respServer = await api.get("minecraft_server", {
