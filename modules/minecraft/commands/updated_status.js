@@ -17,19 +17,19 @@ module.exports ={
         } 
         var status = mcping(respServer.minecraft_servers[0].server_ip, respServer.minecraft_servers[0].port, function(err, res) {
             if (!(typeof err === 'undefined' || err === null)) {
-                var ServerStatus = server + ' server is currently offline';
+                var ServerStatus = (server + ' server is currently offline').toString();
                 console.log(ServerStatus);
                 message.channel.send(ServerStatus);
                 return ServerStatus;
             }
             else if (typeof res.players.online === 0) { 
-                var ServerStatusNoOne = server + ' server is **online**  -  *Nobody is playing!*'; 
+                var ServerStatusNoOne = (server + ' server is **online**  -  *Nobody is playing!*').toString(); 
                 console.log(ServerStatusNoOne);
                 message.channel.send(ServerStatusNoOne);
                 return ServerStatusNoOne;
             }
             else if (!(typeof res.players.online === 0)) { 
-                var ServerStatusSomeone =  server + ' server is **online**  -  **'+res.players.online+'** people are playing!'; 
+                var ServerStatusSomeone =  (server + ' server is **online**  -  **'+res.players.online+'** people are playing!').toString(); 
                 console.log(ServerStatusSomeone); 
                 message.channel.send(ServerStatusSomeone);
                 return ServerStatusSomeone;
