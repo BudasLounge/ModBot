@@ -13,10 +13,10 @@ module.exports ={
                     console.error(err);
             } else {
                     // Success!
-                    message.channel.send(res.version.name);
                     console.log(res.version);
             }
         }, 3000);
+        console.log(stat);
         var respServer;
         try{
             respServer = await api.get("minecraft_server", {
