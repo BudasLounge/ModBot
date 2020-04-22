@@ -13,6 +13,7 @@ module.exports ={
                     console.error(err);
             } else {
                     // Success!
+                    channel.message.send(res);
                     console.log(res);
             }
         }, 3000);
