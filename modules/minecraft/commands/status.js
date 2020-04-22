@@ -7,7 +7,7 @@ module.exports ={
     async execute(message, args, api){
         const Discord = require('discord.js');
         const mcping = require('mc-ping-updated');
-        var stat = mcping('budaslounge.com', 11180, function(err, res) {
+        var stat = mcping('192.168.1.2', 11180, function(err, res) {
             if (err) {
                     // Some kind of error
                     console.error(err);
