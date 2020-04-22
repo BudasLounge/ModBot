@@ -36,7 +36,7 @@ module.exports ={
             }
         })
         console.log(status);
-        message.channel.send(status);
+        //message.channel.send(status);
     }
 };
 
