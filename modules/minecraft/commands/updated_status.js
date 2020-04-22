@@ -20,10 +20,11 @@ module.exports ={
                 ServerStatus += ' server is currently offline';
                 return ServerStatus;
             }
-            if (typeof res.players.sample === 'undefined') { ServerStatus += ' server is **online**  -  *Nobody is playing!*'; return ServerStatus;}
-            if (!(typeof res.players.sample === 'undefined')) { ServerStatus +=  ' server is **online**  -  **'+res.players.online+'** people are playing!'; return ServerStatus; }
+            if (typeof res.players.online === 0) { ServerStatus += ' server is **online**  -  *Nobody is playing!*'; return ServerStatus;}
+            if (!(typeof res.players.online === 0)) { ServerStatus +=  ' server is **online**  -  **'+res.players.online+'** people are playing!'; return ServerStatus; }
         })
-        message.channel.send(status);
+        console.log(status);
+        //message.channel.send(status);
     }
 };
 
