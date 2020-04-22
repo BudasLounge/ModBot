@@ -15,8 +15,8 @@ module.exports ={
         } catch(error){
             console.error(error);
         } 
+        //https://www.reddit.com/r/discordapp/comments/8yn9hp/i_made_a_bot_that_shows_the_live_status_of_our/
         var status = mcping(respServer.minecraft_servers[0].server_ip, respServer.minecraft_servers[0].port, function(err, res) {
-            console.log("players online: " + res.players.online);
             if (!(typeof err === 'undefined' || err === null)) {
                 var ServerStatus = ' server is currently offline';
                 console.log(ServerStatus);
