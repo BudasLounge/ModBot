@@ -22,7 +22,7 @@ async function onUserJoin(member){
     }
 }
 
-async function parseRaw(packet) {
+/*async function parseRaw(packet) {
     // We don't want this to run on unrelated packets
     if (!['MESSAGE_REACTION_ADD', 'MESSAGE_REACTION_REMOVE'].includes(packet.t)) return;
     console.log(packet);
@@ -45,8 +45,8 @@ async function parseRaw(packet) {
         /*if (packet.t === 'MESSAGE_REACTION_REMOVE') {
             client.emit('messageReactionRemove', reaction, client.users.get(packet.d.user_id));
         }*/
-    });
-}
+ //   });
+//}
 
 function register_handlers(event_registry) {
     event_registry.register('messageReactionAdd', onMessageReactionAdd);

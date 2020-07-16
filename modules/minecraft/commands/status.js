@@ -27,30 +27,7 @@ module.exports ={
         }
     }
 };
-/*
-function getServerStatus(server, port, ip, channel){
-    const request = require('request');
-    var url = 'http://mcapi.us/server/status?ip='+ip+'&port=' + port;
-    request(url, function(err, response, body) {
-        if(err) {
-            console.log(err);
-            return message.reply('Error getting server status...');
-        }
-        body = JSON.parse(body);
-        var status = '*'+server+' server is currently offline*';
-        if(body.online) {
-            status = '**'+server+'** server is **online**  -  ';
-            if(body.players.now) {
-                status += '**' + body.players.now + '** people are playing!';
-            } else {
-                status += '*Nobody is playing!*';
-            }
-        }
-        console.log("Returning message: "+status);
-        channel.send(status);
-    });
-}
-*/
+
 async function getServerState(server, port, ip){
     var axios = require('axios');
     var url = 'http://mcapi.us/server/status?ip='+ip+'&port=' + port;
