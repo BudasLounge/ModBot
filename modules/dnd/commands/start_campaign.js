@@ -1,8 +1,8 @@
 module.exports = {
     name: 'start_campaign',
     description: 'Used to open a new campaign',
-    syntax: 'start_campaign [display_name] [short_name] [server_ip] [port] [status_api_port] [numeric_ip] [mc_version] [pack version]',
-    num_args: 6,
+    syntax: 'start_campaign',
+    num_args: 1,
     args_to_lower: true,
     async execute(message, args, api) {
         console.log(">>start_campaign");
