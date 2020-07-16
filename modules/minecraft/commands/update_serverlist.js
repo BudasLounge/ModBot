@@ -5,6 +5,7 @@ module.exports = {
     num_args: 3,
     args_to_lower: true,
     async execute(message, args, api) {
+        if(message.member.roles.has("586313447965327365")){
         const Discord = require('discord.js');
         var respServer;
         try{
@@ -60,7 +61,8 @@ module.exports = {
         }else{
             message.channel.send("Nothing found...");
         }
-
-
+    }else{
+        message.channel.send("You don't have permission to use that command!");
     }
+}
 };
