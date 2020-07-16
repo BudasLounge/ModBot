@@ -73,7 +73,7 @@ module.exports = {
         message.channel.awaitMessages(filter6, { max: 1 })
         .then(collected6 => {
             const response6 = collected6.first();
-            text_amount = response1.content;
+            text_amount = response6.content;
 
         const filter7 = response7 => {
             return response7.author.id === Authorid;
