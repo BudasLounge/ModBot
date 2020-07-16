@@ -86,7 +86,34 @@ module.exports = {
             
 
         message.member.guild.createChannel(category_name, "category");
-            message.channel.send("<@" + message.member.id + "> "+"Here is what you entered:\n" + module + "\n" + start_date + "\n" + schedule_type + "\n" + role_name + "\n" + category_name + "\n" + text_amount + "\n" + voice_amount);
+        let category = server.channels.cache.find(c => c.name == category_name && c.type == "category");
+        for(var i = 0;i < text_amount;i++){
+            const filter8 = response8 => {
+                return response8.author.id === Authorid;
+            }
+            message.channel.send("<@" + message.member.id + "> "+"What is the name of text channel " + i + "?").then(() => {
+            message.channel.awaitMessages(filter8, { max: 1 })
+            .then(collected8 => {
+                const response8 = collected8.first();
+                message.member.guild.createChannel(response8, "text");
+            });
+        });
+        }
+
+        for(var i = 0;i < voice_amount;i++){
+            const filter8 = response8 => {
+                return response8.author.id === Authorid;
+            }
+            message.channel.send("<@" + message.member.id + "> "+"What is the name of voice channel " + i + "?").then(() => {
+            message.channel.awaitMessages(filter8, { max: 1 })
+            .then(collected8 => {
+                const response8 = collected8.first();
+                message.member.guild.createChannel(response8, "voice");
+            });
+        });
+        }
+        
+        message.channel.send("<@" + message.member.id + "> "+"Here is what you entered:\n" + module + "\n" + start_date + "\n" + schedule_type + "\n" + role_name + "\n" + category_name + "\n" + text_amount + "\n" + voice_amount);
         });
         });
         });
