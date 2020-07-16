@@ -9,7 +9,7 @@ module.exports = {
         message.channel.send("<@" + member.id + "> "+"sending you a PM, please fill out the information!");
         const Discord = require(`discord.js`);
 
-        let Author = message.author;
+        /*let Author = message.author;
         let Authorid = Author.id; //You will need this in the future
 
         var module = "";
@@ -50,7 +50,7 @@ module.exports = {
         });
         });
         });
-
+*/
             console.log("<<start_campaign");
         }
 };
