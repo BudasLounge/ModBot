@@ -2,7 +2,7 @@ module.exports = {
     name: 'start_campaign',
     description: 'Used to open a new campaign',
     syntax: 'start_campaign',
-    num_args: 1,
+    num_args: 0,
     args_to_lower: true,
     async execute(message, args, api) {
         console.log(">>start_campaign");
