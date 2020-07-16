@@ -20,7 +20,7 @@ module.exports = {
         const filter1 = response1 => {
         return response1.author.id === Authorid;
         }
-        message.channel.send("What is the module you are using?");
+        message.channel.send("What is the module you are using?").then(() => {
         message.channel.awaitMessages(filter1, { max: 1 })
         .then(collected1 => {
             
@@ -50,6 +50,7 @@ module.exports = {
         });
         });
         });
+    });
             message.channel.send("Here is what you entered:\n" + module + "\n" + start_date + "\n" + schedule_type);
             console.log("<<start_campaign");
         }
