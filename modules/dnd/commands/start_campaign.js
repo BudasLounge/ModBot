@@ -6,7 +6,7 @@ module.exports = {
     args_to_lower: true,
     async execute(message, args, api) {
         console.log(">>start_campaign");
-        message.channel.send("<@" + message.member.id + "> "+"sending you a PM, please fill out the information!");
+        message.channel.send("<@" + message.member.id + "> "+"please fill out the information!");
         const Discord = require(`discord.js`);
 
         let Author = message.author;
@@ -23,7 +23,7 @@ module.exports = {
 
         message.channel.awaitMessages(filter1, { max: 1 })
         .then(collected1 => {
-            message.author.send("What is the module you are using?");
+            message.channel.send("What is the module you are using?");
         const response1 = collected1.first();
             module = response1.content;
 
@@ -33,7 +33,7 @@ module.exports = {
 
         message.channel.awaitMessages(filter2, { max: 1 })
         .then(collected2 => {
-            message.author.send("What is the start date? (Format YYYY-MM-DD)");
+            message.channel.send("What is the start date? (Format YYYY-MM-DD)");
         const response2 = collected2.first();
         start_date = response2.content;
 
@@ -43,14 +43,14 @@ module.exports = {
 
         message.channel.awaitMessages(filter3, { max: 1 })
         .then(collected3 => {
-            message.author.send("How many days in between sessions? (enter only the numeric value)");
+            message.channel.send("How many days in between sessions? (enter only the numeric value)");
         const response3 = collected3.first();
             schedule_type = response3.content;
 
         });
         });
         });
-
+            message.channel.send("Here is what you entered:\n" + module + "\n" + start_date + "\n" + schedule_type);
             console.log("<<start_campaign");
         }
 };
