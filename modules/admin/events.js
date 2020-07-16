@@ -51,7 +51,7 @@ async function onUserJoin(member){
 function register_handlers(event_registry) {
     event_registry.register('messageReactionAdd', onMessageReactionAdd);
     event_registry.register('guildMemberAdd', onUserJoin);
-    event_registry.register('raw', parseRaw);
+    //event_registry.register('raw', parseRaw);
 }
 
 module.exports = register_handlers;
