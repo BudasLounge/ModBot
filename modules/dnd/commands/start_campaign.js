@@ -6,7 +6,7 @@ module.exports = {
     args_to_lower: true,
     async execute(message, args, api) {
         console.log(">>start_campaign");
-        message.channel.send("<@" + member.id + "> "+"sending you a PM, please fill out the information!");
+        message.channel.send("<@" + message.member.id + "> "+"sending you a PM, please fill out the information!");
         const Discord = require(`discord.js`);
 
         let Author = message.author;
