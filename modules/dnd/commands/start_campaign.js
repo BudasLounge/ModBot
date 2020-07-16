@@ -96,6 +96,8 @@ module.exports = {
             .then(collected8 => {
                 const response8 = collected8.first();
                 message.member.guild.createChannel(response8, "text");
+                let channel = server.channels.cache.find(c => c.name == "general" && c.type == "text");
+                channel.setParent(category.id);
             });
         });
         }
@@ -109,6 +111,8 @@ module.exports = {
             .then(collected8 => {
                 const response8 = collected8.first();
                 message.member.guild.createChannel(response8, "voice");
+                let channel = server.channels.cache.find(c => c.name == "general" && c.type == "text");
+                channel.setParent(category.id);
             });
         });
         }
