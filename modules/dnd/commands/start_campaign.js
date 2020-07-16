@@ -85,7 +85,7 @@ module.exports = {
             voice_amount = response7.content;
             
 
-        member.guild.createChannel(category_name, "category");
+        message.member.guild.createChannel(category_name, "category");
             message.channel.send("<@" + message.member.id + "> "+"Here is what you entered:\n" + module + "\n" + start_date + "\n" + schedule_type + "\n" + role_name + "\n" + category_name + "\n" + text_amount + "\n" + voice_amount);
         });
         });
