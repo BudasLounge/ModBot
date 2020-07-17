@@ -85,8 +85,8 @@ module.exports = {
             voice_amount = response7.content;
             
 
-        message.member.guild.createChannel(category_name, "category");
-        let category = message.member.guild.channels.cache.find(c => c.name == category_name && c.type == "category");
+        message.guild.createChannel(category_name, "category");
+        let category = message.guild.channels.cache.find(c => c.name == category_name && c.type == "category");
         for(var i = 0;i < text_amount;i++){
             const filter8 = response8 => {
                 return response8.author.id === Authorid;
@@ -111,7 +111,7 @@ module.exports = {
             .then(collected8 => {
                 const response8 = collected8.first();
                 message.member.guild.createChannel(response8, "voice");
-                let channel = message.guild.member.channels.cache.find(c => c.name == "general" && c.type == "text");
+                let channel = message.member.guild.channels.cache.find(c => c.name == "general" && c.type == "text");
                 channel.setParent(category.id);
             });
         });
