@@ -86,7 +86,7 @@ module.exports = {
             
 
         message.member.guild.createChannel(category_name, "category");
-        let category = message.guild.channels.cache.find(c => c.name == category_name && c.type == "category");
+        let category = message.member.guild.channels.cache.find(c => c.name == category_name && c.type == "category");
         for(var i = 0;i < text_amount;i++){
             const filter8 = response8 => {
                 return response8.author.id === Authorid;
