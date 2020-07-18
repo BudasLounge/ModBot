@@ -16,7 +16,7 @@ module.exports ={
         } 
         console.log(respServer);
         if(respServer.minecraft_servers[0]){
-            var item = await getServerState(respServer.minecraft_servers[0].display_name, respServer.minecraft_servers[0].port, respServer.minecraft_servers[0].numeric_ip, message.channel);
+            var item = await getServerState(respServer.minecraft_servers[0].display_name, respServer.minecraft_servers[0].port, respServer.minecraft_servers[0].numeric_ip, respServer.minecraft_servers[0].status_api_port);
             const ListEmbed = new Discord.RichEmbed()
             .setColor("#f92f03")
             .setTitle(respServer.minecraft_servers[0].display_name + " status: ");
