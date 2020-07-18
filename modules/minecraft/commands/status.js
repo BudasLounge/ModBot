@@ -46,7 +46,6 @@ async function getServerState(server, port, ip, status_api_port){
                     if(respPlayers.data.players.length == 0) {
                         status += ".";
                     } else {
-                        status += ":";
                         for(var player of respPlayers.data.players) {
                             status += "\n  - " + player.username;
                         }
