@@ -45,11 +45,11 @@ async function getServerState(server, port, ip, status_api_port){
                     var respPlayers = await axios.get("http://192.168.1.2:" + status_api_port + "/player-list", {});
                     console.log(respPlayers);
                     if(respPlayers.data.players.length == 0) {
-                        msg += ".";
+                        status += ".";
                     } else {
-                        msg += ":";
+                        status += ":";
                         for(var player of respPlayers.data.players) {
-                            msg += "\n  - " + player.username;
+                            status += "\n  - " + player.username;
                         }
                     }
                 }
