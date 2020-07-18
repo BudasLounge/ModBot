@@ -42,7 +42,7 @@ async function getServerState(server, port, ip, status_api_port){
                 if(status_api_port != "none"){
                     status += "\nPlayers: ";
                     var respPlayers = await axios.get("http://192.168.1.2:" + status_api_port + "/player-list", {});
-                    console.log("returned from api:\n" + respPlayers);
+                    console.log("returned from api:\n" + respPlayers.data.players);
                     if(respPlayers.data.players.length == 0) {
                         status += ".";
                     } else {
