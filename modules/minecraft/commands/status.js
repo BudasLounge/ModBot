@@ -21,6 +21,7 @@ module.exports ={
             .setColor("#f92f03")
             .setTitle(respServer.minecraft_servers[0].display_name + " status: ");
             ListEmbed.addField("status: ", item);
+            console.log(item);
             message.channel.send(ListEmbed);
         }else{
             message.channel.send("Sorry, couldn't find a server with that shortname, try /listmc for a list of all servers.");
