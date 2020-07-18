@@ -21,7 +21,6 @@ module.exports ={
             .setColor("#f92f03")
             .setTitle(respServer.minecraft_servers[0].display_name + " status: ");
             ListEmbed.addField("status: ", item);
-            console.log(item);
             message.channel.send(ListEmbed);
         }else{
             message.channel.send("Sorry, couldn't find a server with that shortname, try /listmc for a list of all servers.");
@@ -43,7 +42,7 @@ async function getServerState(server, port, ip, status_api_port){
                 if(status_api_port != "none"){
                     status += "\nPlayers: ";
                     var respPlayers = await axios.get("http://192.168.1.2:" + status_api_port + "/player-list", {});
-                    console.log(respPlayers);
+                    console.log("returned from api:\n" + respPlayers);
                     if(respPlayers.data.players.length == 0) {
                         status += ".";
                     } else {
