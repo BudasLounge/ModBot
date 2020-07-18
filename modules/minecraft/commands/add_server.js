@@ -18,6 +18,9 @@ module.exports = {
             } 
             if(!respServer.minecraft_servers[0]){
                 message.channel.send("Adding server " + args[1] + " to the database, here we goooooooo");
+                if(!Number.isInteger(args[5])){
+                    args[5] = "none";
+                }
                 try{
                     await api.post("minecraft_server", {
                         display_name: args[1],
