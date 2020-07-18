@@ -30,36 +30,36 @@ module.exports ={
 };
 
 async function getServerState(server, port, ip, status_api_port){
-    try{
     var axios = require('axios');
     var url = 'http://mcapi.us/server/status?ip='+ip+'&port=' + port;
     var response = await axios.get(url);
     response = response.data;
     var status = '*'+server+' server is currently offline*';
-    if(response.online) {
-        status = '**'+server+'** server is **online**  -  ';
-        if(response.players.now) {
-            status += '**' + response.players.now + '** people are playing!';
-            if(status_api_port != "none"){
-                status += "\nPlayers: ";
-                var respPlayers = await axios.get("http://192.168.1.2:" + status_api_port + "/player-list", {});
-                console.log(respPlayers);
-                if(respPlayers.data.players.length == 0) {
-                    msg += ".";
-                } else {
-                    msg += ":";
-                    for(var player of respPlayers.data.players) {
-                        msg += "\n  - " + player.username;
+    try{
+        if(response.online) {
+            status = '**'+server+'** server is **online**  -  ';
+            if(response.players.now) {
+                status += '**' + response.players.now + '** people are playing!';
+                if(status_api_port != "none"){
+                    status += "\nPlayers: ";
+                    var respPlayers = await axios.get("http://192.168.1.2:" + status_api_port + "/player-list", {});
+                    console.log(respPlayers);
+                    if(respPlayers.data.players.length == 0) {
+                        msg += ".";
+                    } else {
+                        msg += ":";
+                        for(var player of respPlayers.data.players) {
+                            msg += "\n  - " + player.username;
+                        }
                     }
                 }
+            } else {
+                status += '*Nobody is playing!*';
             }
-        } else {
-            status += '*Nobody is playing!*';
         }
-    }
-    console.log("Returning message: "+status);
-    return status;
     }catch(err){
         console.error(err);
     }
+    console.log("Returning message: "+status);
+    return status;
 }
