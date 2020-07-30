@@ -2,9 +2,9 @@ var ApiClient = require("../../core/js/APIClient.js");
 var api = new ApiClient();
 const Discord = require('discord.js');
 var client = new Discord.Client();
-function onMessageReactionAdd(messageReaction, user) {
+/*function onMessageReactionAdd(messageReaction, user) {
     messageReaction.message.channel.get("650871820538347520").send("[Admin] A reaction was added!")
-}
+}*/
 
 async function onUserJoin(member){
 	var respServer;
@@ -49,7 +49,7 @@ async function onUserJoin(member){
 //}
 
 function register_handlers(event_registry) {
-    event_registry.register('messageReactionAdd', onMessageReactionAdd);
+    //event_registry.register('messageReactionAdd', onMessageReactionAdd);
     event_registry.register('guildMemberAdd', onUserJoin);
     //event_registry.register('raw', parseRaw);
 }
