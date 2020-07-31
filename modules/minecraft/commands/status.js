@@ -29,7 +29,7 @@ module.exports ={
 };
 
 async function getServerState(server, port, ip, status_api_port){
-    console.log("getServerState()>");
+    console.log("getServerState()>\n");
     var axios = require('axios');
     var url = 'http://mcapi.us/server/status?ip='+ip+'&port=' + port;
     var response = await axios.get(url);
@@ -37,10 +37,12 @@ async function getServerState(server, port, ip, status_api_port){
     var status = '*'+server+' server is currently offline*';
     try{
         if(response.online) {
+            console.log("Found players online...\n");
             status = '**'+server+'** server is **online**  -  ';
             if(response.players.now) {
                 status += '**' + response.players.now + '** people are playing!';
                 if(status_api_port != "none"){
+                    console.log("Found a status_api port...\n");
                     status += "\nPlayers: ";
                     var respPlayers = await axios.get("http://192.168.1.2:" + status_api_port + "/player-list", {});
                     console.log("returned from api:\n" + respPlayers.data.players);
@@ -59,6 +61,7 @@ async function getServerState(server, port, ip, status_api_port){
     }catch(err){
         console.error(err);
     }
+    console.log("getServerState()<\n");
     console.log("Returning message: "+status);
     return status;
 }
