@@ -91,12 +91,12 @@ module.exports = {
             const filter8 = response8 => {
                 return response8.author.id === Authorid;
             }
-            message.channel.send("<@" + message.member.id + "> "+"What is the name of text channel " + i + "?").then(() => {
+            message.channel.send("<@" + message.member.id + "> "+"What is the name of text channel " + i+1 + "?").then(() => {
             message.channel.awaitMessages(filter8, { max: 1 })
             .then(collected8 => {
                 const response8 = collected8.first();
                 message.member.guild.createChannel(response8, "text");
-                let channel = message.member.guild.channels.cache.find(c => c.name == "general" && c.type == "text");
+                let channel = message.member.guild.channels.cache.find(c => (c.name == response8 && c.type == "text"));
                 channel.setParent(category.id);
             });
         });
@@ -111,7 +111,7 @@ module.exports = {
             .then(collected8 => {
                 const response8 = collected8.first();
                 message.member.guild.createChannel(response8, "voice");
-                let channel = message.member.guild.channels.cache.find(c => c.name == "general" && c.type == "text");
+                let channel = message.member.guild.channels.cache.find(c => (c.name == response8 && c.type == "text"));
                 channel.setParent(category.id);
             });
         });
