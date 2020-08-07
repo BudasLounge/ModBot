@@ -91,7 +91,7 @@ module.exports = {
             const filter8 = response8 => {
                 return response8.author.id === Authorid;
             }
-            message.channel.send("<@" + message.member.id + "> "+"What is the name of text channel " + i++ + "?").then(() => {
+            message.channel.send("<@" + message.member.id + "> "+"What is the name of text channel " + i + "?").then(() => {
             message.channel.awaitMessages(filter8, { max: 1 })
             .then(collected8 => {
                 const response8 = collected8.first();
@@ -106,7 +106,7 @@ module.exports = {
             const filter8 = response8 => {
                 return response8.author.id === Authorid;
             }
-            message.channel.send("<@" + message.member.id + "> "+"What is the name of voice channel " + i++ + "?").then(() => {
+            message.channel.send("<@" + message.member.id + "> "+"What is the name of voice channel " + i + "?").then(() => {
             message.channel.awaitMessages(filter8, { max: 1 })
             .then(collected8 => {
                 const response8 = collected8.first();
