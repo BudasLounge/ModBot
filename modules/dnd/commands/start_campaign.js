@@ -92,7 +92,7 @@ module.exports = {
                 return response8.author.id === Authorid;
             }
             message.channel.send("<@" + message.member.id + "> "+"What is the name of text channel " + i++ + "?").then(() => {
-            await message.channel.awaitMessages(filter8, { max: 1 })
+            message.channel.awaitMessages(filter8, { max: 1 })
             .then(collected8 => {
                 const response8 = collected8.first();
                 message.member.guild.createChannel(response8, "text");
@@ -107,7 +107,7 @@ module.exports = {
                 return response8.author.id === Authorid;
             }
             message.channel.send("<@" + message.member.id + "> "+"What is the name of voice channel " + i++ + "?").then(() => {
-            await message.channel.awaitMessages(filter8, { max: 1 })
+            message.channel.awaitMessages(filter8, { max: 1 })
             .then(collected8 => {
                 const response8 = collected8.first();
                 message.member.guild.createChannel(response8, "voice");
