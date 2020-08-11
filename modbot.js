@@ -26,7 +26,7 @@ event_registry.discover_event_handlers(modules);
 authClient();
 
 client.on('ready', () => {
-    logger.log("I am ready!");
+    logger.info("I am ready!");
     var channel = client.channels.get(config.default_channel);
 
     if(fs.existsSync("updated.txt")) {
@@ -44,7 +44,7 @@ function authClient() {
     try {
         token = fs.readFileSync(config.token_file).toString();
     } catch (error) {
-        console.error(error);
+        logger.error(error);
     }
 
     client.login(token);

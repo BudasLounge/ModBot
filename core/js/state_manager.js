@@ -87,7 +87,7 @@ class StateManager {
         });
 
         if(respGet.hasOwnProperty("command_states") && respGet.command_states.length <= 0) {
-            this.logger.log("You attempted to save a state that does not exist! Please ensure you are grabbing states through StateFactory::get_state() to ensure they are properly registered!");
+            this.logger.warn("You attempted to save a state that does not exist! Please ensure you are grabbing states through StateFactory::get_state() to ensure they are properly registered!");
         }
 
         var respUpdate = await this.api.put('command_state', {
