@@ -7,12 +7,10 @@ module.exports = {
     has_state: false,
     execute(message, args, api, state) {
       if(this.hasOwnProperty("logger")) {
-          logger.log("This is a test of the logging system in commands!");
+          this.logger.log("This is a test of the logging system in commands!");
           message.channel.send("Found the logger!");
       } else {
           message.channel.send("There was a problem trying to find the logger!");
       }
-
-      message.channel.send("Admin Pong!");
     }
 };
