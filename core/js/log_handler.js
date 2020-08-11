@@ -10,7 +10,7 @@ var moment = require('moment');
  * @return the winston logger object that will be used for logging.
  */
 function build_logger(log_folder) {
-    var logger = new (winston.Logger)({
+    var logger = winston.createLogger({
         transports: [
             new (winston.transports.Console)({
                 handleExceptions: true
