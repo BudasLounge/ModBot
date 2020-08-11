@@ -13,11 +13,12 @@ class ModuleHandler {
      *
      * @param {string} program_path The absolute path to the root directory of ModBot
      */
-    constructor(program_path, state_manager) {
+    constructor(program_path, state_manager, logger) {
         this.program_path = program_path;
         this.modules = null;
         this.disabled_modules = null;
         this.state_manager = state_manager;
+        this.logger = logger;
     }
 
     /**
@@ -34,7 +35,7 @@ class ModuleHandler {
         this.modules = new Discord.Collection();
         this.disabled_modules = new Discord.Collection();
 
-        console.log("Discovering Modules in: " + modules_folder + " ...");
+        this.logger.info("Discovering Modules in: " + modules_folder + " ...");
         var module_folders = fs.readdirSync(modules_folder, { withFileTypes: true });
         for(var folder of module_folders) {
             if(folder.isDirectory() && fs.existsSync(modules_folder + "/" + folder.name + "/bot_module.json")) {
@@ -67,30 +68,31 @@ class ModuleHandler {
             current_module.commands = new Discord.Collection();
 
             var commands_dir = current_module.location + current_module.config.commands_directory + "/";
-            
-            console.log("Discovering Commands in: " + commands_dir + " ...");
+
+            this.logger.info("Discovering Commands in: " + commands_dir + " ...");
             var command_files = fs.readdirSync(commands_dir).filter(file => file.endsWith('.js'));
 
             for (var file of command_files) {
                 var command = require(commands_dir + file);
+                command.logger = this.logger;
                 current_module.commands.set(command.name, command);
             }
         }
 
         if(this.modules.size > 0) {
-            console.log("Discovered " + this.modules.size + " active module(s) and " + this.disabled_modules.size + " inactive module(s):");
+            this.logger.info("Discovered " + this.modules.size + " active module(s) and " + this.disabled_modules.size + " inactive module(s):");
             for(var current_module_name of Array.from(this.modules.keys())) {
-                console.log("  + " + this.modules.get(current_module_name).config.display_name + " (" + this.modules.get(current_module_name).commands.size + " commands)");
+                this.logger.info("  + " + this.modules.get(current_module_name).config.display_name + " (" + this.modules.get(current_module_name).commands.size + " commands)");
             }
 
             for(var current_module_name of Array.from(this.disabled_modules.keys())) {
-                console.log("  - " + this.disabled_modules.get(current_module_name).config.display_name);
+                this.logger.info("  - " + this.disabled_modules.get(current_module_name).config.display_name);
             }
         } else {
-            console.log("No active modules found! Please enable at least one module for this bot to have any purpose!");
-            console.log("Discovered " + this.disabled_modules.size + " inactive modules:");
+            this.logger.warn("No active modules found! Please enable at least one module for this bot to have any purpose!");
+            this.logger.info("Discovered " + this.disabled_modules.size + " inactive modules:");
             for(var current_module_name of Array.from(this.disabled_modules.keys())) {
-                console.log("  - " + this.disabled_modules.get(current_module_name).config.display_name);
+                this.logger.info("  - " + this.disabled_modules.get(current_module_name).config.display_name);
             }
         }
     }

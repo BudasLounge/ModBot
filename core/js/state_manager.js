@@ -3,8 +3,9 @@ var APIClient = require('./APIClient.js');
 var moment = require('moment');
 
 class StateManager {
-    constructor() {
+    constructor(logger) {
         this.api = new APIClient();
+        this.logger = logger;
     }
 
     parse_data(data) {
@@ -74,7 +75,7 @@ class StateManager {
             }
         }
     }
-    
+
     async save_state(state) {
         if(state.hasOwnProperty("delete") && state.delete === true) {
             this.delete_state(state);
@@ -86,7 +87,7 @@ class StateManager {
         });
 
         if(respGet.hasOwnProperty("command_states") && respGet.command_states.length <= 0) {
-            console.log("You attempted to save a state that does not exist! Please ensure you are grabbing states through StateFactory::get_state() to ensure they are properly registered!");
+            this.logger.log("You attempted to save a state that does not exist! Please ensure you are grabbing states through StateFactory::get_state() to ensure they are properly registered!");
         }
 
         var respUpdate = await this.api.put('command_state', {
