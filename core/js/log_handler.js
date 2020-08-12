@@ -23,7 +23,7 @@ function build_logger(log_folder) {
     });
 
     logger.rejections.handle(
-        new winston.transports.File({ filename: 'rejections.log' })
+        new winston.transports.File({ filename: log_folder + '/rejections.log' })
     );
     //heres some more stuff so I can push
 
