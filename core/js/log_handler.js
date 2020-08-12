@@ -22,6 +22,10 @@ function build_logger(log_folder) {
         ]
     });
 
+    logger.rejections.handle(
+        new winston.transports.File({ filename: 'rejections.log' })
+    );
+
     return logger;
 }
 
