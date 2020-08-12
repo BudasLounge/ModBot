@@ -35,12 +35,8 @@ class StateManager {
             _filter: "expiration after " + moment().format('YYYY-MM-DD HH:mm:ss')
         });
 
-        this.logger.info("Inside get_state!");
-        this.logger.info(respGet);
-
         if(respGet.hasOwnProperty("command_states") && respGet.command_states.length > 0) {
-            this.logger.info("State Data Grabbed:");
-            this.logger.info(respGet);
+            this.logger.info("State Data Grabbed:", respGet);
 
             var respUpdate = await this.api.put('command_state', {
                 state_id: respGet.command_states[0].state_id,
@@ -65,12 +61,13 @@ class StateManager {
 
             return the_state;
         } else {
-            this.logger.info("Creating new command state!")
             respPost = await this.api.post('command_state', {
                 user_id: user_id,
                 command_run: command_run,
                 expiration: moment().add(10, 'minutes').format('YYYY-MM-DD HH:mm:ss')
             });
+
+            this.logger.info("Post after creating state: ", respPost);
 
             if(respPost.hasOwnProperty("command_state")) {
                 this.logger.info("Created State: " + respPost.command_state);
