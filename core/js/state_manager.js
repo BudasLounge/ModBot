@@ -35,6 +35,8 @@ class StateManager {
             _filter: "expiration after " + moment().format('YYYY-MM-DD HH:mm:ss')
         });
 
+        this.logger.info("Inside get_state!");
+
         if(respGet.hasOwnProperty("command_states") && respGet.command_states.length > 0) {
             var respUpdate = await this.api.put('command_state', {
                 state_id: respGet.command_states[0].state_id,
