@@ -8,6 +8,6 @@ module.exports = {
     execute(message, args, api, state, mod_handler) {
       this.logger.info(state);
 
-      message.channel.send("Admin Pong!");
+      message.channel.send(state);
     }
 };
