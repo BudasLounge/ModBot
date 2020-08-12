@@ -8,6 +8,6 @@ module.exports = {
     execute(message, args, api, state, mod_handler) {
       this.logger.info(state.data);
 
-      message.channel.send("" + state);
+      message.channel.send("" + state.data);
     }
 };
