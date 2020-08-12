@@ -5,7 +5,7 @@ module.exports = {
     num_args: 0,
     args_to_lower: true,
     has_state: true,
-    execute(message, args, api, state, mod_handler) {
+    async execute(message, args, api, state, mod_handler) {
       this.logger.info(state.data);
 
       message.channel.send("" + state);
