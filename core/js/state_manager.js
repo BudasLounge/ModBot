@@ -59,6 +59,7 @@ class StateManager {
 
             return the_state;
         } else {
+            this.logger.info("Creating new command state!")
             respPost = await this.api.post('command_state', {
                 user_id: user_id,
                 command_run: command_run,
@@ -66,6 +67,7 @@ class StateManager {
             });
 
             if(respPost.hasOwnProperty("command_state")) {
+                this.logger.info("Created State: " + respPost.command_state);
                 var the_state = respPost.command_state;
                 the_state.data = new Discord.Collection();
                 return the_state;
