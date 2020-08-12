@@ -70,7 +70,7 @@ class StateManager {
                 the_state.data = new Discord.Collection();
                 return the_state;
             } else {
-                console.error("[CRITICAL] Unable to create new command state!");
+                this.logger.error("[CRITICAL] Unable to create new command state!");
                 return null;
             }
         }
