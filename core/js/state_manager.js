@@ -35,6 +35,8 @@ class StateManager {
             _filter: "expiration after " + moment().format('YYYY-MM-DD HH:mm:ss')
         });
 
+        this.logger.info("here is respGet: ", {respGet: respGet});
+
         if(respGet.hasOwnProperty("command_states") && respGet.command_states.length > 0) {
             this.logger.info("State Data Grabbed:", respGet);
 
