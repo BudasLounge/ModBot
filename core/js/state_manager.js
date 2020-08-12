@@ -36,6 +36,7 @@ class StateManager {
         });
 
         this.logger.info("Inside get_state!");
+        this.logger.info(respGet);
 
         if(respGet.hasOwnProperty("command_states") && respGet.command_states.length > 0) {
             this.logger.info("State Data Grabbed:");
