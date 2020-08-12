@@ -29,13 +29,19 @@ class StateManager {
      * @param String command_run - The command that this record is linked to. Of the form 'module:command_name'.
      */
     async get_state(user_id, command_run) {
-        var respGet = await this.api.get('command_state', {
-            user_id: user_id,
-            command_run: command_run,
-            _filter: "expiration after " + moment().format('YYYY-MM-DD HH:mm:ss')
-        });
+        var respGet;
 
-        this.logger.info("here is respGet: ", {respGet: respGet});
+        try {
+            var respGet = await this.api.get('command_state', {
+                user_id: user_id,
+                command_run: command_run,
+                _filter: "expiration after " + moment().format('YYYY-MM-DD HH:mm:ss')
+            });
+
+            this.logger.info("here is respGet: ", {respGet: respGet});
+        } catch (error) {
+            this.logger.error({error: error.response});
+        }
 
         if(respGet.hasOwnProperty("command_states") && respGet.command_states.length > 0) {
             this.logger.info("State Data Grabbed:", respGet);
