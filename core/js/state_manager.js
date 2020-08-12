@@ -38,6 +38,9 @@ class StateManager {
         this.logger.info("Inside get_state!");
 
         if(respGet.hasOwnProperty("command_states") && respGet.command_states.length > 0) {
+            this.logger.info("State Data Grabbed:");
+            this.logger.info(respGet);
+
             var respUpdate = await this.api.put('command_state', {
                 state_id: respGet.command_states[0].state_id,
                 expiration: moment().add(10, 'minutes').format('YYYY-MM-DD HH:mm:ss')
