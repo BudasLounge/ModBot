@@ -40,7 +40,7 @@ class StateManager {
 
             this.logger.info("here is respGet: ", {respGet: respGet});
         } catch (error) {
-            this.logger.error({error: error.response});
+            this.logger.error(error);
         }
 
         if(respGet.hasOwnProperty("command_states") && respGet.command_states.length > 0) {
