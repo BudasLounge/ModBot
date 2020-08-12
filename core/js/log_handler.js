@@ -13,19 +13,16 @@ function build_logger(log_folder) {
     var logger = winston.createLogger({
         transports: [
             new (winston.transports.Console)({
-                handleExceptions: true
+                handleExceptions: true,
+                handleRejections: true
             }),
             new (winston.transports.File)({
                 filename: log_folder + '/modbot_' + moment().format('YYYY_MM_DD_HH_mm_ss') + ".log",
-                handleExceptions: true
+                handleExceptions: true,
+                handleRejections: true
             })
         ]
     });
-
-    logger.rejections.handle(
-        new winston.transports.File({ filename: log_folder + '/rejections.log' })
-    );
-    //heres some more stuff so I can push
 
     return logger;
 }
