@@ -122,14 +122,14 @@ class StateManager {
         for(var data_name of Array.from(state.data.keys())) {
             var the_data = state.data.get(data_name);
             if(!existing_data.has(data_name)) {
-                var respPost = await api.post('state_data', {
+                var respPost = await this.api.post('state_data', {
                     state_id: state.state_id,
                     data_type: the_data.data_type,
                     data_name: the_data.data_name,
                     data: the_data.data
                 });
             } else if(existing_data.has(data_name) && existing_data.get(data_name).data_type !== the_data.data_type) {
-                var respPut = await api.put('state_data', {
+                var respPut = await this.api.put('state_data', {
                     data_id: the_data.data_id,
                     data_type: the_data.data_type,
                     data: the_data.data
@@ -137,7 +137,7 @@ class StateManager {
 
                 existing_data.delete(data_name);
             } else if(existing_data.has(data_name) && existing_data.get(data_name).data !== the_data.data) {
-                var respPut = await api.put('state_data', {
+                var respPut = await this.api.put('state_data', {
                     data_id: the_data.data_id,
                     data: the_data.data
                 });
@@ -148,14 +148,14 @@ class StateManager {
 
         for(var data_name of Array.from(existing_data.keys())) {
             var exst_data = existing_data.get(data_name);
-            var respDelete = await api.delete('state_data', {
+            var respDelete = await this.api.delete('state_data', {
                 data_id: exst_data.data_id
             });
         }
     }
 
     async delete_state(state) {
-        var respDelete = await api.delete('command_state', {
+        var respDelete = await this.api.delete('command_state', {
             state_id: state.state_id
         });
 
