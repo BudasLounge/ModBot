@@ -37,8 +37,6 @@ class StateManager {
                 command_run: command_run,
                 _filter: "expiration after \"" + moment().format('YYYY-MM-DD HH:mm:ss') + "\""
             });
-
-            this.logger.info("here is respGet: ", {respGet: respGet});
         } catch (error) {
             this.logger.error(error);
         }
@@ -46,12 +44,14 @@ class StateManager {
         if(respGet.hasOwnProperty("command_states") && respGet.command_states.length > 0) {
             this.logger.info("State Data Grabbed:", respGet);
 
+            var the_state = respGet.command_states[0];
+
+            the_state.state_id = parseInt(the_state.state_id);
+
             var respUpdate = await this.api.put('command_state', {
                 state_id: respGet.command_states[0].state_id,
                 expiration: moment().add(10, 'minutes').format('YYYY-MM-DD HH:mm:ss')
             });
-
-            var the_state = respGet.command_states[0];
 
             the_state.add_data = function(data_name, data_type, data) {
                 var dataObj = {
@@ -73,7 +73,9 @@ class StateManager {
             if(respData.hasOwnProperty("state_data") && respData.state_data.length > 0) {
                 for(var data of respData.state_data) {
                     data_parsed = this.parseData(data);
-                    the_state.data.set(data.data_name, data.data);
+                    data.data = data_parsed;
+                    data.data_id = parseInt(data.data_id);
+                    the_state.data.set(data.data_name, data);
                 }
             }
 
@@ -90,6 +92,8 @@ class StateManager {
             if(respPost.hasOwnProperty("command_state")) {
                 this.logger.info("Created State: " + respPost.command_state);
                 var the_state = respPost.command_state;
+
+                the_state.state_id = parseInt(the_state.state_id);
 
                 the_state.add_data = function(data_name, data_type, data) {
                     var dataObj = {
