@@ -53,6 +53,16 @@ class StateManager {
 
             var the_state = respGet.command_states[0];
 
+            the_state.add_data = function(data_name, data_type, data) {
+                var dataObj = {
+                    data_name: data_name,
+                    data_type: data_type,
+                    data: data
+                };
+
+                this.data.set(data_name, dataObj);
+            }
+
             var respData = await this.api.get('state_data', {
                 state_id: the_state.state_id,
                 _limit: 100

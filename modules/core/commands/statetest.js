@@ -6,8 +6,12 @@ module.exports = {
     args_to_lower: true,
     has_state: true,
     async execute(message, args, api, state, mod_handler) {
-      var stage = state.data.has("stage") ? state.data.get("stage") : 0;
-      switch(stage) {
+      if(!state.data.has("stage")) {
+        state.add_data("stage", "INT", 0);
+      }
+
+      var stage = state.data.get("stage");
+      switch(stage.data) {
         case 0:
           message.channel.send("This is the first response!");
           break;
@@ -22,6 +26,7 @@ module.exports = {
           message.channel.send("Somehow, the 'stage' state data got to a value it shouldn't be!");
       }
 
-      state.data.set("stage", stage + 1);
+      stage.data++;
+      state.data.set("stage", stage);
     }
 };
