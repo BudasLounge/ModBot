@@ -152,27 +152,27 @@ class StateManager {
                     state_id: state.state_id,
                     data_type: the_data.data_type,
                     data_name: the_data.data_name,
-                    data: the_data.data
+                    data: String(the_data.data)
                 });
 
                 var respPost = await this.api.post('state_data', {
                     state_id: state.state_id,
                     data_type: the_data.data_type,
                     data_name: the_data.data_name,
-                    data: the_data.data
+                    data: String(the_data.data)
                 });
             } else if(existing_data.has(data_name) && existing_data.get(data_name).data_type !== the_data.data_type) {
                 var respPut = await this.api.put('state_data', {
                     data_id: the_data.data_id,
                     data_type: the_data.data_type,
-                    data: the_data.data
+                    data: String(the_data.data)
                 });
 
                 existing_data.delete(data_name);
             } else if(existing_data.has(data_name) && existing_data.get(data_name).data !== the_data.data) {
                 var respPut = await this.api.put('state_data', {
                     data_id: the_data.data_id,
-                    data: the_data.data
+                    data: String(the_data.data)
                 });
 
                 existing_data.delete(data_name);
