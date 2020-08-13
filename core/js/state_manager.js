@@ -72,7 +72,7 @@ class StateManager {
 
             if(respData.hasOwnProperty("state_data") && respData.state_data.length > 0) {
                 for(var data of respData.state_data) {
-                    data_parsed = this.parse_data(data);
+                    var data_parsed = this.parse_data(data);
                     data.data = data_parsed;
                     data.data_id = parseInt(data.data_id);
                     the_state.data.set(data.data_name, data);
