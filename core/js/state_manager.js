@@ -69,15 +69,13 @@ class StateManager {
 
             return the_state;
         } else {
-            this.logger.info("About to create a new state!");
-
             var respPost = await this.api.post('command_state', {
                 user_id: user_id,
                 command_run: command_run,
                 expiration: moment().add(10, 'minutes').format('YYYY-MM-DD HH:mm:ss')
             });
 
-            this.logger.info("Post after creating state: ", { post_response: respPost });
+            this.logger.info({ message: "Post after state creation", post_response: respPost });
 
             if(respPost.hasOwnProperty("command_state")) {
                 this.logger.info("Created State: " + respPost.command_state);
