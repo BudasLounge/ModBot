@@ -143,6 +143,14 @@ class StateManager {
         for(var data_name of Array.from(state.data.keys())) {
             var the_data = state.data.get(data_name);
             if(!existing_data.has(data_name)) {
+                this.logger.info({
+                    message: "State Data Creation",
+                    state_id: state.state_id,
+                    data_type: the_data.data_type,
+                    data_name: the_data.data_name,
+                    data: the_data.data
+                });
+
                 var respPost = await this.api.post('state_data', {
                     state_id: state.state_id,
                     data_type: the_data.data_type,
