@@ -71,7 +71,7 @@ class StateManager {
         } else {
             this.logger.info("About to create a new state!");
 
-            respPost = await this.api.post('command_state', {
+            var respPost = await this.api.post('command_state', {
                 user_id: user_id,
                 command_run: command_run,
                 expiration: moment().add(10, 'minutes').format('YYYY-MM-DD HH:mm:ss')
