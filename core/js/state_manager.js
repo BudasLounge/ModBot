@@ -77,7 +77,7 @@ class StateManager {
                 expiration: moment().add(10, 'minutes').format('YYYY-MM-DD HH:mm:ss')
             });
 
-            this.logger.info("Post after creating state: ", respPost);
+            this.logger.info("Post after creating state: ", { post_response: respPost });
 
             if(respPost.hasOwnProperty("command_state")) {
                 this.logger.info("Created State: " + respPost.command_state);
