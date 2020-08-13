@@ -35,7 +35,7 @@ class StateManager {
             var respGet = await this.api.get('command_state', {
                 user_id: user_id,
                 command_run: command_run,
-                _filter: "expiration after " + moment().format('YYYY-MM-DD HH:mm:ss')
+                _filter: "expiration after \"" + moment().format('YYYY-MM-DD HH:mm:ss') + "\""
             });
 
             this.logger.info("here is respGet: ", {respGet: respGet});
