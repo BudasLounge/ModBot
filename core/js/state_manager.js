@@ -61,7 +61,7 @@ class StateManager {
                 };
 
                 this.data.set(data_name, dataObj);
-            }
+            };
 
             var respData = await this.api.get('state_data', {
                 state_id: the_state.state_id,
@@ -90,6 +90,17 @@ class StateManager {
             if(respPost.hasOwnProperty("command_state")) {
                 this.logger.info("Created State: " + respPost.command_state);
                 var the_state = respPost.command_state;
+
+                the_state.add_data = function(data_name, data_type, data) {
+                    var dataObj = {
+                        data_name: data_name,
+                        data_type: data_type,
+                        data: data
+                    };
+    
+                    this.data.set(data_name, dataObj);
+                };
+
                 the_state.data = new Discord.Collection();
                 return the_state;
             } else {
