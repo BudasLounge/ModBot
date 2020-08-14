@@ -4,7 +4,11 @@ module.exports = {
     syntax: 'start_campaign',
     num_args: 0,
     args_to_lower: true,
-    async execute(message, args, api) {
+    needs_api: true,
+    has_state: false,
+    async execute(message, args, extra) {
+        var api = extra.api;
+
         console.log(">>start_campaign");
         message.channel.send("<@" + message.member.id + "> "+"please fill out the information!");
         const Discord = require(`discord.js`);

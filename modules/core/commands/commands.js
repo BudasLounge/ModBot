@@ -4,7 +4,11 @@ module.exports = {
     syntax: 'commands [module_name]',
     num_args: 0,
     args_to_lower: false,
-    async execute(message, args, api, mod_handler) {
+    needs_api: true,
+    has_state: false,
+    async execute(message, args, extra) {
+        var api = extra.api;
+
         var output = '```';
         if(args.length > 1) {
             var module_name = args[1];

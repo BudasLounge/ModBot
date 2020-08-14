@@ -1,11 +1,15 @@
-var APIClient = require('../../../core/js/APIClient.js');
 module.exports = {
     name: 'modules',
     description: 'Provides information about the modules ModBot has loaded. Optional second argument to filter modules. Default is \'all\'',
     syntax: 'modules [enabled|disabled|all]',
     num_args: 0,
     args_to_lower: false,
-    async execute(message, args, api, mod_handler) {
+    needs_api: true,
+    has_state: false,
+    async execute(message, args, extra) {
+        var api = extra.api;
+        var mod_handler = extra.module_handler;
+
         var output = '```';
         var module_type = "all";
         if(args.length > 1) {

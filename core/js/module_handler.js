@@ -121,17 +121,21 @@ class ModuleHandler {
 
         var command_args = message.content.split(" ");
 
+        var current_module;
+        var current_command;
+
+        //This block is for when the user runs the command in the form '//module:command'
         if(command_args[0].startsWith("//") && command_args[0].includes(":")) {
             var spec_module = command_args[0].substring(2, command_args[0].indexOf(":"));
             var spec_command = command_args[0].substring(command_args[0].indexOf(":") + 1);
-            if(this.modules.has(spec_module)) {
-                var current_module = this.modules.get(spec_module);
+            if(this.modules.has(spec_module)) { //Specified module exists
+                current_module = this.modules.get(spec_module);
                 var respModule = await api.get('module', {
                     name: current_module.config.name
                 });
 
-                if(respModule.modules.length == 0) {
-                    message.channel.send("That module could not be found!");
+                if(respModule.modules.length == 0) { //Module exists in ModBot, but not in database
+                    message.channel.send("Sorry, the database does not contain a record of the module: " + spec_module);
                     return;
                 }
 
@@ -140,117 +144,53 @@ class ModuleHandler {
                     module_id: parseInt(respModule.modules[0].module_id)
                 });
 
-                if(respEnabled.enabled_modules.length == 0) {
+                if(respEnabled.enabled_modules.length == 0) { //The module is not enabled for the server this message came from
                     message.channel.send("That module is disabled on this server!");
                     return;
                 }
 
-                if(current_module.commands.has(spec_command)) {
-                    if(command_args.length - 1 >= current_module.commands.get(spec_command).num_args) {
-                        var current_command = current_module.commands.get(spec_command);
-                        if(current_module.config.is_core) {
-                            if(current_command.args_to_lower) {
-                                for(var i=0; i < command_args.length; i++) {
-                                    command_args[i] = command_args[i].toLowerCase();
-                                }
-                            }
-
-                            if(current_command.has_state) {
-                                var state = await this.state_manager.get_state(message.author.id, current_module.config.name + ":" + current_command.name);
-                                await current_command.execute(message, command_args, api, state, this);
-                                this.state_manager.save_state(state);
-                            } else {
-                                current_command.execute(message, command_args, api, this);
-                            }
-                        } else {
-                            if(current_command.args_to_lower) {
-                                for(var i=0; i < command_args.length; i++) {
-                                    command_args[i] = command_args[i].toLowerCase();
-                                }
-                            }
-
-                            if(current_command.has_state) {
-                                var state = await this.state_manager.get_state(message.author.id, current_module.config.name + ":" + current_command.name);
-                                await current_command.execute(message, command_args, api, state);
-                                this.state_manager.save_state(state);
-                            } else {
-                                current_command.execute(message, command_args, api);
-                            }
-                        }
-                    } else {
-                        this.invalid_syntax(current_module, spec_command, message);
-                    }
-                } else {
+                if(current_module.commands.has(spec_command)) { //Command exists in this module
+                    current_command = current_module.commands.get(spec_command);
+                } else { //Command specified does not exist in the specified module
                     message.channel.send("The module '" + spec_module + "' has no command '" + spec_command + "'.");
+                    return;
                 }
-            } else {
+            } else { //Specified module does not exist
                 message.channel.send("Sorry, I couldn't find the module: " + spec_module);
+                return;
             }
-        } else {
+        } else { //This section runs when user uses form '/command' (the module will be found automatically)
             var found_command = false;
             var matched_prefix = false;
 
-            for(var current_module_name of Array.from(this.modules.keys())) {
-                var current_module = this.modules.get(current_module_name);
+            for(var current_module_name of Array.from(this.modules.keys())) { //Iterate all modules
+                current_module = this.modules.get(current_module_name);
 
-                if(message.content.startsWith(current_module.config.command_prefix)) {
+                if(message.content.startsWith(current_module.config.command_prefix)) { //This module's command prefix matches the one used
                     matched_prefix = true;
                     var command_name = command_args[0].substring(current_module.config.command_prefix.length);
 
-                    if(current_module.commands.has(command_name)) {
-                        try{
+                    if(current_module.commands.has(command_name)) { //The current module has a command with the specified name
                         var respModule = await api.get('module', {
                             name: current_module.config.name
                         });
-                    }catch(err1){
-                        console.error(err1.response);
-                    }
+
+                        if(respModule.modules.length == 0) { //Module exists in ModBot, but not in database
+                            continue;
+                        }
 
                         var respEnabled = await api.get('enabled_module', {
                             server_id: message.channel.guild.id,
                             module_id: parseInt(respModule.modules[0].module_id)
                         });
 
-                        if(respEnabled.enabled_modules.length == 0) {
+                        if(respEnabled.enabled_modules.length == 0) { //Module is not enabled on this server
                             continue;
                         }
 
                         found_command = true;
                         command_args[0] = command_name;
-                        if(command_args.length - 1 >= current_module.commands.get(command_args[0]).num_args) {
-                            var current_command = current_module.commands.get(command_args[0]);
-                            if(current_module.config.is_core) {
-                                if(current_command.args_to_lower) {
-                                    for(var i=0; i < command_args.length; i++) {
-                                        command_args[i] = command_args[i].toLowerCase();
-                                    }
-                                }
-
-                                if(current_command.has_state) {
-                                    var state = await this.state_manager.get_state(message.author.id, current_module.config.name + ":" + current_command.name);
-                                    await current_command.execute(message, command_args, api, state, this);
-                                    this.state_manager.save_state(state);
-                                } else {
-                                    current_command.execute(message, command_args, api, this);
-                                }
-                            } else {
-                                if(current_command.args_to_lower) {
-                                    for(var i=0; i < command_args.length; i++) {
-                                        command_args[i] = command_args[i].toLowerCase();
-                                    }
-                                }
-
-                                if(current_command.has_state) {
-                                    var state = await this.state_manager.get_state(message.author.id, current_module.config.name + ":" + current_command.name);
-                                    await current_command.execute(message, command_args, api, state);
-                                    this.state_manager.save_state(state);
-                                } else {
-                                    current_command.execute(message, command_args, api);
-                                }
-                            }
-                        } else {
-                            this.invalid_syntax(current_module, command_args[0], message);
-                        }
+                        current_command = current_module.commands.get(command_args[0]);
                         break;
                     }
                 }
@@ -258,7 +198,39 @@ class ModuleHandler {
 
             if(matched_prefix && !found_command) {
                 message.channel.send("Sorry, I couldn't find that command!");
+                return;
             }
+        }
+
+        if(command_args.length - 1 >= current_module.commands.get(command_args[0]).num_args) { //Command contains at least the required number of arguments
+            if(current_command.args_to_lower) { //If set in command, make all arguments lowercase
+                for(var i=0; i < command_args.length; i++) {
+                    command_args[i] = command_args[i].toLowerCase();
+                }
+            }
+            
+            var extra = {}; //This will contain all of the extra variables that a command may need, based on its configuration
+
+            if(current_module.config.is_core) { //If this module is a core module, it gains access to this ModuleHandler
+                extra.module_handler = this;
+            }
+
+            if(current_command.has_state) { //If command uses state system, must grab the state
+                var state = await this.state_manager.get_state(message.author.id, current_module.config.name + ":" + current_command.name);
+                extra.state = state;
+            }
+
+            if(current_command.needs_api) { //If command needs to access the API, we pass it here
+                extra.api = api;
+            }
+
+            await current_command.execute(message, command_args, extra); //NOTE: ALL command execute functions MUST be async!
+
+            if(current_command.has_state) { //If this command used the state system, we must save any changes to the state
+                this.state_manager.save_state(extra.state);
+            }
+        } else { //Not enough arguments provided
+            this.invalid_syntax(current_module, command_args[0], message);
         }
     }
 

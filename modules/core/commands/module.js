@@ -4,7 +4,11 @@ module.exports = {
     syntax: 'module <enable|disable|status> <module>',
     num_args: 2,
     args_to_lower: true,
-    async execute(message, args, api, mod_handler) {
+    needs_api: true,
+    has_state: false,
+    async execute(message, args, extra) {
+        var api = extra.api;
+
         if(args[1] == "enable") {
             var respModule = await api.get('module', {
                 name: args[2]

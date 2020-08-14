@@ -4,7 +4,11 @@ module.exports ={
     syntax: 'up_status [name of server]',
     num_args: 1,
     args_to_lower: true,
-    async execute(message, args, api){
+    needs_api: true,
+    has_state: false,
+    async execute(message, args, extra){
+        var api = extra.api;
+
         const Discord = require('discord.js');
         const mcping = require('mc-ping-updated');
         var respServer;

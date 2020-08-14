@@ -4,7 +4,9 @@ module.exports = {
     syntax: 'ping',
     num_args: 0,
     args_to_lower: false,
-    execute(message, api, args) {
+    needs_api: false,
+    has_state: false,
+    execute(message, args, extra) {
         message.channel.send('League Pong.');
     }
 };

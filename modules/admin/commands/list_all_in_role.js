@@ -4,7 +4,9 @@ module.exports = {
     syntax: 'list_role [role]',
     num_args: 1,
     args_to_lower: true,
-    async execute(message, args, api) {
+    needs_api: false,
+    has_state: false,
+    async execute(message, args, extra) {
         const Discord = require('discord.js');
         role = message.guild.roles.find(role => role.name.toLowerCase() === args[1]);
 		if(args[1] == "everyone") return message.reply("I don't like listing everyone, sorry!");

@@ -4,7 +4,11 @@
     syntax: 'add_server [display_name] [short_name] [server_ip] [port] [status_api_port] [numeric_ip] [mc_version] [pack version]',
     num_args: 6,
     args_to_lower: true,
-    async execute(message, args, api) {
+    needs_api: true,
+    has_state: false,
+    async execute(message, args, extra) {
+        var api = extra.api;
+
         console.log(">>add_server");
         var respServer;
         try{
@@ -17,7 +21,7 @@
         } 
         if(!respServer.minecraft_servers[0]){
             message.channel.send("Adding server " + args[1] + " to the database, here we goooooooo");
-            try{
+            try{ //JR, probably not a good idea to pass so many args into the API with no validation
                 await api.post("minecraft_server", {
                     display_name: args[1],
                     short_name: args[2],
