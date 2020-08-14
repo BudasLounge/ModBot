@@ -204,7 +204,7 @@ class ModuleHandler {
             }
         }
 
-        if(command_args.length - 1 >= current_module.commands.get(command_args[0]).num_args) { //Command contains at least the required number of arguments
+        if(command_args.length - 1 >= current_command.num_args) { //Command contains at least the required number of arguments
             if(current_command.args_to_lower) { //If set in command, make all arguments lowercase
                 for(var i=0; i < command_args.length; i++) {
                     command_args[i] = command_args[i].toLowerCase();
