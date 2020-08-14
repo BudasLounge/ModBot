@@ -199,6 +199,8 @@ class ModuleHandler {
             if(matched_prefix && !found_command) {
                 message.channel.send("Sorry, I couldn't find that command!");
                 return;
+            } else if(!matched_prefix) {
+                return;
             }
         }
 
