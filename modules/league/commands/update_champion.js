@@ -38,6 +38,7 @@ module.exports = {
                     changedInfo += "role_secondary: " + respUpdate.league_champions[0].role_secondary + "\n";
 
                     ListEmbed.addField("A post function update: ", changedInfo);
+                    this.logger.info("respUpdate returned OK, returning data");
                     message.channel.send(ListEmbed);
                 }
             }catch(error2){
