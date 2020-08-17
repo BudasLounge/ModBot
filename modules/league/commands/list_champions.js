@@ -42,7 +42,7 @@ module.exports = {
                 .setColor("#f92f03")
                 .setTitle("A list of all champions: ");
                 ListEmbed.addField("A post function update: ", output);
-                MessageHelper.send(ListEmbed);
+                MessageHelper.send(output);
         
         }
     }
