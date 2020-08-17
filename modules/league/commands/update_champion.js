@@ -8,6 +8,7 @@ module.exports = {
     has_state: false,
     async execute(message, args, extra) {
         var api = extra.api;
+        const Discord = require('discord.js');
         var respChamps;
         try{
             respChamps = await api.get("league_champion",{
@@ -33,6 +34,9 @@ module.exports = {
                     changedInfo += "name: " + respUpdate.league_champions[0].name + "\n";
                     changedInfo += "role_primary: " + respUpdate.league_champions[0].role_primary + "\n";
                     changedInfo += "role_secondary: " + respUpdate.league_champions[0].role_secondary + "\n";
+
+                    ListEmbed.addField("A post function update: ", changedInfo);
+                    message.channel.send(ListEmbed);
                 }
             }catch(error2){
                 this.logger.error(error2.response);
