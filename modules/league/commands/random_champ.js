@@ -19,7 +19,7 @@ module.exports = {
                 this.logger.error(error2.response);
             }
             this.logger.info("array length is: "+ respChamps.league_champions.length);
-            var seed = (Math.floor(Math.random() * respChamps.league_champions.length)+1);
+            var seed = (Math.floor(Math.random() * respChamps.league_champions.length));
             this.logger.info(seed);
             message.channel.send("Your " + args[1] + " champ is: " + respChamps.league_champions[seed].name);
         }
@@ -31,7 +31,7 @@ module.exports = {
             } catch(error){
                 this.logger.error(error.response);
             }
-            var seed = (Math.floor(Math.random() * 150) + 1);
+            var seed = (Math.floor(Math.random() * 150));
             try{
                 message.channel.send(respChamps.league_champions[seed].name);
             } catch(error2){
