@@ -18,7 +18,7 @@ module.exports = {
                     role_primary: args[1]
                 });
             } catch(error2){
-                this.logger.error(error2.response);
+                this.logger.error({error: error2.response});
             }
             try{
                 respChampsSec = await api.get("league_champion",{
@@ -38,13 +38,13 @@ module.exports = {
                     _limit: 150
                 });
             } catch(error){
-                this.logger.error(error.response);
+                this.logger.error({error:error.response});
             }
             var seed = (Math.floor(Math.random() * 150));
             try{
                 message.channel.send("<@" + message.member.id + "> "+respChamps.league_champions[seed].name);
             } catch(error2){
-                this.logger.error(error2.response);
+                this.logger.error({error: error2.response});
             }
         }
     }

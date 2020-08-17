@@ -44,7 +44,7 @@ module.exports = {
                     message.channel.send(changedInfo);
                 }
             }catch(error2){
-                this.logger.error(error2.response);
+                this.logger.error({error: error2.response});
             }
         }else{
             message.channel.send("No champion with that name here!");
