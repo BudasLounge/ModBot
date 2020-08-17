@@ -87,7 +87,7 @@ module.exports = {
 
         message.guild.createChannel(category_name, "category");
         let category = message.guild.channels.find(c => (c.name == category_name && c.type == "category"));
-        for(var i = 0;i < text_amount;i++){
+        for(var i = 1;i <= text_amount;i++){
             const filter8 = response8 => {
                 return response8.author.id === Authorid;
             }
@@ -102,7 +102,7 @@ module.exports = {
         });
         }
 
-        for(var i = 0;i < voice_amount;i++){
+        for(var i = 1;i <= voice_amount;i++){
             const filter8 = response8 => {
                 return response8.author.id === Authorid;
             }
