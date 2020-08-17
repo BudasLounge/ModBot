@@ -14,6 +14,10 @@ class MessageHelper {
             return;
         }
 
+        var sub = text.substr(0, config.max_message_length);
+        if(sub.lastIndexOf('\n') != -1) {
+            sub = sub.substr(0, sub.lastIndexOf('\n'));
+        }
         this.message.channel.send(text.substr(0, config.max_message_length));
         var position = config.max_message_length;
 

@@ -69,7 +69,7 @@ module.exports = {
                     output += "\n";
                 }
                 output += "```";
-                extra.message_helper.send(output);
+                extra.message_helper.send(output, {split: true});
             } else {
                 extra.message_helper.send("Sorry, I couldn't find that module!");
             }
@@ -155,7 +155,7 @@ module.exports = {
                 }
             }
             output += "```";
-            extra.message_helper.send(output);
+            extra.message_helper.send(output, {split: true});
         }
     }
 };
