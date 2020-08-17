@@ -14,6 +14,10 @@ module.exports = {
             this.logger.error(error.response);
         }
         var seed = (Math.floor(Math.random() * 150) + 1);
-        message.channel.send(respChamps.league_champions[seed].name);
+        try{
+            message.channel.send(respChamps.league_champions[seed].name);
+        } catch(error2){
+            this.logger.error(error2.response);
+        }
     }
 };
