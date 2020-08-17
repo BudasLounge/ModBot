@@ -4,7 +4,9 @@ module.exports = {
     syntax: 'champ_update [champ] [field to change] [new data]',
     num_args: 0,
     args_to_lower: false,
-    execute(message, api, args) {
+    needs_api: true,
+    has_state: false,
+    execute(message, args, extra) {
         
     }
 };

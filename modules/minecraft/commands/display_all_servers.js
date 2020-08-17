@@ -3,7 +3,12 @@ module.exports ={
     description: 'Shows all servers and their information',
     syntax: 'listmc',
     num_args: 0,
-    async execute(message, args, api){
+    args_to_lower: false,
+    needs_api: true,
+    has_state: false,
+    async execute(message, args, extra){
+        var api = extra.api;
+
         const Discord = require('discord.js');
         console.log(">>display_all_servers");
         var respServer;

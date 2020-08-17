@@ -10,20 +10,23 @@ var config = JSON.parse(fs.readFileSync('modbot.json'));
 var ModuleHandler = require('./core/js/module_handler.js');
 var EventRegistry = require('./core/js/event_registry.js');
 var StateManager = require('./core/js/state_manager.js');
+var LogHandler = require('./core/js/log_handler.js');
 
-var state_manager = new StateManager();
+var logger = LogHandler.build_logger(__dirname + "/" + config.log_folder);
 
-var modules = new ModuleHandler(__dirname, state_manager);
+var state_manager = new StateManager(logger);
+
+var modules = new ModuleHandler(__dirname, state_manager, logger);
 modules.discover_modules(__dirname + "/" + config.modules_folder);
 modules.discover_commands();
 
-var event_registry = new EventRegistry(client);
+var event_registry = new EventRegistry(client, logger);
 event_registry.discover_event_handlers(modules);
 
 authClient();
 
 client.on('ready', () => {
-    console.log("I am ready!");
+    logger.info("I am ready!");
     var channel = client.channels.get(config.default_channel);
 
     if(fs.existsSync("updated.txt")) {
@@ -41,7 +44,7 @@ function authClient() {
     try {
         token = fs.readFileSync(config.token_file).toString();
     } catch (error) {
-        console.error(error);
+        logger.error(error);
     }
 
     client.login(token);

@@ -4,7 +4,11 @@ module.exports = {
     syntax: 'add_server [check code comments]', //[display_name] [short_name] [server_ip] [port] [status_api_port] [numeric_ip] [mc_version] [pack version]
     num_args: 6,
     args_to_lower: true,
-    async execute(message, args, api) {
+    needs_api: true,
+    has_state: false,
+    async execute(message, args, extra) {
+        var api = extra.api;
+
         console.log(">>add_server");
         if(message.member.roles.has("586313447965327365")){
             var respServer;

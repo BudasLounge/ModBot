@@ -4,7 +4,11 @@ module.exports = {
     syntax: 'updatesl [server name] [whats updating] [new value]',
     num_args: 3,
     args_to_lower: true,
-    async execute(message, args, api) {
+    needs_api: true,
+    has_state: false,
+    async execute(message, args, extra) {
+        var api = extra.api;
+
         if(message.member.roles.has("586313447965327365")){
         const Discord = require('discord.js');
         var respServer;

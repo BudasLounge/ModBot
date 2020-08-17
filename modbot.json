@@ -9,5 +9,7 @@
         "name": "in the matrix",
         "type": "PLAYING"
     },
-    "modules_folder": "modules"
+    "modules_folder": "modules",
+    "log_folder": "logs",
+    "max_message_length": 2000
 }

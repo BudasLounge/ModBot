@@ -4,7 +4,9 @@ module.exports = {
     syntax: 'ping',
     num_args: 0,
     args_to_lower: false,
-    execute(message, args, api) {
+    needs_api: false,
+    has_state: false,
+    execute(message, args, extra) {
         message.channel.send('Minecraft Pong.');
     }
 };

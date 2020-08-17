@@ -4,7 +4,11 @@ module.exports = {
     syntax: 'whoison',
     num_args: 0,
     args_to_lower: true,
-    async execute(message, args, api) {
+    needs_api: true,
+    has_state: false,
+    async execute(message, args, extra) {
+        var api = extra.api;
+
         const axios = require('axios');
         const Discord = require('discord.js');
         console.log(">>all_players_online");
