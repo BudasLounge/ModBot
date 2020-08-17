@@ -18,6 +18,7 @@ module.exports = {
             this.logger.error(error.response);
         }
         if(respChamps.league_champions[0]){
+            this.logger.log("Found a champion");
             try{
                 var data = {name: respChamps.league_champions[0].name};
                 data[args[2]] = args[3];
@@ -42,7 +43,7 @@ module.exports = {
                 this.logger.error(error2.response);
             }
         }else{
-            message.channel.send("No chamion with that name here!");
+            message.channel.send("No champion with that name here!");
         }
         
     }
