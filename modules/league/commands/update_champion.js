@@ -40,7 +40,7 @@ module.exports = {
                     message.channel.send(ListEmbed);
                 }
             }catch(error2){
-                this.logger.error(error2.response);
+                this.logger.error(error2);
             }
         }else{
             message.channel.send("No champion with that name here!");
