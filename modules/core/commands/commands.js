@@ -159,13 +159,13 @@ module.exports = {
                         }
 
                         output += "\n";
-                    }
-                }
 
-                num_lines++;
-                if(num_lines >= 14) {
-                    output += "```\n```";
-                    num_lines = 0;
+                        num_lines++;
+                        if(num_lines >= 14) {
+                            output += "```\n```";
+                            num_lines = 0;
+                        }
+                    }
                 }
             }
             output += "```";
