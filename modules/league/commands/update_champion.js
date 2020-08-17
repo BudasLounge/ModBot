@@ -24,24 +24,21 @@ module.exports = {
                 data[args[2]] = args[3];
                 var respUpdate = await api.put("league_champion" , data);
                 if(respUpdate.ok == true){
-                    this.logger.info(respUpdate.league_champions[0].name);
-                    this.logger.info(respChamps);
                     const ListEmbed = new Discord.RichEmbed()
                         .setColor("#f92f03")
                         .setTitle("Here's what changed: ");
                     this.logger.info("created ListEmbed");
                     var changedInfo = "";
                     changedInfo += "name: " + respChamps.league_champions[0].name + "\n";
-                    //changedInfo += "role_primary: " + respChamps.league_champions[0].role_primary + "\n";
-                    //changedInfo += "role_secondary: " + respChamps.league_champions[0].role_secondary + "\n";
+                    changedInfo += "role_primary: " + respChamps.league_champions[0].role_primary + "\n";
+                    changedInfo += "role_secondary: " + respChamps.league_champions[0].role_secondary + "\n";
                     changedInfo += "\n\nvvvvv has been changed to vvvvv\n\n";
-                    changedInfo += "name: " + respUpdate.league_champions[0].name + "\n";
-                    //changedInfo += "role_primary: " + respUpdate.league_champions[0].role_primary + "\n";
-                    //changedInfo += "role_secondary: " + respUpdate.league_champions[0].role_secondary + "\n";
+                    changedInfo += "name: " + respUpdate.league_champion.name + "\n";
+                    changedInfo += "role_primary: " + respUpdate.league_champion.role_primary + "\n";
+                    changedInfo += "role_secondary: " + respUpdate.league_champion.role_secondary + "\n";
                     this.logger.info("filled changedInfo variable");
-                    //ListEmbed.addField("A post function update: ", changedInfo);
-                    this.logger.info("respUpdate returned OK, returning data");
-                    message.channel.send(changedInfo);
+                    ListEmbed.addField("A post function update: ", changedInfo);
+                    message.channel.send(ListEmbed);
                 }
             }catch(error2){
                 this.logger.error({error: error2.response});
