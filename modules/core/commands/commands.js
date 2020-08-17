@@ -115,6 +115,7 @@ module.exports = {
             }
 
             var desc_space = 134 - longest_syntax.length - longest_module_name.length;
+            var num_lines = 0;
 
             for(var current_module_name of Array.from(mod_handler.modules.keys())) {
                 var current_module = mod_handler.modules.get(current_module_name);
@@ -159,6 +160,12 @@ module.exports = {
 
                         output += "\n";
                     }
+                }
+
+                num_lines++;
+                if(num_lines >= 14) {
+                    output += "```\n```";
+                    num_lines = 0;
                 }
             }
             output += "```";
