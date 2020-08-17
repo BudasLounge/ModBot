@@ -7,7 +7,7 @@ class MessageHelper {
     }
 
     send(text) {
-        var config = JSON.parse(fs.readFileSync(path + '/modbot.json'));
+        var config = JSON.parse(fs.readFileSync(this.path + '/modbot.json'));
 
         if(text.length <= config.max_message_length) {
             this.message.channel.send(text);
