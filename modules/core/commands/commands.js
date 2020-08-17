@@ -8,6 +8,7 @@ module.exports = {
     has_state: false,
     async execute(message, args, extra) {
         var api = extra.api;
+        var mod_handler = extra.mod_handler
 
         var output = '```';
         if(args.length > 1) {
