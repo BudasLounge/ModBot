@@ -4,7 +4,7 @@ module.exports = {
     syntax: 'rando',
     num_args: 0,
     args_to_lower: false,
-    execute(message, api, args) {
+    async execute(message, api, args) {
         var respChamps;
         try{
             respChamps = await api.get("league_champion",{
