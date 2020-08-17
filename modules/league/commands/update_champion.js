@@ -34,11 +34,12 @@ module.exports = {
                     changedInfo += "role_primary: " + respUpdate.league_champions[0].role_primary + "\n";
                     changedInfo += "role_secondary: " + respUpdate.league_champions[0].role_secondary + "\n";
                 }
-            else{
-                message.channel.send("No chamion with that name here!");
+            }catch(error2){
+                this.logger.error(error2.response);
             }
-        }catch(error2){
-            this.logger.error(error2.response);
+        }else{
+            message.channel.send("No chamion with that name here!");
         }
+        
     }
 };
