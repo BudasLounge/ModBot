@@ -41,6 +41,7 @@ module.exports = {
                 }
 
                 var desc_space = 134 - longest_syntax.length - longest_module_name.length;
+                var numLines = 0;
 
                 for(var current_command_name of Array.from(selected_module.commands.keys())) {
                     var current_command = selected_module.commands.get(current_command_name);
@@ -67,6 +68,12 @@ module.exports = {
                     }
 
                     output += "\n";
+                    num_lines++;
+
+                    if(num_lines >= 14) {
+                        output += "```\n```";
+                        num_lines = 0;
+                    }
                 }
                 output += "```";
                 extra.message_helper.send(output, {split: true});
