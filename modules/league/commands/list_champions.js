@@ -41,7 +41,7 @@ module.exports = {
             const ListEmbed = new Discord.RichEmbed()
                 .setColor("#f92f03")
                 .setTitle("A list of all champions: ");
-                ListEmbed.addField("A post function update: ", changedInfo);
+                ListEmbed.addField("A post function update: ", output);
                 MessageHelper.send(ListEmbed, {split:true});
         
         }
