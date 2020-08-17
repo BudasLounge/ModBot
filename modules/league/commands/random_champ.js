@@ -9,18 +9,32 @@ module.exports = {
     async execute(message, args, extra) {
         var api = extra.api;
         var respChamps;
-        try{
-            respChamps = await api.get("league_champion",{
-                _limit: 150
-            });
-        } catch(error){
-            this.logger.error(error.response);
+        if(args[1]){
+            try{
+                respChamps = await api.get("league_champion",{
+                    _limit: 150,
+                    role_primary: args[1]
+                });
+            } catch(error2){
+                this.logger.error(error2.response);
+            }
+            var seed = (Math.floor(Math.random() * respChamps.league_champions.length)+1);
+            message.channel.send("Your " + args[1] +" champ is: " + respChamps.league_champions[seed].name);
         }
-        var seed = (Math.floor(Math.random() * 150) + 1);
-        try{
-            message.channel.send(respChamps.league_champions[seed].name);
-        } catch(error2){
-            this.logger.error(error2.response);
+        else{
+            try{
+                respChamps = await api.get("league_champion",{
+                    _limit: 150
+                });
+            } catch(error){
+                this.logger.error(error.response);
+            }
+            var seed = (Math.floor(Math.random() * 150) + 1);
+            try{
+                message.channel.send(respChamps.league_champions[seed].name);
+            } catch(error2){
+                this.logger.error(error2.response);
+            }
         }
     }
 };
