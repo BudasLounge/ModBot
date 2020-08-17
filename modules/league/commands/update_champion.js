@@ -40,7 +40,7 @@ module.exports = {
                     this.logger.info("filled changedInfo variable");
                     ListEmbed.addField("A post function update: ", changedInfo);
                     this.logger.info("respUpdate returned OK, returning data");
-                    message.channel.send(ListEmbed);
+                    message.channel.send(changedInfo);
                 }
             }catch(error2){
                 this.logger.error(error2.response);
