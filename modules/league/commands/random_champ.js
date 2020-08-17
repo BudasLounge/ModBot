@@ -30,7 +30,7 @@ module.exports = {
             }
             respChamps = {...respChampsPrim, ...respChampsSec};
             var seed = (Math.floor(Math.random() * respChamps.league_champions.length));
-            message.channel.reply("Your " + args[1] + " champ is: " + respChamps.league_champions[seed].name);
+            message.channel.send("<@" + message.member.id + "> "+"Your " + args[1] + " champ is: " + respChamps.league_champions[seed].name);
         }
         else{
             try{
@@ -42,7 +42,7 @@ module.exports = {
             }
             var seed = (Math.floor(Math.random() * 150));
             try{
-                message.channel.reply(respChamps.league_champions[seed].name);
+                message.channel.send("<@" + message.member.id + "> "+respChamps.league_champions[seed].name);
             } catch(error2){
                 this.logger.error(error2.response);
             }
