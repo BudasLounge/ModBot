@@ -18,7 +18,7 @@ module.exports = {
         }
         if(respChamps.league_champions[0]){
             try{
-                var data = {id: respChamps.league_champions[0].id};
+                var data = {name: respChamps.league_champions[0].name};
                 data[args[2]] = args[3];
                 var respUpdate = await api.put("league_champion" , data);
                 if(respUpdate.ok == true){
