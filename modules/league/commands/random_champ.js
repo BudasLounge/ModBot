@@ -8,19 +8,28 @@ module.exports = {
     has_state: false,
     async execute(message, args, extra) {
         var api = extra.api;
+        var respChampsPrim;
+        var respChampsSec;
         var respChamps;
         if(args[1]){
             try{
-                respChamps = await api.get("league_champion",{
+                respChampsPrim = await api.get("league_champion",{
                     _limit: 150,
                     role_primary: args[1]
                 });
             } catch(error2){
                 this.logger.error(error2.response);
             }
-            this.logger.info("array length is: "+ respChamps.league_champions.length);
+            try{
+                respChampsSec = await api.get("league_champion",{
+                    _limit: 150,
+                    role_secondary: args[1]
+                });
+            } catch(error3){
+                this.logger.error(error3.response);
+            }
+            respChamps = respChampsPrim.concat(respChampsSec);
             var seed = (Math.floor(Math.random() * respChamps.league_champions.length));
-            this.logger.info(seed);
             message.channel.send("Your " + args[1] + " champ is: " + respChamps.league_champions[seed].name);
         }
         else{
