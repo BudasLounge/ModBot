@@ -71,12 +71,14 @@ module.exports = {
                     num_lines++;
 
                     if(num_lines >= 14) {
-                        output += "```\n```";
+                        output += "```";
+                        message.channel.send(output);
+                        output = "```";
                         num_lines = 0;
                     }
                 }
                 output += "```";
-                extra.message_helper.send(output, {split: true});
+                extra.message_helper.send(output);
             } else {
                 extra.message_helper.send("Sorry, I couldn't find that module!");
             }
@@ -162,14 +164,16 @@ module.exports = {
 
                         num_lines++;
                         if(num_lines >= 14) {
-                            output += "```\n```";
+                            output += "```";
+                            message.channel.send(output);
+                            output = "```";
                             num_lines = 0;
                         }
                     }
                 }
             }
             output += "```";
-            extra.message_helper.send(output, {split: true});
+            extra.message_helper.send(output);
         }
     }
 };
