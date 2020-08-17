@@ -24,6 +24,7 @@ module.exports = {
                 data[args[2]] = args[3];
                 var respUpdate = await api.put("league_champion" , data);
                 if(respUpdate.ok == true){
+                    this.logger.info("respUpdate returned OK");
                     const ListEmbed = new Discord.RichEmbed()
                         .setColor("#f92f03")
                         .setTitle("Here's what changed: ");
@@ -40,7 +41,7 @@ module.exports = {
                     message.channel.send(ListEmbed);
                 }
             }catch(error2){
-                this.logger.error(error2);
+                this.logger.error(error2.response);
             }
         }else{
             message.channel.send("No champion with that name here!");
