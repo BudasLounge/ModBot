@@ -18,7 +18,7 @@ module.exports = {
             this.logger.error(error.response);
         }
         if(respChamps.league_champions[0]){
-            this.logger.log("Found a champion");
+            this.logger.info("Found a champion");
             try{
                 var data = {name: respChamps.league_champions[0].name};
                 data[args[2]] = args[3];
