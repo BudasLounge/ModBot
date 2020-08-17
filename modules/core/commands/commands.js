@@ -99,7 +99,7 @@ module.exports = {
 
                     for(var current_command_name of Array.from(current_module.commands.keys())) {
                         var current_command = current_module.commands.get(current_command_name);
-                        this.logger.info({ command: current_command });
+                        this.logger.info({ command: current_command.name });
                         if(current_command.syntax.length > longest_syntax.length) {
                             longest_syntax = current_command.syntax;
                         }
