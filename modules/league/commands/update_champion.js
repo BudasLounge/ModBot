@@ -25,6 +25,7 @@ module.exports = {
                 var respUpdate = await api.put("league_champion" , data);
                 if(respUpdate.ok == true){
                     this.logger.info(respUpdate);
+                    this.logger.info(respChamps);
                     const ListEmbed = new Discord.RichEmbed()
                         .setColor("#f92f03")
                         .setTitle("Here's what changed: ");
