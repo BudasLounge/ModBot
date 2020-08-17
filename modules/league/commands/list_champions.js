@@ -8,6 +8,7 @@ module.exports = {
     has_state: false,
     async execute(message, args, extra) {
         var api = extra.api;
+        const Discord = require('discord.js');
         var respChamps;
         if(args[1]){
             try{
