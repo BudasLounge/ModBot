@@ -1,7 +1,6 @@
 var Discord = require('discord.js');
 var fs = require('fs');
 var APIClient = require('./APIClient.js');
-var MessageHelper = require('./message_helper.js');
 
 /**
  * The ModuleHandler class is the meat and bones of ModBot's modular system. This class handles discovering modules, loading modules,
@@ -213,8 +212,6 @@ class ModuleHandler {
             }
             
             var extra = {}; //This will contain all of the extra variables that a command may need, based on its configuration
-
-            extra.message_helper = new MessageHelper(message, this.program_path);
 
             if(current_module.config.is_core) { //If this module is a core module, it gains access to this ModuleHandler
                 extra.module_handler = this;
