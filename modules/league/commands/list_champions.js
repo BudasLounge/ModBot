@@ -14,8 +14,8 @@ module.exports = {
                 respChamps = await api.get("league_champion",{
                     name: args[1]
                 });
-            } catch(error){
-                this.logger.error(error.response);
+            } catch(error2){
+                this.logger.error(error2.response);
             }
             if(respChamps.league_champions[0]){
                 var output = "Champion: " + respChamps.league_champions[0].name + "\nPrimary role: " + respChamps.league_champions[0].role_primary + "\nSecondary role: " + respChamps.league_champions[0].role_secondary;
