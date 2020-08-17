@@ -11,7 +11,7 @@ module.exports = {
                 _limit: 150
             });
         } catch(error){
-            this.logger.log(error.response);
+            this.logger.error(error.response);
         }
         var seed = (Math.floor(Math.random() * 150) + 1);
         message.channel.send(respChamps.league_champions[seed].name);
