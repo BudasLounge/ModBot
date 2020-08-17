@@ -22,6 +22,7 @@ module.exports = {
         }
         try{
             extra.message_helper.send(output);
+            message.channel.send(output);
         } catch(error2){
             this.logger.error(error2.response);
         }
