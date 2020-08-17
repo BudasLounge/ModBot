@@ -39,7 +39,7 @@ module.exports = {
                     //changedInfo += "role_primary: " + respUpdate.league_champions[0].role_primary + "\n";
                     //changedInfo += "role_secondary: " + respUpdate.league_champions[0].role_secondary + "\n";
                     this.logger.info("filled changedInfo variable");
-                    ListEmbed.addField("A post function update: ", changedInfo);
+                    //ListEmbed.addField("A post function update: ", changedInfo);
                     this.logger.info("respUpdate returned OK, returning data");
                     message.channel.send(changedInfo);
                 }
