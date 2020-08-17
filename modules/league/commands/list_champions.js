@@ -21,7 +21,7 @@ module.exports = {
             output += respChamps.league_champions[i].name + "\n";
         }
         try{
-            MessageHelper.send(output);
+            extra.MessageHelper.send(output);
             //message.channel.send(output);
         } catch(error2){
             this.logger.error(error2.response);
