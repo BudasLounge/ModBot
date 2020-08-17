@@ -11,16 +11,22 @@ module.exports = {
         var respChamps;
         try{
             respChamps = await api.get("league_champion",{
-                
+                name: args[1]
             });
         } catch(error){
             this.logger.error(error.response);
         }
-        var seed = (Math.floor(Math.random() * 150) + 1);
-        try{
-            message.channel.send(respChamps.league_champions[seed].name);
-        } catch(error2){
-            this.logger.error(error2.response);
+        if(respChamps.league_champions[0]){
+            var respUpdated;
+            try{
+                respUpdated = await api.get("league_champion",{
+
+                });
+            }catch{
+
+            }
+        }else{
+            message.channel.send("No chamion with that name here!");
         }
     }
 };
