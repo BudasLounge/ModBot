@@ -42,7 +42,7 @@ module.exports = {
                         .setColor("#f92f03")
                         .setTitle("A list of all champions: ");
                         ListEmbed.addField("A post function update: ", changedInfo);
-                        message.channel.send(ListEmbed, {split: true});
+                        message.channel.send(ListEmbed);
             } catch(error2){
                 this.logger.error(error2.response);
             }
