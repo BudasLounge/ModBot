@@ -34,14 +34,15 @@ module.exports = {
             }
             var output = "";
             for(var i = 1; i<respChamps.league_champions.length;i++){
-                output += respChamps.league_champions[i].name + "\n";
-            }
-            try{
-                //MessageHelper.send(output);
-                message.channel.send(output);
-            } catch(error2){
-                this.logger.error(error2.response);
-            }
+                output += respChamps.league_champions[i].name + " - " + respChamps.league_champions[i].role_primary + "/" +respChamps.league_champions[i].role_secondary +"\n";
+            } 
+            message.channel.send(output, {split:true});
+            /*const ListEmbed = new Discord.RichEmbed()
+                .setColor("#f92f03")
+                .setTitle("A list of all champions: ");
+                ListEmbed.addField("A post function update: ", changedInfo);
+                message.channel.send(ListEmbed, {split:true});
+            */
         }
     }
 };
