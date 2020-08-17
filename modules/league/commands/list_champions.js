@@ -37,7 +37,7 @@ module.exports = {
             for(var i = 1; i<respChamps.league_champions.length;i++){
                 output += respChamps.league_champions[i].name + " - " + respChamps.league_champions[i].role_primary + "/" +respChamps.league_champions[i].role_secondary +"\n";
             } 
-            message.channel.send(output, {split:true});
+            message.author.send(output, {split:true});
             /*const ListEmbed = new Discord.RichEmbed()
                 .setColor("#f92f03")
                 .setTitle("A list of all champions: ");
