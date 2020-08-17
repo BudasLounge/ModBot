@@ -18,7 +18,7 @@ module.exports = {
             });
 
             if(respGetModule.modules.length <= 0) {
-                message.channel.send("Sorry, that module doesn't exist in the server-specific registries!");
+                extra.message_helper.send("Sorry, that module doesn't exist in the server-specific registries!");
                 return;
             }
 
@@ -68,9 +68,9 @@ module.exports = {
                     output += "\n";
                 }
                 output += "```";
-                message.channel.send(output);
+                extra.message_helper.send(output);
             } else {
-                message.channel.send("Sorry, I couldn't find that module!");
+                extra.message_helper.send("Sorry, I couldn't find that module!");
             }
         } else {
             var longest_syntax = "";
@@ -83,7 +83,7 @@ module.exports = {
                 });
 
                 if(respModule.modules.length <= 0) {
-                    message.channel.send("Oops, something went wrong!");
+                    extra.message_helper.send("Oops, something went wrong!");
                     return;
                 }
 
@@ -115,7 +115,7 @@ module.exports = {
                 });
 
                 if(respModule.modules.length <= 0) {
-                    message.channel.send("Oops, something went wrong!");
+                    extra.message_helper.send("Oops, something went wrong!");
                     return;
                 }
 
@@ -153,7 +153,7 @@ module.exports = {
                 }
             }
             output += "```";
-            message.channel.send(output);
+            extra.message_helper.send(output);
         }
     }
 };
