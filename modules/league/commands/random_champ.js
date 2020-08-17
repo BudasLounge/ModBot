@@ -6,7 +6,8 @@ module.exports = {
     args_to_lower: false,
     needs_api: true,
     has_state: false,
-    async execute(message, api, args, extra) {
+    async execute(message, args, extra) {
+        var api = extra.api;
         var respChamps;
         try{
             respChamps = await api.get("league_champion",{
