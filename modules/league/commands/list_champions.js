@@ -20,6 +20,6 @@ module.exports = {
         for(var i = 1; i<respChamps.league_champions.length;i++){
             output += respChamps.league_champions[i].name + "\n";
         }
-        extra.message_helper.send(output);
+        extra.message_helper.send(message, output);
     }
 };
