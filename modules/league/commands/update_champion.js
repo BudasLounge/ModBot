@@ -32,8 +32,8 @@ module.exports = {
                     this.logger.info("created ListEmbed");
                     var changedInfo = "";
                     changedInfo += "name: " + respChamps.league_champions[0].name + "\n";
-                    changedInfo += "role_primary: " + respChamps.league_champions[0].role_primary + "\n";
-                    changedInfo += "role_secondary: " + respChamps.league_champions[0].role_secondary + "\n";
+                    //changedInfo += "role_primary: " + respChamps.league_champions[0].role_primary + "\n";
+                    //changedInfo += "role_secondary: " + respChamps.league_champions[0].role_secondary + "\n";
                     changedInfo += "\n\nvvvvv has been changed to vvvvv\n\n";
                     changedInfo += "name: " + respUpdate.league_champions[0].name + "\n";
                     changedInfo += "role_primary: " + respUpdate.league_champions[0].role_primary + "\n";
