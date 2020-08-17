@@ -34,7 +34,7 @@ module.exports = {
             }
             var output = "";
             for(var i = 1; i<respChamps.league_champions.length;i++){
-                output += respChamps.league_champions[i].name + respChamps.league_champions[i].role_primary + respChamps.league_champions[i].role_secondary +"\n";
+                output += respChamps.league_champions[i].name + " " + respChamps.league_champions[i].role_primary + " " +respChamps.league_champions[i].role_secondary +"\n";
             }
             try{
                 //MessageHelper.send(output);
