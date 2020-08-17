@@ -28,6 +28,7 @@ module.exports = {
                     const ListEmbed = new Discord.RichEmbed()
                         .setColor("#f92f03")
                         .setTitle("Here's what changed: ");
+                    this.logger.info("created ListEmbed");
                     var changedInfo = "";
                     changedInfo += "name: " + respChamps.league_champions[0].name + "\n";
                     changedInfo += "role_primary: " + respChamps.league_champions[0].role_primary + "\n";
