@@ -6,11 +6,11 @@ class MessageHelper {
         this.path = path;
     }
 
-    split_embed(embedIn) {
+    split_embed(embedIn, descIn) {
         var config = JSON.parse(fs.readFileSync(this.path + '/modbot.json'));
 
         var descriptions = [];
-        var text = embedIn.description;
+        var text = descIn;
         var lines = text.split("\n");
         var currentDesc = "";
         for(var line of lines) {
