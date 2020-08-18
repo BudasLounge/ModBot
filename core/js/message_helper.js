@@ -14,7 +14,7 @@ class MessageHelper {
         var lines = text.split("\n");
         var current_desc = "";
         for(var line of lines) {
-            if(current_desc.length + line.length + 1 <= config.max_message_length) {
+            if(current_desc.length + line.length + 1 <= config.max_embed_desc_length) {
                 current_desc += line + "\n";
             } else if(current_desc.length <= 0) {
                 descriptions.push(current_desc);
