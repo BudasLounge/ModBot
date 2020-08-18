@@ -33,7 +33,7 @@ module.exports = {
             } catch(error){
                 this.logger.error(error.response);
             }
-            var output = "";
+            var output = "Champion | Primary Role | Secondary Role";
             for(var i = 1; i<respChamps.league_champions.length;i++){
                 output += respChamps.league_champions[i].name + " - " + respChamps.league_champions[i].role_primary + "/" +respChamps.league_champions[i].role_secondary +"\n";
             } 
