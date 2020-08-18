@@ -12,7 +12,7 @@ module.exports = {
         var respChampsSec;
         var respChamps;
         if(args[1]){
-            this.logger.info("args[1] found");
+            this.logger.info("args[1] found: "+args[1]);
             if(args[1] == "cella"){
                 this.logger.info("cella function");
                 var cella = (Math.floor(Math.random() * 2)+1);
