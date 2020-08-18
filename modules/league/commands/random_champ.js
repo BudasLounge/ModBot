@@ -18,6 +18,7 @@ module.exports = {
                 this.logger.info("cella function");
                 var cella = (Math.floor(Math.random() * 2)+1);
                 this.logger.info("rando variable is: " + cella);
+                
                 if(cella == 1){
                     message.channel.send("<@" + message.member.id + "> your champ is yuumi");
                 }else{
