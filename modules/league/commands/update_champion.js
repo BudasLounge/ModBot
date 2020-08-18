@@ -10,6 +10,7 @@ module.exports = {
         var api = extra.api;
         const Discord = require('discord.js');
         var respChamps;
+        if(message.member.roles.has("745067270287392839")){
         try{
             respChamps = await api.get("league_champion",{
                 name: args[1]
@@ -46,6 +47,8 @@ module.exports = {
         }else{
             message.channel.send("No champion with that name here!");
         }
-        
+    }else{
+        message.channel.send("You don't have permission to use that command!");
+    }
     }
 };
