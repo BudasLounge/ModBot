@@ -12,6 +12,14 @@ module.exports = {
         var respChampsSec;
         var respChamps;
         if(args[1]){
+            if(args[1] == "cella"){
+                var cella = (Math.floor(Math.random() * 2)+1);
+                if(cella == 1){
+                    message.channel.send("<@" + message.member.id + "> your champ is yuumi");
+                }else{
+                    message.channel.send("<@" + message.member.id + "> your champ is nami");
+                }
+            }
             try{
                 respChampsPrim = await api.get("league_champion",{
                     _limit: 150,
