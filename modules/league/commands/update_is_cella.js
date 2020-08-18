@@ -33,6 +33,8 @@ module.exports = {
         }else{
             message.channel.send("No champion with that name here!");
         }
+    }else{
+        message.channel.send("Hey! You're not Cella!");
     }
 }
 };
