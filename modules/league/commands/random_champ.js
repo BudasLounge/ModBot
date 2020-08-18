@@ -11,6 +11,7 @@ module.exports = {
         var respChampsPrim;
         var respChampsSec;
         var respChamps;
+        var roles = ["mid","top","adc","sup","jg"];
         if(args[1]){
             this.logger.info("args[1] found: "+args[1]);
             if(args[1] == "cella"){
@@ -23,25 +24,29 @@ module.exports = {
                     message.channel.send("<@" + message.member.id + "> your champ is nami");
                 }
             }else{
-                try{
-                    respChampsPrim = await api.get("league_champion",{
-                        _limit: 150,
-                        role_primary: args[1]
-                    });
-                } catch(error2){
-                    this.logger.error({error: error2.response});
+                if(roles.indexOf(args[1]) > -1){
+                    try{
+                        respChampsPrim = await api.get("league_champion",{
+                            _limit: 150,
+                            role_primary: args[1]
+                        });
+                    } catch(error2){
+                        this.logger.error({error: error2.response});
+                    }
+                    try{
+                        respChampsSec = await api.get("league_champion",{
+                            _limit: 150,
+                            role_secondary: args[1]
+                        });
+                    } catch(error3){
+                        this.logger.error(error3.response);
+                    }
+                    respChamps = {...respChampsPrim, ...respChampsSec};
+                    var seed = (Math.floor(Math.random() * respChamps.league_champions.length));
+                    message.channel.send("<@" + message.member.id + "> "+"Your " + args[1] + " champ is: " + respChamps.league_champions[seed].name);
+                }else{
+                    message.channel.send("That role doesn't exist! Try:\nmid, top, sup, adc, jg");
                 }
-                try{
-                    respChampsSec = await api.get("league_champion",{
-                        _limit: 150,
-                        role_secondary: args[1]
-                    });
-                } catch(error3){
-                    this.logger.error(error3.response);
-                }
-                respChamps = {...respChampsPrim, ...respChampsSec};
-                var seed = (Math.floor(Math.random() * respChamps.league_champions.length));
-                message.channel.send("<@" + message.member.id + "> "+"Your " + args[1] + " champ is: " + respChamps.league_champions[seed].name);
             }
         }
         else{
