@@ -19,7 +19,7 @@ module.exports = {
                 }else{
                     message.channel.send("<@" + message.member.id + "> your champ is nami");
                 }
-            }
+            }else{
             try{
                 respChampsPrim = await api.get("league_champion",{
                     _limit: 150,
@@ -39,6 +39,7 @@ module.exports = {
             respChamps = {...respChampsPrim, ...respChampsSec};
             var seed = (Math.floor(Math.random() * respChamps.league_champions.length));
             message.channel.send("<@" + message.member.id + "> "+"Your " + args[1] + " champ is: " + respChamps.league_champions[seed].name);
+        }
         }
         else{
             try{
