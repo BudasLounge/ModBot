@@ -21,7 +21,7 @@ module.exports = {
                     this.logger.error(error2.response);
                 }
                 var output = "A list of Cella approved champions:\n";
-                for(var i = 1; i<respChamps.league_champions.length;i++){
+                for(var i = 0; i<respChamps.league_champions.length;i++){
                     output += respChamps.league_champions[i].name + " - " + respChamps.league_champions[i].role_primary + "/" +respChamps.league_champions[i].role_secondary +"\n";
                 } 
                 message.channel.send(output, {split:true});
@@ -51,7 +51,7 @@ module.exports = {
                 this.logger.error(error.response);
             }
             var output = "Champion - Primary Role / Secondary Role\n";
-            for(var i = 1; i<respChamps.league_champions.length;i++){
+            for(var i = 0; i<respChamps.league_champions.length;i++){
                 output += respChamps.league_champions[i].name + " - " + respChamps.league_champions[i].role_primary + "/" +respChamps.league_champions[i].role_secondary +"\n";
             } 
             message.author.send(output, {split:true});
