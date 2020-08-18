@@ -15,15 +15,17 @@ module.exports = {
         if(args[1]){
             this.logger.info("args[1] found: "+args[1]);
             if(args[1] == "cella"){
-                this.logger.info("cella function");
-                var cella = (Math.floor(Math.random() * 2)+1);
-                this.logger.info("rando variable is: " + cella);
-                
-                if(cella == 1){
-                    message.channel.send("<@" + message.member.id + "> your champ is yuumi");
-                }else{
-                    message.channel.send("<@" + message.member.id + "> your champ is nami");
+                var respChampsCella;
+                try{
+                    respChampsCella = await api.get("league_champion",{
+                        _limit: 150,
+                        is_cella: 1
+                    });
+                }catch(errorCella){
+                    this.logger.error(errorCellaMessage, errorCella.response);
+                    message.channel.send("<@" + message.member.id + "> "+"Your champ is: " + respChamps.league_champions[seed].name);
                 }
+                var seedCella = (Math.floor(Math.random() * respChampsCella.league_champions.length));
             }else{
                 if(roles.indexOf(args[1]) > -1){
                     try{
