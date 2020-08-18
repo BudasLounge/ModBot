@@ -11,18 +11,34 @@ module.exports = {
         const Discord = require('discord.js');
         var respChamps;
         if(args[1]){
-            try{
-                respChamps = await api.get("league_champion",{
-                    name: args[1]
-                });
-            } catch(error2){
-                this.logger.error(error2.response);
-            }
-            if(respChamps.league_champions[0]){
-                var output = "Champion: " + respChamps.league_champions[0].name + "\nPrimary role: " + respChamps.league_champions[0].role_primary + "\nSecondary role: " + respChamps.league_champions[0].role_secondary;
-                message.author.send(output);
+            if(args[1] == "cella"){
+                try{
+                    respChamps = await api.get("league_champion",{
+                        _limit: 150,
+                        is_cella: 1
+                    });
+                } catch(error2){
+                    this.logger.error(error2.response);
+                }
+                var output = "A list of Cella approved champions:\n";
+                for(var i = 1; i<respChamps.league_champions.length;i++){
+                    output += respChamps.league_champions[i].name + " - " + respChamps.league_champions[i].role_primary + "/" +respChamps.league_champions[i].role_secondary +"\n";
+                } 
+                message.author.send(output, {split:true});
             }else{
-                message.author.send("Couldn't find a champion by that name!");
+                try{
+                    respChamps = await api.get("league_champion",{
+                        name: args[1]
+                    });
+                } catch(error2){
+                    this.logger.error(error2.response);
+                }
+                if(respChamps.league_champions[0]){
+                    var output = "Champion: " + respChamps.league_champions[0].name + "\nPrimary role: " + respChamps.league_champions[0].role_primary + "\nSecondary role: " + respChamps.league_champions[0].role_secondary;
+                    message.author.send(output);
+                }else{
+                    message.author.send("Couldn't find a champion by that name!");
+                }
             }
         }
         else{
