@@ -22,7 +22,7 @@ module.exports = {
                 }
                 var output = "A list of Cella approved champions:\n";
                 for(var i = 0; i<respChamps.league_champions.length;i++){
-                    output += respChamps.league_champions[i].name + " - " + respChamps.league_champions[i].role_primary + "/" +respChamps.league_champions[i].role_secondary +"\n";
+                    output += respChamps.league_champions[i].name + "\n";
                 } 
                 message.channel.send(output, {split:true});
             }else{
