@@ -9,7 +9,7 @@ module.exports = {
     async execute(message, args, extra) {
         var api = extra.api;
         const Discord = require('discord.js');
-        if(message.sender === "459248333299515392" || message.sender === "185223223892377611"){
+        if(message.author.id === "459248333299515392" || message.author.id === "185223223892377611"){
         var respChamps;
         try{
             respChamps = await api.get("league_champion",{
