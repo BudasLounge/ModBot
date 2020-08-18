@@ -24,7 +24,7 @@ module.exports = {
                 for(var i = 1; i<respChamps.league_champions.length;i++){
                     output += respChamps.league_champions[i].name + " - " + respChamps.league_champions[i].role_primary + "/" +respChamps.league_champions[i].role_secondary +"\n";
                 } 
-                message.author.send(output, {split:true});
+                message.channel.send(output, {split:true});
             }else{
                 try{
                     respChamps = await api.get("league_champion",{
