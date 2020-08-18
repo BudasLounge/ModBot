@@ -20,9 +20,9 @@ module.exports = {
             }
             if(respChamps.league_champions[0]){
                 var output = "Champion: " + respChamps.league_champions[0].name + "\nPrimary role: " + respChamps.league_champions[0].role_primary + "\nSecondary role: " + respChamps.league_champions[0].role_secondary;
-                message.channel.send(output);
+                message.author.send(output);
             }else{
-                message.channel.send("Couldn't find a champion by that name!");
+                message.author.send("Couldn't find a champion by that name!");
             }
         }
         else{
@@ -45,5 +45,6 @@ module.exports = {
                 MessageHelper.send(output);
         */
         }
+        message.channel.send("Sent a PM!");
     }
 };
