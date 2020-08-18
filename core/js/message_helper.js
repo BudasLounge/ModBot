@@ -6,29 +6,29 @@ class MessageHelper {
         this.path = path;
     }
 
-    split_embed(embedIn, descIn) {
+    split_embed(embed_in, desc_in) {
         var config = JSON.parse(fs.readFileSync(this.path + '/modbot.json'));
 
         var descriptions = [];
-        var text = descIn;
+        var text = desc_in;
         var lines = text.split("\n");
-        var currentDesc = "";
+        var current_desc = "";
         for(var line of lines) {
-            if(currentDesc.length + line.length + 1 <= config.max_message_length) {
-                currentDesc += line + "\n";
-            } else if(currentDesc.length <= 0) {
-                descriptions.push(currentDesc);
-                currentDesc = "";
+            if(current_desc.length + line.length + 1 <= config.max_message_length) {
+                current_desc += line + "\n";
+            } else if(current_desc.length <= 0) {
+                descriptions.push(current_desc);
+                current_desc = "";
             }
         }
 
-        if(currentDesc.length > 0) {
-            descriptions.push(currentDesc);
+        if(current_desc.length > 0) {
+            descriptions.push(current_desc);
         }
 
         var embeds = [];
         for(var description of descriptions) {
-            var new_embed = JSON.parse(JSON.stringify(embedIn));
+            var new_embed = JSON.parse(JSON.stringify(embed_in));
             new_embed.setDescription(description);
             embeds.push(new_embed);
         }
