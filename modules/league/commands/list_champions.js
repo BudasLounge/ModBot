@@ -58,7 +58,7 @@ module.exports = {
             const ListEmbed = new Discord.RichEmbed()
                 .setColor("#f92f03")
                 .setTitle("A list of all champions: ");
-                extra.MessageHelper.send(ListEmbed, output);
+                extra.MessageHelper.split_embed(ListEmbed, output);
         
         message.channel.send("Sent a PM!");
         }
