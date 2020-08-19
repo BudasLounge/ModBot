@@ -55,10 +55,13 @@ module.exports = {
                 output += respChamps.league_champions[i].name + " - " + respChamps.league_champions[i].role_primary + "/" +respChamps.league_champions[i].role_secondary +"\n";
             } 
             message.author.send(output, {split:true});
-            /*const ListEmbed = new Discord.RichEmbed()
+            const ListEmbed = new Discord.RichEmbed()
                 .setColor("#f92f03")
                 .setTitle("A list of all champions: ");
-                extra.MessageHelper.split_embed(ListEmbed, output);*/
+            var embeds = extra.MessageHelper.split_embed(ListEmbed, output);
+            for(var e = 0;e<embeds.length;e++){
+                message.channel.send(embeds[e]);
+            }
         
         message.channel.send("Sent a PM!");
         }
