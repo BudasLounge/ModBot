@@ -23,9 +23,9 @@ module.exports = {
                     });
                 }catch(errorCella){
                     this.logger.error(errorCellaMessage, errorCella.response);
-                    message.channel.send("<@" + message.member.id + "> "+"Your champ is: " + respChamps.league_champions[seed].name);
                 }
                 var seedCella = (Math.floor(Math.random() * respChampsCella.league_champions.length));
+                message.channel.send("<@" + message.member.id + "> "+"Your champ is: " + respChamps.league_champions[seed].name);
             }else{
                 if(roles.indexOf(args[1]) > -1){
                     try{
