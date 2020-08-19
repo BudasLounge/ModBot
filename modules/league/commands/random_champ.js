@@ -25,7 +25,7 @@ module.exports = {
                     this.logger.error(errorCellaMessage, errorCella.response);
                 }
                 var seedCella = (Math.floor(Math.random() * respChampsCella.league_champions.length));
-                message.channel.send("<@" + message.member.id + "> "+"Your champ is: " + respChampsCella.league_champions[seed].name);
+                message.channel.send("<@" + message.member.id + "> "+"Your champ is: " + respChampsCella.league_champions[seedCella].name);
             }else{
                 if(roles.indexOf(args[1]) > -1){
                     try{
