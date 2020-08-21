@@ -18,7 +18,7 @@ module.exports = {
                 var respChampsCella;
                 try{
                     respChampsCella = await api.get("league_champion",{
-                        _limit: 150,
+                        _limit: 200,
                         is_cella: 1
                     });
                 }catch(errorCella){
@@ -30,7 +30,7 @@ module.exports = {
                 if(roles.indexOf(args[1]) > -1){
                     try{
                         respChampsPrim = await api.get("league_champion",{
-                            _limit: 150,
+                            _limit: 200,
                             role_primary: args[1]
                         });
                     } catch(error2){
@@ -38,7 +38,7 @@ module.exports = {
                     }
                     try{
                         respChampsSec = await api.get("league_champion",{
-                            _limit: 150,
+                            _limit: 200,
                             role_secondary: args[1]
                         });
                     } catch(error3){
