@@ -10,16 +10,16 @@ module.exports ={
         var api = extra.api;
 
         const Discord = require('discord.js');
-        console.log(">>display_all_servers_status");
+        this.logger.info(">>display_all_servers_status");
         var respServer;
         try{
             respServer = await api.get("minecraft_server", {
                 _limit: 20
             });
         } catch(error){
-            console.error(error.response);
+            this.logger.error(error.response);
         }
-        console.log(respServer.minecraft_servers.length + " servers found...");
+        this.logger.info(respServer.minecraft_servers.length + " servers found...");
         const ListEmbed = new Discord.RichEmbed()
         .setColor("#f92f03")
         .setTitle("List of all minecraft servers: ");
@@ -27,12 +27,12 @@ module.exports ={
             var nextItem = "";
             //nextItem += getServerStatus(respServer.minecraft_servers[i].short_name, respServer.minecraft_servers[i].port, respServer.minecraft_servers[i].numeric_ip);
             nextItem += await getServerState(respServer.minecraft_servers[i].short_name, respServer.minecraft_servers[i].port, respServer.minecraft_servers[i].numeric_ip, respServer.minecraft_servers[i].status_api_port);
-            //console.log(nextItem);
+            //this.logger.info(nextItem);
             ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:", nextItem);
         }
         
         message.channel.send(ListEmbed);
-        console.log("<<display_all_servers_status");
+        this.logger.info("<<display_all_servers_status");
     }
 };
 
@@ -50,7 +50,7 @@ module.exports ={
             status += '*Nobody is playing!*';
         }
     }
-    console.log("Returning message: "+status);
+    this.logger.info("Returning message: "+status);
     return status;
 }*/
 async function getServerState(server, port, ip, status_api_port){
@@ -67,7 +67,7 @@ async function getServerState(server, port, ip, status_api_port){
                 if(status_api_port != "none"){
                     status += "\nPlayers: ";
                     var respPlayers = await axios.get("http://192.168.1.2:" + status_api_port + "/player-list", {});
-                    console.log("returned from api:\n" + respPlayers.data.players);
+                    this.logger.info("returned from api:\n" + respPlayers.data.players);
                     if(respPlayers.data.players.length == 0) {
                         status += ".";
                     } else {
@@ -81,9 +81,9 @@ async function getServerState(server, port, ip, status_api_port){
             }
         }
     }catch(err){
-        console.error(err);
+        this.logger.error(err);
     }
-    console.log("Returning message: "+status);
+    this.logger.info("Returning message: "+status);
     return status;
 }
 //http://mcapi.us/server/status?ip=104.218.144.200&port=11160

@@ -16,9 +16,9 @@ module.exports ={
                 short_name: args[1]
             });
         } catch(error){
-            console.error(error);
+            this.logger.error(error);
         } 
-        console.log(respServer);
+        this.logger.info(respServer);
         if(respServer.minecraft_servers[0]){
             var item = await getServerState(respServer.minecraft_servers[0].display_name, respServer.minecraft_servers[0].port, respServer.minecraft_servers[0].numeric_ip, respServer.minecraft_servers[0].status_api_port);
             const ListEmbed = new Discord.RichEmbed()
@@ -33,7 +33,7 @@ module.exports ={
 };
 
 async function getServerState(server, port, ip, status_api_port){
-    console.log("getServerState()>\n");
+    this.logger.info("getServerState()>\n");
     var axios = require('axios');
     var url = 'http://mcapi.us/server/status?ip='+ip+'&port=' + port;
     var response = await axios.get(url);
@@ -41,15 +41,15 @@ async function getServerState(server, port, ip, status_api_port){
     var status = '*'+server+' server is currently offline*';
     try{
         if(response.online) {
-            console.log("Found players online...\n");
+            this.logger.info("Found players online...\n");
             status = '**'+server+'** server is **online**  -  ';
             if(response.players.now) {
                 status += '**' + response.players.now + '** people are playing!';
                 if(status_api_port != "none"){
-                    console.log("Found a status_api port...\n");
+                    this.logger.info("Found a status_api port...\n");
                     status += "\nPlayers: ";
                     var respPlayers = await axios.get("http://192.168.1.2:" + status_api_port + "/player-list", {});
-                    console.log("returned from api:\n" + respPlayers.data.players);
+                    this.logger.info("returned from api:\n" + respPlayers.data.players);
                     if(respPlayers.data.players.length == 0) {
                         status += ".";
                     } else {
@@ -63,9 +63,9 @@ async function getServerState(server, port, ip, status_api_port){
             }
         }
     }catch(err){
-        console.error(err);
+        this.logger.error(err);
     }
-    console.log("getServerState()<\n");
-    console.log("Returning message: "+status);
+    this.logger.info("getServerState()<\n");
+    this.logger.info("Returning message: "+status);
     return status;
 }
