@@ -20,7 +20,8 @@ async function onUserJoin(member){
         if(respServer.discord_servers[0].server_id == "650865972051312673"){
             try{
                 var respPlayer = await api.post("dnd_player", {
-                    discord_id: member.id
+                    discord_id: member.id,
+                    is_dm: 0
                 });
             }catch(error2){
                 this.logger.error(error2);
