@@ -24,7 +24,7 @@ async function onUserJoin(member){
             member.guild.channels.get(respServer.discord_servers[0].welcome_channel_id).send("<@" + member.id + "> "+respServer.discord_servers[0].welcome_message);
             member.addRole(respServer.discord_servers[0].default_role_id);
         }else{
-            member.guild.channels.get(respServer.discord_servers[0].welcome_channel_id).send("<@" + member.id + "> "+respServer.discord_servers[0].welcome_message);
+            member.guild.channels.get(respServer.discord_servers[0].welcome_channel_id).send("Hi! <@" + member.id + "> "+respServer.discord_servers[0].welcome_message);
             member.addRole(respServer.discord_servers[0].default_role_id);
         }
     }
