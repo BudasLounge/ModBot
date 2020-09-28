@@ -15,5 +15,16 @@ module.exports = {
         }catch(error2){
             this.logger.error(error2);
         }
+        var respFound;
+        try{
+            respFound = await api.get("dnd_player", {
+                discord_id: message.member.id
+            });
+        }catch(error){
+            this.logger.error(error);
+        }
+        if(respFound.dnd_players[0]){
+            message.channel.send("Found a player with the id of: " + respFound.dnd_players[0].discord_id);
+        }
     }
 };
