@@ -18,7 +18,7 @@ async function onUserJoin(member){
     console.log(respServer);
     if(respServer.discord_servers[0]){
         if(respServer.discord_servers[0].server_id == "650865972051312673"){
-            respPlayer = await api.post("discord_player", {
+            var respPlayer = await api.post("discord_player", {
                 discord_id: member.id
             })
             member.guild.channels.get(respServer.discord_servers[0].welcome_channel_id).send("<@" + member.id + "> "+respServer.discord_servers[0].welcome_message);
