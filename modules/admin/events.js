@@ -21,6 +21,8 @@ async function onUserJoin(member){
             respPlayer = await api.put("discord_player", {
                 discord_id: member.id
             })
+            member.guild.channels.get(respServer.discord_servers[0].welcome_channel_id).send("<@" + member.id + "> "+respServer.discord_servers[0].welcome_message);
+            member.addRole(respServer.discord_servers[0].default_role_id);
         }else{
             member.guild.channels.get(respServer.discord_servers[0].welcome_channel_id).send("<@" + member.id + "> "+respServer.discord_servers[0].welcome_message);
             member.addRole(respServer.discord_servers[0].default_role_id);
