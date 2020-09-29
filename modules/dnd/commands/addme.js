@@ -8,6 +8,7 @@ module.exports = {
     has_state: false,
     async execute(message, args, extra) {
         var api = extra.api;
+        message.channel.send("addme going in");
         try{
             var respPlayer = await api.post("dnd_player", {
                 discord_id: message.member.id,
