@@ -11,7 +11,7 @@ module.exports = {
         message.channel.send("addme going in");
         try{
             var respPlayer = await api.post("dnd_player", {
-                discord_id: message.member.id,
+                discord_id: message.author.id,
                 is_dm: 0
             });
         }catch(error2){
