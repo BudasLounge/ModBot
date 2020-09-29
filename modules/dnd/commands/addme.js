@@ -7,7 +7,7 @@ module.exports = {
     needs_api: false,
     has_state: false,
     execute(message, args, extra) {
-        /*
+        var api = extra.api;
         try{
             var respPlayer = await api.post("dnd_player", {
                 discord_id: message.member.id,
@@ -26,6 +26,6 @@ module.exports = {
         }
         if(respFound.dnd_players[0]){
             message.channel.send("Found a player with the id of: " + respFound.dnd_players[0].discord_id);
-        }*/
+        }
     }
 };
