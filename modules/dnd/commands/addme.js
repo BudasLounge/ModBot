@@ -12,7 +12,7 @@ module.exports = {
         try{
             var respPlayer = await api.post("dnd_player", {
                 discord_id: message.member.id,
-                is_dm: 0
+                is_dm: false
             });
         }catch(error2){
             this.logger.error(error2);
