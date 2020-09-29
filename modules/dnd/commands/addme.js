@@ -31,6 +31,15 @@ module.exports = {
             }catch(error2){
                 this.logger.error(error2);
             }
+
+            try{
+                respFound = await api.get("dnd_player", {
+                    discord_id: message.member.id
+                });
+            }catch(error){
+                this.logger.error(error);
+            }
+            
             message.channel.send("Added a player with the id of: " + respFound.dnd_players[0].discord_id);
         }
         
@@ -54,7 +63,7 @@ module.exports = {
             }
             message.channel.send(respFound.dnd_players[0].is_dm);
             if(respFound.dnd_players[0].is_dm){
-
+                message.channel.send("You're listed as a dm now");
             }
         }
         
