@@ -31,6 +31,7 @@ module.exports = {
             }catch(error2){
                 this.logger.error(error2);
             }
+            message.channel.send("Added a player with the id of: " + respFound.dnd_players[0].discord_id);
         }
         
         if(args[1] == "dm"){
