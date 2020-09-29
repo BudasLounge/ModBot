@@ -7,7 +7,7 @@ module.exports = {
     needs_api: false,
     has_state: false,
     execute(message, args, extra) {
-        /*
+        
         try{
             var respPlayer = await api.post("dnd_player", {
                 discord_id: message.member.id,
@@ -15,7 +15,7 @@ module.exports = {
             });
         }catch(error2){
             this.logger.error(error2);
-        }
+        }/*
         var respFound;
         try{
             respFound = await api.get("dnd_player", {
