@@ -34,10 +34,27 @@ module.exports = {
         }
         
         if(args[1] == "dm"){
-            var respPlayer = await api.put("dnd_player", {
-                discord_id: message.member.id,
-                is_dm: true
-            });
+            message.channel.send("Let's get you added as a DM");
+            try{
+                var respPlayer = await api.put("dnd_player", {
+                    discord_id: message.member.id,
+                    is_dm: true
+                });
+            }catch(error3){
+                this.logger.error(error3);
+            }
+
+            try{
+                respFound = await api.get("dnd_player", {
+                    discord_id: message.member.id
+                });
+            }catch(error){
+                this.logger.error(error);
+            }
+            message.channel.send(respFound.dnd_players[0].is_dm);
+            if(respFound.dnd_players[0].is_dm){
+
+            }
         }
         
     }
