@@ -4,7 +4,7 @@ module.exports = {
     syntax: 'addme_dnd',
     num_args: 0,
     args_to_lower: false,
-    needs_api: false,
+    needs_api: true,
     has_state: false,
     execute(message, args, extra) {
         var api = extra.api;
