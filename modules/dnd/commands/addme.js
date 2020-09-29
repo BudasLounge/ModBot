@@ -27,6 +27,8 @@ module.exports = {
         }
         if(respFound.dnd_players[0]){
             message.channel.send("Found a player with the id of: " + respFound.dnd_players[0].discord_id);
+        }else{
+            message.channel.send("you didn't get added, going out");
         }
     }
 };
