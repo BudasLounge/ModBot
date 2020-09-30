@@ -26,6 +26,30 @@ module.exports = {
                 }
                 var seedCella = (Math.floor(Math.random() * respChampsCella.league_champions.length));
                 message.channel.send("<@" + message.member.id + "> "+"Your champ is: " + respChampsCella.league_champions[seedCella].name);
+            }else if(args[1] == "ad"){
+                var respChampsAd;
+                try{
+                    respChampsAd = await api.get("league_champion",{
+                        _limit: 200,
+                        ad_ap: "ad"
+                    });
+                }catch(errorAd){
+                    this.logger.error(errorAdMessage, errorAd.response);
+                }
+                var seedAd = (Math.floor(Math.random() * respChampsAd.league_champions.length));
+                message.channel.send("<@" + message.member.id + "> "+"Your AD champ is: " + respChampsAd.league_champions[seedAd].name);
+            }else if(args[1] == "ap"){
+                var respChampsAp;
+                try{
+                    respChampsAp = await api.get("league_champion",{
+                        _limit: 200,
+                        ad_ap: "ap"
+                    });
+                }catch(errorAp){
+                    this.logger.error(errorApMessage, errorAp.response);
+                }
+                var seedAp = (Math.floor(Math.random() * respChampsAp.league_champions.length));
+                message.channel.send("<@" + message.member.id + "> "+"Your AP champ is: " + respChampsAp.league_champions[seedAp].name);
             }else{
                 if(roles.indexOf(args[1]) > -1){
                     try{
