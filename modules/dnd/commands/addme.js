@@ -20,7 +20,7 @@ module.exports = {
         }
 
         if(respFound.dnd_players[0]){
-            message.channel.send("Found a player with the id of: " + respFound.dnd_players[0].discord_id);
+            message.channel.send("That player is already in the database, good to go!");
         }else{
             message.channel.send("let's get you added");
             try{
@@ -39,8 +39,8 @@ module.exports = {
             }catch(error){
                 this.logger.error(error);
             }
-            
-            message.channel.send("Added a player with the id of: " + respFound.dnd_players[0].discord_id);
+            message.member.roles.add("735631143583481987");
+            message.channel.send("Added a player to the databse! Ask an admin for help if you can't see the players lounge!");
         }
         
         if(args[1] == "dm"){
