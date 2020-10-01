@@ -40,7 +40,7 @@ module.exports = {
             }catch(error){
                 this.logger.error(error);
             }
-            message.member.roles.add("735631143583481987");
+            message.member.addRole("735631143583481987");
             message.channel.send("Added a player to the databse! Ask an admin for help if you can't see the players lounge!");
         }
         
