@@ -3,7 +3,7 @@ module.exports = {
     description: 'Adds you to the dnd database',
     syntax: 'addme_dnd [dm]',
     num_args: 0,
-    args_to_lower: false,
+    args_to_lower: true,
     needs_api: true,
     has_state: false,
     async execute(message, args, extra) {
