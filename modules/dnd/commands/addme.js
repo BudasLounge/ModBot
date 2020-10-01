@@ -8,7 +8,6 @@ module.exports = {
     has_state: false,
     async execute(message, args, extra) {
         var api = extra.api;
-        message.channel.send("addme going in");
         var respFound;
 
         try{
