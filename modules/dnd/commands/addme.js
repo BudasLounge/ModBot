@@ -21,6 +21,7 @@ module.exports = {
 
         if(respFound.dnd_players[0]){
             message.channel.send("That player is already in the database, good to go!");
+            message.member.roles.add("735631143583481987");
         }else{
             message.channel.send("let's get you added");
             try{
