@@ -21,7 +21,8 @@ module.exports = {
 
         if(respFound.dnd_players[0]){
             message.channel.send("That player is already in the database, good to go!");
-            message.member.roles.add("735631143583481987");
+            let role = message.guild.roles.get("735631143583481987");
+            message.member.addRole(role);
         }else{
             message.channel.send("let's get you added");
             try{
@@ -40,7 +41,8 @@ module.exports = {
             }catch(error){
                 this.logger.error(error);
             }
-            message.member.addRole("735631143583481987");
+            let role = message.guild.roles.get("735631143583481987");
+            message.member.addRole(role);
             message.channel.send("Added a player to the databse! Ask an admin for help if you can't see the players lounge!");
         }
         
