@@ -66,6 +66,8 @@ module.exports = {
             message.channel.send(respFound.dnd_players[0].is_dm);
             if(respFound.dnd_players[0].is_dm){
                 message.channel.send("You're listed as a dm now");
+            }else{
+                message.channel.send("Something went wrong...try again or ask a mod for help.");
             }
         }
         
