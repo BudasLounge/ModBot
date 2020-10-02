@@ -42,7 +42,7 @@ module.exports = {
             message.member.addRole(role);
             let rem_role = message.guild.roles.get("670370134925508717");
             message.member.removeRole(rem_role);
-            message.channel.send("Added a player to the databse! Ask an admin for help if you can't see the players lounge!");
+            message.channel.send("Added a player to the database! Ask an admin for help if you can't see the players lounge!");
         }
         
         if(args[1] == "dm"){
