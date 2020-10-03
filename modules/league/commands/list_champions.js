@@ -38,7 +38,7 @@ module.exports = {
                     message.author.send(output);
                     message.channel.send("Sent a PM!");
                 }else{
-                    message.author.send("Couldn't find a champion by that name!");
+                    message.channel.send("Couldn't find a champion by that name!");
                 }
             }
         }
