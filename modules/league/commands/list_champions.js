@@ -34,7 +34,7 @@ module.exports = {
                     this.logger.error(error2.response);
                 }
                 if(respChamps.league_champions[0]){
-                    var output = "Champion: " + respChamps.league_champions[0].name + "\nPrimary role: " + respChamps.league_champions[0].role_primary + "\nSecondary role: " + respChamps.league_champions[0].role_secondary;
+                    var output = "Champion: " + respChamps.league_champions[0].name + "\nPrimary role: " + respChamps.league_champions[0].role_primary + "\nSecondary role: " + respChamps.league_champions[0].role_secondary + "\nDamage type: " + respChamps.league_champions[0].ad_ap;
                     message.author.send(output);
                     message.channel.send("Sent a PM!");
                 }else{
