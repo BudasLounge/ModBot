@@ -22,7 +22,7 @@ module.exports = {
             this.logger.info("Found a champion");
             try{
                 var data = {name: respChamps.league_champions[0].name};
-                data[args[2]] = 1;
+                data[args[1]] = 1;
                 var respUpdate = await api.put("league_champion" , data);
                 this.logger.info(respUpdate);
                 if(respUpdate.ok == true){
