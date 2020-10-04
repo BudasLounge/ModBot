@@ -24,6 +24,7 @@ module.exports = {
                 var data = {name: respChamps.league_champions[0].name};
                 data[args[2]] = 1;
                 var respUpdate = await api.put("league_champion" , data);
+                this.logger.info(respUpdate);
                 if(respUpdate.ok == true){
                     message.channel.send(respChamps.league_champions[0].name + " is now Cella approved");
                 }
