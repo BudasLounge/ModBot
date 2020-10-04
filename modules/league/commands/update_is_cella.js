@@ -21,9 +21,10 @@ module.exports = {
         if(respChamps.league_champions[0]){
             this.logger.info("Found a champion");
             try{
-                var data = {name: respChamps.league_champions[0].name};
-                data[args[1]] = 1;
-                var respUpdate = await api.put("league_champion" , data);
+                var respUpdate = await api.put("league_champion" , {
+                    name: args[1],
+                    is_cella: 1
+                });
                 this.logger.info(respUpdate);
                 if(respUpdate.ok == true){
                     message.channel.send(respChamps.league_champions[0].name + " is now Cella approved");
