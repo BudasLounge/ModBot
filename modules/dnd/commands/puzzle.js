@@ -11,12 +11,14 @@ module.exports = {
         var answersArray = {"first": "Ask Cella for the number", "2319":"It's all in reverse?"};
         var flag = false;
         for(var key in answersArray){
-            if(key == message[args[1]]){
+            this.logger.info("in key finding function");
+            if(key == args[1]){
+                this.logger.info("setting flag to true");
                 flag = true;
             }
         }
         if(flag = true){
-            message.channel.send(answersArray[message[args[1]]]);
+            message.channel.send(answersArray[args[1]]);
         };
     }
 };
