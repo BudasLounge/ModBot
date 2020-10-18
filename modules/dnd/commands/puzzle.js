@@ -17,7 +17,7 @@ module.exports = {
                 flag = true;
             }
         }
-        if(flag = true){
+        if(flag == true){
             message.channel.send(answersArray[args[1]]);
         }else{
             message.channel.send("Try and find some key words");
