@@ -1,6 +1,6 @@
 module.exports = {
     name: 'puzzle',
-    description: 'Helps you find the answers.',
+    description: 'For Foundation personnel use only.',
     syntax: 'puzzle [info]',
     num_args: 0,
     args_to_lower: true,
