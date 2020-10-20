@@ -68,7 +68,7 @@ module.exports = {
                     } catch(error3){
                         this.logger.error(error3.response);
                     }
-                    respChamps = [].concat(respChampsPrim, respChampsSec, respChampsPrim);
+                    var respChamps = [].concat(respChampsPrim, respChampsSec, respChampsPrim);
                     this.logger.info(respChamps);
                     var seed = (Math.floor(Math.random() * respChamps.league_champions.length));
                     message.channel.send("<@" + message.member.id + "> "+"Your " + args[1] + " champ is: " + respChamps.league_champions[seed].name);
