@@ -69,7 +69,7 @@ module.exports = {
                         this.logger.error(error3.response);
                     }
                     var respChamps = [].concat(respChampsPrim.league_champions, respChampsSec.league_champions, respChampsPrim.league_champions);
-                    this.logger.info(respChamps);
+                    //this.logger.info(respChamps);
                     var seed = (Math.floor(Math.random() * respChamps.length));
                     message.channel.send("<@" + message.member.id + "> "+"Your " + args[1] + " champ is: " + respChamps[seed].name);
                 }else{
