@@ -7,6 +7,7 @@ module.exports = {
     needs_api: true,
     has_state: true,
     async execute(message, args, extra) {
+        var state = extra.state;
         if(!state.data.has("name")) {
             if(args.length == 2) {
               state.add_data("name", "STRING", args[1]);
