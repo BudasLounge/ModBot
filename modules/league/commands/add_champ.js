@@ -39,10 +39,10 @@ module.exports = {
                     
                     try{
                         respNewChamp = await api.post("league_champion", {
-                        name:state.data.get("name"),
-                        role_primary:state.data.get("prim_role"),
-                        role_secondary:state.data.get("sec_role"),
-                        ad_ap:state.data.get("ad_ap")
+                        name:state.data.get("name").data,
+                        role_primary:state.data.get("prim_role").data,
+                        role_secondary:state.data.get("sec_role").data,
+                        ad_ap:state.data.get("ad_ap").data
                     });
                     }catch(err){
                         this.logger.error(err);
@@ -53,6 +53,8 @@ module.exports = {
                     }else{
                         message.channel.send("Hit a snag... try again!");
                     }
+
+                    state.delete = true;
 
                 } else{
                     message.channel.send("Please enter '/new_champ ad' or '/new_champ ap' to select a damage type")
