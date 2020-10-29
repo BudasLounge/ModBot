@@ -13,21 +13,21 @@ module.exports = {
         if(!state.data.has("name")) {
             if(args.length == 2) {
               state.add_data("name", "STRING", args[1]);
-              message.channel.send("Okay, the champion is named: " + state.data.get("name"));
+              message.channel.send("Okay, the champion is named: " + state.data.get("name").data);
             } else {
               message.channel.send("To add a new champion, start with /new_champ [champion name]");
             }
         }else if(!state.data.has("prim_role")){
             if(args.length == 2) {
                 state.add_data("prim_role", "STRING", args[1]);
-                message.channel.send(state.data.get("name") + " has a primary role of: " + state.data.get("prim_role"));
+                message.channel.send(state.data.get("name").data + " has a primary role of: " + state.data.get("prim_role").data);
               } else {
                 message.channel.send("To add the champion's primary role, enter /new_champ [primary role]");
               }
         }else if(!state.data.has("sec_role")){
             if(args.length == 2) {
                 state.add_data("sec_role", "STRING", args[1]);
-                message.channel.send(state.data.get("name") + " has a secondary role of: " + state.data.get("sec_role"));
+                message.channel.send(state.data.get("name").data + " has a secondary role of: " + state.data.get("sec_role").data);
               } else {
                 message.channel.send("To add the champion's secondary role, enter /new_champ [secondary role]");
               }
@@ -35,7 +35,7 @@ module.exports = {
             if(args.length == 2) {
                 if(args[1]=="ad"||args[1]=="ap"){
                     state.add_data("ad_ap", "STRING", args[1]);
-                    message.channel.send(state.data.get("name") + " is of damage type: " + state.data.get("ad_ap"));
+                    message.channel.send(state.data.get("name").data + " is of damage type: " + state.data.get("ad_ap").data);
                     
                     try{
                         respNewChamp = await api.post("league_champion", {
