@@ -60,7 +60,7 @@ module.exports = {
                     message.channel.send("Please enter '/new_champ ad' or '/new_champ ap' to select a damage type")
                 }
               } else {
-                message.channel.send("To add the championss damage type, enter /new_champ [damage type (ad or ap only)]");
+                message.channel.send("To add the champion's damage type, enter /new_champ [damage type (ad or ap only)]");
               }
         }
 
