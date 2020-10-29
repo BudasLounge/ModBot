@@ -9,7 +9,7 @@ module.exports = {
     async execute(message, args, extra) {
         var state = extra.state;
         var api = extra.api;
-
+        var respNewChamp;
         if(!state.data.has("name")) {
             if(args.length == 2) {
               state.add_data("name", "STRING", args[1]);
@@ -36,6 +36,17 @@ module.exports = {
                 if(args[1]=="ad"||args[1]=="ap"){
                     state.add_data("ad_ap", "STRING", args[1]);
                     message.channel.send(state.data.get("name") + " is of damage type: " + state.data.get("ad_ap"));
+                    
+                    try{
+                            respNewChamp = await api.post("league_champion", {
+                            name:state.data.get("name"),
+                            role_primary:state.data.get("prim_role"),
+                            role_secondary:state.data.get("sec_role"),
+                            ad_ap:state.data.get("ad_ap")
+                        });
+                    }catch(err){
+                        this.logger.error(err);
+                    }
                 } else{
                     message.channel.send("Please enter '/new_champ ad' or '/new_champ ap' to select a damage type")
                 }
@@ -44,16 +55,7 @@ module.exports = {
               }
         }
 
-        try{
-            var respNewChamp = await api.post("league_champion", {
-                name:state.data.get("name"),
-                role_primary:state.data.get("prim_role"),
-                role_secondary:state.data.get("sec_role"),
-                ad_ap:state.data.get("ad_ap")
-            });
-        }catch(err){
-            this.logger.error(err);
-        }
+        
         if(respNewChamp.ok == true){
             message.channel.send("Successfully added a new champion!");
         }else{
