@@ -20,14 +20,18 @@ module.exports = {
                 try{
                     respChampsCustom = await api.get("league_pref_champ",{
                         _limit: 200,
-                        user_id:customID
+                        user_id: customID
                     });
                 }catch(errorCustom){
                     this.logger.error(errorCustomMessage, errorCustom.response);
                 }
-                this.logger.info(respChampsCustom);
-                var seedCustom = (Math.floor(Math.random() * respChampsCustom.league_pref_champs.length));
-                message.channel.send("<@" + message.member.id + "> "+"Your champ is: " + respChampsCustom.league_pref_champs[seedCustom].champ_name);
+                if(respChampsCustom.league_pref_champs[0]){
+                    this.logger.info(respChampsCustom);
+                    var seedCustom = (Math.floor(Math.random() * respChampsCustom.league_pref_champs.length));
+                    message.channel.send("<@" + message.member.id + "> "+"Your champ is: " + respChampsCustom.league_pref_champs[seedCustom].champ_name);
+                }else{
+                    message.channel.send("That person hasn't approved any champions yet!");
+                }
             }else if(args[1] == "ad"){
                 var respChampsAd;
                 try{
