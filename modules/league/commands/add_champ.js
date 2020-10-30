@@ -20,14 +20,14 @@ module.exports = {
         }else if(!state.data.has("prim_role")){
             if(args.length == 2) {
                 state.add_data("prim_role", "STRING", args[1]);
-                message.channel.send(state.data.get("name").data + " has a primary role of: " + state.data.get("prim_role").data + "Next, put in the secondary role.");
+                message.channel.send(state.data.get("name").data + " has a primary role of: " + state.data.get("prim_role").data + ". Next, put in the secondary role.");
               } else {
                 message.channel.send("To add the champion's primary role, enter /new_champ [primary role]");
               }
         }else if(!state.data.has("sec_role")){
             if(args.length == 2) {
                 state.add_data("sec_role", "STRING", args[1]);
-                message.channel.send(state.data.get("name").data + " has a secondary role of: " + state.data.get("sec_role").data + ".  Next, put in if it's an ad or ap champion.");
+                message.channel.send(state.data.get("name").data + " has a secondary role of: " + state.data.get("sec_role").data + ". Next, put in if it's an ad or ap champion.");
               } else {
                 message.channel.send("To add the champion's secondary role, enter /new_champ [secondary role]");
               }
