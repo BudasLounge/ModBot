@@ -25,8 +25,9 @@ module.exports = {
                 }catch(errorCustom){
                     this.logger.error(errorCustomMessage, errorCustom.response);
                 }
-                var seedCustom = (Math.floor(Math.random() * respChampsCustom.league_pref_champions.length));
-                message.channel.send("<@" + message.member.id + "> "+"Your champ is: " + respChampsCustom.league_pref_champions[seedCustom].champ_name);
+                this.logger.info(respChampsCustom);
+                //var seedCustom = (Math.floor(Math.random() * respChampsCustom.league_pref_champions.length));
+                //message.channel.send("<@" + message.member.id + "> "+"Your champ is: " + respChampsCustom.league_pref_champions[seedCustom].champ_name);
             }else if(args[1] == "ad"){
                 var respChampsAd;
                 try{
