@@ -14,18 +14,19 @@ module.exports = {
         var roles = ["mid","top","adc","sup","jg"];
         if(args[1]){
             this.logger.info("args[1] found: "+args[1]);
-            if(args[1] == "cella"){
-                var respChampsCella;
+            if(args[1].includes("@")){
+                var respChampsCustom;
+                var customID = message.mentions.users.first().id;
                 try{
-                    respChampsCella = await api.get("league_champion",{
+                    respChampsCustom = await api.get("league_pref_champ",{
                         _limit: 200,
-                        is_cella: 1
+                        user_id:customID
                     });
-                }catch(errorCella){
-                    this.logger.error(errorCellaMessage, errorCella.response);
+                }catch(errorCustom){
+                    this.logger.error(errorCustomMessage, errorCustom.response);
                 }
-                var seedCella = (Math.floor(Math.random() * respChampsCella.league_champions.length));
-                message.channel.send("<@" + message.member.id + "> "+"Your champ is: " + respChampsCella.league_champions[seedCella].name);
+                var seedCustom = (Math.floor(Math.random() * respChampsCustom.league_pref_champions.length));
+                message.channel.send("<@" + message.member.id + "> "+"Your champ is: " + respChampsCustom.league_pref_champions[seedCustom].champ_name);
             }else if(args[1] == "ad"){
                 var respChampsAd;
                 try{
