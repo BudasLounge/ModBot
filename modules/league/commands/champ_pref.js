@@ -21,7 +21,7 @@ module.exports = {
         if(respChamps.league_champions[0]){
             this.logger.info("Found a champion");
             try{
-                var respUpdate = await api.put("league_pref_champ" , {
+                var respUpdate = await api.post("league_pref_champ" , {
                     champ_name: args[1],
                     user_id:message.member.id
                 });
