@@ -9,25 +9,25 @@ module.exports = {
     async execute(message, args, extra) {
         var state = extra.state;
         var api = extra.api;
-        var respNewChamp;
+        var respNewChamp;9
         if(!state.data.has("name")) {
             if(args.length == 2) {
               state.add_data("name", "STRING", args[1]);
-              message.channel.send("Okay, the champion is named: " + state.data.get("name").data);
+              message.channel.send("Okay, the champion is named: " + state.data.get("name").data + ". Next, put in the primary role.");
             } else {
               message.channel.send("To add a new champion, start with /new_champ [champion name]");
             }
         }else if(!state.data.has("prim_role")){
             if(args.length == 2) {
                 state.add_data("prim_role", "STRING", args[1]);
-                message.channel.send(state.data.get("name").data + " has a primary role of: " + state.data.get("prim_role").data);
+                message.channel.send(state.data.get("name").data + " has a primary role of: " + state.data.get("prim_role").data + "Next, put in the secondary role.");
               } else {
                 message.channel.send("To add the champion's primary role, enter /new_champ [primary role]");
               }
         }else if(!state.data.has("sec_role")){
             if(args.length == 2) {
                 state.add_data("sec_role", "STRING", args[1]);
-                message.channel.send(state.data.get("name").data + " has a secondary role of: " + state.data.get("sec_role").data);
+                message.channel.send(state.data.get("name").data + " has a secondary role of: " + state.data.get("sec_role").data + ".  Next, put in if it's an ad or ap champion.");
               } else {
                 message.channel.send("To add the champion's secondary role, enter /new_champ [secondary role]");
               }
@@ -45,7 +45,8 @@ module.exports = {
                         ad_ap:state.data.get("ad_ap").data
                     });
                     }catch(err){
-                        this.logger.error(err);
+                        this.logger.error(err);1195
+
                     }
 
                     if(respNewChamp.ok == true){
