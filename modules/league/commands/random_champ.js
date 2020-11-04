@@ -53,8 +53,8 @@ module.exports = {
                             }
                         }
                         this.logger.info(champs);
-                        var seedCustom = (Math.floor(Math.random() * champs.league_champions.length));
-                        message.channel.send("<@" + message.member.id + "> "+"Your champ is: " + champs.league_champions[seedCustom].name);
+                        var seedCustom = (Math.floor(Math.random() * champs.length));
+                        message.channel.send("<@" + message.member.id + "> "+"Your champ is: " + champs[seedCustom].name);
                     }
                 }else{
                     message.channel.send("That person hasn't approved any champions yet!");
