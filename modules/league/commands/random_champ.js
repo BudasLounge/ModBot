@@ -34,7 +34,7 @@ module.exports = {
                         var champs;
                         var i = 0;
                         this.logger.info(respChampsCustom);
-                        for(var champ in respChampsCustom){
+                        for(var champ in respChampsCustom.league_pref_champs){
                             this.logger.info("In for loop");
                             this.logger.info(champ);
                             var respChamps;
