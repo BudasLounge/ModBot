@@ -32,16 +32,15 @@ module.exports = {
                         message.channel.send("<@" + message.member.id + "> "+"Your champ is: " + respChampsCustom.league_pref_champs[seedCustom].champ_name);
                     }else if(roles.indexOf(args[2]) > -1){
                         var champs;
-                        var i = 0;
                         this.logger.info(respChampsCustom);
-                        for(var champ in respChampsCustom.league_pref_champs){
+                        for(var i = 0;i<respChampsCustom.league_pref_champs.length;i++){
                             this.logger.info("In for loop");
-                            this.logger.info("champ data --> " + champ);
+                            this.logger.info("champ data --> " + respChampsCustom.league_pref_champs[i]);
                             var respChamps;
                             try{
                                 respChamps = await api.get("league_champion",{
-                                    name: champ.champ_name,
-                                    role_primary:args[2]
+                                    name: respChampsCustom.league_pref_champs[i].champ_name,
+                                    role_primary: args[2]
                                 });
                             } catch(error2){
                                 this.logger.error({error: error2.response});
@@ -49,7 +48,6 @@ module.exports = {
                             if(respChamps.league_champions[0]){
                                 this.logger.info("Found a champion");
                                 champs = [].concat(respChamps.league_champions[0]);
-                                i++;
                             }
                         }
                         this.logger.info(champs);
