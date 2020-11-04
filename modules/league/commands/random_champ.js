@@ -52,6 +52,7 @@ module.exports = {
                         }
                         this.logger.info("new champ list -->" + champs);
                         var seedCustom = (Math.floor(Math.random() * champs.length));
+                        this.logger.info("This is the seed: "+ seedCustom + "\nthis is the max alloted seed: "+ champs.length);
                         message.channel.send("<@" + message.member.id + "> "+"Your champ is: " + champs[seedCustom].name);
                     }
                 }else{
