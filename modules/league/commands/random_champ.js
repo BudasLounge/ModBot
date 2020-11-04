@@ -51,6 +51,7 @@ module.exports = {
                                 i++;
                             }
                         }
+                        this.logger.info(champs);
                         var seedCustom = (Math.floor(Math.random() * champs.league_champions.length));
                         message.channel.send("<@" + message.member.id + "> "+"Your champ is: " + champs.league_champions[seedCustom].name);
                     }
