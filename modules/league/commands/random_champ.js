@@ -33,7 +33,9 @@ module.exports = {
                     }else if(roles.indexOf(args[2]) > -1){
                         var champs;
                         var i = 0;
+                        this.logger.info(respChampsCustom);
                         for(var champ in respChampsCustom){
+                            this.logger.info("In for loop");
                             try{
                                 respChamps = await api.get("league_champion",{
                                     name: champ.champ_name,
@@ -43,6 +45,7 @@ module.exports = {
                                 this.logger.error({error: error2.response});
                             }
                             if(respChamps.league_champions[0]){
+                                this.logger.info("Found a champion");
                                 champs[i] = respChamps.league_champions[0];
                                 i++;
                             }
