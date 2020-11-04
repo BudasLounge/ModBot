@@ -46,7 +46,7 @@ module.exports = {
                             }
                             if(respChamps.league_champions[0]){
                                 this.logger.info("Found a champion");
-                                champs[i] = respChamps.league_champions[0];
+                                champs = [].concat(respChamps.league_champions[0]);
                                 i++;
                             }
                         }
