@@ -50,7 +50,7 @@ module.exports = {
                                 champs = [].concat(respChamps.league_champions[0]);
                             }
                         }
-                        this.logger.info(champs);
+                        this.logger.info("new champ list -->" + champs);
                         var seedCustom = (Math.floor(Math.random() * champs.length));
                         message.channel.send("<@" + message.member.id + "> "+"Your champ is: " + champs[seedCustom].name);
                     }
