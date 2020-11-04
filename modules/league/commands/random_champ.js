@@ -31,7 +31,7 @@ module.exports = {
                         var seedCustom = (Math.floor(Math.random() * respChampsCustom.league_pref_champs.length));
                         message.channel.send("<@" + message.member.id + "> "+"Your champ is: " + respChampsCustom.league_pref_champs[seedCustom].champ_name);
                     }else if(roles.indexOf(args[2]) > -1){
-                        var champs;
+                        var champs = [];
                         this.logger.info(respChampsCustom);
                         for(var i = 0;i<respChampsCustom.league_pref_champs.length;i++){
                             this.logger.info("In for loop");
