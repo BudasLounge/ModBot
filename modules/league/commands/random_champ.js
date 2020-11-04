@@ -32,7 +32,7 @@ module.exports = {
                         message.channel.send("<@" + message.member.id + "> "+"Your champ is: " + respChampsCustom.league_pref_champs[seedCustom].champ_name);
                     }else if(roles.indexOf(args[2]) > -1){
                         var champs;
-
+                        var i = 0;
                         for(var champ in respChampsCustom){
                             try{
                                 respChamps = await api.get("league_champion",{
@@ -43,6 +43,7 @@ module.exports = {
                                 this.logger.error({error: error2.response});
                             }
                             champs[i] = respChamps.league_champions[0];
+                            i++;
                         }
                         message.channel.send("<@" + message.member.id + "> "+"Your champ is: " + champs.league_champions[seedCustom].name);
                     }
