@@ -42,8 +42,10 @@ module.exports = {
                             } catch(error2){
                                 this.logger.error({error: error2.response});
                             }
-                            champs[i] = respChamps.league_champions[0];
-                            i++;
+                            if(respChamps.league_champions[0]){
+                                champs[i] = respChamps.league_champions[0];
+                                i++;
+                            }
                         }
                         message.channel.send("<@" + message.member.id + "> "+"Your champ is: " + champs.league_champions[seedCustom].name);
                     }
