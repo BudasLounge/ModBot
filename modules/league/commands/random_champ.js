@@ -36,7 +36,7 @@ module.exports = {
                         this.logger.info(respChampsCustom);
                         for(var champ in respChampsCustom.league_pref_champs){
                             this.logger.info("In for loop");
-                            this.logger.info(champ);
+                            this.logger.info("champ data --> " + champ);
                             var respChamps;
                             try{
                                 respChamps = await api.get("league_champion",{
