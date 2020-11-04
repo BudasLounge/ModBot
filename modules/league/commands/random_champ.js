@@ -26,9 +26,26 @@ module.exports = {
                     this.logger.error(errorCustomMessage, errorCustom.response);
                 }
                 if(respChampsCustom.league_pref_champs[0]){
-                    this.logger.info(respChampsCustom);
-                    var seedCustom = (Math.floor(Math.random() * respChampsCustom.league_pref_champs.length));
-                    message.channel.send("<@" + message.member.id + "> "+"Your champ is: " + respChampsCustom.league_pref_champs[seedCustom].champ_name);
+                    if(!args[2]){
+                        this.logger.info(respChampsCustom);
+                        var seedCustom = (Math.floor(Math.random() * respChampsCustom.league_pref_champs.length));
+                        message.channel.send("<@" + message.member.id + "> "+"Your champ is: " + respChampsCustom.league_pref_champs[seedCustom].champ_name);
+                    }else if(roles.indexOf(args[2]) > -1){
+                        var champs;
+
+                        for(var champ in respChampsCustom){
+                            try{
+                                respChamps = await api.get("league_champion",{
+                                    name: champ.champ_name,
+                                    role_primary:args[2]
+                                });
+                            } catch(error2){
+                                this.logger.error({error: error2.response});
+                            }
+                            champs[i] = respChamps.league_champions[0];
+                        }
+                        message.channel.send("<@" + message.member.id + "> "+"Your champ is: " + champs.league_champions[seedCustom].name);
+                    }
                 }else{
                     message.channel.send("That person hasn't approved any champions yet!");
                 }
