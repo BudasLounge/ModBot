@@ -46,7 +46,7 @@ module.exports = {
                                 this.logger.error({error: error2.response});
                             }
                             if(respChamps.league_champions[0]){
-                                this.logger.info("Found a champion");
+                                this.logger.info("Found a champion: " + respChamps.league_champions[0]);
                                 champs = [].concat(respChamps.league_champions[0]);
                             }
                         }
