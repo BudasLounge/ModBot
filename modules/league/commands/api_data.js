@@ -26,6 +26,6 @@ module.exports = {
         
 
         var testMatch = await LeagueAPI.getMatch(3072454619);
-        this.logger.log("Here's the match data:" + testMatch);
+        this.logger.info("Here's the match data:" + testMatch);
     }
 };
