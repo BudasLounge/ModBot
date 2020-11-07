@@ -24,8 +24,8 @@ module.exports = {
             this.logger.info(matchData);
 
     
-        //LeagueAPI.getMatch(3026936146)
-        //.then(console.log);
-        //message.channel.send("Here's the match data:" + testMatch);
+        LeagueAPI.getMatch(3593248505)
+        .then(console.log);
+        message.channel.send("Here's the match data:" + testMatch);
     }
 };
