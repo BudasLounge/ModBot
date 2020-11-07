@@ -10,7 +10,11 @@ module.exports = {
         let LeagueAPI = require('leagueapiwrapper');
         LeagueAPI = new LeagueAPI("RGAPI-09a3d630-4744-4345-9026-e5368912b158", Region.NA);
  
-        accountData = LeagueAPI.getSummonerByName(args[1]);
-        this.logger.info(accountData);
+        LeagueAPI.getSummonerByName(args[1])
+            .then(function(accountInfo) {
+        // do something with accountInfo
+            message.channel.send(accountInfo);
+         })
+        .catch(console.log);
     }
 };
