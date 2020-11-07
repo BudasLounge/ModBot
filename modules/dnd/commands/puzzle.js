@@ -8,7 +8,7 @@ module.exports = {
     has_state: false,
     async execute(message, args, extra) {
         var api = extra.api;
-        var answersArray = {"friend": "Ask Cella for the number", "2319":"RETAIИMƎNT UNSUCCESSFULLUFSSECCUSNU\nᗡIMƎИƧIOИA⅃ PLASTIYTIC UNTENELBA\nƎW ƎƧOHT OTO THOSE WƎ FAILED ƧU ƎVIᎮЯOᖷ"};
+        var answersArray = {"html": "Take a closer look at https://budaslounge.com"};
         var flag = false;
         for(var key in answersArray){
             this.logger.info("in key finding function");
