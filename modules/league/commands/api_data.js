@@ -21,7 +21,7 @@ module.exports = {
             })
         .catch(console.log);
 
-            message.channel.send(matchData);
+            this.logger.info(matchData);
 
         
 
