@@ -23,5 +23,9 @@ module.exports = {
 
             this.logger.log(matchData);
 
-        }
+        
+
+        var testMatch = LeagueAPI.getMatch(3072454619);
+        this.logger.info(testMatch);
+    }
 };
