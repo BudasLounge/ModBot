@@ -17,7 +17,7 @@ module.exports = {
                 return LeagueAPI.getMatchList(accountObject);
             })
             .then(function(activeGames) { 
-                message.channel.send(activeGames);
+                console.log(activeGames);
             })
         .catch(console.log);
 
