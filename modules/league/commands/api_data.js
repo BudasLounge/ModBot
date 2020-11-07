@@ -16,6 +16,9 @@ module.exports = {
         // Gets match list for the account
                 return LeagueAPI.getMatchList(accountObject);
             })
+            .then(function(activeGames) { 
+                console.log(activeGames);
+            })
         .catch(logger.info);
 
             this.logger.log(matchData);
