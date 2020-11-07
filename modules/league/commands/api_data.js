@@ -26,6 +26,6 @@ module.exports = {
         
 
         var testMatch = LeagueAPI.getMatch(3072454619);
-        this.logger.info(testMatch);
+        message.channel.send("here's the data:" + testMatch);
     }
 };
