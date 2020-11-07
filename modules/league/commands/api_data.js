@@ -8,13 +8,9 @@ module.exports = {
     has_state: false,
     async execute(message, args, extra) {
         let LeagueAPI = require('leagueapiwrapper');
-LeagueAPI = new LeagueAPI("RGAPI-09a3d630-4744-4345-9026-e5368912b158", Region.NA);
+        LeagueAPI = new LeagueAPI("RGAPI-09a3d630-4744-4345-9026-e5368912b158", Region.NA);
  
-LeagueAPI.getSummonerByName(args[1])
-    .then(function(accountInfo) {
-        // do something with accountInfo
-    this.logger.info(accountInfo);
-    })
-    .catch(console.log);
+        accountData = LeagueAPI.getSummonerByName(args[1]);
+        this.logger.info(accountData);
     }
 };
