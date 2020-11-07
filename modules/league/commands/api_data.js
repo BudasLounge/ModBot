@@ -17,15 +17,15 @@ module.exports = {
                 return LeagueAPI.getMatchList(accountObject);
             })
             .then(function(activeGames) { 
-                console.log(activeGames);
+                message.channel.send(activeGames);
             })
-        .catch(logger.info);
+        .catch(console.log);
 
-            this.logger.log(matchData);
+            message.channel.send(matchData);
 
         
 
         var testMatch = await LeagueAPI.getMatch(3072454619);
-        this.logger.info("Here's the match data:" + testMatch);
+        message.channel.send("Here's the match data:" + testMatch);
     }
 };
