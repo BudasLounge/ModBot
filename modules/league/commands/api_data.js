@@ -11,11 +11,17 @@ module.exports = {
         let LeagueAPI = require('leagueapiwrapper');
         LeagueAPI = new LeagueAPI("RGAPI-09a3d630-4744-4345-9026-e5368912b158", Region.NA);
  
-        LeagueAPI.getSummonerByName(args[1])
-            .then(function(accountInfo) {
-        // do something with accountInfo
-            logger.info(accountInfo);
-         })
-        .catch(console.log);
-    }
+        var matchData = LeagueAPI.getSummonerByName('LeagueOfDrMundo')
+            .then(function(accountObject) {
+        // Gets match list for the account
+                return LeagueAPI.getMatchList(accountObject);
+            })
+            .then(function(activeGames) { 
+                logger.info(activeGames);
+            })
+        .catch(logger.info);
+
+            this.logger.log(matchData);
+
+        }
 };
