@@ -7,6 +7,7 @@ module.exports = {
     needs_api: true,
     has_state: false,
     async execute(message, args, extra) {
+        var fs = require('fs');
         logger = this.logger;
         let LeagueAPI = require('leagueapiwrapper');
         token = fs.readFileSync(__dirname + "/../../../riot_token.txt", "utf8");
