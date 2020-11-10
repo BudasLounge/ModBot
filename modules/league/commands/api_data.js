@@ -10,7 +10,7 @@ module.exports = {
         var fs = require('fs');
         logger = this.logger;
         let LeagueAPI = require('leagueapiwrapper');
-        token = fs.readFileSync("/home/botsriot_token.txt", "utf8");
+        token = fs.readFileSync("/home/bots/riot_token.txt", "utf8");
         LeagueAPI = new LeagueAPI(token, Region.NA);
  
         var matchData = await LeagueAPI.getSummonerByName(args[1])
