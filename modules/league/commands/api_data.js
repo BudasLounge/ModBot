@@ -9,7 +9,8 @@ module.exports = {
     async execute(message, args, extra) {
         logger = this.logger;
         let LeagueAPI = require('leagueapiwrapper');
-        LeagueAPI = new LeagueAPI("RGAPI-09a3d630-4744-4345-9026-e5368912b158", Region.NA);
+        token = fs.readFileSync(__dirname + "/../../../riot_token.txt", "utf8");
+        LeagueAPI = new LeagueAPI(token, Region.NA);
  
         var matchData = await LeagueAPI.getSummonerByName(args[1])
             .then(function(accountObject) {
