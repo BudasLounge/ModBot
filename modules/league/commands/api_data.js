@@ -23,10 +23,10 @@ module.exports = {
             })
         .catch(console.log);
 
-            this.logger.info(matchData);
+            //this.logger.info(matchData);
 
     
-        var testMatch = await LeagueAPI.getMatch(3603368540).then(console.log);
-        message.channel.send("Here's the match data:" + testMatch);
+        var testMatch = await LeagueAPI.getMatch(3603368540);
+        message.channel.send(testMatch);
     }
 };
