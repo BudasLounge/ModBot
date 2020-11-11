@@ -19,7 +19,7 @@ module.exports = {
                 return LeagueAPI.getMatchList(accountObject);
             })
             .then(function(activeGames) { 
-                console.log(activeGames);
+                message.channel.send(JSON.stringify(activeGames), {split:{char: ','}});
             })
         .catch(console.log);
 
