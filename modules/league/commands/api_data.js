@@ -27,6 +27,6 @@ module.exports = {
 
     
         var testMatch = await LeagueAPI.getMatch(3603368540);
-        message.channel.send(testMatch);
+        message.channel.send(JSON.stringify(testMatch));
     }
 };
