@@ -8,7 +8,7 @@ module.exports = {
     has_state: false,
     async execute(message, args, extra) {
         var api = extra.api;
-        var answersArray = {"html": "Take a closer look at https://budaslounge.com"};
+        var answersArray = {"html": "Let's check out those hacker skills on a friend's domain", "finished":"Key: SCP\nh y  mna aImii  i. yea t  v r.es acpyntt  tnmpm m  sb anefsTyaImoa dh ahtgyreIabltuImerit","2":"Here's your answer! https://www.scpwiki.com/scp-002"};
         var flag = false;
         for(var key in answersArray){
             this.logger.info("in key finding function");
