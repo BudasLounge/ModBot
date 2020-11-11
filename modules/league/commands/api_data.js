@@ -23,7 +23,7 @@ module.exports = {
             })
         .catch(console.log);
 
-        message.channel.send(JSON.stringify(matchData), {split:{char: ','}});
+        //message.channel.send(JSON.stringify(matchData), {split:{char: ','}});
 
     
         //var testMatch = await LeagueAPI.getMatch(3603368540);
