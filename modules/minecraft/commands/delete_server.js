@@ -10,7 +10,7 @@ module.exports = {
         var api = extra.api;
 
         var respServer;
-        if(message.member.roles.has("586313447965327365")){
+        if(message.member.roles.has("586313447965327365") || message.member.roles.has("670379823239004161")){
             try{
                 respServer = await api.get("minecraft_server", {
                     short_name: args[1]
@@ -38,6 +38,8 @@ module.exports = {
             }else{
                 message.channel.send("That server could not be found...");
             }
+        }else{
+            message.channel.send("You don't have permission to do that");
         }
     }
 };
