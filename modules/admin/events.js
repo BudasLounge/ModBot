@@ -7,6 +7,7 @@ var client = new Discord.Client();
 }*/
 
 async function onUserJoin(member){
+    this.logger.info("Adding new user to a server...");
 	var respServer;
     try{
         respServer = await api.get("discord_server", {
