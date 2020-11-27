@@ -7,14 +7,13 @@ var client = new Discord.Client();
 }*/
 
 async function onUserJoin(member){
-    this.logger.info("Adding new user to a server...");
 	var respServer;
     try{
         respServer = await api.get("discord_server", {
             server_id: member.guild.id
         });
     }catch(error){
-        this.logger.error(error);
+        console.log(error);
     }
     if(respServer.discord_servers[0]){
             member.guild.channels.get(respServer.discord_servers[0].welcome_channel_id).send("Hi! <@" + member.id + "> "+respServer.discord_servers[0].welcome_message);
