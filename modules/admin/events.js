@@ -15,7 +15,7 @@ async function onUserJoin(member){
     }catch(error){
         this.logger.error(error);
     }
-    console.log(respServer);
+    this.logger.info(respServer);
     if(respServer.discord_servers[0]){
             member.guild.channels.get(respServer.discord_servers[0].welcome_channel_id).send("Hi! <@" + member.id + "> "+respServer.discord_servers[0].welcome_message);
             member.addRole(respServer.discord_servers[0].default_role_id);
