@@ -27,7 +27,7 @@ module.exports = {
                     for(var i = 0;i<respChampsCustom.league_pref_champs.length;i++){
                         this.logger.info("In for loop");
                         this.logger.info("champ data --> " + respChampsCustom.league_pref_champs[i]);
-                        output+=respChampsCustom.league_pref_champs[i].champ_name;
+                        output+=respChampsCustom.league_pref_champs[i].champ_name +"\n";
                     }
                 }else{
                     message.channel.send("That person hasn't approved any champions yet!");
