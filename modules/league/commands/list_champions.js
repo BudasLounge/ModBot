@@ -11,19 +11,27 @@ module.exports = {
         const Discord = require('discord.js');
         var respChamps;
         if(args[1]){
-            if(args[1] == "cella"){
+            if(args[1].includes("@")){
+                var respChampsCustom;
+                var customID = message.mentions.users.first().id;
+                var output;
                 try{
-                    respChamps = await api.get("league_champion",{
-                        _limit: 150,
-                        is_cella: 1
+                    respChampsCustom = await api.get("league_pref_champ",{
+                        _limit: 200,
+                        user_id: customID
                     });
-                } catch(error2){
-                    this.logger.error(error2.response);
+                }catch(errorCustom){
+                    this.logger.error(errorCustomMessage, errorCustom.response);
                 }
-                var output = "A list of Cella approved champions:\n";
-                for(var i = 0; i<respChamps.league_champions.length;i++){
-                    output += respChamps.league_champions[i].name + "\n";
-                } 
+                if(respChampsCustom.league_pref_champs[0]){
+                    for(var i = 0;i<respChampsCustom.league_pref_champs.length;i++){
+                        this.logger.info("In for loop");
+                        this.logger.info("champ data --> " + respChampsCustom.league_pref_champs[i]);
+                        output+=respChampsCustom.league_pref_champs[i].champ_name;
+                    }
+                }else{
+                    message.channel.send("That person hasn't approved any champions yet!");
+                }
                 message.channel.send(output, {split:true});
             }else{
                 try{
