@@ -1,7 +1,7 @@
 module.exports = {
     name: 'rando',
-    description: 'returns a random league champion',
-    syntax: 'rando',
+    description: 'returns a random league champion.',
+    syntax: 'rando [role]or[@discord_name]',
     num_args: 0,
     args_to_lower: false,
     needs_api: true,
