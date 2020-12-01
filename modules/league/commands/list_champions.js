@@ -14,7 +14,7 @@ module.exports = {
             if(args[1].includes("@")){
                 var respChampsCustom;
                 var customID = message.mentions.users.first().id;
-                var output = "";
+                var output = "Here is " + args[1] + "'s champion list:\n";
                 try{
                     respChampsCustom = await api.get("league_pref_champ",{
                         _limit: 200,
