@@ -20,18 +20,26 @@ module.exports ={
         } 
         this.logger.info(respServer);
         if(respServer.minecraft_servers[0]){
-            try{
-                var item = await getStatus(respServer.minecraft_servers[0].server_ip);
-            }catch(status_error){
-                this.logger.error(status_error);
-                item = respServer.minecraft_servers[0].display_name + " is currently offline!";
-            }
+            var item;
+            var flag = false;
             const ListEmbed = new Discord.RichEmbed()
             .setColor("#f92f03")
             .setTitle(respServer.minecraft_servers[0].display_name + " status: ");
-            ListEmbed.addField("status: ", item);
+            try{
+                item = await getStatus(respServer.minecraft_servers[0].server_ip);
+            }catch(status_error){
+                this.logger.error(status_error);
+                item = respServer.minecraft_servers[0].display_name + " is currently offline!";
+                ListEmbed.addField("status: ", item);
+                message.channel.send(ListEmbed);
+                flag = true;
+            }
+            if(flag){
+                return;
+            }
+            var output = respServer.minecraft_servers[0].display_name + " is currently online with: " + item.players.online + " players online!";
+            ListEmbed.addField("status: ", output);
             message.channel.send(ListEmbed);
-            this.logger.info(item);
         }else{
             message.channel.send("Sorry, couldn't find a server with that shortname, try /listmc for a list of all servers.");
         }
