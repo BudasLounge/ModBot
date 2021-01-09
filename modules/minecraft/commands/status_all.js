@@ -27,6 +27,7 @@ module.exports ={
         .setColor("#f92f03")
         .setTitle("List of all minecraft servers: ");
         for(var i = 0;i<respServer.minecraft_servers.length;i++){
+            this.logger.info("Working on server: " + respServer.minecraft_servers[i].display_name);
             var item;
             var flag = false;
             try{
