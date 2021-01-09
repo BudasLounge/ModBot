@@ -24,8 +24,9 @@ module.exports ={
             const ListEmbed = new Discord.RichEmbed()
             .setColor("#f92f03")
             .setTitle(respServer.minecraft_servers[0].display_name + " status: ");
-            ListEmbed.addField("status: ", item[0]);
+            ListEmbed.addField("status: ", item);
             message.channel.send(ListEmbed);
+            this.logger.info(item);
         }else{
             message.channel.send("Sorry, couldn't find a server with that shortname, try /listmc for a list of all servers.");
         }
