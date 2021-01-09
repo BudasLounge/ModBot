@@ -8,8 +8,8 @@ module.exports ={
     has_state: false,
     async execute(message, args, extra){
         var api = extra.api;
-
         const Discord = require('discord.js');
+        const {getStatus} = require("mc-server-status");
         var respServer;
         try{
             respServer = await api.get("minecraft_server", {
@@ -20,7 +20,7 @@ module.exports ={
         } 
         this.logger.info(respServer);
         if(respServer.minecraft_servers[0]){
-            var item = await getServerState(respServer.minecraft_servers[0].display_name, respServer.minecraft_servers[0].port, respServer.minecraft_servers[0].numeric_ip, respServer.minecraft_servers[0].status_api_port);
+            var item = await getStatus(respServer.minecraft_servers[0].server_ip);
             const ListEmbed = new Discord.RichEmbed()
             .setColor("#f92f03")
             .setTitle(respServer.minecraft_servers[0].display_name + " status: ");
@@ -32,7 +32,7 @@ module.exports ={
     }
 };
 
-async function getServerState(server, port, ip, status_api_port){
+/*async function getServerState(server, port, ip, status_api_port){
     this.logger.info("getServerState()>\n");
     var axios = require('axios');
     var url = 'http://mcapi.us/server/status?ip='+ip+'&port=' + port;
@@ -68,4 +68,4 @@ async function getServerState(server, port, ip, status_api_port){
     this.logger.info("getServerState()<\n");
     this.logger.info("Returning message: "+status);
     return status;
-}
+}*/
