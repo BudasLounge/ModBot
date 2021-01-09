@@ -41,7 +41,7 @@ module.exports ={
             var output = respServer.minecraft_servers[0].display_name + " is currently online with: " + item.players.online + " players online!\n";
             output += "Players online:";
             for(var i = 0;i<item.players.online;i++){
-                output += item.players.sample[i];
+                output += item.players.sample[i].name;
             }
             ListEmbed.addField("status: ", output);
             message.channel.send(ListEmbed);
