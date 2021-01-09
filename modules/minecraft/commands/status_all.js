@@ -49,7 +49,7 @@ module.exports ={
                         nextItem += "- " + item.players.sample[j].name + "\n";
                     }
                 }else{
-                    var nextItem = respServer.minecraft_servers[i].display_name + " is currently online but no one else is.";
+                    var nextItem = respServer.minecraft_servers[i].display_name + " is currently online but no players are.";
                 }
                 ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:", nextItem);
             }
