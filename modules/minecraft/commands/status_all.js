@@ -27,14 +27,26 @@ module.exports ={
         .setColor("#f92f03")
         .setTitle("List of all minecraft servers: ");
         for(var i = 0;i<respServer.minecraft_servers.length;i++){
-            var nextItem = respServer.minecraft_servers[0].display_name + " is currently online with: " + item.players.online + " players online!\n";
+            var item;
+            var flag = false;
+            try{
+                item = await getStatus(respServer.minecraft_servers[i].server_ip);
+            }catch(status_error){
+                this.logger.error(status_error);
+                item = respServer.minecraft_servers[i].display_name + " is currently offline!";
+                flag = true;
+            }
+            if(flag == true){
+                ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:", item);
+            }else{
+                var nextItem = respServer.minecraft_servers[i].display_name + " is currently online with: " + item.players.online + " players online!\n";
                 nextItem += "Players online:\n";
                 for(var i = 0;i<item.players.online;i++){
                     nextItem += "- " + item.players.sample[i].name + "\n";
                 }
-            ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:", nextItem);
+                ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:", nextItem);
+            }
         }
-        
         message.channel.send(ListEmbed);
         this.logger.info("<<display_all_servers_status");
     }
