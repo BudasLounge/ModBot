@@ -35,16 +35,15 @@ module.exports ={
                 flag = true;
             }
             this.logger.info(item);
-            if(flag){
-                return;
+            if(flag = false){
+                var output = respServer.minecraft_servers[0].display_name + " is currently online with: " + item.players.online + " players online!\n";
+                output += "Players online:\n";
+                for(var i = 0;i<item.players.online;i++){
+                    output += "- " + item.players.sample[i].name + "\n";
+                }
+                ListEmbed.addField("status: ", output);
+                message.channel.send(ListEmbed);
             }
-            var output = respServer.minecraft_servers[0].display_name + " is currently online with: " + item.players.online + " players online!\n";
-            output += "Players online:\n";
-            for(var i = 0;i<item.players.online;i++){
-                output += "- " + item.players.sample[i].name + "\n";
-            }
-            ListEmbed.addField("status: ", output);
-            message.channel.send(ListEmbed);
         }else{
             message.channel.send("Sorry, couldn't find a server with that shortname, try /listmc for a list of all servers.");
         }
