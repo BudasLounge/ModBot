@@ -34,6 +34,7 @@ module.exports ={
                 message.channel.send(ListEmbed);
                 flag = true;
             }
+            this.logger.info(">>>>>>Here is the status item: " + item);
             if(flag){
                 return;
             }
