@@ -42,10 +42,14 @@ module.exports ={
                 ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:", item);
             }else{
                 this.logger.info("Adding listEmbed for online server");
-                var nextItem = respServer.minecraft_servers[i].display_name + " is currently online with: " + item.players.online + " players online!\n";
-                nextItem += "Players online:\n";
-                for(var j = 0;j<item.players.online;j++){
-                    nextItem += "- " + item.players.sample[j].name + "\n";
+                if(item.players.online>0){
+                    var nextItem = respServer.minecraft_servers[i].display_name + " is currently online with: " + item.players.online + " players online!\n";
+                    nextItem += "Players online:\n";
+                    for(var j = 0;j<item.players.online;j++){
+                        nextItem += "- " + item.players.sample[j].name + "\n";
+                    }
+                }else{
+                    var nextItem = respServer.minecraft_servers[i].display_name + " is currently online but no one else is.";
                 }
                 ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:", nextItem);
             }
