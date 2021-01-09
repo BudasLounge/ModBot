@@ -34,11 +34,13 @@ module.exports ={
                 message.channel.send(ListEmbed);
                 flag = true;
             }
-            this.logger.info(item.players);
+            this.logger.info(item);
             if(flag){
                 return;
             }
-            var output = respServer.minecraft_servers[0].display_name + " is currently online with: " + item.players.online + " players online!";
+            var output = respServer.minecraft_servers[0].display_name + " is currently online with: " + item.players.online + " players online!\n";
+            //output += "Players online:";
+            //for(var i = 0;i<item.players.)
             ListEmbed.addField("status: ", output);
             message.channel.send(ListEmbed);
         }else{
