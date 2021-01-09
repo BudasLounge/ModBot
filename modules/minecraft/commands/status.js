@@ -34,7 +34,7 @@ module.exports ={
                 message.channel.send(ListEmbed);
                 flag = true;
             }
-            this.logger.info(item);
+            this.logger.info(item.players);
             if(flag){
                 return;
             }
