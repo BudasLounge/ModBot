@@ -35,7 +35,7 @@ module.exports ={
                 flag = true;
             }
             this.logger.info(item);
-            if(flag = false){
+            if(flag == false){
                 var output = respServer.minecraft_servers[0].display_name + " is currently online with: " + item.players.online + " players online!\n";
                 output += "Players online:\n";
                 for(var i = 0;i<item.players.online;i++){
