@@ -44,8 +44,8 @@ module.exports ={
                 this.logger.info("Adding listEmbed for online server");
                 var nextItem = respServer.minecraft_servers[i].display_name + " is currently online with: " + item.players.online + " players online!\n";
                 nextItem += "Players online:\n";
-                for(var i = 0;i<item.players.online;i++){
-                    nextItem += "- " + item.players.sample[i].name + "\n";
+                for(var j = 0;j<item.players.online;j++){
+                    nextItem += "- " + item.players.sample[j].name + "\n";
                 }
                 ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:", nextItem);
             }
