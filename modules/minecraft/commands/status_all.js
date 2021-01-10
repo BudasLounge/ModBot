@@ -11,6 +11,7 @@ module.exports ={
         const Discord = require('discord.js');
         const {getStatus} = require("mc-server-status");
         this.logger.info(">>display_all_servers_status");
+        message.channel.send("Finding info on all servers...");
         var respServer;
         try{
             respServer = await api.get("minecraft_server", {
