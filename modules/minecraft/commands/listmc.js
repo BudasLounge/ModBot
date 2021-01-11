@@ -29,8 +29,8 @@ module.exports ={
             nextItem += "server ip: " + respServer.minecraft_servers[i].server_ip + "\n";
             nextItem += "numeric ip: " + respServer.minecraft_servers[i].numeric_ip + ":" + respServer.minecraft_servers[i].port + "\n";
             nextItem += "minecraft version: " + respServer.minecraft_servers[i].mc_version + "\n";
-            nextItem += "pack version: " + respServer.minecraft_servers[i].pack_version;
-
+            nextItem += "pack version: " + respServer.minecraft_servers[i].pack_version + "\n";
+            nextItem += "date created: " + respServer.minecraft_servers[i].date_created;
             ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:", nextItem);
         }
         message.channel.send(ListEmbed);
