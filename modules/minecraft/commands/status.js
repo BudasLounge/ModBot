@@ -25,6 +25,7 @@ module.exports ={
             const ListEmbed = new Discord.RichEmbed()
             .setColor("#f92f03")
             .setTitle(respServer.minecraft_servers[0].display_name + " status: ");
+            ListEmbed.addField("If the server crashed, it should auto restart in 5 minutes or less\nContact a server admin if it does not.")
             try{
                 item = await getStatus(respServer.minecraft_servers[0].server_ip);
             }catch(status_error){

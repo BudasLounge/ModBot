@@ -23,7 +23,6 @@ module.exports ={
         const ListEmbed = new Discord.RichEmbed()
         .setColor("#f92f03")
         .setTitle("List of all minecraft servers: ");
-        ListEmbed.addField("If the server crashed, it should auto restart in 5 minutes or less\nContact a server admin if it does not.")
         for(var i = 0;i<respServer.minecraft_servers.length;i++){
             var nextItem = "";
             nextItem += "short name: " + respServer.minecraft_servers[i].short_name + "\n";
