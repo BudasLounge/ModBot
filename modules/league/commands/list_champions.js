@@ -1,7 +1,7 @@
 module.exports = {
     name: 'list_champs',
     description: 'returns all league champions',
-    syntax: 'list_champs [name]',
+    syntax: 'list_champs [champ name] or [@user]',
     num_args: 0,
     args_to_lower: false,
     needs_api: true,
