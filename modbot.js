@@ -23,6 +23,8 @@ modules.discover_commands();
 var event_registry = new EventRegistry(client, logger);
 event_registry.discover_event_handlers(modules);
 
+logger.info("Event Registration Complete!");
+
 authClient();
 
 client.on('ready', () => {
