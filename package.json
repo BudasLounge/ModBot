@@ -5,7 +5,7 @@
   "author": "Andrew Graber & JR Buda",
   "dependencies": {
     "axios": "^0.19.0",
-    "discord.js": "^11.5.1",
+    "discord.js": "^12.5.3",
     "moment": "^2.24.0",
     "request": "^2.88.0",
     "winston": "^3.3.3"

@@ -27,8 +27,6 @@ logger.info("Event Registration Complete!");
 
 authClient();
 
-logger.info("Boopity Bop.");
-
 client.on('ready', () => {
     logger.info("I am ready!");
     var channel = client.channels.get(config.default_channel);
