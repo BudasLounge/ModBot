@@ -1,7 +1,5 @@
 var ApiClient = require("../../core/js/APIClient.js");
 var api = new ApiClient();
-const Discord = require('discord.js');
-var client = new Discord.Client();
 /*function onMessageReactionAdd(messageReaction, user) {
     messageReaction.message.channel.get("650871820538347520").send("[Admin] A reaction was added!")
 }*/
