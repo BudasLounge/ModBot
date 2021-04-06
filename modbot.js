@@ -51,9 +51,9 @@ function authClient() {
     }
 
     client.login(token);
-    logger.info("Logged in Successfully!");
 }
 
 client.on('message', (message) => {
+    logger.info("Got message!");
     modules.handle_command(message);
 });
