@@ -45,6 +45,7 @@ function authClient() {
 
     try {
         token = fs.readFileSync(config.token_file).toString();
+        token = token.replace(/\s+/g, '');
         logger.info("Token: " + token);
     } catch (error) {
         logger.error(error);
