@@ -36,7 +36,7 @@ async function botInit () {
         channel.send(config.startup_messages.update);
         fs.unlinkSync("updated.txt");
     } else {
-        channel.sendMessage(config.startup_messages.restart);
+        channel.send(config.startup_messages.restart);
     }
 
     client.user.setActivity(config.bot_activity.name, { type: config.bot_activity.type });
