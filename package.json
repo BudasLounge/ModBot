@@ -4,9 +4,11 @@
   "description": "A modular, modifiable moderator for Discord",
   "author": "Andrew Graber & JR Buda",
   "dependencies": {
-    "axios": "^0.19.0",
+    "axios": "^0.21.1",
     "discord.js": "^12.5.3",
-    "moment": "^2.24.0",
+    "leagueapiwrapper": "^2.3.1",
+    "mc-server-status": "^2.0.2",
+    "moment": "^2.29.1",
     "request": "^2.88.0",
     "winston": "^3.3.3"
   }
