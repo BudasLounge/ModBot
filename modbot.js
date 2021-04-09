@@ -27,9 +27,15 @@ logger.info("Event Registration Complete!");
 
 authClient();
 
+async function getMainChannel () {
+    var channel = await client.channels.fetch(config.default_channel);
+    return channel;
+}
+
 client.on('ready', () => {
     logger.info("I am ready!");
-    var channel = client.channels.get(config.default_channel);
+
+    var channel = getMainChannel();
 
     if(fs.existsSync("updated.txt")) {
         channel.send(config.startup_messages.update);
