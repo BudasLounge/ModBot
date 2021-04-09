@@ -27,24 +27,22 @@ logger.info("Event Registration Complete!");
 
 authClient();
 
-async function getMainChannel () {
-    var channel = await client.channels.fetch(config.default_channel);
-    return channel;
-}
-
-client.on('ready', () => {
+async function botInit () {
     logger.info("I am ready!");
 
-    var channel = getMainChannel();
-
+    var channel = await client.channels.fetch(config.default_channel);
+    
     if(fs.existsSync("updated.txt")) {
         channel.send(config.startup_messages.update);
         fs.unlinkSync("updated.txt");
     } else {
         channel.sendMessage(config.startup_messages.restart);
     }
+
     client.user.setActivity(config.bot_activity.name, { type: config.bot_activity.type });
-});
+}
+
+client.on('ready', botInit);
 
 function authClient() {
     var token;
