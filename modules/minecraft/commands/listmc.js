@@ -20,7 +20,7 @@ module.exports ={
             console.error(error);
         }
         console.log(respServer.minecraft_servers.length + " servers found...");
-        const ListEmbed = new Discord.RichEmbed()
+        const ListEmbed = new Discord.MessageEmbed()
         .setColor("#f92f03")
         .setTitle("List of all minecraft servers: ");
         for(var i = 0;i<respServer.minecraft_servers.length;i++){
