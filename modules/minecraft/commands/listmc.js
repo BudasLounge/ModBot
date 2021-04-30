@@ -20,7 +20,7 @@ module.exports ={
             console.error(error);
         }
         console.log(respServer.minecraft_servers.length + " servers found...");
-        var serverList = "List of all servers:\n";
+        var serverList = "List of all servers:\n\n";
         /*const ListEmbed = new Discord.MessageEmbed()
         .setColor("#f92f03")
         .setTitle("List of all minecraft servers: ");*/
@@ -32,7 +32,7 @@ module.exports ={
             nextItem += "minecraft version: " + respServer.minecraft_servers[i].mc_version + "\n";
             nextItem += "pack version: " + respServer.minecraft_servers[i].pack_version + "\n";
             nextItem += "date created: " + respServer.minecraft_servers[i].date_created + "\n";
-            serverList += nextItem + "\n\n";
+            serverList += nextItem + "\n";
             //ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:", nextItem);
         }
         //message.channel.send(ListEmbed);
