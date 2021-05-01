@@ -24,10 +24,11 @@ module.exports ={
             return;
         }
         this.logger.info(respServer.minecraft_servers.length + " servers found...");
-        const ListEmbed = new Discord.RichEmbed()
+        var stat_server = "";
+        /*const ListEmbed = new Discord.RichEmbed()
         .setColor("#f92f03")
         .setTitle("List of all minecraft servers: ");
-        ListEmbed.addField("Notice:\n","If the server crashed, it should auto restart in 5 minutes or less\nContact a server admin if it does not.")
+        ListEmbed.addField("Notice:\n","If the server crashed, it should auto restart in 5 minutes or less\nContact a server admin if it does not.")*/
         for(var i = 0;i<respServer.minecraft_servers.length;i++){
             this.logger.info("Working on server: " + respServer.minecraft_servers[i].display_name);
             var item;
@@ -41,7 +42,8 @@ module.exports ={
             }
             if(flag == true){
                 this.logger.info("Adding listEmbed for offline server");
-                ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:", item);
+                //ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:", item);
+                stat_server += respServer.minecraft_servers[i].display_name + " server info:\n" + respServer.minecraft_servers[i].display_name + " is currently offline!";
             }else{
                 this.logger.info("Adding listEmbed for online server");
                 if(item.players.online>0){
@@ -53,10 +55,12 @@ module.exports ={
                 }else{
                     var nextItem = respServer.minecraft_servers[i].display_name + " is currently online but no players are.";
                 }
-                ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:", nextItem);
+                //ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:", nextItem);
+                stat_server += nextItem;
             }
         }
-        message.channel.send(ListEmbed);
+        //message.channel.send(ListEmbed);
+        message.channel.send(stat_server);
         this.logger.info("<<display_all_servers_status");
     }
 };
