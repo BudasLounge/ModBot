@@ -37,7 +37,7 @@ module.exports ={
                 item = await getStatus(respServer.minecraft_servers[i].server_ip);
             }catch(status_error){
                 this.logger.error(status_error + ", setting flag to true");
-                item = respServer.minecraft_servers[i].display_name + " is currently offline!";
+                item = respServer.minecraft_servers[i].display_name + " is currently offline!\n\n";
                 flag = true;
             }
             if(flag == true){
