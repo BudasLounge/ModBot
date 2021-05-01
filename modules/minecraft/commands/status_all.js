@@ -43,17 +43,17 @@ module.exports ={
             if(flag == true){
                 this.logger.info("Adding listEmbed for offline server");
                 //ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:", item);
-                stat_server += respServer.minecraft_servers[i].display_name + " server info:\n" + respServer.minecraft_servers[i].display_name + " is currently offline!";
+                stat_server += respServer.minecraft_servers[i].display_name + " server info: " + respServer.minecraft_servers[i].display_name + " is currently offline!";
             }else{
                 this.logger.info("Adding listEmbed for online server");
                 if(item.players.online>0){
-                    var nextItem = respServer.minecraft_servers[i].display_name + " is currently online with: " + item.players.online + " players online!\n";
+                    var nextItem = respServer.minecraft_servers[i].display_name + " is currently online with: " + item.players.online + " players online!\n\n";
                     nextItem += "Players online:\n";
                     for(var j = 0;j<item.players.online;j++){
                         nextItem += "- " + item.players.sample[j].name + "\n";
                     }
                 }else{
-                    var nextItem = respServer.minecraft_servers[i].display_name + " is currently online but no players are.";
+                    var nextItem = respServer.minecraft_servers[i].display_name + " is currently online but no players are.\n\n";
                 }
                 //ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:", nextItem);
                 stat_server += nextItem;
