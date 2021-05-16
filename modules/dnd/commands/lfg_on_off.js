@@ -7,7 +7,7 @@ module.exports = {
     needs_api: true,
     has_state: false,
     async execute(message, args, extra) {
-        let role = message.guild.roles.get("761355940955291678");
+        let role = message.guild.cache.find(role => role.id === "761355940955291678");
 
         if(args[1] == "on"){
             message.member.addRole(role);
