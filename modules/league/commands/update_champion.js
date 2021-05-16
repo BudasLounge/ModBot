@@ -10,7 +10,7 @@ module.exports = {
         var api = extra.api;
         const Discord = require('discord.js');
         var respChamps;
-        if(message.member.roles.cache.has(role => role.id === "745067270287392839")){
+        if(message.member.roles.cache.find(role => role.id === "745067270287392839")){
         try{
             respChamps = await api.get("league_champion",{
                 name: args[1]
