@@ -21,9 +21,9 @@ module.exports ={
         }
         console.log(respServer.minecraft_servers.length + " servers found...");
         var serverList = "List of all servers:\n\n";
-        const ListEmbed = new Discord.MessageEmbed()
+        /*const ListEmbed = new Discord.MessageEmbed()
         .setColor("#f92f03")
-        .setTitle("List of all minecraft servers: ");
+        .setTitle("List of all minecraft servers: ");*/
         for(var i = 0;i<respServer.minecraft_servers.length;i++){
             var nextItem = "";
             nextItem += "short name: " + respServer.minecraft_servers[i].short_name + "\n";
@@ -33,9 +33,9 @@ module.exports ={
             nextItem += "pack version: " + respServer.minecraft_servers[i].pack_version + "\n";
             nextItem += "date created: " + respServer.minecraft_servers[i].date_created + "\n";
             serverList += nextItem + "\n";
-            ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:", nextItem);
+            //ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:", nextItem);
         }
-        message.channel.send(ListEmbed);
+        //message.channel.send(ListEmbed);
         message.channel.send(serverList)
         console.log("<<display_all_servers");
     }
