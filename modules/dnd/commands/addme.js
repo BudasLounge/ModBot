@@ -38,10 +38,10 @@ module.exports = {
             }catch(error){
                 this.logger.error(error);
             }
-            let role = message.guild.roles.get("735631143583481987");
-            message.member.addRole(role);
-            let rem_role = message.guild.roles.get("670370134925508717");
-            message.member.removeRole(rem_role);
+            let role = message.guild.roles.cache.find(role => role.id === "735631143583481987");
+            message.member.roles.add(role);
+            let rem_role = message.guild.cache.find(role => role.id === "670370134925508717");
+            message.member.roles.remove(rem_role);
             message.channel.send("Added a player to the database! Ask an admin for help if you can't see the players lounge!");
         }
         
@@ -64,7 +64,7 @@ module.exports = {
                 this.logger.error(error);
             }
             let dmRole = message.guild.roles.get("735644461627080765");
-            message.member.addRole(dmRole);
+            message.member.roles.add(dmRole);
             if(respFound.dnd_players[0].is_dm){
                 message.channel.send("You're listed as a dm now");
             }else{
