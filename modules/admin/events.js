@@ -17,7 +17,7 @@ async function onUserJoin(member){
     }
     if(respServer.discord_servers[0]){
             member.guild.channels.cache.find(channel => channel.id === respServer.discord_servers[0].welcome_channel_id).send("Hi! <@" + member.id + "> "+respServer.discord_servers[0].welcome_message);
-            member.addRole(respServer.discord_servers[0].default_role_id);
+            member.roles.add(respServer.discord_servers[0].default_role_id);
     }
 }
 
