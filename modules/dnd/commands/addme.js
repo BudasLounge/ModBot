@@ -63,7 +63,7 @@ module.exports = {
             }catch(error){
                 this.logger.error(error);
             }
-            let dmRole = message.guild.roles.get("735644461627080765");
+            let dmRole = message.guild.cache.find(role => role.id === "735644461627080765");
             message.member.roles.add(dmRole);
             if(respFound.dnd_players[0].is_dm){
                 message.channel.send("You're listed as a dm now");
