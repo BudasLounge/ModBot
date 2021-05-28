@@ -24,7 +24,7 @@ module.exports ={
             return;
         }
         this.logger.info(respServer.minecraft_servers.length + " servers found...");
-        var stat_server = ""; 
+        var stat_server = "";
         /*const ListEmbed = new Discord.RichEmbed()
         .setColor("#f92f03")
         .setTitle("List of all minecraft servers: ");
