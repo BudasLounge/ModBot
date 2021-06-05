@@ -20,7 +20,7 @@ module.exports = {
                 } catch(error){
                     this.logger.error(error.response);
                 }
-                if(respGame.game_joining_master[0]){
+                if(respGame.game_joining_masters[0]){
                     message.channel.send("You already have a live game! Close it out with /game end");
                 }else{
                     this.logger.info(respGame[0]);
@@ -31,9 +31,9 @@ module.exports = {
                     } catch(error2){
                         this.logger.error(error2.response);
                     }
-                    //if(respGame.ok){
-                    //    message.channel.send("Created a game! Others can now join with /game join @host");
-                    //}
+                    if(respGame.ok){
+                        message.channel.send("Created a game! Others can now join with /game join @host");
+                    }
                 }
             break;
                 }
