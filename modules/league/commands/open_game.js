@@ -176,6 +176,8 @@ module.exports = {
                 default:
                     message.channel.send("Here is a list of the current options: randomize");
                 }
+            default:
+                message.channel.send("Here is a list of the current commands:\nopen - this will open a new game for you\noptions - these are options that you can apply to your game. Further list can be found with /game options\nstart - this closes the game from new players joining\nend - this deletes the game from the system")
             }
         }
 };
