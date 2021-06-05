@@ -99,6 +99,7 @@ module.exports = {
             case "end":
                 var respGame;
                 var respPlayersList;
+                var respPlayers;
                 try{
                     respGame = await api.get("game_joining_master",{
                         host_id:message.member.id
@@ -115,7 +116,7 @@ module.exports = {
                         game_id:Number(respGame.game_joining_masters[0].game_id)
                     });
                     for(var i = 0;i<respPlayersList.length;i++){
-                        var respPlayers = await api.delete("game_joining_player",{
+                            respPlayers = await api.delete("game_joining_player",{
                             game_id:Number(respGame.game_joining_masters[0].game_id),
                             player_id:respPlayersList.game_joining_players[i].player_id
                         });
