@@ -130,6 +130,24 @@ module.exports = {
                         message.channel.send("Succesfully ended game.");
                     }
                 }
+                break;
+            case "options":
+                var respGame;
+                var respPlayersList;
+                try{
+                    respGame = await api.get("game_joining_master",{
+                        host_id:message.member.id
+                    });
+                } catch(error8){
+                    this.logger.error(error8.response);
+                }
+                if(respGame.game_joining_masters[0]){
+                    respPlayersList = await api.get("game_joining_player",{
+                        _limit: 20,
+                        game_id:Number(respGame.game_joining_masters[0].game_id)
+                    });
+                }
+                message.channel.send(respPlayersList.game_joining_players);
             }
         }
 };
