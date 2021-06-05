@@ -163,11 +163,11 @@ module.exports = {
                 }
                 var output1 = "Team 1:\n";
                 for(var k = 0;k<players.length;k++){
-                    output1 += "<@" + players(k) + ">\n";
+                    output1 += "<@" + players[k] + ">\n";
                 }
                 var output2 = "Team 2:\n";
                 for(var l = 0;l<team2.length;l++){
-                    output2 += "<@" + team2(l) + ">\n";
+                    output2 += "<@" + team2[l] + ">\n";
                 }
                 message.channel.send(output1 + "\n" + output2);
             }
