@@ -9,7 +9,8 @@ module.exports = {
     async execute(message, args, extra) {
         var api = extra.api;
         const Discord = require("discord.js");
-        switch(args[0]){
+
+        switch(args[1]){
             case "open":
                 var respGame;
                 try{
