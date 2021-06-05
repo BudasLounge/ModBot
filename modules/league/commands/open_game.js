@@ -120,7 +120,7 @@ module.exports = {
                             player_id:respPlayersList.game_joining_players[i].player_id
                         })
                         respPlayers = await api.delete("game_joining_player",{
-                            game_player_id:respTemp.game_joining_players[0].game_player_id
+                            game_player_id:Number(respTemp.game_joining_players[0].game_player_id)
                         });
                     }
                     respGame = await api.delete("game_joining_master",{
