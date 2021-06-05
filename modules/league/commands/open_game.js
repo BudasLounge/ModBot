@@ -134,6 +134,8 @@ module.exports = {
             case "options":
                 var respGame;
                 var respPlayersList;
+                var players;
+                var team2;
                 try{
                     respGame = await api.get("game_joining_master",{
                         host_id:message.member.id
@@ -147,7 +149,26 @@ module.exports = {
                         game_id:Number(respGame.game_joining_masters[0].game_id)
                     });
                 }
-                message.channel.send(respPlayersList.game_joining_players[0]);
+                for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                    players.push(respPlayersList.game_joining_players[i].player_id);
+                }
+                var count = Math.floor(respPlayersList.game_joining_players.length/2);
+                for(var j = 0;j<count;j++){
+                    var rand = Math.floor(Math.random() * respPlayersList.game_joining_players.length)+1;
+                    team2.push(players(rand));
+                    var index = players.indexof(players(rand));
+                    if(index>-1){
+                        players.splice(index,1);
+                    }
+                }
+                var output1 = "Team 1:\n";
+                for(var k = 0;k<players.length;k++){
+                    output1 += "<@" + players(k) + ">\n";
+                }
+                var output2 = "Team 2:\n";
+                for(var l = 0;l<team2.length;l++){
+                    output2 += "<@" + team2(l) + ">\n";
+                }
             }
         }
 };
