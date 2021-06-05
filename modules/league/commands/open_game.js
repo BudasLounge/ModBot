@@ -134,8 +134,8 @@ module.exports = {
             case "options":
                 var respGame;
                 var respPlayersList;
-                var players;
-                var team2;
+                var players = [];
+                var team2 = [];
                 try{
                     respGame = await api.get("game_joining_master",{
                         host_id:message.member.id
