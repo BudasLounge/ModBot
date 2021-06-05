@@ -132,44 +132,48 @@ module.exports = {
                 }
                 break;
             case "options":
-                var respGame;
-                var respPlayersList;
-                var players = [];
-                var team2 = [];
-                try{
-                    respGame = await api.get("game_joining_master",{
-                        host_id:message.member.id
-                    });
-                } catch(error8){
-                    this.logger.error(error8.response);
+                switch(args[2]){
+                    case "randomize":
+                        var respGame;
+                        var respPlayersList;
+                        var players = [];
+                        var team2 = [];
+                        try{
+                            respGame = await api.get("game_joining_master",{
+                                host_id:message.member.id
+                            });
+                        } catch(error8){
+                            this.logger.error(error8.response);
+                        }
+                        if(respGame.game_joining_masters[0]){
+                            respPlayersList = await api.get("game_joining_player",{
+                                _limit: 20,
+                                game_id:Number(respGame.game_joining_masters[0].game_id)
+                            });
+                        }
+                        for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                            players.push(respPlayersList.game_joining_players[i].player_id);
+                        }
+                        var count = Math.floor(respPlayersList.game_joining_players.length/2);
+                        for(var j = 0;j<count;j++){
+                            var rand = Math.floor(Math.random() * respPlayersList.game_joining_players.length);
+                            team2.push(players[rand]);
+                            var index = players.indexOf(players[rand]);
+                            if(index>-1){
+                                players.splice(index,1);
+                            }
+                        }
+                        var output1 = "Team 1:\n";
+                        for(var k = 0;k<players.length;k++){
+                            output1 += "<@" + players[k] + ">\n";
+                        }
+                        var output2 = "Team 2:\n";
+                        for(var l = 0;l<team2.length;l++){
+                            output2 += "<@" + team2[l] + ">\n";
+                        }
+                        message.channel.send(output1 + "\n" + output2);
+                    break;
                 }
-                if(respGame.game_joining_masters[0]){
-                    respPlayersList = await api.get("game_joining_player",{
-                        _limit: 20,
-                        game_id:Number(respGame.game_joining_masters[0].game_id)
-                    });
-                }
-                for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
-                    players.push(respPlayersList.game_joining_players[i].player_id);
-                }
-                var count = Math.floor(respPlayersList.game_joining_players.length/2);
-                for(var j = 0;j<count;j++){
-                    var rand = Math.floor(Math.random() * respPlayersList.game_joining_players.length);
-                    team2.push(players[rand]);
-                    var index = players.indexOf(players[rand]);
-                    if(index>-1){
-                        players.splice(index,1);
-                    }
-                }
-                var output1 = "Team 1:\n";
-                for(var k = 0;k<players.length;k++){
-                    output1 += "<@" + players[k] + ">\n";
-                }
-                var output2 = "Team 2:\n";
-                for(var l = 0;l<team2.length;l++){
-                    output2 += "<@" + team2[l] + ">\n";
-                }
-                message.channel.send(output1 + "\n" + output2);
             }
         }
 };
