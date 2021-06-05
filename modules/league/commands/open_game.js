@@ -169,6 +169,7 @@ module.exports = {
                 for(var l = 0;l<team2.length;l++){
                     output2 += "<@" + team2(l) + ">\n";
                 }
+                message.channel.send(output1 + "\n" + output2);
             }
         }
 };
