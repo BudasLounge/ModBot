@@ -113,17 +113,17 @@ module.exports = {
                         game_id:Number(respGame.game_joining_masters[0].game_id)
                     });
                     for(var i = 0;i<respPlayersList.length;i++){
-                            respPlayers = await api.delete("game_joining_player",{
+                        var respTemp = await api.get("game_joining_player",{
                             game_id:Number(respGame.game_joining_masters[0].game_id),
                             player_id:respPlayersList.game_joining_players[i].player_id
+                        })
+                        respPlayers = await api.delete("game_joining_player",{
+                            game_player_id:respTemp.game_joining_players[0].game_player_id
                         });
                     }
                     respGame = await api.delete("game_joining_master",{
                         game_id:Number(respGame.game_joining_masters[0].game_id)
                     });
-                    if(respGame.ok){
-                        message.channel.send("Game succesfully closed!");
-                    }
                 }
             }
         }
