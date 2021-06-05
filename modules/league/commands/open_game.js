@@ -36,6 +36,31 @@ module.exports = {
                     }
                 }
             break;
+            case "join":
+                if(!args[2]){
+                    message.channel.send("Make sure to @ the host of the game you are joining when running this command.");
+                }else{
+                    var respGame;
+                    var respPlayers;
+                    var hostID = message.mentions.users.first().id;
+                    try{
+                        respGame = await api.get("game_joining_master",{
+                            host_id:hostID
+                        });
+                    } catch(error4){
+                        this.logger.error(error4.response);
+                    }
+                    if(respGame.game_joining_masters[0]){
+                        try{
+                            respPlayers = await api.post("game_joining_player",{
+                                player_id:message.member.id,
+                                game_id:respGame.game_joining_masters[0].game_id
+                            });
+                        } catch(error5){
+                            this.logger.error(error5.response);
+                        }
+                    }
                 }
+            }
         }
 };
