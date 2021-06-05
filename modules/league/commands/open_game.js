@@ -155,8 +155,8 @@ module.exports = {
                 var count = Math.floor(respPlayersList.game_joining_players.length/2);
                 for(var j = 0;j<count;j++){
                     var rand = Math.floor(Math.random() * respPlayersList.game_joining_players.length)+1;
-                    team2.push(players(rand));
-                    var index = players.indexof(players(rand));
+                    team2.push(players[rand]);
+                    var index = players.indexof(players[rand]);
                     if(index>-1){
                         players.splice(index,1);
                     }
