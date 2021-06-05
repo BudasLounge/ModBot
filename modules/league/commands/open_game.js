@@ -59,8 +59,14 @@ module.exports = {
                         } catch(error5){
                             this.logger.error(error5.response);
                         }
+                        if(respPlayers.ok){
+                            message.channel.send("Succesfully joined the game!");
+                        }else{
+                            message.channel.send("There was an error joining the game.");
+                        }
                     }
                 }
+                break;
             }
         }
 };
