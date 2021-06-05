@@ -51,21 +51,48 @@ module.exports = {
                         this.logger.error(error4.response);
                     }
                     if(respGame.game_joining_masters[0]){
-                        try{
-                            respPlayers = await api.post("game_joining_player",{
-                                player_id:message.member.id,
-                                game_id:Number(respGame.game_joining_masters[0].game_id)
-                            });
-                        } catch(error5){
-                            this.logger.error(error5.response);
-                        }
-                        if(respPlayers.ok){
-                            message.channel.send("Succesfully joined the game!");
+                        if(respGame.game_joining_masters[0].status == "open"){
+                            try{
+                                respPlayers = await api.post("game_joining_player",{
+                                    player_id:message.member.id,
+                                    game_id:Number(respGame.game_joining_masters[0].game_id)
+                                });
+                            } catch(error5){
+                                this.logger.error(error5.response);
+                            }
+                            if(respPlayers.ok){
+                                message.channel.send("Succesfully joined the game!");
+                            }else{
+                                message.channel.send("There was an error joining the game.");
+                            }
                         }else{
-                            message.channel.send("There was an error joining the game.");
+                            message.channel.send("This game is already in progress and cannot be joined.");
                         }
                     }else{
                         message.channel.send("That user does not have an active game!");
+                    }
+                }
+                break;
+            case "start":
+                var respGame;
+                try{
+                    respGame = await api.get("game_joining_master",{
+                        host_id:message.member.id
+                    });
+                } catch(error6){
+                    this.logger.error(error6.response);
+                }
+                if(respGame.game_joining_masters[0]){
+                    if(respGame.game_joining_masters[0].status == "open"){
+                        respGame = await api.put("game_joining_master",{
+                            game_id:Number(respGame.game_joining_masters[0].game_id),
+                            status:"started"
+                        });
+                        if(respGame.ok){
+                            message.channel.send("Succesfully started your game!");
+                        }
+                    }else{
+                        message.channel.send("This game is already in progress.");
                     }
                 }
                 break;
