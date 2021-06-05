@@ -64,6 +64,8 @@ module.exports = {
                         }else{
                             message.channel.send("There was an error joining the game.");
                         }
+                    }else{
+                        message.channel.send("That user does not have an active game!");
                     }
                 }
                 break;
