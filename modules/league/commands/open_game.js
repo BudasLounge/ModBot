@@ -112,7 +112,9 @@ module.exports = {
                         _limit: 20,
                         game_id:Number(respGame.game_joining_masters[0].game_id)
                     });
+                    this.logger.info("Set to loop "+respPlayersList.length+" times.");
                     for(var i = 0;i<respPlayersList.length;i++){
+                        this.logger.info("Loop: "+i);
                         var respTemp = await api.get("game_joining_player",{
                             game_id:Number(respGame.game_joining_masters[0].game_id),
                             player_id:respPlayersList.game_joining_players[i].player_id
