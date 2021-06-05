@@ -110,9 +110,16 @@ module.exports = {
                     respGame = await api.delete("game_joining_master",{
                         game_id:Number(respGame.game_joining_masters[0].game_id)
                     });
-                    respPlayers = await api.delete("game_joining_player",{
+                    respPlayers = await api.get("game_joining_player",{
+                        _limit: 20,
                         game_id:Number(respGame.game_joining_masters[0].game_id)
                     });
+                    foreach(player in respPlayers.game_joining_masters){
+                        respPlayers = await api.delete("game_joining_player",{
+                            game_id:Number(respGame.game_joining_masters[0].game_id),
+                            player_id:player.player_id
+                        });
+                    }
                     if(respGame.ok && respPlayers.ok){
                         message.channel.send("Game succesfully closed!");
                     }
