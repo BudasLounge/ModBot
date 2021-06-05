@@ -96,6 +96,27 @@ module.exports = {
                     }
                 }
                 break;
+            case "end":
+                var respGame;
+                var respPlayers
+                try{
+                    respGame = await api.get("game_joining_master",{
+                        host_id:message.member.id
+                    });
+                } catch(error7){
+                    this.logger.error(error7.response);
+                }
+                if(respGame.game_joining_masters[0]){
+                    respGame = await api.delete("game_joining_master",{
+                        game_id:Number(respGame.game_joining_masters[0].game_id)
+                    });
+                    respPlayers = await api.delete("game_joining_player",{
+                        game_id:Number(respGame.game_joining_masters[0].game_id)
+                    });
+                    if(respGame.ok && respPlayers.ok){
+                        message.channel.send("Game succesfully closed!");
+                    }
+                }
             }
         }
 };
