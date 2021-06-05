@@ -23,7 +23,7 @@ module.exports = {
                 if(respGame[0]){
                     message.channel.send("You already have a live game! Close it out with /game end");
                 }else{
-                    message.channel.send(respGame[0]);
+                    this.logger.info(respGame[0]);
                     try{
                         respGame = await api.post("game_joining_master",{
                             host_id:message.member.id
@@ -31,9 +31,9 @@ module.exports = {
                     } catch(error2){
                         this.logger.error(error2.response);
                     }
-                    if(respGame.ok){
-                        message.channel.send("Created a game! Others can now join with /game join @host");
-                    }
+                    //if(respGame.ok){
+                    //    message.channel.send("Created a game! Others can now join with /game join @host");
+                    //}
                 }
             break;
                 }
