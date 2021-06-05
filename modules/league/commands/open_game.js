@@ -147,7 +147,7 @@ module.exports = {
                         game_id:Number(respGame.game_joining_masters[0].game_id)
                     });
                 }
-                message.channel.send(respPlayersList.game_joining_players);
+                message.channel.send(respPlayersList.game_joining_players[0]);
             }
         }
 };
