@@ -126,6 +126,9 @@ module.exports = {
                     respGame = await api.delete("game_joining_master",{
                         game_id:Number(respGame.game_joining_masters[0].game_id)
                     });
+                    if(respGame.ok && respPlayers.ok){
+                        message.channel.send("Succesfully ended game.");
+                    }
                 }
             }
         }
