@@ -173,6 +173,8 @@ module.exports = {
                         }
                         message.channel.send(output1 + "\n" + output2);
                     break;
+                default:
+                    message.channel.send("Here is a list of the current options: randomize");
                 }
             }
         }
