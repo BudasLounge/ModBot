@@ -54,7 +54,7 @@ module.exports = {
                         try{
                             respPlayers = await api.post("game_joining_player",{
                                 player_id:message.member.id,
-                                game_id:respGame.game_joining_masters[0].game_id
+                                game_id:Number(respGame.game_joining_masters[0].game_id)
                             });
                         } catch(error5){
                             this.logger.error(error5.response);
