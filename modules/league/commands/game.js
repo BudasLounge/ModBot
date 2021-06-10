@@ -37,7 +37,7 @@ module.exports = {
                 }
             break;
             case "join":
-                if(!args[2]){
+                if(!args[2]||args[2].indexOf("@") === -1){
                     message.channel.send("Make sure to @ the host of the game you are joining when running this command.");
                 }else{
                     var respGame;
@@ -150,28 +150,30 @@ module.exports = {
                                 _limit: 20,
                                 game_id:Number(respGame.game_joining_masters[0].game_id)
                             });
-                        }
-                        for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
-                            players.push(respPlayersList.game_joining_players[i].player_id);
-                        }
-                        var count = Math.floor(respPlayersList.game_joining_players.length/2);
-                        for(var j = 0;j<count;j++){
-                            var rand = Math.floor(Math.random() * respPlayersList.game_joining_players.length);
-                            team2.push(players[rand]);
-                            var index = players.indexOf(players[rand]);
-                            if(index>-1){
-                                players.splice(index,1);
+                            for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                                players.push(respPlayersList.game_joining_players[i].player_id);
                             }
+                            var count = Math.floor(respPlayersList.game_joining_players.length/2);
+                            for(var j = 0;j<count;j++){
+                                var rand = Math.floor(Math.random() * respPlayersList.game_joining_players.length);
+                                team2.push(players[rand]);
+                                var index = players.indexOf(players[rand]);
+                                if(index>-1){
+                                    players.splice(index,1);
+                                }
+                            }
+                            var output1 = "Team 1:\n";
+                            for(var k = 0;k<players.length;k++){
+                                output1 += "<@" + players[k] + ">\n";
+                            }
+                            var output2 = "Team 2:\n";
+                            for(var l = 0;l<team2.length;l++){
+                                output2 += "<@" + team2[l] + ">\n";
+                            }
+                            message.channel.send(output1 + "\n" + output2);
+                        }else{
+                            message.channel.send("You do not currently own a game, use:\n/game open\nto start a game session.");
                         }
-                        var output1 = "Team 1:\n";
-                        for(var k = 0;k<players.length;k++){
-                            output1 += "<@" + players[k] + ">\n";
-                        }
-                        var output2 = "Team 2:\n";
-                        for(var l = 0;l<team2.length;l++){
-                            output2 += "<@" + team2[l] + ">\n";
-                        }
-                        message.channel.send(output1 + "\n" + output2);
                     break;
                 default:
                     message.channel.send("Here is a list of the current options: randomize");
