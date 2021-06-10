@@ -37,6 +37,7 @@ module.exports = {
                 }
             break;
             case "join":
+                this.logger.info(message.mentions.users.first().id);
                 if(!args[2]||args[2].indexOf("@") === -1||!message.mentions.users.first().id){
                     message.channel.send("Make sure to @ the host of the game you are joining when running this command.");
                 }else{
