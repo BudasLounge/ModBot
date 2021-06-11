@@ -100,9 +100,16 @@ module.exports = {
                 var respGame;
                 var respPlayersList;
                 var respPlayers;
+                var proxy_id;
+                if(args[2]&&message.member.id === "185223223892377611"){
+                    proxy_id = message.mentions.users.first().id;
+                }else{
+                    proxy_id = message.member.id;
+                }
+
                 try{
                     respGame = await api.get("game_joining_master",{
-                        host_id:message.member.id
+                        host_id:proxy_id
                     });
                 } catch(error7){
                     this.logger.error(error7.response);
