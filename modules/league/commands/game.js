@@ -166,7 +166,7 @@ module.exports = {
                             this.logger.info("Max array size: "+ respPlayersList.game_joining_players.length + "\nplayers on team 2: "+count);
                             for(var j = 0;j<count;j++){
                                 var rand = Math.floor(Math.random() * players.length);
-                                this.logger.info("Taking player " + rand + "from the array of size " + players.length)
+                                this.logger.info("Taking player " + rand + " from the array of size " + players.length)
                                 team2.push(players[rand]);
                                 var index = players.indexOf(players[rand]);
                                 if(index>-1){
