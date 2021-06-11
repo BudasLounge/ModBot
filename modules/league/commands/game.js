@@ -136,6 +136,8 @@ module.exports = {
                     if(respGame.ok && respPlayers.ok){
                         message.channel.send("Succesfully ended game.");
                     }
+                }else{
+                    message.channel.send("No game was found for that user.");
                 }
                 break;
             case "options":
