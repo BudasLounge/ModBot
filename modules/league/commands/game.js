@@ -203,7 +203,7 @@ module.exports = {
                 if(respGame.game_joining_masters[0]){
                     var output = "These people still have a game open:\n";
                     for(var i =0;i<respGame.game_joining_masters[i];i++){
-                        var user = message.guild.members.cache.get(respGame.game_joining_masters[i].host_id);
+                        var user = await message.guild.members.cache.get(respGame.game_joining_masters[i].host_id);
                         output += user + "\n"
                     }
                     message.channel.send(output);
