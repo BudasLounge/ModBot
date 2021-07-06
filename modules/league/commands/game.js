@@ -201,8 +201,6 @@ module.exports = {
                     message.channel.send("Hit an error, check the logs");
                 }
                 if(respGame.game_joining_masters[0]){
-                    var output = "These people still have a game open:\n";
-                    message.channel.send("First count: " + respGame.game_joining_masters.length);
                     for(var i =0;i<respGame.game_joining_masters.length;i++){
                         output += "<@"+ respGame.game_joining_masters[i].host_id + ">\n"
                     }
