@@ -190,6 +190,27 @@ module.exports = {
                     message.channel.send("Here is a list of the current options: randomize");
                 }
                 break;
+            case "list":
+                var respGame;
+                try{
+                    respGame = await api.get("game_joining_master", {
+
+                    });
+                } catch(error9){
+                    this.logger.error(error9.response);
+                    message.channel.send("Hit an error, check the logs");
+                }
+                if(respGame.game_joining_masters[0]){
+                    var output = "These people still have a game open:\n";
+                    for(var i =0;i<respGame.game_joining_masters[i];i++){
+                        var user = message.guild.members.cache.get(respGame.game_joining_masters[i].host_id);
+                        output += user + "\n"
+                    }
+                    message.channel.send(output);
+                }else{
+                    message.channel.send("There are no open games at this time");
+                }
+                break;
             default:
                 message.channel.send("Here is a list of the current commands:\nopen - this will open a new game for you\noptions - these are options that you can apply to your game. Further list can be found with /game options\nstart - this closes the game from new players joining\nend - this deletes the game from the system")
             }
