@@ -204,7 +204,7 @@ module.exports = {
                     var output = "These people still have a game open:\n";
                     message.channel.send("First count: " + respGame.game_joining_masters.length);
                     for(var i =0;i<respGame.game_joining_masters.length;i++){
-                        output += "<@"+ user + ">\n"
+                        output += "<@"+ respGame.game_joining_masters[i].host_id + ">\n"
                     }
                     message.channel.send(output);
                 }else{
