@@ -201,6 +201,7 @@ module.exports = {
                     message.channel.send("Hit an error, check the logs");
                 }
                 if(respGame.game_joining_masters[0]){
+                    var output = "Here is the list of people with games still open:\n";
                     for(var i =0;i<respGame.game_joining_masters.length;i++){
                         output += "<@"+ respGame.game_joining_masters[i].host_id + ">\n"
                     }
