@@ -194,7 +194,7 @@ module.exports = {
                 var respGame;
                 try{
                     respGame = await api.get("game_joining_master", {
-
+                        _limit: 20
                     });
                 } catch(error9){
                     this.logger.error(error9.response);
