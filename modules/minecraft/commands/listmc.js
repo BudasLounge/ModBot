@@ -26,6 +26,7 @@ module.exports ={
         .setTitle("List of all minecraft servers: ");*/
         for(var i = 0;i<respServer.minecraft_servers.length;i++){
             var nextItem = "";
+            nextItem += respServer.minecraft_servers[i].display_name +":\n";
             nextItem += "short name: " + respServer.minecraft_servers[i].short_name + "\n";
             nextItem += "server ip: " + respServer.minecraft_servers[i].server_ip + "\n";
             nextItem += "numeric ip: " + respServer.minecraft_servers[i].numeric_ip + ":" + respServer.minecraft_servers[i].port + "\n";
