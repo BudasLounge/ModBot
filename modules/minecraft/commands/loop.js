@@ -1,3 +1,5 @@
+const { build_logger } = require("../../../core/js/log_handler");
+
 module.exports = {
     name: 'loop_sep',
     description: 'loops to a number',
@@ -7,12 +9,15 @@ module.exports = {
     needs_api: false,
     has_state: false,
     async execute(message, args, extra) {
+        this.logger.info("Here are the variables:\nstart: " + args[1]+"\nend: " + args[2] +"\ninterval: "+args[3]+"\nseparator: "+ args[4]);
         var start = args[1];
         var end = args[2];
         var interval = args[3];
         var separator;
         if(args[4]){
             separator = args[4];
+        }else{
+            separator = " ";
         }
         if(interval>0 && args[1]>args[2]){
             message.channel.send("This will cause an error, try with different numbers");
