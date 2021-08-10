@@ -11,7 +11,7 @@ module.exports ={
         const Discord = require('discord.js');
         const {getStatus} = require("mc-server-status");
         this.logger.info(">>display_all_servers_status");
-        message.channel.send("Finding info on all servers...");
+        message.channel.send("Finding info on all servers...\nIf your server is offline, wait up to 5 minutes for it to automatically restart!");
         var respServer;
         try{
             respServer = await api.get("minecraft_server", {
