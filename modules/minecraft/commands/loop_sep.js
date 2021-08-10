@@ -1,5 +1,3 @@
-const { build_logger } = require("../../../core/js/log_handler");
-
 module.exports = {
     name: 'loop_sep',
     description: 'loops to a number',
@@ -25,7 +23,7 @@ module.exports = {
         else if(interval<0 && args[1]<args[2]){
             message.channel.send("This will cause an error, try with different numbers");
         }else{
-            var output;
+            var output = "";
             for(var i = start;i<end;i+=interval){
                 output+= i + " " + separator;
             }
