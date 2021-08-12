@@ -9,7 +9,7 @@ module.exports = {
     async execute(message, args, extra) {
         var state = extra.state;
         var api = extra.api;
-        var respNewChamp;9
+        var respNewChamp;
         if(!state.data.has("name")) {
             if(args.length == 2) {
               state.add_data("name", "STRING", args[1]);
@@ -45,7 +45,7 @@ module.exports = {
                         ad_ap:state.data.get("ad_ap").data
                     });
                     }catch(err){
-                        this.logger.error(err);1195
+                        this.logger.error(err);
 
                     }
 
