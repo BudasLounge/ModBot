@@ -15,10 +15,11 @@ module.exports = {
         lightResp = await axios.get(url, {
            
         });
+        this.logger.info("Here is lightResp: \n" +lightResp);
     } catch (err) {
         this.logger.error(err);
     }
-    message.channel.send(lightResp);
+    //message.channel.send(lightResp);
     //message.channel.send("Light controlled!");
     }
 };
