@@ -6,7 +6,7 @@ module.exports = {
     args_to_lower: true,
     needs_api: false,
     has_state: false,
-    execute(message, args, extra) {
+    async execute(message, args, extra) {
       var fs = require('fs');
       var token = fs.readFileSync("../hue_token.txt").toString();
       var respLight;
