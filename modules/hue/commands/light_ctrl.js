@@ -2,7 +2,7 @@ module.exports = {
     name: 'light_ctrl',
     description: 'controls a light.',
     syntax: 'light_ctrl',
-    num_args: 1,
+    num_args: 0,
     args_to_lower: true,
     needs_api: false,
     has_state: false,
