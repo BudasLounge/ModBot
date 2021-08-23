@@ -9,9 +9,12 @@ module.exports = {
     async execute(message, args, extra) {
       var fs = require('fs');
       var axios = require('axios');
+
       var token = await fs.readFileSync("../hue_token.txt").toString();
       var url = 'http://192.168.1.58/api/'+token+'/lights/7/state';
+      message.channel.send(url);
       var lightResp;
+
       if(args[1] == "on"){
         try {
             lightResp = await axios.put(url, {
