@@ -2,19 +2,20 @@ module.exports = {
     name: 'light_ctrl',
     description: 'controls a light.',
     syntax: 'light_ctrl',
-    num_args: 0,
+    num_args: 2,
     args_to_lower: true,
     needs_api: false,
     has_state: false,
     async execute(message, args, extra) {
-      var fs = require('fs');
-      var axios = require('axios');
+        var fs = require('fs');
+        var axios = require('axios');
 
-      var token = await fs.readFileSync("../hue_token.txt").toString();
-      token = token.replace(/(\r\n|\n|\r)/gm, "");
-      
-      var url = `http://192.168.1.58/api/${token}/lights/7/state`;
-      var lightResp;
+        var token = await fs.readFileSync("../hue_token.txt").toString();
+        token = token.replace(/(\r\n|\n|\r)/gm, "");
+        var lightID = args[2];
+
+        var url = `http://192.168.1.58/api/${token}/lights/${lightID}/state`;
+        var lightResp;
 
       if(args[1] == "on"){
         try {
