@@ -15,6 +15,7 @@ module.exports = {
         if(hours>=8 && (hours === 23 && mins <= 30)){
 
         }else{
+            message.channel.send("This command is closed from 11:30pm to 8am. Try again later!");
         return;
         }
 
