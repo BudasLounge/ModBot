@@ -13,7 +13,7 @@ module.exports = {
         var token = await fs.readFileSync("../hue_token.txt").toString();
         token = token.replace(/(\r\n|\n|\r)/gm, "");
         var lightID = args[2];
-        if(Number.isInteger(args[3]) && Number.isInteger(args[4]) && Number.isInteger(args[5])){
+        if(Number.isInteger(parseInt(args[3])) && Number.isInteger(parseInt(args[4])) && Number.isInteger(parseInt(args[5]))){
             message.channel.send("Valid RGB!");
         }else{
             message.channel.send("Invalid RGB, defaulting to 100 100 100");
