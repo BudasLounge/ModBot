@@ -12,13 +12,24 @@ module.exports = {
       var token = fs.readFileSync("../hue_token.txt").toString();
       const url = `http://192.168.1.58/api/Y-rvKf4l0NUAWUc-cJ8AxKB3U2zzIGveGEgs1l9W/lights/7/state`;
       var lightResp;
-    try {
-        lightResp = await axios.put(url, {
-            on: false,
-        });
-    } catch (err) {
-        this.logger.error(err);
-    }
+      if(args[1] == "on"){
+        try {
+            lightResp = await axios.put(url, {
+                on: true,
+            });
+        } catch (err) {
+            this.logger.error(err);
+        }
+      }else if(args[1] == "off"){
+        try {
+            lightResp = await axios.put(url, {
+                on: false,
+            });
+        } catch (err) {
+            this.logger.error(err);
+        }
+      }
+    
     message.channel.send("Light controlled!");
     }
 };
