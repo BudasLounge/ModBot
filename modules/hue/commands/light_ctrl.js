@@ -14,17 +14,26 @@ module.exports = {
         token = token.replace(/(\r\n|\n|\r)/gm, "");
         var lightID = args[2];
 
+        var red = args[3];
+        var green = args[4];
+        var blue = args[5];
+        red = (red > 0.04045) ? Math.pow((red + 0.055) / (1.0 + 0.055), 2.4) : (red / 12.92);
+        green = (green > 0.04045) ? Math.pow((green + 0.055) / (1.0 + 0.055), 2.4) : (green / 12.92);
+        blue = (blue > 0.04045) ? Math.pow((blue + 0.055) / (1.0 + 0.055), 2.4) : (blue / 12.92);
+        var X = red * 0.664511 + green * 0.154324 + blue * 0.162028;
+        var Y = red * 0.283881 + green * 0.668433 + blue * 0.047685;
+        var Z = red * 0.000088 + green * 0.072310 + blue * 0.986039;
+        var fx = X / (X + Y + Z);
+        var fy = Y / (X + Y + Z);
+
         var url = `http://192.168.1.58/api/${token}/lights/${lightID}/state`;
         var lightResp;
-        if(args[3]==""){
-            args[3] = 30000;
-        }
 
       if(args[1] == "on"){
         try {
             lightResp = await axios.put(url, {
                 on: true,
-                xy:[0.188071151799067,0.7032850275650089],
+                xy:[fx,fy],
                 //hue: parseInt(args[3]),
             });
         } catch (err) {
