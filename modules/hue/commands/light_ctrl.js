@@ -24,7 +24,7 @@ module.exports = {
         try {
             lightResp = await axios.put(url, {
                 on: true,
-                hue: args[3],
+                hue: parseInt(args[3]),
             });
         } catch (err) {
             this.logger.error(err);

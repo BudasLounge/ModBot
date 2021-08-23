@@ -112,12 +112,12 @@ module.exports = {
         else{
             try{
                 respChamps = await api.get("league_champion",{
-                    _limit: 150
+                    _limit: 156
                 });
             } catch(error){
                 this.logger.error({error:error.response});
             }
-            var seed = (Math.floor(Math.random() * 150));
+            var seed = (Math.floor(Math.random() * 156));
             try{
                 message.channel.send("<@" + message.member.id + "> "+respChamps.league_champions[seed].name);
             } catch(error2){
