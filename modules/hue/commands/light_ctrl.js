@@ -33,7 +33,7 @@ module.exports = {
           lightResp = await axios.get("http://192.168.1.58/api/Y-rvKf4l0NUAWUc-cJ8AxKB3U2zzIGveGEgs1l9W/lights", {
 
           });
-          message.channel.send(lightResp);
+          message.channel.send(lightResp[0]);
       }
     message.channel.send("Light controlled!");
     }
