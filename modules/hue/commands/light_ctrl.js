@@ -1,7 +1,7 @@
 module.exports = {
-    name: 'light_list',
-    description: 'Returns a list of all lights that are controllabble.',
-    syntax: 'light_list',
+    name: 'light_ctrl',
+    description: 'controls a light.',
+    syntax: 'light_ctrl',
     num_args: 0,
     args_to_lower: true,
     needs_api: false,
