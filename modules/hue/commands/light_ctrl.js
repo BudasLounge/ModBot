@@ -1,7 +1,7 @@
 module.exports = {
     name: 'light_ctrl',
-    description: 'controls a light.',
-    syntax: 'light_ctrl',
+    description: 'Controls a lights on or off state and its color, if applicable',
+    syntax: 'light_ctrl [on/off] [lightID] [R] [G] [B]")',
     num_args: 2,
     args_to_lower: true,
     needs_api: false,
@@ -65,11 +65,12 @@ module.exports = {
         }
       }
       else{
-          lightResp = await axios.get(`http://192.168.1.58/api/${token}/lights`, {
+          /*lightResp = await axios.get(`http://192.168.1.58/api/${token}/lights`, {
 
           });
-          message.channel.send(JSON.stringify(lightResp));
+          message.channel.send(JSON.stringify(lightResp));*/
+          message.channel.send("Usage: /light_ctrl [on/off] [lightID] [R] [G] [B]")
       }
-    message.channel.send(lightResp);
+    message.channel.send("Light controlled!");
     }
 };
