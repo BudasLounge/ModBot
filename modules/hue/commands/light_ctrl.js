@@ -12,7 +12,7 @@ module.exports = {
         var hours = d.getHours();
         var mins = d.getMinutes();
         var day = d.getDay();
-        if(hours>=8 && (hours === 23 && mins <= 30)){
+        if(hours >= 8 && (hours < 23 && mins <= 30)){
 
         }else{
             message.channel.send("This command is closed from 11:30pm to 8am. Try again later!");
