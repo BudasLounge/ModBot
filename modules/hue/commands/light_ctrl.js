@@ -9,7 +9,7 @@ module.exports = {
     async execute(message, args, extra) {
       var fs = require('fs');
       var token = fs.readFileSync("../hue_token.txt").toString();
-      const url = `http://192.168.1.58/api/${token}/lights/7/state`;
+      const url = `http://192.168.1.58/api/${token}/lights/7/`;
     try {
         await axios.put(url, {
             on: true,
