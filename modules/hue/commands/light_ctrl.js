@@ -9,14 +9,16 @@ module.exports = {
     async execute(message, args, extra) {
       var fs = require('fs');
       var token = fs.readFileSync("../hue_token.txt").toString();
-      const url = `http://192.168.1.58/api/${token}/lights/7/`;
+      const url = `http://192.168.1.58/api/${token}/lights/`;
+      var lightResp;
     try {
-        await axios.put(url, {
-            on: true,
+        lightResp = await axios.get(url, {
+           
         });
     } catch (err) {
         this.logger.error(err);
     }
-    message.channel.send("Light controlled!");
+    message.channel.send(lightResp);
+    //message.channel.send("Light controlled!");
     }
 };
