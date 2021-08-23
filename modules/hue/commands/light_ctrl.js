@@ -45,6 +45,7 @@ module.exports = {
             var Z = red * 0.000088 + green * 0.072310 + blue * 0.986039;
             var fx = X / (X + Y + Z);
             var fy = Y / (X + Y + Z);
+            message.channel.send(fx + " " + fy);
         }
         
 
