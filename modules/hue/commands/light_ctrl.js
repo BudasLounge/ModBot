@@ -13,6 +13,11 @@ module.exports = {
         var token = await fs.readFileSync("../hue_token.txt").toString();
         token = token.replace(/(\r\n|\n|\r)/gm, "");
         var lightID = args[2];
+        if(Number.isInteger(args[3]) && Number.isInteger(args[4]) && Number.isInteger(args[5])){}else{
+            args[3] = 100;
+            args[4] = 100;
+            args[5] = 100;
+        }
         if(lightID === "6"){
             var red = args[3];
             var green = args[4];
@@ -26,6 +31,7 @@ module.exports = {
             var fx = X / (X + Y + Z);
             var fy = Y / (X + Y + Z);
         }
+        
 
         var url = `http://192.168.1.58/api/${token}/lights/${lightID}/state`;
         var lightResp;
@@ -56,7 +62,7 @@ module.exports = {
         }
       }
       else{
-          lightResp = await axios.get("http://192.168.1.58/api/Y-rvKf4l0NUAWUc-cJ8AxKB3U2zzIGveGEgs1l9W/lights", {
+          lightResp = await axios.get(`http://192.168.1.58/api/${token}/lights`, {
 
           });
           message.channel.send(JSON.stringify(lightResp));
