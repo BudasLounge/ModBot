@@ -14,7 +14,7 @@ module.exports = {
       var lightResp;
     try {
         lightResp = await axios.put(url, {
-            on: args[1],
+            on: false,
         });
     } catch (err) {
         this.logger.error(err);
