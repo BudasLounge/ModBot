@@ -7,6 +7,17 @@ module.exports = {
     needs_api: false,
     has_state: false,
     async execute(message, args, extra) {
+
+        var d = new Date(); // current time
+        var hours = d.getHours();
+        var mins = d.getMinutes();
+        var day = d.getDay();
+        if(hours>=8 && (hours === 23 && mins <= 30)){
+
+        }else{
+        return;
+        }
+
         var fs = require('fs');
         var axios = require('axios');
 
