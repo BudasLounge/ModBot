@@ -9,6 +9,15 @@ module.exports = {
     execute(message, args, extra) {
       var fs = require('fs');
       var token = fs.readFileSync("../hue_token.txt").toString();
-      message.channel.send(token);
+      var respLight;
+      try{
+        respLight = await axios.get(`http://192.168.1.58/api/${token}/lights`, {
+
+        });
+      }catch(err){
+        this.logger.error(err);
+      }
+      message.channel.send(respLight);
+
     }
 };
