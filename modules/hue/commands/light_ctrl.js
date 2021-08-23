@@ -16,12 +16,15 @@ module.exports = {
 
         var url = `http://192.168.1.58/api/${token}/lights/${lightID}/state`;
         var lightResp;
+        if(args[3]==""){
+            args[3] = 20000;
+        }
 
       if(args[1] == "on"){
         try {
             lightResp = await axios.put(url, {
                 on: true,
-                hue: 0,
+                hue: args[3],
             });
         } catch (err) {
             this.logger.error(err);
