@@ -26,6 +26,11 @@ module.exports = {
         token = token.replace(/(\r\n|\n|\r)/gm, "");
         var lightID = args[2];
         if(lightID === "6"){
+            if(args[3] == "rando"){
+                args[3] = Math.random() * (255-1) +1;
+                args[4] = Math.random() * (255-1) +1;
+                args[5] = Math.random() * (255-1) +1;
+            }
         if(Number.isInteger(parseInt(args[3])) && Number.isInteger(parseInt(args[4])) && Number.isInteger(parseInt(args[5]))){
             message.channel.send("Valid RGB!");
         }else{
