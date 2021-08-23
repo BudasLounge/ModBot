@@ -11,7 +11,9 @@ module.exports = {
       var axios = require('axios');
 
       var token = await fs.readFileSync("../hue_token.txt").toString();
-      var url = 'http://192.168.1.58/api/'+token+'/lights/7/state';
+      token = token.replace(/(\r\n|\n|\r)/gm, "");
+
+      var url = `http://192.168.1.58/api/${token}/lights/7/state`;
       message.channel.send(url);
       var lightResp;
 
