@@ -11,11 +11,11 @@ module.exports = {
       var token = fs.readFileSync("../hue_token.txt").toString();
       const url = `http://192.168.1.58/api/${token}/lights/7/state`;
     try {
-        return await axios.put(url, {
+        await axios.put(url, {
             on: true,
         });
     } catch (err) {
-        message.channel.send(err);
+        this.logger.error(err);
     }
     message.channel.send("Light controlled!");
     }
