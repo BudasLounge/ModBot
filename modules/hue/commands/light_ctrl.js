@@ -17,6 +17,6 @@ module.exports = {
     } catch (err) {
         console.error(err);
     }
-
+    message.channel.send("Light controlled!");
     }
 };
