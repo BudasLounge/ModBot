@@ -29,7 +29,7 @@ module.exports = {
             this.logger.error(err);
         }
       }
-    
+    message.channel.send("Here is the token: "+ token);
     message.channel.send("Light controlled!");
     }
 };
