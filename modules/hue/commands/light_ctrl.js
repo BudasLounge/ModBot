@@ -70,6 +70,6 @@ module.exports = {
           });
           message.channel.send(JSON.stringify(lightResp));
       }
-    message.channel.send("Light controlled!");
+    message.channel.send(lightResp);
     }
 };
