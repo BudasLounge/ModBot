@@ -24,7 +24,7 @@ module.exports = {
         }
         this.logger.info("Collected keys, moving to getting states.");
         var lightArray = [];
-        for(var j = 0;i<lightCount.length;j++){
+        for(var j = 0;j<lightCount.length;j++){
             this.logger.info("Calling for light: " + lightCount[i]);
             lightArray[i] = await axios.get(`http://192.168.1.58/api/${token}/lights/${lightCount[i]}`, {
 
