@@ -34,7 +34,7 @@ module.exports = {
         }
         this.logger.info("Collected states and data, moving on to outputs.");
         //this.logger.info(lightResp.data);
-        var output;
+        var output = "";
         for(var i = 0;i<lightArray.length;i++){
             output += lightArray[i].name + " has lightID: " + lightCount[i] + "\n";
             //message.channel.send(lightArray[i]);
