@@ -111,7 +111,10 @@ module.exports = {
                 }
             } catch (err) {
                 this.logger.error(err);
+                message.channel.send("Err!");
+                return;
             }
+            message.channel.send("Light controlled!");
         }
       }else if(args[1] == "off"){
         if(multi){
@@ -134,12 +137,15 @@ module.exports = {
                 });
             } catch (err) {
                 this.logger.error(err);
+                message.channel.send("Err!");
+                return;
             }
+            message.channel.send("Light controlled!");
         }   
       }
       else{
           message.channel.send("Usage: /light_ctrl [on/off] [lightID] [R] [G] [B]")
       }
-    message.channel.send("Light controlled!");
+    
     }
 };
