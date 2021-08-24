@@ -40,6 +40,6 @@ module.exports = {
             //message.channel.send(lightArray[i]);
             //message.channel.send(lightArray[i] + " " + lightArray[i].state);
         }
-        //message.channel.send(JSON.stringify(stringedResp));
+        message.channel.send(output);
     }
 }
