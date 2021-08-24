@@ -22,7 +22,7 @@ module.exports = {
             key = key.replace(/(\r\n|\n|\r)/gm, "");
             lightCount.push(key);
         }
-
+        this.logger.info("Collected keys, moving to getting states.");
         var lightArray = [];
         for(var j = 0;i<lightCount.length;j++){
             this.logger.info("Calling for light: " + lightCount[i]);
