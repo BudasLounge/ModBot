@@ -84,7 +84,9 @@ module.exports = {
 
       if(args[1] == "on"){
           if(multi){
+              this.logger.info("In multi");
             for(var i = start;i<end;i++){
+                this.logger.info("Loop " + i);
                 url = `http://192.168.1.58/api/${token}/lights/${i}/state`
                 if(lightID === "12"){
                     lightResp = await axios.put(url, {
@@ -94,7 +96,7 @@ module.exports = {
                 }else{
                     try{
                         lightResp = await axios.put(url, {
-                            on: false,
+                            on: true,
                         });
                     } catch (err) {
                         this.logger.error(err);
