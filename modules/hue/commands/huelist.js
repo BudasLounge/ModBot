@@ -16,7 +16,11 @@ module.exports = {
         var lightResp = await axios.get(`http://192.168.1.58/api/${token}/lights`, {
 
         });
-        this.logger.info("Here is the lightResp:\n" + lightResp[0]);
+        var stringedResp;
+        for(light in lightResp){
+            stringedResp =+ lightResp[light] + "\n";
+        }
+        this.logger.info("Here is the lightResp:\n" + stringedResp);
         //message.channel.send(lightResp);
     }
 }
