@@ -37,7 +37,8 @@ module.exports = {
         if(args[2].includes("-")){
             multi = true;
             var start = args[2].substring(0, args[2].indexOf("-"));
-            message.channel.send(start);
+            var end = args[2].substring(args[2].indexOf("-")+1);
+            message.channel.send(start + " " + end);
         }else{
             if(!Number.isInteger(parseInt(args[2]))){
                 message.channel.send("Please enter a valid lightID");
