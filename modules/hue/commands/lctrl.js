@@ -38,7 +38,10 @@ module.exports = {
             multi = true;
             var start = args[2].substring(0, args[2].indexOf("-"));
             var end = args[2].substring(args[2].indexOf("-")+1);
-            message.channel.send(start + " " + end);
+            if(!Number.isInteger(parseInt(start)) || !Number.isInteger(parseInt(end))){
+                message.channel.send("Please enter a valid range of lightIDs (make sure the values are numeric)");
+                return;
+            }
         }else{
             if(!Number.isInteger(parseInt(args[2]))){
                 message.channel.send("Please enter a valid lightID");
@@ -80,29 +83,62 @@ module.exports = {
         var lightResp;
 
       if(args[1] == "on"){
-        try {
-            if(lightID === "12"){
-                lightResp = await axios.put(url, {
-                    on: true,
-                    xy:[fx,fy],
-                });
+          if(multi){
+            for(var i = start;i<end;i++){
+                url = `http://192.168.1.58/api/${token}/lights/${i}/state`
+                if(lightID === "12"){
+                    lightResp = await axios.put(url, {
+                        on: true,
+                        xy:[fx,fy],
+                    });
+                }else{
+                    try{
+                        lightResp = await axios.put(url, {
+                            on: false,
+                        });
+                    } catch (err) {
+                        this.logger.error(err);
+                    }
+                }
             }
-            else{
-                lightResp = await axios.put(url, {
-                    on: true,
-                });
+          }else{
+            try {
+                if(lightID === "12"){
+                    lightResp = await axios.put(url, {
+                        on: true,
+                        xy:[fx,fy],
+                    });
+                }
+                else{
+                    lightResp = await axios.put(url, {
+                        on: true,
+                    });
+                }
+            } catch (err) {
+                this.logger.error(err);
             }
-        } catch (err) {
-            this.logger.error(err);
         }
       }else if(args[1] == "off"){
-        try {
-            lightResp = await axios.put(url, {
-                on: false,
-            });
-        } catch (err) {
-            this.logger.error(err);
-        }
+        if(multi){
+            for(var i = start;i<end;i++){
+                url = `http://192.168.1.58/api/${token}/lights/${i}/state`
+                try{
+                    lightResp = await axios.put(url, {
+                        on: false,
+                    });
+                } catch (err) {
+                    this.logger.error(err);
+                }
+            }
+        }else{
+            try {
+                lightResp = await axios.put(url, {
+                    on: false,
+                });
+            } catch (err) {
+                this.logger.error(err);
+            }
+        }   
       }
       else{
           message.channel.send("Usage: /light_ctrl [on/off] [lightID] [R] [G] [B]")
