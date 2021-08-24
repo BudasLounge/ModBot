@@ -23,6 +23,9 @@ module.exports = {
         }
         var stringedResp = Object.values(lightResp.data);
         this.logger.info(stringedResp);
-        message.channel.send(JSON.stringify(stringedResp));
+        for(var i = 0;i<lightArray.length;i++){
+            message.channel.send(lightArray[i]);
+        }
+        //message.channel.send(JSON.stringify(stringedResp));
     }
 }
