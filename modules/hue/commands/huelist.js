@@ -18,6 +18,6 @@ module.exports = {
         });
         var stringedResp = Object.values(lightResp.data);
         this.logger.info(stringedResp);
-        message.channel.send(JSON.stringify(stringedResp));
+        message.channel.send(JSON.stringify(stringedResp), {split:true});
     }
 }
