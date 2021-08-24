@@ -16,14 +16,36 @@ module.exports = {
 
         }else{
             message.channel.send("This command is closed from 11pm to 8am. Try again later!");
-        return;
+            return;
         }
 
         var fs = require('fs');
         var axios = require('axios');
-
         var token = await fs.readFileSync("../hue_token.txt").toString();
         token = token.replace(/(\r\n|\n|\r)/gm, "");
+
+        var lightPrep = await axios.get(`http://192.168.1.58/api/${token}/lights`, {
+
+        });
+        message.channel.send("Compiling light list...");
+        var lightCount = [];
+        for(var key in lightPrep.data){
+            this.logger.info("Pushing key: " + key);
+            key = key.replace(/(\r\n|\n|\r)/gm, "");
+            lightCount.push(key);
+        }
+        var multi = false;
+        if(args[2].includes("-")){
+            multi = true;
+            var start = args[2].substring(0, args[2].indexOf("-"));
+            message.channel.send(start);
+        }else{
+            if(!Number.isInteger(parseInt(args[2]))){
+                message.channel.send("Please enter a valid lightID");
+                return;
+            }
+        }
+
         var lightID = args[2];
         if(lightID === "12"){
             if(args[3] == "rando"){
