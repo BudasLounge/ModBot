@@ -21,11 +21,11 @@ module.exports = {
         for(light in lightResp.data){
             lightArray.push(light);
         }
-        var stringedResp = Object.values(lightResp.data);
+
         this.logger.info(lightResp.data);
-        for(var key in stringedResp){
+
+        for(var key in lightResp.data){
             message.channel.send(key);
-            message.channel.send(stringedResp[key]);
             //message.channel.send(lightArray[i] + " " + lightArray[i].state);
         }
         //message.channel.send(JSON.stringify(stringedResp));
