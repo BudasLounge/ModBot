@@ -26,11 +26,12 @@ module.exports = {
         var lightArray = [];
         for(var j = 0;j<lightCount.length;j++){
             this.logger.info("Calling for light: " + lightCount[j]);
-            lightArray[i] = await axios.get(`http://192.168.1.58/api/${token}/lights/${lightCount[j]}`, {
+            var resp = await axios.get(`http://192.168.1.58/api/${token}/lights/${lightCount[j]}`, {
 
             });
+            lightArray[j] = resp.data;
         }
-
+        this.logger.info("Collected states and data, moving on to outputs.");
         //this.logger.info(lightResp.data);
 
         
