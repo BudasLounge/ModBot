@@ -36,7 +36,7 @@ module.exports = {
 
         
         for(var i = 0;i<lightArray.length;i++){
-            message.channel.send(lightArray[i].name);
+            message.channel.send("Light " + lightCount[i] + " is name: " + lightArray[i].name);
             //message.channel.send(lightArray[i]);
             //message.channel.send(lightArray[i] + " " + lightArray[i].state);
         }
