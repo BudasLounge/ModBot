@@ -33,7 +33,7 @@ module.exports = {
             lightArray[j] = resp.data;
         }
         this.logger.info("Collected states and data, moving on to outputs.");
-        this.logger.info("State of a light:" + lightArray[0].has_state.on);
+        this.logger.info("State of a light:" + lightArray[0].state.on);
         //this.logger.info(lightResp.data);
         var output = "";
         for(var i = 0;i<lightArray.length;i++){
