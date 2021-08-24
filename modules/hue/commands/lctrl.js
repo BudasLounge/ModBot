@@ -88,14 +88,17 @@ module.exports = {
             for(var i = start;i<=end;i++){
                 this.logger.info("Loop " + i);
                 url = `http://192.168.1.58/api/${token}/lights/${i}/state`
-                    try{
-                        lightResp = await axios.put(url, {
-                            on: true,
-                        });
-                    } catch (err) {
-                        this.logger.error(err);
-                    }
+                try{
+                    lightResp = await axios.put(url, {
+                        on: true,
+                    });
+                } catch (err) {
+                    this.logger.error(err);
+                    message.channel.send("Err!");
+                    return;
+                }
             }
+            message.channel.send("Multiple lights controlled!");
           }else{
             try {
                 if(lightID === "12"){
@@ -128,8 +131,11 @@ module.exports = {
                     });
                 } catch (err) {
                     this.logger.error(err);
+                    message.channel.send("Err!");
+                    return;
                 }
             }
+            message.channel.send("Multiple lights controlled!");
         }else{
             try {
                 lightResp = await axios.put(url, {
