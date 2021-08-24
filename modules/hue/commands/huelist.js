@@ -36,7 +36,7 @@ module.exports = {
         //this.logger.info(lightResp.data);
         var output;
         for(var i = 0;i<lightArray.length;i++){
-            output =+ lightArray[i].name + " has lightID: " + lightCount[i] + "\n";
+            output += lightArray[i].name + " has lightID: " + lightCount[i] + "\n";
             //message.channel.send(lightArray[i]);
             //message.channel.send(lightArray[i] + " " + lightArray[i].state);
         }
