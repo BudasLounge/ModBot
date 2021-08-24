@@ -36,7 +36,7 @@ module.exports = {
 
         
         for(var i = 0;i<lightArray.length;i++){
-            this.logger.info(lightArray[i]);
+            this.logger.info(lightArray[i].name);
             //message.channel.send(lightArray[i]);
             //message.channel.send(lightArray[i] + " " + lightArray[i].state);
         }
