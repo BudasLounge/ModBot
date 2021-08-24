@@ -1,7 +1,7 @@
 module.exports = {
-    name: 'light_ctrl',
+    name: 'lctrl',
     description: 'Controls a lights on or off state and its color, if applicable',
-    syntax: 'light_ctrl [on/off] [lightID] [R] [G] [B]',
+    syntax: 'lctrl [on/off] [lightID] [R] [G] [B]',
     num_args: 2,
     args_to_lower: true,
     needs_api: false,
