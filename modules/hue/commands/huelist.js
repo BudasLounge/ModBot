@@ -19,6 +19,7 @@ module.exports = {
         var lightCount = [];
         for(var key in lightResp.data){
             this.logger.info("Pushing key: " + key);
+            key = key.replace(/(\r\n|\n|\r)/gm, "");
             lightCount.push(key);
         }
 
