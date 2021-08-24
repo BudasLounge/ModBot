@@ -25,7 +25,7 @@ module.exports = {
         var token = await fs.readFileSync("../hue_token.txt").toString();
         token = token.replace(/(\r\n|\n|\r)/gm, "");
         var lightID = args[2];
-        if(lightID === "6"){
+        if(lightID === "12"){
             if(args[3] == "rando"){
                 args[3] = Math.random() * (255-1) +1;
                 args[4] = Math.random() * (255-1) +1;
