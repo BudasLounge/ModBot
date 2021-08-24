@@ -88,12 +88,6 @@ module.exports = {
             for(var i = start;i<=end;i++){
                 this.logger.info("Loop " + i);
                 url = `http://192.168.1.58/api/${token}/lights/${i}/state`
-                if(lightID === "12"){
-                    lightResp = await axios.put(url, {
-                        on: true,
-                        xy:[fx,fy],
-                    });
-                }else{
                     try{
                         lightResp = await axios.put(url, {
                             on: true,
@@ -101,7 +95,6 @@ module.exports = {
                     } catch (err) {
                         this.logger.error(err);
                     }
-                }
             }
           }else{
             try {
