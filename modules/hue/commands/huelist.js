@@ -22,7 +22,7 @@ module.exports = {
             lightArray.push(light);
         }
         var stringedResp = Object.values(lightResp.data);
-        this.logger.info(stringedResp);
+        this.logger.info(lightResp.data);
         for(var key in stringedResp){
             message.channel.send(key);
             message.channel.send(stringedResp[key]);
