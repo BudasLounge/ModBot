@@ -17,7 +17,7 @@ module.exports = {
 
         });
         var stringedResp = Object.values(lightResp);
-        this.logger.info("Here is the lightResp:\n" + stringedResp);
+        this.logger.info("Here is the lightResp:\n" + lightResp.json());
         //message.channel.send(lightResp);
     }
 }
