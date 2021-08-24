@@ -27,7 +27,6 @@ module.exports = {
         var lightPrep = await axios.get(`http://192.168.1.58/api/${token}/lights`, {
 
         });
-        message.channel.send("Compiling light list...");
         var lightCount = [];
         for(var key in lightPrep.data){
             this.logger.info("Pushing key: " + key);
