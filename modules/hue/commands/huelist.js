@@ -13,9 +13,9 @@ module.exports = {
 
         var token = await fs.readFileSync("../hue_token.txt").toString();
         token = token.replace(/(\r\n|\n|\r)/gm, "");
-        lightResp = await axios.get(`http://192.168.1.58/api/${token}/lights`, {
+        var lightResp = await axios.get(`http://192.168.1.58/api/${token}/lights`, {
 
-          });
-          message.channel.send(JSON.parse(lightResp));
+        });
+        message.channel.send(lightResp.state);
     }
 }
