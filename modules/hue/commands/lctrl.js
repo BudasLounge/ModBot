@@ -83,10 +83,6 @@ module.exports = {
         }
       }
       else{
-          /*lightResp = await axios.get(`http://192.168.1.58/api/${token}/lights`, {
-
-          });
-          message.channel.send(JSON.stringify(lightResp));*/
           message.channel.send("Usage: /light_ctrl [on/off] [lightID] [R] [G] [B]")
       }
     message.channel.send("Light controlled!");
