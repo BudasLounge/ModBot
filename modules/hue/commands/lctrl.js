@@ -59,7 +59,7 @@ module.exports = {
 
       if(args[1] == "on"){
         try {
-            if(lightID === "6"){
+            if(lightID === "12"){
                 lightResp = await axios.put(url, {
                     on: true,
                     xy:[fx,fy],
