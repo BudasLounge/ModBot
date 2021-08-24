@@ -16,17 +16,23 @@ module.exports = {
         var lightResp = await axios.get(`http://192.168.1.58/api/${token}/lights`, {
 
         });
-
-        var lightArray = [];
-        for(light in lightResp.data){
-            lightArray.push(light);
+        var lightCount = [];
+        for(var key in lightResp.data){
+            lightCount.push(key);
         }
 
-        this.logger.info(lightResp.data);
+        var lightArray = [];
+        for(var j = 0;i<lightCount.length;j++){
+            lightArray[i] = await axios.get(`http://192.168.1.58/api/${token}/lights/${lightCount[i]}`, {
+
+            });
+        }
+
+        //this.logger.info(lightResp.data);
 
         
-        for(var i = 0;i<lightResp.data.length;i++){
-            message.channel.send(lightResp.data[i]);
+        for(var i = 0;i<lightArray.length;i++){
+            message.channel.send(lightArray[i]);
             //message.channel.send(lightArray[i] + " " + lightArray[i].state);
         }
         //message.channel.send(JSON.stringify(stringedResp));
