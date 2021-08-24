@@ -34,12 +34,14 @@ module.exports = {
         }
         this.logger.info("Collected states and data, moving on to outputs.");
         this.logger.info("State of a light:" + lightArray[0].state.on);
-        //this.logger.info(lightResp.data);
+        
         var output = "";
         for(var i = 0;i<lightArray.length;i++){
-            output += lightArray[i].name + " has lightID: " + lightCount[i] + "\n";
-            //message.channel.send(lightArray[i]);
-            //message.channel.send(lightArray[i] + " " + lightArray[i].state);
+            if(lightArray[i].state.on){
+                output += lightArray[i].name + " has lightID: " + lightCount[i] + " and is ON\n";
+            }else{
+                output += lightArray[i].name + " has lightID: " + lightCount[i] + " and is OFF\n";
+            }
         }
         message.channel.send(output);
     }
