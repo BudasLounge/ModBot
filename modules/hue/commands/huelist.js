@@ -23,10 +23,9 @@ module.exports = {
         }
         var stringedResp = Object.values(lightResp.data);
         this.logger.info(stringedResp);
-        var keys = Object.keys(lightResp.data);
-        for(var key in lightResp.data){
+        for(var key in stringedResp){
             message.channel.send(key);
-            message.channel.send(lightResp.data[key]);
+            message.channel.send(stringedResp[key]);
             //message.channel.send(lightArray[i] + " " + lightArray[i].state);
         }
         //message.channel.send(JSON.stringify(stringedResp));
