@@ -84,8 +84,8 @@ module.exports = {
 
       if(args[1] == "on"){
           if(multi){
-              this.logger.info("In multi");
-            for(var i = start;i<end;i++){
+              this.logger.info("In multi "+start + " " + end);
+            for(var i = start;i<=end;i++){
                 this.logger.info("Loop " + i);
                 url = `http://192.168.1.58/api/${token}/lights/${i}/state`
                 if(lightID === "12"){
@@ -122,8 +122,8 @@ module.exports = {
         }
       }else if(args[1] == "off"){
         if(multi){
-            this.logger.info("In multi");
-            for(var i = start;i<end;i++){
+            this.logger.info("In multi: "+start + " " + end);
+            for(var i = start;i<=end;i++){
                 this.logger.info("Loop " + i);
                 url = `http://192.168.1.58/api/${token}/lights/${i}/state`
                 try{
