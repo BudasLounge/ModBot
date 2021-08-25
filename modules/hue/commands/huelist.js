@@ -41,7 +41,7 @@ module.exports = {
         var output = "";
         for(var i = 0;i<lightArray.length;i++){
             if(lightArray[i].state.on){
-                output += lightArray[i].name + " has lightID: " + lightCount[i] + " and is ON\n";
+                output += lightArray[i].name + " has lightID: " + Object.keys(lightArray[i])[0] + " and is ON\n";
             }else{
                 output += lightArray[i].name + " has lightID: " + lightCount[i] + " and is OFF\n";
             }
