@@ -32,9 +32,10 @@ module.exports = {
             });
             lightArray[j] = resp.data;
         }
+        lightArray.sort();
         this.logger.info("Collected states and data, moving on to outputs.");
         this.logger.info("State of a light:" + lightArray[0].state.on);
-        
+
         var output = "";
         for(var i = 0;i<lightArray.length;i++){
             if(lightArray[i].state.on){
