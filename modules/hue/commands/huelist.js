@@ -34,6 +34,9 @@ module.exports = {
         }
 
         this.logger.info("Collected states and data, moving on to outputs.");
+        lightArray.sort(function(a, b) {
+            return compareStrings(a.name, b.name);
+          })
 
         var output = "";
         for(var i = 0;i<lightArray.length;i++){
@@ -47,12 +50,10 @@ module.exports = {
     }
 }
 
-function sortData(a, b){
-    if (a > b) {
-        return 1;
-    }
-    if (b > a) {
-        return -1;
-    }
-    return 0;
-}
+function compareStrings(a, b) {
+    // Assuming you want case-insensitive comparison
+    a = a.toLowerCase();
+    b = b.toLowerCase();
+  
+    return (a < b) ? -1 : (a > b) ? 1 : 0;
+  }
