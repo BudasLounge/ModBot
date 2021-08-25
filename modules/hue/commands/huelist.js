@@ -34,6 +34,7 @@ module.exports = {
         }
 
         this.logger.info("Collected states and data, moving on to outputs.");
+        this.logger.info(lightArray);
         lightArray.sort(function(a, b) {
             return compareStrings(a.name, b.name);
           })
