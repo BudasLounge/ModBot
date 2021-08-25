@@ -35,7 +35,7 @@ module.exports = {
 
 
         for(var k = 0;k<lightArray.length;k++){
-            lightArray["lightID"] = lightCount[k];
+            lightArray["lightID"]["lightID"] = lightCount[k];
         }
         this.logger.info("Collected states and data, moving on to outputs.");
         this.logger.info(lightArray);
