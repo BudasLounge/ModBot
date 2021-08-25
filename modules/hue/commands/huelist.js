@@ -32,8 +32,14 @@ module.exports = {
             });
             lightArray[j] = resp.data;
         }
-        this.logger.info(lightArray);
-        lightArray.sort();
+
+        for(var k = 1;k<lightArray.length;k++){
+            if(sortData(lightArray[k-1], lightArray[k]) === "-1"){
+                var temp = lightArray[k-1];
+                lightArray[k-1] = lightArray[k];
+                lightArray[k] = temp;
+            }
+        }
         this.logger.info("Collected states and data, moving on to outputs.");
         this.logger.info("State of a light:" + lightArray[0].state.on);
 
@@ -47,4 +53,14 @@ module.exports = {
         }
         message.channel.send(output);
     }
+}
+
+function sortData(a, b){
+    if (a > b) {
+        return 1;
+    }
+    if (b > a) {
+        return -1;
+    }
+    return 0;
 }
