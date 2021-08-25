@@ -32,15 +32,7 @@ module.exports = {
             });
             lightArray[j] = resp.data;
         }
-        lightArray.sort(function (a, b) {
-            if (a > b) {
-                return 1;
-            }
-            if (b > a) {
-                return -1;
-            }
-            return 0;
-        });
+        lightArray.sort();
         this.logger.info("Collected states and data, moving on to outputs.");
         this.logger.info("State of a light:" + lightArray[0].state.on);
 
