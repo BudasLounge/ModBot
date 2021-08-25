@@ -33,6 +33,10 @@ module.exports = {
             lightArray[j] = resp.data;
         }
 
+        var lightArrayID = [];
+        for(var k = 0;k<lightArray.length;k++){
+            lightArrayID[lightCount[k]] = lightArray[k];
+        }
         this.logger.info("Collected states and data, moving on to outputs.");
         this.logger.info(lightArray);
         lightArray.sort(function(a, b) {
@@ -42,7 +46,7 @@ module.exports = {
         var output = "";
         for(var i = 0;i<lightArray.length;i++){
             if(lightArray[i].state.on){
-                output += lightArray[i].name + " has lightID: " + Object.keys(lightArray[i])[0] + " and is ON\n";
+                output += lightArrayID[i].name + " has lightID: " + lightArrayID[i] + " and is ON\n";
             }else{
                 output += lightArray[i].name + " has lightID: " + lightCount[i] + " and is OFF\n";
             }
