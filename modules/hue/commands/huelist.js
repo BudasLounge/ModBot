@@ -33,9 +33,9 @@ module.exports = {
             lightArray[j] = resp.data;
         }
 
-        var lightArrayID = [];
+
         for(var k = 0;k<lightArray.length;k++){
-            lightArrayID[lightCount[k]] = lightArray[k];
+            lightArray["lightID"] = lightCount[k];
         }
         this.logger.info("Collected states and data, moving on to outputs.");
         this.logger.info(lightArray);
@@ -46,9 +46,9 @@ module.exports = {
         var output = "";
         for(var i = 0;i<lightArray.length;i++){
             if(lightArray[i].state.on){
-                output += lightArrayID[i].name + " has lightID: " + lightArrayID[i] + " and is ON\n";
+                output += lightArray[i].name + " has lightID: " + lightArray[i].lightID + " and is ON\n";
             }else{
-                output += lightArray[i].name + " has lightID: " + lightCount[i] + " and is OFF\n";
+                output += lightArray[i].name + " has lightID: " + lightArray[i].lightID + " and is OFF\n";
             }
         }
         message.channel.send(output);
