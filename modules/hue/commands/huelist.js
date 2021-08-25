@@ -34,7 +34,7 @@ module.exports = {
         }
         var lightNames = [];
         for(var light in lightArray){
-            lightNames.push(light.name, light.state);
+            lightNames.push(light.name);
         }
         lightNames.sort();
         for(var k = 1;k<lightArray.length;k++){
