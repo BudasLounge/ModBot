@@ -48,11 +48,11 @@ module.exports = {
 
         var output = "";
         for(var i = 0;i<lightNames.length;i++){
-            if(lightNames[i].state.on){
+            //if(lightNames[i].state.on){
                 output += lightNames[i].name + " has lightID: " + lightCount[i] + " and is ON\n";
-            }else{
-                output += lightNames[i].name + " has lightID: " + lightCount[i] + " and is OFF\n";
-            }
+            //}else{
+                //output += lightNames[i].name + " has lightID: " + lightCount[i] + " and is OFF\n";
+            //}
         }
         message.channel.send(output);
     }
