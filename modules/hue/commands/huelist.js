@@ -34,7 +34,7 @@ module.exports = {
         }
 
         for(var k = 1;k<lightArray.length;k++){
-            if(sortData(lightArray[k-1], lightArray[k]) === "-1"){
+            if(sortData(lightArray[k-1].name, lightArray[k].name) === "-1"){
                 var temp = lightArray[k-1];
                 lightArray[k-1] = lightArray[k];
                 lightArray[k] = temp;
