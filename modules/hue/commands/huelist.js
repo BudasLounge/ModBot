@@ -34,21 +34,21 @@ module.exports = {
         }
 
 
-        for(var k = 0;k<lightArray.length;k++){
+       /* for(var k = 0;k<lightArray.length;k++){
             lightArray["lightID"] = lightCount[k];
-        }
+        }*/
         this.logger.info("Collected states and data, moving on to outputs.");
         this.logger.info(lightArray);
-        lightArray.sort(function(a, b) {
+        /*lightArray.sort(function(a, b) {
             return compareStrings(a.name, b.name);
-          })
+          })*/
 
         var output = "";
         for(var i = 0;i<lightArray.length;i++){
             if(lightArray[i].state.on){
-                output += lightArray[i].name + " has lightID: " + lightArray[i].lightID + " and is ON\n";
+                output += lightArray[i].name + " has lightID: " + lightCount[i] + " and is ON\n";
             }else{
-                output += lightArray[i].name + " has lightID: " + lightArray[i].lightID + " and is OFF\n";
+                output += lightArray[i].name + " has lightID: " + lightCount[i] + " and is OFF\n";
             }
         }
         message.channel.send(output);
