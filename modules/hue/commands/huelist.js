@@ -32,16 +32,24 @@ module.exports = {
             });
             lightArray[j] = resp.data;
         }
-        var lightArraySorted = lightArray.sort();
+        lightArray.sort(function (a, b) {
+            if (a > b) {
+                return 1;
+            }
+            if (b > a) {
+                return -1;
+            }
+            return 0;
+        });
         this.logger.info("Collected states and data, moving on to outputs.");
         this.logger.info("State of a light:" + lightArray[0].state.on);
 
         var output = "";
-        for(var i = 0;i<lightArraySorted.length;i++){
-            if(lightArraySorted[i].state.on){
-                output += lightArraySorted[i].name + " has lightID: " + lightCount[i] + " and is ON\n";
+        for(var i = 0;i<lightArray.length;i++){
+            if(lightArray[i].state.on){
+                output += lightArray[i].name + " has lightID: " + lightCount[i] + " and is ON\n";
             }else{
-                output += lightArraySorted[i].name + " has lightID: " + lightCount[i] + " and is OFF\n";
+                output += lightArray[i].name + " has lightID: " + lightCount[i] + " and is OFF\n";
             }
         }
         message.channel.send(output);
