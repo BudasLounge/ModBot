@@ -32,7 +32,7 @@ module.exports = {
             });
             lightArray[j] = resp.data;
         }
-        await lightArray.sort();
+        lightArray = lightArray.sort();
         this.logger.info("Collected states and data, moving on to outputs.");
         this.logger.info("State of a light:" + lightArray[0].state.on);
 
