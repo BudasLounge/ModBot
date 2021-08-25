@@ -36,6 +36,7 @@ module.exports = {
         for(var light in lightArray){
             lightNames.push(light.name);
         }
+        this.logger.info(lightNames);
         lightNames.sort();
         for(var k = 1;k<lightArray.length;k++){
             if(sortData(lightArray[k-1].name, lightArray[k].name) === "-1"){
