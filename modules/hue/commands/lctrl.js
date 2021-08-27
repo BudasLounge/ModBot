@@ -57,7 +57,7 @@ module.exports = {
                 args[5] = Math.random() * (255-1) +1;
             }
         if((Number.isInteger(parseInt(args[3])) && Number.isInteger(parseInt(args[4])) && Number.isInteger(parseInt(args[5]))) || args[1] == "off"){
-            //message.channel.send("Valid RGB!");
+            
         }else{
             message.channel.send("Invalid RGB, defaulting to 100 100 100");
             args[3] = 100;
