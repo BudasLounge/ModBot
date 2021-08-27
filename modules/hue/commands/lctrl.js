@@ -12,7 +12,7 @@ module.exports = {
         var hours = d.getHours();
         var mins = d.getMinutes();
         var day = d.getDay();
-        if((hours >= 8 && (hours < 23)) || message.member.roles.cache.find(role => role.id === "745067270287392839")){
+        if((hours >= 8 && (hours < 23)) || message.member.roles.cache.find(role => role.id === "858548913455235073")){
 
         }else{
             message.channel.send("This command is closed from 11pm to 8am. Try again later!");
