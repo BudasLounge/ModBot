@@ -1,6 +1,6 @@
 {
     "token_file": "../token.txt",
-    "default_channel": "880888578849271818",
+    "default_channel": "880900861692358696",
     "startup_messages": {
         "update": "I have been updated!",
         "restart": "I have restarted!"
