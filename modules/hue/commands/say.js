@@ -10,7 +10,7 @@ module.exports = {
         const say = require('say');
         var message = args.join();
         say.speak(message);
-        say.stop();
+        //say.stop();
 
     }
 }
