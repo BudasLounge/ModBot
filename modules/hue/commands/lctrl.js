@@ -14,7 +14,7 @@ module.exports = {
         var now = moment();
         
 
-        if((hours >= 8 && (hours < 23)) || message.member.roles.cache.find(role => role.id === "858548913455235073")){
+        if((hours >= 8 && (hours < 23)) || message.member.cache.find(user => user.id === "185223223892377611")){
 
         }else{
             var deadline = now.clone().hour(8).minute(0).second(0);
