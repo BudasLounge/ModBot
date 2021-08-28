@@ -8,14 +8,24 @@ module.exports = {
     has_state: false,
     async execute(message, args, extra) {
 
+        const moment = require('moment');
         var d = new Date(); // current time
         var hours = d.getHours();
-        var mins = d.getMinutes();
-        var day = d.getDay();
+        var now = moment();
+        
+
         if((hours >= 8 && (hours < 23)) || message.member.roles.cache.find(role => role.id === "858548913455235073")){
 
         }else{
-            message.channel.send("This command is closed from 11pm to 8am. Try again later!");
+            var deadline = now.clone().hour(8).minute(0).second(0);
+            var opening_time;
+            if(now.isAfter(deadline)) {
+                var tomorrow  = moment(new Date()).add(1,'days').hour(8).minute(0).second(0);
+                opening_time = tomorrow.from(now);
+            }else {
+                opening_time = deadline.from(now);
+            }
+            message.channel.send("This command is closed. It will open again in <t:" + opening_time + ":T>. Try again later!");
             return;
         }
 
