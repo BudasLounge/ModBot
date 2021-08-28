@@ -21,11 +21,11 @@ module.exports = {
             var opening_time;
             if(now.isAfter(deadline)) {
                 var tomorrow  = moment(new Date()).add(1,'days').hour(8).minute(0).second(0);
-                opening_time = tomorrow.from(now).unix();
+                opening_time = tomorrow.from(now);
             }else {
-                opening_time = deadline.from(now).unix();
+                opening_time = deadline.from(now);
             }
-            message.channel.send("This command is closed. It will open again in <t:" + opening_time + ":T>. Try again later!");
+            message.channel.send("This command is closed. It will open again " + opening_time + ". Try again later!");
             return;
         }
 
