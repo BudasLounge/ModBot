@@ -25,7 +25,7 @@ module.exports = {
             }else {
                 opening_time = deadline.from(now);
             }
-            message.channel.send("This command is closed. It will open again in <t:" + opening_time + ":T>. Try again later!");
+            message.channel.send("This command is closed. It will open again in <t:" + opening_time.unix() + ":T>. Try again later!");
             return;
         }
 
