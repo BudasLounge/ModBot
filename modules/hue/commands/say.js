@@ -1,7 +1,7 @@
 module.exports = {
     name: 'say',
     description: 'Speak some words into the world!',
-    syntax: 'lctrl [message]',
+    syntax: 'say [message]',
     num_args: 1,
     args_to_lower: false,
     needs_api: false,
