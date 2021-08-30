@@ -7,9 +7,15 @@ module.exports = {
     needs_api: false,
     has_state: false,
     async execute(message, args, extra) {
+        const Filter = require('bad-words');
+        filter = new Filter();
         const say = require('say');
         args.shift();
         var sayMessage = args.join();
+        if(filter.isProfane(sayMessage)){
+            message.channel.send("No bad words for now!");
+            return;
+        }
         if(sayMessage.length>=200){
             say.speak(sayMessage);
         }else{
