@@ -9,7 +9,7 @@ module.exports = {
     async execute(message, args, extra) {
         const say = require('say');
         var message = args.join();
-        say.speak("Testing");
+        say.speak(message);
         //say.stop();
 
     }
