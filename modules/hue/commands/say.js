@@ -9,8 +9,12 @@ module.exports = {
     async execute(message, args, extra) {
         const say = require('say');
         args.shift();
-        var message = args.join();
-        say.speak(message);
+        var sayMessage = args.join();
+        if(sayMessage.length>=200){
+            say.speak(sayMessage);
+        }else{
+            message.channel.send("That message is too long, no more than 200 characters per message!");
+        }
         //say.stop();
 
     }
