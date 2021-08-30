@@ -19,6 +19,7 @@ module.exports = {
         }
         if(sayMessage.length<=200){
             say.speak(sayMessage);
+            message.channel.send("Message was spoken!");
         }else{
             message.channel.send("That message is too long, no more than 200 characters per message!");
         }
