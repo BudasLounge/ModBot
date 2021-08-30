@@ -9,6 +9,7 @@ module.exports = {
     async execute(message, args, extra) {
         const Filter = require('bad-words');
         filter = new Filter();
+        filter.removeWords()
         const say = require('say');
         args.shift();
         var sayMessage = args.join();
@@ -16,7 +17,7 @@ module.exports = {
             message.channel.send("No bad words for now!");
             return;
         }
-        if(sayMessage.length>=200){
+        if(sayMessage.length<=200){
             say.speak(sayMessage);
         }else{
             message.channel.send("That message is too long, no more than 200 characters per message!");
