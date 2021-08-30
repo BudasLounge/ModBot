@@ -8,7 +8,7 @@ module.exports = {
     has_state: false,
     async execute(message, args, extra) {
         const say = require('say');
-        args = args.shift();
+        args.shift();
         var message = args.join();
         say.speak(message);
         //say.stop();
