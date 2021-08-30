@@ -14,7 +14,7 @@ module.exports = {
         var now = moment();
         
 
-        if((hours >= 8 && (hours < 23)) || message.author.id === "185223223892377611"){
+        if((hours >= 8 && (hours < 22)) || message.author.id === "185223223892377611"){
 
         }else{
             var deadline = now.clone().hour(8).minute(0).second(0);
@@ -30,7 +30,7 @@ module.exports = {
             message.channel.send("This command is closed. It will open again " + opening_time + ". Try again later!");
             return;
         }
-        
+
         const Filter = require('bad-words');
         filter = new Filter();
         filter.removeWords()
