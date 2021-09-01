@@ -117,7 +117,7 @@ module.exports = {
             } catch(error){
                 this.logger.error({error:error.response});
             }
-            var seed = (Math.floor(Math.random() * 156));
+            var seed = (Math.floor(Math.random() * respChamps.length));
             try{
                 message.channel.send("<@" + message.member.id + "> "+respChamps.league_champions[seed].name);
             } catch(error2){
