@@ -36,7 +36,7 @@ module.exports = {
 
             });
             for(var word in respApprovedWords){
-                approvedWords.push();
+                approvedWords.push(word);
             }
         }catch(err){
             this.logger.error(err);
