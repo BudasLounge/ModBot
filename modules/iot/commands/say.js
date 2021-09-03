@@ -36,7 +36,7 @@ module.exports = {
                 //approved: "true"
             });
             for(var i = 0;i<respApprovedWords.allowed_words.length;i++){
-                if(respApprovedWords.allowed_words[i].approved === "true"){
+                if(respApprovedWords.allowed_words[i].approved === "1"){
                     approvedWords.push(respApprovedWords.allowed_words[i].word);
                 }
             }
