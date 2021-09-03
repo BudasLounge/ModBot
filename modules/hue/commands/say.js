@@ -42,7 +42,7 @@ module.exports = {
 
         const Filter = require('bad-words');
         filter = new Filter();
-        filter.removeWords(approvedWords);
+        filter.removeWords(...approvedWords);
         const say = require('say');
         args.shift();
         var sayMessage = args.join();
