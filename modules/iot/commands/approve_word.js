@@ -36,7 +36,7 @@ module.exports = {
             }else{
                 try{
                     var data = {word: respCheckWord.approved_words[0].word};
-                    data[approved] = 1;
+                    data["approved"] = 1;
                     var respUpdateApprovedWords = await api.put("allowed_word", data)
                 }catch(err2){
                     this.logger.error(err2);
