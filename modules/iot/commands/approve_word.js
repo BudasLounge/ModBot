@@ -20,7 +20,7 @@ module.exports = {
                 try{
                     var respApprovedWords = await api.post("allowed_word",{
                         word:args[1],
-                        approve:"true"
+                        approve:true
                     })
                 }catch(err){
                     this.logger.error(err);
@@ -36,7 +36,7 @@ module.exports = {
                 try{
                     var respUpdateApprovedWords = await api.put("allowed_word",{
                         word:args[1],
-                        approve:"true"
+                        approve:true
                     })
                 }catch(err){
                     this.logger.error(err);
