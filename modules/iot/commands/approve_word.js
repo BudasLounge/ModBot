@@ -34,10 +34,11 @@ module.exports = {
                     message.channel.send("Failed to approve, try again!");
                 }
             }else{
+                var respUpdateApprovedWords;
                 try{
                     var data = {word: respCheckWord.approved_words[0].word};
                     data["approved"] = 1;
-                    var respUpdateApprovedWords = await api.put("allowed_word", data)
+                        respUpdateApprovedWords = await api.put("allowed_word", data)
                 }catch(err2){
                     this.logger.error(err2);
                 }
