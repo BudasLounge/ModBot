@@ -33,7 +33,7 @@ module.exports = {
         var approvedWords = [];
         try{
             var respApprovedWords = await api.get("allowed_word", {
-                approved:true
+                //approved: "true"
             });
             for(var i = 0;i<respApprovedWords.allowed_words.length;i++){
                 approvedWords.push(respApprovedWords.allowed_words[i].word);
