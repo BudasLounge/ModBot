@@ -35,9 +35,8 @@ module.exports = {
             var respApprovedWords = await api.get("allowed_word", {
 
             });
-            message.channel.send("respCheck: " + respApprovedWords.allowed_words[0].word);
-            for(var word in respApprovedWords.allowed_words){
-                approvedWords.push(word.word);
+            for(var i = 0;i<respApprovedWords.allowed_words.length;i++){
+                approvedWords.push(respApprovedWords.allowed_words[i].word);
             }
         }catch(err){
             this.logger.error(err);
