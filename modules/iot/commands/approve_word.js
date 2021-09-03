@@ -8,9 +8,10 @@ module.exports = {
     has_state: false,
     async execute(message, args, extra) {
         var api = extra.api;
+        var respCheckWord;
         if(message.author.id === "185223223892377611"){
             try{
-                var respCheckWord = await api.get("allowed_word",{
+                    respCheckWord = await api.get("allowed_word",{
                     word:args[1]
                 })
             }catch(err2){
@@ -34,10 +35,9 @@ module.exports = {
                 }
             }else{
                 try{
-                    var respUpdateApprovedWords = await api.put("allowed_word",{
-                        word:args[1],
-                        approve:1
-                    })
+                    var data = {word: respCheckWord.approved_words[0].word};
+                    data[approved] = 1;
+                    var respUpdateApprovedWords = await api.put("allowed_word", data)
                 }catch(err2){
                     this.logger.error(err2);
                 }
