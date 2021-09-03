@@ -32,7 +32,7 @@ module.exports = {
         }
         var approvedWords = [];
         try{
-            var respApprovedWords = await api.get("allowed_words", {
+            var respApprovedWords = await api.get("allowed_word", {
 
             });
             for(var word in respApprovedWords){
