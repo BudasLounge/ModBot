@@ -8,10 +8,9 @@ module.exports = {
     has_state: false,
     async execute(message, args, extra) {
         var api = extra.api;
-        var respCheckWord;
         if(message.author.id === "185223223892377611"){
             try{
-                    respCheckWord = await api.get("allowed_word",{
+                var respCheckWord = await api.get("allowed_word",{
                     word:args[1]
                 })
             }catch(err2){
@@ -21,7 +20,7 @@ module.exports = {
                 try{
                     var respApprovedWords = await api.post("allowed_word",{
                         word:args[1],
-                        approve:1
+                        approved:1
                     })
                 }catch(err){
                     this.logger.error(err);
@@ -34,27 +33,27 @@ module.exports = {
                     message.channel.send("Failed to approve, try again!");
                 }
             }else{
-                var respUpdateApprovedWords;
                 try{
-                    var data = {word: respCheckWord.approved_words[0].word};
-                    data["approved"] = 1;
-                        respUpdateApprovedWords = await api.put("allowed_word", data)
+                    var respUpdateApprovedWords = await api.put("allowed_word",{
+                        word:args[1],
+                        approved:1
+                    })
                 }catch(err2){
                     this.logger.error(err2);
                 }
-                /*
+
                 if(respUpdateApprovedWords.ok){
                     message.channel.send("Word approved!");
                 }
                 else{
                     message.channel.send("Failed to approve, try again!");
-                }*/
+                }
             }
         }else{
             try{
                 var respApprovedWords = await api.post("allowed_word",{
                     word:args[1],
-                    approve:0
+                    approved:0
                 })
             }catch(err){
                 this.logger.error(err);
