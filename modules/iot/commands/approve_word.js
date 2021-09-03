@@ -11,7 +11,8 @@ module.exports = {
         if(message.author.id === "185223223892377611"){
             try{
                 var respApprovedWords = await api.post("allowed_word",{
-                    word:args[1]
+                    word:args[1],
+                    approve:"true"
                 })
             }catch(err){
                 this.logger.error(err);
