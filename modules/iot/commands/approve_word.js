@@ -24,7 +24,20 @@ module.exports = {
                 message.channel.send("Failed to approve, try again!");
             }
         }else{
-            message.channel.send("You are not approved to do that function");
+            try{
+                var respApprovedWords = await api.post("allowed_word",{
+                    word:args[1],
+                    approve:"false"
+                })
+            }catch(err){
+                this.logger.error(err);
+            }
+            if(respApprovedWords.ok){
+                message.channel.send("Word was sent for approval!");
+            }
+            else{
+                message.channel.send("Failed to send for approval, try again!");
+            }
         }
     }
 }
