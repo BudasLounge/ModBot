@@ -34,7 +34,7 @@ module.exports = {
                 }
             }else{
                 try{
-                    var respApprovedWords = await api.put("allowed_word",{
+                    var respUpdateApprovedWords = await api.put("allowed_word",{
                         word:args[1],
                         approve:"true"
                     })
@@ -42,7 +42,7 @@ module.exports = {
                     this.logger.error(err);
                 }
 
-                if(respApprovedWords.ok){
+                if(respUpdateApprovedWords.ok){
                     message.channel.send("Word approved!");
                 }
                 else{
