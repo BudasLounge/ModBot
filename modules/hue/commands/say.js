@@ -35,7 +35,7 @@ module.exports = {
             var respApprovedWords = await api.get("allowed_word", {
 
             });
-            for(var word in respApprovedWords){
+            for(var word in respApprovedWords[0]){
                 approvedWords.push(word);
             }
         }catch(err){
