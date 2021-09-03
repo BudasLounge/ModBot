@@ -42,13 +42,13 @@ module.exports = {
                 }catch(err2){
                     this.logger.error(err2);
                 }
-
+                /*
                 if(respUpdateApprovedWords.ok){
                     message.channel.send("Word approved!");
                 }
                 else{
                     message.channel.send("Failed to approve, try again!");
-                }
+                }*/
             }
         }else{
             try{
