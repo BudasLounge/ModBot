@@ -44,7 +44,7 @@ module.exports = {
 
         const Filter = require('bad-words');
         filter = new Filter();
-        message.channel.send("Here are you words: " + approvedWords);
+        
         filter.removeWords(...approvedWords);
         const say = require('say');
         args.shift();
