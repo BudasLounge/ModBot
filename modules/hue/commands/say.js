@@ -4,10 +4,10 @@ module.exports = {
     syntax: 'say [message]',
     num_args: 1,
     args_to_lower: false,
-    needs_api: false,
+    needs_api: true,
     has_state: false,
     async execute(message, args, extra) {
-
+        var api = extra.api;
         const moment = require('moment');
         var d = new Date(); // current time
         var hours = d.getHours();
@@ -30,10 +30,19 @@ module.exports = {
             message.channel.send("This command is closed. It will open again " + opening_time + ". Try again later!");
             return;
         }
+        var approvedWords = '';
+        try{
+            var respApprovedWords = await api.get("allowed_words", {
+
+            });
+            approvedWords - respApprovedWords.join();
+        }catch(err){
+            this.logger.error(err);
+        }
 
         const Filter = require('bad-words');
         filter = new Filter();
-        filter.removeWords()
+        filter.removeWords(approvedWords);
         const say = require('say');
         args.shift();
         var sayMessage = args.join();
