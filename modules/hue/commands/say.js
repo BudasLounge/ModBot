@@ -30,19 +30,21 @@ module.exports = {
             message.channel.send("This command is closed. It will open again " + opening_time + ". Try again later!");
             return;
         }
-        var approvedWords = '';
+        var approvedWords = [];
         try{
             var respApprovedWords = await api.get("allowed_words", {
 
             });
-            approvedWords - respApprovedWords.join();
+            for(var word in respApprovedWords){
+                approvedWords.push();
+            }
         }catch(err){
             this.logger.error(err);
         }
 
         const Filter = require('bad-words');
         filter = new Filter();
-        message.channel.send("Here are you words: " +approvedWords);
+        message.channel.send("Here are you words: " + approvedWords);
         filter.removeWords(...approvedWords);
         const say = require('say');
         args.shift();
