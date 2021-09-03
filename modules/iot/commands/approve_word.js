@@ -10,18 +10,44 @@ module.exports = {
         var api = extra.api;
         if(message.author.id === "185223223892377611"){
             try{
-                var respApprovedWords = await api.post("allowed_word",{
-                    word:args[1],
-                    approve:"true"
+                var respCheckWord = await api.get("allowed_word",{
+                    word:args[1]
                 })
-            }catch(err){
-                this.logger.error(err);
+            }catch(err2){
+                this.logger.error(err2);
             }
-            if(respApprovedWords.ok){
-                message.channel.send("Word approved!");
-            }
-            else{
-                message.channel.send("Failed to approve, try again!");
+            if(!respCheckWord.allowed_words[0]){
+                try{
+                    var respApprovedWords = await api.post("allowed_word",{
+                        word:args[1],
+                        approve:"true"
+                    })
+                }catch(err){
+                    this.logger.error(err);
+                }
+
+                if(respApprovedWords.ok){
+                    message.channel.send("Word approved!");
+                }
+                else{
+                    message.channel.send("Failed to approve, try again!");
+                }
+            }else{
+                try{
+                    var respApprovedWords = await api.put("allowed_word",{
+                        word:args[1],
+                        approve:"true"
+                    })
+                }catch(err){
+                    this.logger.error(err);
+                }
+
+                if(respApprovedWords.ok){
+                    message.channel.send("Word approved!");
+                }
+                else{
+                    message.channel.send("Failed to approve, try again!");
+                }
             }
         }else{
             try{
