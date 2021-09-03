@@ -36,7 +36,9 @@ module.exports = {
                 //approved: "true"
             });
             for(var i = 0;i<respApprovedWords.allowed_words.length;i++){
-                approvedWords.push(respApprovedWords.allowed_words[i].word);
+                if(respApprovedWords.allowed_words[i].approved === "true"){
+                    approvedWords.push(respApprovedWords.allowed_words[i].word);
+                }
             }
         }catch(err){
             this.logger.error(err);
