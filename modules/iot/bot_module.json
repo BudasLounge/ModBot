@@ -1,6 +1,6 @@
 {
-    "name": "hue",
-    "display_name": "Hue",
+    "name": "iot",
+    "display_name": "IoT",
     "version": "1.0.0",
     "enabled": true,
     "commands_directory": "commands",
