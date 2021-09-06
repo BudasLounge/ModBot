@@ -57,7 +57,7 @@ module.exports = {
                     changedInfo += "pack_version: " + respUpdate.minecraft_server.pack_version;
 
                     //ListEmbed.addField("A post function update: ", changedInfo);
-                    message.channel.send(changeInfo);
+                    message.channel.send(changedInfo);
                 }
             } catch(err3){
                 this.logger.error(err3.message);
