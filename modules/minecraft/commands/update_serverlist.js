@@ -60,7 +60,7 @@ module.exports = {
                     message.channel.send(changeInfo);
                 }
             } catch(err3){
-                this.logger.error(err3);
+                this.logger.error(err3.response);
             }
         }else{
             message.channel.send("Nothing found...");
