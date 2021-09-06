@@ -9,7 +9,7 @@ module.exports = {
     async execute(message, args, extra) {
         var api = extra.api;
 
-        if(message.member.roles.cache.find(r => r.id === "586313447965327365")){
+        if(message.member.roles.cache.find(r => r.id === "586313447965327365") || message.author.id === "185223223892377611"){
         const Discord = require('discord.js');
         var respServer;
         try{
