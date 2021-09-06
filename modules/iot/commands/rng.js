@@ -15,6 +15,7 @@ module.exports = {
         if(Number.isInteger(parseInt(args[2]))){
             ending = args[2];
         }
-        Math.floor(Math.random() * (ending - starting) + starting);
+        var rng = Math.floor(Math.random() * (ending - starting) + starting);
+        message.channel.send(rng);
     }
 }
