@@ -36,9 +36,9 @@ module.exports = {
                 data[args[2]] = args[3];
                 var respUpdate = await api.put("minecraft_server", data);
                 if(respUpdate.ok == true){
-                    const ListEmbed = new Discord.RichEmbed()
-                    .setColor("#f92f03")
-                    .setTitle("Here's what changed: ");
+                    //const ListEmbed = new Discord.RichEmbed()
+                    //.setColor("#f92f03")
+                    //.setTitle("Here's what changed: ");
                     var changedInfo = "";
                     changedInfo += "short_name: " + respServer.minecraft_servers[0].short_name + "\n";
                     changedInfo += "display_name: " + respServer.minecraft_servers[0].display_name + "\n";
@@ -56,8 +56,8 @@ module.exports = {
                     changedInfo += "mc_version: " + respUpdate.minecraft_server.mc_version + "\n";
                     changedInfo += "pack_version: " + respUpdate.minecraft_server.pack_version;
 
-                    ListEmbed.addField("A post function update: ", changedInfo);
-                    message.channel.send(ListEmbed);
+                    //ListEmbed.addField("A post function update: ", changedInfo);
+                    message.channel.send(changeInfo);
                 }
             } catch(err3){
                 console.error(err3);
