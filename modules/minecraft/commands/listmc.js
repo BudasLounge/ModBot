@@ -34,10 +34,10 @@ module.exports ={
             nextItem += "pack version: " + respServer.minecraft_servers[i].pack_version + "\n";
             nextItem += "date created: " + respServer.minecraft_servers[i].date_created + "\n";
             serverList += nextItem + "\n";
-            ListEmbed.addField({name: respServer.minecraft_servers[i].display_name, value: "Server info:", nextItem});
+            ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:", nextItem);
         }
         //message.channel.send(ListEmbed);
-        message.channel.send(ListEmbed)
+        message.channel.send(serverList)
         console.log("<<display_all_servers");
     }
 };
