@@ -112,7 +112,7 @@ module.exports = {
         else{
             try{
                 respChamps = await api.get("league_champion",{
-                    _limit: 200
+                    _limit: 154
                 });
             } catch(error){
                 this.logger.error(error.message);
