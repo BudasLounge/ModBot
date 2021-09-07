@@ -118,7 +118,7 @@ module.exports = {
                 this.logger.error(error.message);
             }
             var seed = (Math.floor(Math.random() * respAllChamps.length));
-            this.logger.ingo(respAllChamps.league_champions);
+            this.logger.info(respAllChamps.league_champions);
             this.logger.info("seed is: " + seed);
             this.logger.info("length is: " + respAllChamps.length);
             try{
