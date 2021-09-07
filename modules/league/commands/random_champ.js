@@ -120,8 +120,8 @@ module.exports = {
             var seed = (Math.floor(Math.random() * respChamps.length));
             try{
                 message.channel.send("<@" + message.member.id + "> "+respChamps.league_champions[seed].name);
-            } catch(error2){
-                this.logger.error({error: error2.response});
+            }catch(error2){
+                this.logger.error(error2.message);
             }
         }
     }
