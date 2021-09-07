@@ -115,7 +115,7 @@ module.exports = {
                     _limit: 200
                 });
             } catch(error){
-                this.logger.error({error:error.response});
+                this.logger.error(error.message);
             }
             var seed = (Math.floor(Math.random() * respChamps.length));
             this.logger.info("seed is: " + seed);
