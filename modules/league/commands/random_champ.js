@@ -117,7 +117,7 @@ module.exports = {
             } catch(error){
                 this.logger.error(error.message);
             }
-            var seed = (Math.floor(Math.random() * respAllChamps.length));
+            var seed = (Math.floor(Math.random() * Object.keys(respAllChamps).length));
             this.logger.info(respAllChamps.league_champions);
             this.logger.info("seed is: " + seed);
             this.logger.info("length is: " + respAllChamps.length);
