@@ -3,7 +3,7 @@ var axios = require('axios');
 var request = require('request');
 
 var Discord = require('discord.js');
-var client = new Discord.Client();
+var client = new Discord.Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES] });
 
 var config = JSON.parse(fs.readFileSync('modbot.json'));
 
