@@ -37,7 +37,7 @@ module.exports ={
             ListEmbed.addField({name: respServer.minecraft_servers[i].display_name, value: "Server info:", nextItem});
         }
         //message.channel.send(ListEmbed);
-        message.channel.send(serverList)
+        message.channel.send(ListEmbed)
         console.log("<<display_all_servers");
     }
 };
