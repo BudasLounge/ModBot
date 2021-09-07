@@ -59,17 +59,17 @@ module.exports = {
                 this.logger.error(error.response);
             }
             var output = "Champion - Primary Role / Secondary Role\n";
-            for(var i = 0; i<respChamps.league_champions.length;i++){
+            /*for(var i = 0; i<respChamps.league_champions.length;i++){
                 output += respChamps.league_champions[i].name + " - " + respChamps.league_champions[i].role_primary + "/" +respChamps.league_champions[i].role_secondary +"\n";
             } 
-            message.author.send(output, {split:true});
-            /*const ListEmbed = new Discord.RichEmbed()
+            message.author.send(output, {split:true});*/
+            const ListEmbed = new Discord.MessageEmbed()
                 .setColor("#f92f03")
                 .setTitle("A list of all champions: ");
             var embeds = extra.MessageHelper.split_embed(ListEmbed, output);
             for(var e = 0;e<embeds.length;e++){
-                message.channel.send(embeds[e]);
-            }*/
+                message.author.send(embeds[e]);
+            }
         
         message.channel.send("Sent a PM!");
         }

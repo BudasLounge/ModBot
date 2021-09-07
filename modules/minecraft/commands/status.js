@@ -22,7 +22,7 @@ module.exports ={
         if(respServer.minecraft_servers[0]){
             var item;
             var flag = false;
-            const ListEmbed = new Discord.RichEmbed()
+            const ListEmbed = new Discord.MessageEmbed()
             .setColor("#f92f03")
             .setTitle(respServer.minecraft_servers[0].display_name + " status: ");
             ListEmbed.addField("Notice:\n","If the server crashed, it should auto restart in 5 minutes or less\nContact a server admin if it does not.")

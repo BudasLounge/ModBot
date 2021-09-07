@@ -35,7 +35,7 @@ module.exports = {
 		for(let j = counter; j>=0; j--){
 			args.shift();
 		}
-		const ListEmbed = new Discord.RichEmbed()
+		const ListEmbed = new Discord.MessageEmbed()
 		.setTitle('Users with the '+role.name+' role:')
 		.setDescription(message.guild.roles.get(role.id).members.map(m=>m.user.tag).join('\n'));
 		message.channel.send(ListEmbed); 

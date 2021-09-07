@@ -26,7 +26,7 @@ module.exports = {
             var status = await getServerState(respServer.minecraft_servers[0].display_name, respServer.minecraft_servers[0].port, respServer.minecraft_servers[0].numeric_ip, message.channel);
             if(status == "online"){
                 console.log("Making listEmbed now!");
-                const ListEmbed = new Discord.RichEmbed()
+                const ListEmbed = new Discord.MessageEmbed()
                 .setColor("#f92f03")
                 .setTitle("List of all players on " + respServer.minecraft_servers[0].display_name + ": ");
                 var msg = "Players: ";

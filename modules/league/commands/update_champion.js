@@ -25,7 +25,7 @@ module.exports = {
                 data[args[2]] = args[3];
                 var respUpdate = await api.put("league_champion" , data);
                 if(respUpdate.ok == true){
-                    const ListEmbed = new Discord.RichEmbed()
+                    const ListEmbed = new Discord.MessageEmbed()
                         .setColor("#f92f03")
                         .setTitle("Here's what changed: ");
                     this.logger.info("created ListEmbed");

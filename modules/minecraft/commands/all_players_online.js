@@ -22,7 +22,7 @@ module.exports = {
         } catch(error2){
             console.error(error2);
         }
-        const ListEmbed = new Discord.RichEmbed()
+        const ListEmbed = new Discord.MessageEmbed()
             .setColor("#f92f03")
             .setTitle("List of all players on all online servers:");
         for(var i = 0;i<respServer.minecraft_servers.length;i++){
