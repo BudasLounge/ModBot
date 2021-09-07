@@ -117,10 +117,10 @@ module.exports = {
             } catch(error){
                 this.logger.error(error.message);
             }
-            var seed = (Math.floor(Math.random() * respAllChamps.length));
+            var seed = (Math.floor(Math.random() * respAllChamps.league_champions.length));
             this.logger.info(respAllChamps.league_champions);
             this.logger.info("seed is: " + seed);
-            this.logger.info("length is: " + respAllChamps.length);
+            this.logger.info("length is: " + respAllChamps.league_champions.length);
             try{
                 message.channel.send("<@" + message.member.id + "> "+respAllChamps.league_champions[seed].name);
             }catch(error2){
