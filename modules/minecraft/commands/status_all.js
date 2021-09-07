@@ -25,7 +25,7 @@ module.exports ={
         }
         this.logger.info(respServer.minecraft_servers.length + " servers found...");
         var stat_server = ""; 
-        /*const ListEmbed = new Discord.RichEmbed()
+        const ListEmbed = new Discord.RichEmbed()
         .setColor("#f92f03")
         .setTitle("List of all minecraft servers: ");
         ListEmbed.addField("Notice:\n","If the server crashed, it should auto restart in 5 minutes or less\nContact a server admin if it does not.")*/
@@ -56,12 +56,12 @@ module.exports ={
                 }else{
                     var nextItem = respServer.minecraft_servers[i].display_name + " is currently online but no players are.\n\n";
                 }
-                //ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:", nextItem);
+                ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:", nextItem);
                 stat_server += nextItem;
             }
         }
-        //message.channel.send(ListEmbed);
-        message.channel.send(stat_server);
+        message.channel.send(ListEmbed);
+        //message.channel.send(stat_server);
         this.logger.info("<<display_all_servers_status");
     }
 };
