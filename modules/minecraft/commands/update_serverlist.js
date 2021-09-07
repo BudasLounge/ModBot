@@ -36,7 +36,7 @@ module.exports = {
                 data[args[2]] = args[3];
                 var respUpdate = await api.put("minecraft_server", data);
                 if(respUpdate.ok == true){
-                    const ListEmbed = new Discord.RichEmbed()
+                    const ListEmbed = new Discord.MessageEmbed()
                     .setColor("#f92f03")
                     .setTitle("Here's what changed: ");
                     var changedInfo = "";
