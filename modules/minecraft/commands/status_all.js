@@ -42,7 +42,7 @@ module.exports ={
             }
             if(flag == true){
                 this.logger.info("Adding listEmbed for offline server");
-                //ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:", item);
+                ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:", item);
                 stat_server += respServer.minecraft_servers[i].display_name + " server info: " + respServer.minecraft_servers[i].display_name + " is currently offline!\n\n";
             }else{
                 this.logger.info("Adding listEmbed for online server");
