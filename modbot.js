@@ -2,8 +2,8 @@ var fs = require('fs');
 var axios = require('axios');
 var request = require('request');
 
-var {Client, discord} = require('discord.js');
-const client = new Client({ intents: [discord.Intents.FLAGS.GUILD_MESSAGES, discord.Intents.FLAGS.GUILDS] });
+var discord = require('discord.js');
+const client = new discord.Client({ intents: [discord.Intents.FLAGS.GUILD_MESSAGES, discord.Intents.FLAGS.GUILDS] });
 
 var config = JSON.parse(fs.readFileSync('modbot.json'));
 
