@@ -25,7 +25,7 @@ module.exports ={
         }
         this.logger.info(respServer.minecraft_servers.length + " servers found...");
         var stat_server = ""; 
-        const ListEmbed = new Discord.RichEmbed()
+        const ListEmbed = new Discord.MessageEmbed()
         .setColor("#f92f03")
         .setTitle("List of all minecraft servers: ");
         ListEmbed.addField("Notice:\n","If the server crashed, it should auto restart in 5 minutes or less\nContact a server admin if it does not.");
