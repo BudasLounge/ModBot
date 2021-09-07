@@ -111,17 +111,17 @@ module.exports = {
         }
         else{
             try{
-                respChamps = await api.get("league_champion",{
-                    _limit: 154
+                var respAllChamps = await api.get("league_champion",{
+                    _limit: 200
                 });
             } catch(error){
                 this.logger.error(error.message);
             }
-            var seed = (Math.floor(Math.random() * respChamps.length));
+            var seed = (Math.floor(Math.random() * respAllChamps.length));
             this.logger.info("seed is: " + seed);
-            this.logger.info("length is: " + respChamps.length);
+            this.logger.info("length is: " + respAllChamps.length);
             try{
-                message.channel.send("<@" + message.member.id + "> "+respChamps.league_champions[seed].name);
+                message.channel.send("<@" + message.member.id + "> "+respAllChamps.league_champions[seed].name);
             }catch(error2){
                 this.logger.error(error2.message);
             }
