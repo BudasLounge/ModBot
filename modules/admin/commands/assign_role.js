@@ -7,6 +7,7 @@ module.exports = {
     needs_api: false,
     has_state: false,
     async execute(message, args, extra) {
+        const Discord = require('discord.js');
         var strLength = 0;
 		var messageString = "";
 		var role = "";
@@ -37,8 +38,8 @@ module.exports = {
             message.channel.send("Role adding failed!");
             return;
         }
-        const ListEmbed = new DynamicsCompressorNode.MessageEmbed()
-        .setTitle("Made this edit to <@"+member.id+">:")
+        const ListEmbed = new Discord.MessageEmbed()
+        .setTitle("Made this edit to <@"+member.id+"> :")
         .setDescription("Added role: "+role.name);
         message.channel.send(ListEmbed + "\nRole adding success!");
     }
