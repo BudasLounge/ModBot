@@ -28,7 +28,15 @@ module.exports = {
 			strLength ++;
 		counter++;
 		}
-        role = message.guild.roles.cache.find(role => role.name.toLowerCase() === messageString.trim());
-        member.roles.add(role.id);
+        try{
+            role = message.guild.roles.cache.find(role => role.name.toLowerCase() === messageString.trim());
+            member.roles.add(role.id);
+        }
+        catch(err){
+            this.logger.error(err.message);
+            message.channel.send("Role adding failed!");
+            return;
+        }
+        message.channel.send("Role adding success!");
     }
 }
