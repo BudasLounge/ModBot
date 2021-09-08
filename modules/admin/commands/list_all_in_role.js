@@ -37,7 +37,7 @@ module.exports = {
 		}
 		const ListEmbed = new Discord.MessageEmbed()
 		.setTitle('Users with the '+role.name+' role:')
-		.setDescription(message.guild.roles.cache.find(role.id).members.map(m=>m.user.tag).join('\n'));
+		.setDescription(message.guild.roles.cache.find(role.id).members.map(m=>m.user.id).join('\n'));
 		message.channel.send(ListEmbed); 
     }
 };
