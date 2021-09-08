@@ -1,7 +1,7 @@
 module.exports = {
-    name: 'give_role',
+    name: 'add_role',
     description: 'Assigns a specified role to a specified user',
-    syntax: 'give_role [@user] [role]',
+    syntax: 'add_role [@user] [role]',
     num_args: 2,
     args_to_lower: true,
     needs_api: false,
