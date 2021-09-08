@@ -7,6 +7,24 @@ module.exports = {
     needs_api: false,
     has_state: false,
     async execute(message, args, extra) {
+        var api = extra.api;
+        var respAdminID = "";
+        try{
+            respAdminID = await api.get("discord_server",{
+                server_id:message.guild.id
+            })
+        }catch(err){
+            this.logger.error(err.message);
+        }
+        if(respAdminID[0]){
+            if(!message.member.roles.cache.has(respAdminID[0].discord_servers.admin_role_id)){
+                message.channel.send("You do not have permission to use this command.");
+                return;
+            }
+        }else{
+            message.channel.send("This command requires an admin rol but no main admin role has been selected for this server.");
+            return;
+        }
         const Discord = require('discord.js');
         var strLength = 0;
 		var messageString = "";
@@ -42,5 +60,5 @@ module.exports = {
         .setTitle(`Made this edit to ${member.user.username}:`)
         .setDescription("Added role: "+role.name);
         message.channel.send(ListEmbed);
-    }
+    } 
 }
