@@ -4,7 +4,7 @@ module.exports = {
     syntax: 'add_role [@user] [role]',
     num_args: 2,
     args_to_lower: true,
-    needs_api: false,
+    needs_api: true,
     has_state: false,
     async execute(message, args, extra) {
         var api = extra.api;
