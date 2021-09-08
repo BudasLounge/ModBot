@@ -22,7 +22,7 @@ module.exports = {
                 return;
             }
         }else{
-            message.channel.send("This command requires an admin rol but no main admin role has been selected for this server.");
+            message.channel.send("This command requires an admin role but no main admin role has been selected for this server.");
             return;
         }
         const Discord = require('discord.js');
