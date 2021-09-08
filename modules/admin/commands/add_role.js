@@ -14,7 +14,7 @@ module.exports = {
             respAdminID = await api.get("discord_server",{
                 server_id:message.guild.id
             });
-            this.logger.info(respAdminID.discord_servers[0]);
+            this.logger.info("Here is resp: " + respAdminID.discord_servers[0]);
         }catch(err){
             this.logger.error(err.message);
         }
