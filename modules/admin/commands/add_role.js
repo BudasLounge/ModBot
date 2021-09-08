@@ -12,7 +12,8 @@ module.exports = {
         try{
             respAdminID = await api.get("discord_server",{
                 server_id:message.guild.id
-            })
+            });
+            message.channel.send(respAdminID);
         }catch(err){
             this.logger.error(err.message);
         }
