@@ -12,8 +12,7 @@ module.exports = {
 		var messageString = "";
 		var role = "";
 		var counter = 0;
-        var memberID = message.mentions.users.first().id
-        var member = message.guild.users.cache.get(memberID);
+        var member = message.mentions.users.first();
 		for(let i=2;i<args.length;i++){
 			//Manages current string length of arguments combined
 			strLength += args[i].length;
@@ -40,7 +39,7 @@ module.exports = {
             return;
         }
         const ListEmbed = new Discord.MessageEmbed()
-        .setTitle("Made this edit to "+member.username+":")
+        .setTitle(`Made this edit to ${member.username}:`)
         .setDescription("Added role: "+role.name);
         message.channel.send(ListEmbed);
     }
