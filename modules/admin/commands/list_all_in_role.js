@@ -30,7 +30,7 @@ module.exports = {
 			strLength ++;
 		counter++;
 		}
-		role = message.guild.roles.find(role => role.name.toLowerCase() === messageString.trim());
+		role = message.guild.roles.cache.find(role => role.name.toLowerCase() === messageString.trim());
 		if (!role) return message.reply("There is not such a role!");
 		for(let j = counter; j>=0; j--){
 			args.shift();
