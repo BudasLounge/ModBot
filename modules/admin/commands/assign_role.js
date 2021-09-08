@@ -12,7 +12,7 @@ module.exports = {
 		var messageString = "";
 		var role = "";
 		var counter = 0;
-        var member = message.mentions.members.first();
+        var member = message.guild.users.cache.get(message.mentions.users.first().id);
 		for(let i=2;i<args.length;i++){
 			//Manages current string length of arguments combined
 			strLength += args[i].length;
