@@ -1,6 +1,6 @@
 module.exports = {
-    name: 'loop_sep',
-    description: 'loops to a number',
+    name: 'loop',
+    description: 'loops on interval with separator',
     syntax: 'loop_sep [start] [end] [interval] [separator]',
     num_args: 3,
     args_to_lower: true,
