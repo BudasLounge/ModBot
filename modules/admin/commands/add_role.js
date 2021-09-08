@@ -16,7 +16,7 @@ module.exports = {
         }catch(err){
             this.logger.error(err.message);
         }
-        if(respAdminID[0]){
+        if(respAdminID.discord_servers[0]){
             if(!message.member.roles.cache.has(respAdminID[0].discord_servers.admin_role_id)){
                 message.channel.send("You do not have permission to use this command.");
                 return;
