@@ -37,6 +37,9 @@ module.exports = {
             message.channel.send("Role adding failed!");
             return;
         }
-        message.channel.send("Role adding success!");
+        const ListEmbed = new DynamicsCompressorNode.MessageEmbed()
+        .setTitle("Made this edit to <@"+member.id+">:")
+        .setDescription("Added role: "+role.name);
+        message.channel.send(ListEmbed + "\nRole adding success!");
     }
 }
