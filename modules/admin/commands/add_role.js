@@ -17,7 +17,11 @@ module.exports = {
             this.logger.error(err.message);
         }
         if(respAdminID.discord_servers[0]){
-            if(!message.member.roles.cache.has(respAdminID.discord_servers[0].admin_role_id)){
+            if(respAdminID.discord_servers[0].admin_role_id === ""){
+                message.channel.send("This command requires an admin role but no main admin role has been selected for this server.");
+                return;
+            }
+            else if(!message.member.roles.cache.has(respAdminID.discord_servers[0].admin_role_id)){
                 message.channel.send("You do not have permission to use this command.");
                 return;
             }
