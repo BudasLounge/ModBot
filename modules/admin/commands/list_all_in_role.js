@@ -8,7 +8,7 @@ module.exports = {
     has_state: false,
     async execute(message, args, extra) {
         const Discord = require('discord.js');
-        role = message.guild.roles.find(role => role.name.toLowerCase() === args[1]);
+        role = message.guild.roles.cache.find(role => role.name.toLowerCase() === args[1]);
 		if(args[1] == "everyone") return message.reply("I don't like listing everyone, sorry!");
 		var strLength = 0;
 		var messageString = "";
