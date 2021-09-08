@@ -10,10 +10,14 @@ module.exports = {
         var starting = 1;
         var ending = 10;
         if(Number.isInteger(parseInt(args[1]))){
-            starting = args[1];
-        }
-        if(Number.isInteger(parseInt(args[2]))){
-            ending = args[2];
+            if(args[1]>0){
+                starting = args[1];
+                if(Number.isInteger(parseInt(args[2]))){
+                    if(args[2]>args[1]){
+                        ending = args[2];
+                    }
+                }
+            }
         }
         var rng = Math.floor(Math.random() * (ending - starting) + starting);
         message.channel.send(rng);
