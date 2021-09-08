@@ -8,7 +8,7 @@ module.exports = {
     has_state: false,
     async execute(message, args, extra) {
         const Discord = require('discord.js');
-        role = message.guild.roles.cache.find(role => role.name.toLowerCase().trim() === args[1]);
+        role = message.guild.roles.cache.find(role => role.name.toLowerCase().trim() == args[1]);
 		if(args[1] == "everyone") return message.reply("I don't like listing everyone, sorry!");
 		var strLength = 0;
 		var messageString = "";
@@ -30,7 +30,7 @@ module.exports = {
 			strLength ++;
 		counter++;
 		}
-		role = message.guild.roles.cache.find(role => role.name.toLowerCase() === messageString.trim());
+		role = message.guild.roles.cache.find(role => role.name.toLowerCase() == messageString.trim());
 		if (!role) return message.reply("There is not such a role!");
 		for(let j = counter; j>=0; j--){
 			args.shift();
