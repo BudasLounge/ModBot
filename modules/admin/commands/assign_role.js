@@ -39,7 +39,7 @@ module.exports = {
             return;
         }
         const ListEmbed = new Discord.MessageEmbed()
-        .setTitle(`Made this edit to ${member.username}:`)
+        .setTitle(`Made this edit to ${member.user.username}:`)
         .setDescription("Added role: "+role.name);
         message.channel.send(ListEmbed);
     }
