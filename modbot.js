@@ -1,6 +1,7 @@
 var fs = require('fs');
 var axios = require('axios');
 var request = require('request');
+var shell = require('shelljs');
 
 var discord = require('discord.js');
 const client = new discord.Client();
@@ -28,6 +29,8 @@ logger.info("Event Registration Complete!");
 authClient();
 
 async function botInit () {
+    shell.exec('~./clean_logs.sh');
+    ligger.info("Logs older than 3 days have been cleaned");
     logger.info("I am ready!");
 
     var channel = await client.channels.fetch(config.default_channel);
