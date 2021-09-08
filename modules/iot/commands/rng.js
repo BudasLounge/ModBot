@@ -15,6 +15,9 @@ module.exports = {
                 if(Number.isInteger(parseInt(args[2]))){
                     if(args[2]>args[1]){
                         ending = args[2];
+                    }else{
+                        starting = 1;
+                        ending = 10;
                     }
                 }
             }
