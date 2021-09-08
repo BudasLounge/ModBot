@@ -12,7 +12,7 @@ module.exports = {
 		var role = "";
 		var counter = 0;
         var member = message.mentions.users.first();
-		for(let i=1;i<args.length;i++){
+		for(let i=2;i<args.length;i++){
 			//Manages current string length of arguments combined
 			strLength += args[i].length;
 			messageString += args[i];
