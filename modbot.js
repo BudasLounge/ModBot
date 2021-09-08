@@ -30,7 +30,7 @@ authClient();
 
 async function botInit () {
     shell.exec('~./clean_logs.sh');
-    ligger.info("Logs older than 3 days have been cleaned");
+    logger.info("Logs older than 3 days have been cleaned");
     logger.info("I am ready!");
 
     var channel = await client.channels.fetch(config.default_channel);
