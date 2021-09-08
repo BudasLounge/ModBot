@@ -19,7 +19,7 @@ module.exports = {
 			strLength += args[i].length;
 			messageString += args[i];
 			//Check to see if a role exists using that begins with the collective messageString
-			role = message.guild.roles.find(role => role.name.toLowerCase().includes(messageString));
+			role = message.guild.roles.cache.find(role => role.name.toLowerCase().includes(messageString));
 			if(!role){
 				//If role not found then return to string from previous iteration
 				messageString = messageString.substring(0, strLength - args[i].length - 1);
