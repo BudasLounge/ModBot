@@ -38,10 +38,8 @@ module.exports = {
             const ListEmbed = new Discord.MessageEmbed()
             .setColor("#f92f03")
             .setTitle("Let's see who is in the lead: ");
-            for(j=0; j<pointUsers.length; j++){
-                for(i=0; i<pointUsers[j].length; i++){
+            for(var j=0; j<pointUsers.length; j++){
                 ListEmbed.addField(pointUsers[j][0] + ": " + pointUsers[j][1])
-                }
             }
             message.channel.send(ListEmbed);
         }else{
