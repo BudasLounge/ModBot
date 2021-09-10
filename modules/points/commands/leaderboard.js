@@ -68,7 +68,7 @@ module.exports = {
                     ListEmbed.addField(pointUsers[k][0] + ": " + pointUsers[k][1] + " " + respCheckServer.bet_configs[0].point_name + "s", "...........................................................................");
                 }
                 //ListEmbed.addField("The list: ", output);
-                ListEmbed2.addField("Let's see who is in the lead:",output);
+                ListEmbed2.addField("Placements:",output);
                 message.channel.send(ListEmbed);
                 message.channel.send(ListEmbed2);
                 message.channel.send(outputTitle + output);
