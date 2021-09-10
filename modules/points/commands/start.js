@@ -35,6 +35,7 @@ module.exports = {
             this.logger.error(err.message);
         }
         if(respCheckServer.bet_configs[0]){
+            this.logger.info("Here is respCheckServer: " + respCheckServer.bet_configs[0]);
             var respNew;
             try{
                 respNew = await api.post("bet_point",{
