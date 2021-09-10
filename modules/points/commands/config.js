@@ -40,7 +40,7 @@ module.exports = {
             var options = ["point_name", "recharge_amount", "base_amount", "recharge_cooldown"];
             if(options.indexOf(args[1]) > -1){
                 if((args[1] === "base_amount" || args[1] === "recharge_cooldown") && Number.isInteger(parseInt(args[1]))){
-                    args[1] = Number.isInteger(parseInt(args[1]));
+                    args[1] = parseInt(args[1]);
                 }
                 var data = {discord_server_id:message.guild.id};
                 data[args[1]] = args[2];
