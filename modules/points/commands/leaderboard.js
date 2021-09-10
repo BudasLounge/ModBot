@@ -61,6 +61,7 @@ module.exports = {
                     output += pointUsers[j][0] + ": " + pointUsers[j][1] + " " + respCheckServer.bet_configs[0].point_name + "s\n";
                 }
                 ListEmbed.addField("The list: ", output);
+                message.channel.send(ListEmbed);
                 message.channel.send(output);
             }else{
                 message.channel.send("Hit an error");
