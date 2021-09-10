@@ -60,7 +60,10 @@ module.exports = {
                 for(var j=0; j<stop; j++){
                     output += pointUsers[j][0] + ": " + pointUsers[j][1] + " " + respCheckServer.bet_configs[0].point_name + "s\n";
                 }
-                ListEmbed.addField("The list: ", output);
+                for(var k = 0;k<stop;k++){
+                    ListEmbed.addfield(pointUsers[k][0] + ": " + pointUsers[k][1] + " " + respCheckServer.bet_configs[0].point_name + "s", " ");
+                }
+                //ListEmbed.addField("The list: ", output);
                 message.channel.send(ListEmbed);
                 message.channel.send(output);
             }else{
