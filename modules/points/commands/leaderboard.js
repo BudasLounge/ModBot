@@ -44,7 +44,7 @@ module.exports = {
                         return (a[1] > b[1]) ? -1 : 1;
                     }
                 }
-                var outputTitle = "Let's see who is in the lead:\n";
+                //var outputTitle = "Let's see who is in the lead:\n";
                 var output = "";
                 const ListEmbed2 = new Discord.MessageEmbed()
                 .setColor("#f92f03")
@@ -69,9 +69,9 @@ module.exports = {
                 }*/
                 //ListEmbed.addField("The list: ", output);
                 ListEmbed2.addField("Placements:",output);
-                message.channel.send(ListEmbed);
+                //message.channel.send(ListEmbed);
                 message.channel.send(ListEmbed2);
-                message.channel.send(outputTitle + output);
+                //message.channel.send(outputTitle + output);
             }else{
                 message.channel.send("Hit an error");
                 return;
