@@ -42,7 +42,8 @@ module.exports = {
             for(var j=0; j<pointUsers.length; j++){
                 output += pointUsers[j][0] + ": " + pointUsers[j][1] + "\n";
             }
-            message.channel.send(output);
+            ListEmbed.addField("The list: ", output);
+            message.channel.send(ListEmbed);
         }else{
             message.channel.send("Hit an error");
             return;
