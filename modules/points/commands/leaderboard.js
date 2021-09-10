@@ -21,7 +21,7 @@ module.exports = {
             this.logger.error(err.message);
         }
         if(respUsers.bet_points[0]){
-            for(var i = 0;respUsers.bet_points.length;i++){
+            for(var i = 0;i<respUsers.bet_points.length;i++){
                 pointUsers.push([respUsers.bet_points[i].discord_username, respUsers.bet_points[i].points_total]);
             }
 
