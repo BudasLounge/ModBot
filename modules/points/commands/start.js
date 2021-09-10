@@ -36,7 +36,7 @@ module.exports = {
             this.logger.error(err.message);
         }
         if(respNew.ok){
-            message.channel.reply(", you have received 100 points and are now in the system. Have fun!");
+            message.channel.send("<@" + message.member.id + ">, you have received 100 points and are now in the system. Have fun!");
         }else{
             message.channel.send("There was an error.");
         }
