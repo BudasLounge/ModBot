@@ -36,14 +36,14 @@ module.exports = {
                 }
             }
             var output = "Let's see who is in the lead:\n";
-            const ListEmbed = new Discord.MessageEmbed()
-            .setColor("#f92f03")
-            .setTitle("Let's see who is in the lead: ");
+            //const ListEmbed = new Discord.MessageEmbed()
+            //.setColor("#f92f03")
+            //.setTitle("Let's see who is in the lead: ");
             for(var j=0; j<pointUsers.length; j++){
                 output += pointUsers[j][0] + ": " + pointUsers[j][1] + "\n";
             }
-            ListEmbed.addField("The list: ", output);
-            message.channel.send(ListEmbed);
+            //ListEmbed.addField("The list: ", output);
+            message.channel.send(output);
         }else{
             message.channel.send("Hit an error");
             return;
