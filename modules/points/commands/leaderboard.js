@@ -51,7 +51,13 @@ module.exports = {
                 if(respCheckServer.bet_configs[0].point_name.charAt(respCheckServer.bet_configs[0].point_name.length-1) === "s"){
                     respCheckServer.bet_configs[0].point_name = respCheckServer.bet_configs[0].point_name.substring(0, respCheckServer.bet_configs[0].point_name.length-1);
                 }
-                for(var j=0; j<pointUsers.length; j++){
+                var stop;
+                if(pointUsers.length<25){
+                    stop = pointUsers.length;
+                }else{
+                    stop = 25;
+                }
+                for(var j=0; j<stop; j++){
                     output += pointUsers[j][0] + ": " + pointUsers[j][1] + " " + respCheckServer.bet_configs[0].point_name + "s\n";
                 }
                 //ListEmbed.addField("The list: ", output);
