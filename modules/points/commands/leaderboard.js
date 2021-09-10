@@ -35,13 +35,14 @@ module.exports = {
                     return (a[1] < b[1]) ? -1 : 1;
                 }
             }
+            var output = "";
             const ListEmbed = new Discord.MessageEmbed()
             .setColor("#f92f03")
             .setTitle("Let's see who is in the lead: ");
             for(var j=0; j<pointUsers.length; j++){
-                ListEmbed.addField(pointUsers[j][0] + ": " + pointUsers[j][1],"");
+                output =+ pointUsers[j][0] + ": " + pointUsers[j][1] + "\n";
             }
-            message.channel.send(ListEmbed);
+            message.channel.send(output);
         }else{
             message.channel.send("Hit an error");
             return;
