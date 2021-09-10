@@ -1,0 +1,10 @@
+{
+    "name": "points",
+    "display_name": "Points",
+    "version": "1.0.0",
+    "enabled": true,
+    "commands_directory": "commands",
+    "command_prefix": "/",
+    "is_core": false,
+    "event_handler": false
+}
