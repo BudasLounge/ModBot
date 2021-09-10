@@ -37,7 +37,7 @@ module.exports = {
             this.logger.error(err.message);
         }
         if(respCheck.bet_configs[0]){
-            var options = ["point_name", "recharge_amount", "base_amount", "recharge_cooldown"];
+            var options = ["point_name", "recharge_amount", "base_amount", "recharge_cooldown", "bet_buyin_time"];
             if(options.indexOf(args[1]) > -1){
                 if((args[1] === "base_amount" || args[1] === "recharge_cooldown") && Number.isInteger(parseInt(args[2]))){
                     args[2] = parseInt(args[2]);
@@ -54,7 +54,7 @@ module.exports = {
                     message.channel.send("Successfully updated this server's config");
                 }
             }else{
-                message.channel.send("That option doesn't exist try:point_name, recharge_amount, base_amount, recharge_cooldown\n")
+                message.channel.send("That option doesn't exist try:point_name, recharge_amount, base_amount, recharge_cooldown, bet_buyin_time\n")
             }
         }else{
             message.channel.send("That server hasn't been set up yet. Use /point_start_server to get a config loaded");
