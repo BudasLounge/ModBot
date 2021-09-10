@@ -45,9 +45,9 @@ module.exports = {
                     }
                 }
                 var output = "Let's see who is in the lead:\n";
-                //const ListEmbed = new Discord.MessageEmbed()
-                //.setColor("#f92f03")
-                //.setTitle("Let's see who is in the lead: ");
+                const ListEmbed = new Discord.MessageEmbed()
+                .setColor("#f92f03")
+                .setTitle("Let's see who is in the lead: ");
                 if(respCheckServer.bet_configs[0].point_name.charAt(respCheckServer.bet_configs[0].point_name.length-1) === "s"){
                     respCheckServer.bet_configs[0].point_name = respCheckServer.bet_configs[0].point_name.substring(0, respCheckServer.bet_configs[0].point_name.length-1);
                 }
