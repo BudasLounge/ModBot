@@ -29,12 +29,31 @@ module.exports = {
             message.channel.send("This command requires an admin role but no main admin role has been selected for this server.");
             return;
         }
-
-        var options = ["discord_Server_id", "point_name", "recharge_amount", "base_amount", "recharge_cooldown"];
-        if(options.indexOf(args[1]) > -1){
-
+        try{
+            var respCheck = await api.get("bet_config",{
+                discord_server_id:message.guild.id
+            });
+        }catch(err){
+            this.logger.error(err.message);
+        }
+        if(respCheck.bet_configs[0]){
+            var options = ["point_name", "recharge_amount", "base_amount", "recharge_cooldown"];
+            if(options.indexOf(args[1]) > -1){
+                var data = {discord_server_id:message.guild.id};
+                data[args[1]] = args[2];
+                try{
+                    var respUpdate = await api.put("bet_config", data);
+                }catch(err){
+                    this.logger.error(err.message);
+                }
+                if(respUpdate.ok){
+                    message.channel.send("Successfully updated this server's config");
+                }
+            }else{
+                message.channel.send("That option doesn't exist try:point_name, recharge_amount, base_amount, recharge_cooldown\n")
+            }
         }else{
-            message.channel.send("That option doesn't exist try:discord_Server_id, point_name, recharge_amount, base_amount, recharge_cooldown\n")
+            message.channel.send("That server hasn't been set up yet. Use /point_start_server to get a config loaded");
         }
 
     }
