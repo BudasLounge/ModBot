@@ -46,6 +46,7 @@ module.exports = {
             }catch(err){
                 this.logger.error(err.message);
             }
+            this.logger.info("Here is that data: " + respNew);
             if(respNew.ok == true){
                 message.channel.send("<@" + message.member.id + ">, you have received " + respCheckServer.bet_configs[0].base_amount + " " + respCheckServer.bet_configs[0].point_name + "s and are now in the system. Have fun!");
             }else{
