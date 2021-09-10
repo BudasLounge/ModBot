@@ -22,7 +22,7 @@ module.exports = {
                 }
             }
         }
-        var rng = Math.floor(Math.random() * (ending - starting) + starting);
+        var rng = Math.floor(Math.random() * (ending - starting + 1) + starting);
         message.channel.send(rng);
     }
 }
