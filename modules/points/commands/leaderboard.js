@@ -14,7 +14,8 @@ module.exports = {
         var pointUsers = [];
         try{
             respUsers = await api.get("bet_point",{
-                discord_server_id:server_id
+                discord_server_id:server_id,
+                _limit:200
             });
         }catch(err){
             this.logger.error(err.message);
