@@ -62,7 +62,7 @@ module.exports = {
                     stop = 25;
                 }
                 for(var j=0; j<stop; j++){
-                    output += j + ". " + pointUsers[j][0] + ": " + pointUsers[j][1] + " " + respCheckServer.bet_configs[0].point_name + "s\n";
+                    output += (j+1) + ". " + pointUsers[j][0] + ": " + pointUsers[j][1] + " " + respCheckServer.bet_configs[0].point_name + "s\n";
                 }
                 /*for(var k = 0;k<stop;k++){
                     ListEmbed.addField(pointUsers[k][0] + ": " + pointUsers[k][1] + " " + respCheckServer.bet_configs[0].point_name + "s", "...........................................................................");
