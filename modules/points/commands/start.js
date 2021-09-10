@@ -41,7 +41,7 @@ module.exports = {
                 respNew = await api.post("bet_point",{
                     discord_user_id:init_id,
                     discord_server_id:server_id,
-                    points_total:Number.isInteger(parseInt(respCheckServer.bet_configs[0].base_amount)),
+                    points_total:parseInt(respCheckServer.bet_configs[0].base_amount),
                     discord_username:init_name
                 })
             }catch(err){
