@@ -32,7 +32,7 @@ module.exports = {
                     return 0;
                 }
                 else {
-                    return (a[1] < b[1]) ? -1 : 1;
+                    return (a[1] > b[1]) ? -1 : 1;
                 }
             }
             var output = "Let's see who is in the lead:\n";
