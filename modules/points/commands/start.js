@@ -26,21 +26,33 @@ module.exports = {
             return;
         }
 
-        var respNew;
+        var respCheckServer;
         try{
-            respNew = await api.post("bet_point",{
-                discord_user_id:init_id,
-                discord_server_id:server_id,
-                points_total:100,
-                discord_username:init_name
+            respCheckServer = await api.get("bet_config",{
+                discord_server_id:server_id
             })
         }catch(err){
             this.logger.error(err.message);
         }
-        if(respNew.ok){
-            message.channel.send("<@" + message.member.id + ">, you have received 100 points and are now in the system. Have fun!");
+        if(respCheckServer.bet_configs[0]){
+            var respNew;
+            try{
+                respNew = await api.post("bet_point",{
+                    discord_user_id:init_id,
+                    discord_server_id:server_id,
+                    points_total:respCheckServer.bet_configs[0].base_amount,
+                    discord_username:init_name
+                })
+            }catch(err){
+                this.logger.error(err.message);
+            }
+            if(respNew.ok){
+                message.channel.send("<@" + message.member.id + ">, you have received " + respCheckServer.bet_configs[0].base_amount + " " + respCheckServer.bet_configs[0].point_name + "s and are now in the system. Have fun!");
+            }else{
+                message.channel.send("There was an error.");
+            }
         }else{
-            message.channel.send("There was an error.");
+            message.channel.send("This server doesn't have a loaded config. Have an admin use /point_start_server to get it loaded.");
         }
     }
 }
