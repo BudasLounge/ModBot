@@ -49,6 +49,9 @@ module.exports = {
             }
             this.logger.info("Here is that data: " + respNew);
             if(respNew.ok == true){
+                if(respCheckServer.bet_configs[0].point_name.charAt(respCheckServer.bet_configs[0].point_name.length-1) === "s"){
+                    respCheckServer.bet_configs[0].point_name = respCheckServer.bet_configs[0].point_name.substring(0, respCheckServer.bet_configs[0].point_name.length-1);
+                }
                 message.channel.send("<@" + message.member.id + ">, you have received " + respCheckServer.bet_configs[0].base_amount + " " + respCheckServer.bet_configs[0].point_name + "s and are now in the system. Have fun!");
             }else{
                 message.channel.send("There was an error.");
