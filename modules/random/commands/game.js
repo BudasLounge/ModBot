@@ -18,7 +18,7 @@ module.exports = {
                         host_id:message.member.id
                     });
                 } catch(error){
-                    this.logger.error(error.response);
+                    this.logger.error(error.message);
                 }
                 if(respGame.game_joining_masters[0]){
                     message.channel.send("You already have a live game! Close it out with /game end");
@@ -29,7 +29,7 @@ module.exports = {
                             host_id:message.member.id
                         });
                     } catch(error2){
-                        this.logger.error(error2.response);
+                        this.logger.error(error2.message);
                     }
                     if(respGame.ok){
                         message.channel.send("Created a game! Others can now join with /game join @host");
@@ -48,7 +48,7 @@ module.exports = {
                             host_id:hostID
                         });
                     } catch(error4){
-                        this.logger.error(error4.response);
+                        this.logger.error(error4.message);
                     }
                     if(respGame.game_joining_masters[0]){
                         if(respGame.game_joining_masters[0].status == "open"){
@@ -58,7 +58,7 @@ module.exports = {
                                     game_id:Number(respGame.game_joining_masters[0].game_id)
                                 });
                             } catch(error5){
-                                this.logger.error(error5.response);
+                                this.logger.error(error5.message);
                             }
                             if(respPlayers.ok){
                                 message.channel.send("Succesfully joined the game!");
@@ -80,7 +80,7 @@ module.exports = {
                         host_id:message.member.id
                     });
                 } catch(error6){
-                    this.logger.error(error6.response);
+                    this.logger.error(error6.message);
                 }
                 if(respGame.game_joining_masters[0]){
                     if(respGame.game_joining_masters[0].status == "open"){
@@ -112,7 +112,7 @@ module.exports = {
                         host_id:proxy_id
                     });
                 } catch(error7){
-                    this.logger.error(error7.response);
+                    this.logger.error(error7.message);
                 }
                 if(respGame.game_joining_masters[0]){
                     respPlayersList = await api.get("game_joining_player",{
@@ -152,7 +152,7 @@ module.exports = {
                                 host_id:message.member.id
                             });
                         } catch(error8){
-                            this.logger.error(error8.response);
+                            this.logger.error(error8.message);
                         }
                         if(respGame.game_joining_masters[0]){
                             respPlayersList = await api.get("game_joining_player",{
@@ -197,7 +197,7 @@ module.exports = {
                         _limit: 20
                     });
                 } catch(error9){
-                    this.logger.error(error9.response);
+                    this.logger.error(error9.message);
                     message.channel.send("Hit an error, check the logs");
                 }
                 if(respGame.game_joining_masters[0]){
