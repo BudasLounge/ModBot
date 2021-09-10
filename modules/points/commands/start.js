@@ -35,13 +35,13 @@ module.exports = {
             this.logger.error(err.message);
         }
         if(respCheckServer.bet_configs[0]){
-            this.logger.info("Here is respCheckServer: " + respCheckServer.bet_configs[0]);
+            this.logger.info("Here is respCheckServer: " + respCheckServer.bet_configs[0].base_amount);
             var respNew;
             try{
                 respNew = await api.post("bet_point",{
                     discord_user_id:init_id,
                     discord_server_id:server_id,
-                    points_total:respCheckServer.bet_configs[0].base_amount,
+                    points_total:Number.isInteger(parseInt(respCheckServer.bet_configs[0].base_amount)),
                     discord_username:init_name
                 })
             }catch(err){
