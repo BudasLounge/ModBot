@@ -159,7 +159,7 @@ class ModuleHandler {
                 message.channel.send("Sorry, I couldn't find the module: " + spec_module);
                 return;
             }
-        } else { //This section runs when user uses form '/command' (the module will be found automatically)
+        } else { //This section runs when user uses form '/[command]' (the module will be found automatically)
             var found_command = false;
             var matched_prefix = false;
 
