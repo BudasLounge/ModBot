@@ -41,8 +41,9 @@ module.exports = {
             if(options.indexOf(args[1]) > -1){
                 var data = {discord_server_id:message.guild.id};
                 data[args[1]] = args[2];
+                var respUpdate;
                 try{
-                    var respUpdate = await api.put("bet_config", data);
+                    respUpdate = await api.put("bet_config", data);
                 }catch(err){
                     this.logger.error(err.message);
                 }
