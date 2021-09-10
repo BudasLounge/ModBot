@@ -10,6 +10,7 @@ module.exports = {
         var api = extra.api;
         var init_id = message.member.id;
         var server_id = message.guild.id;
+        var init_name = message.member.user.username;
 
         var respCheck;
         try{
@@ -30,7 +31,8 @@ module.exports = {
             respNew = await api.post("bet_point",{
                 discord_user_id:init_id,
                 discord_server_id:server_id,
-                points_total:100
+                points_total:100,
+                discord_username:init_name
             })
         }catch(err){
             this.logger.error(err.message);
