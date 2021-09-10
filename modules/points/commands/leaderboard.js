@@ -61,7 +61,7 @@ module.exports = {
                     output += pointUsers[j][0] + ": " + pointUsers[j][1] + " " + respCheckServer.bet_configs[0].point_name + "s\n";
                 }
                 for(var k = 0;k<stop;k++){
-                    ListEmbed.addfield(pointUsers[k][0] + ": " + pointUsers[k][1] + " " + respCheckServer.bet_configs[0].point_name + "s", " ");
+                    ListEmbed.addfield(pointUsers[k][0] + ": " + pointUsers[k][1] + " " + respCheckServer.bet_configs[0].point_name + "s", " test ");
                 }
                 //ListEmbed.addField("The list: ", output);
                 message.channel.send(ListEmbed);
