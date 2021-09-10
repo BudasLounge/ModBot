@@ -20,29 +20,33 @@ module.exports = {
         }catch(err){
             this.logger.error(err.message);
         }
-
-        for(var i = 0;respUsers.bet_points.length;i++){
-            pointUsers.push([respUsers.bet_points[i].discord_username, respUsers.bet_points[i].points_total]);
-        }
-
-        pointUsers.sort(compareSecondColumn);
-
-        function compareSecondColumn(a, b) {
-            if (a[1] === b[1]) {
-                return 0;
+        if(respUsers.bet_points[0]){
+            for(var i = 0;respUsers.bet_points.length;i++){
+                pointUsers.push([respUsers.bet_points[i].discord_username, respUsers.bet_points[i].points_total]);
             }
-            else {
-                return (a[1] < b[1]) ? -1 : 1;
+
+            pointUsers.sort(compareSecondColumn);
+
+            function compareSecondColumn(a, b) {
+                if (a[1] === b[1]) {
+                    return 0;
+                }
+                else {
+                    return (a[1] < b[1]) ? -1 : 1;
+                }
             }
-        }
-        const ListEmbed = Discord.MessageEmbed()
-        .setColor("#f92f03")
-        .setTitle("Let's see who is in the lead: ");
-        for(j=0; j<pointUsers.length; j++){
-            for(i=0; i<pointUsers[j].length; i++){
-            ListEmbed.addField(pointUsers[j][0] + ": " + pointUsers[j][1])
+            const ListEmbed = Discord.MessageEmbed()
+            .setColor("#f92f03")
+            .setTitle("Let's see who is in the lead: ");
+            for(j=0; j<pointUsers.length; j++){
+                for(i=0; i<pointUsers[j].length; i++){
+                ListEmbed.addField(pointUsers[j][0] + ": " + pointUsers[j][1])
+                }
             }
+            message.channel.send(ListEmbed);
+        }else{
+            message.channel.send("Hit an error");
+            return;
         }
-        message.channel.send(ListEmbed);
     }
 }
