@@ -52,7 +52,7 @@ module.exports = {
                     respCheckServer.bet_configs[0].point_name = respCheckServer.bet_configs[0].point_name.substring(0, respCheckServer.bet_configs[0].point_name.length-1);
                 }
                 for(var j=0; j<pointUsers.length; j++){
-                    output += pointUsers[j][0] + ": " + pointUsers[j][1] + respCheckServer.bet_configs[0].point_name + "\n";
+                    output += pointUsers[j][0] + ": " + pointUsers[j][1] + " " + respCheckServer.bet_configs[0].point_name + "s\n";
                 }
                 //ListEmbed.addField("The list: ", output);
                 message.channel.send(output);
