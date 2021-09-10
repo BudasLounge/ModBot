@@ -35,7 +35,7 @@ module.exports = {
                     return (a[1] < b[1]) ? -1 : 1;
                 }
             }
-            var output = "";
+            var output = "Let's see who is in the lead:\n";
             const ListEmbed = new Discord.MessageEmbed()
             .setColor("#f92f03")
             .setTitle("Let's see who is in the lead: ");
