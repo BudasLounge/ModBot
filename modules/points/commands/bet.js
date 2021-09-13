@@ -11,12 +11,12 @@ module.exports = {
         const MessageButton = require('discord.js');
         const MessageActionRow = require('discord.js');
         const row = new MessageActionRow()
-        .addComponents(
-        new MessageButton()
-            .setCustomId('primary')
-            .setLabel('Primary')
-            .setStyle('PRIMARY'),
-        );
+			.addComponents(
+				new MessageButton()
+					.setCustomId('primary')
+					.setLabel('Primary')
+					.setStyle('PRIMARY'),
+			);
 
         message.channel.send({components: [row]});
     }
