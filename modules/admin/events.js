@@ -21,9 +21,10 @@ async function onUserJoin(member){
     }
 }
 
-async function onButtonClick(interaction){
-    if(!interaction.isButton()) return;
-	this.logger.info(interaction);
+async function onButtonClick(button){
+    await button.clicker.fetch();
+    const user = button.clicker.user;
+    button.message.channel.send({content: user.toString() + " clicked me!"});
 }
 
 /*async function parseRaw(packet) {
