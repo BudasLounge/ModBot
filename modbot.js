@@ -67,8 +67,8 @@ client.on('message', (message) => {
     modules.handle_command(message);
 });
 
-client.on('interactionCreate', (button) => {
+/*client.on('interactionCreate', (button) => {
     if (!button.isButton()) return;
     logger.info(button.id);
     button.deferUpdate();
-}); 
+}); */
