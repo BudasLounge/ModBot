@@ -18,16 +18,16 @@ module.exports = {
             separator = " ";
         }
         if(interval>0 && args[1]>args[2]){
-            message.channel.send("This will cause an error, try with different numbers");
+            message.channel.send({ content: "This will cause an error, try with different numbers"});
         }
         else if(interval<0 && args[1]<args[2]){
-            message.channel.send("This will cause an error, try with different numbers");
+            message.channel.send({ content: "This will cause an error, try with different numbers"});
         }else{
             var output = "";
             for(var i = start;i<end;i+=interval){
                 output+= i + " " + separator;
             }
-            message.channel.send(output);
+            message.channel.send({ content: output});
         }
     }
 };

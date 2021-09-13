@@ -18,15 +18,15 @@ module.exports = {
         }
         if(respAdminID.discord_servers[0]){
             if(respAdminID.discord_servers[0].admin_role_id === ""){
-                message.channel.send("This command requires an admin role but no main admin role has been selected for this server.");
+                message.channel.send({ content: "This command requires an admin role but no main admin role has been selected for this server."});
                 return;
             }
             else if(!message.member.roles.cache.has(respAdminID.discord_servers[0].admin_role_id)){
-                message.channel.send("You do not have permission to use this command.");
+                message.channel.send({ content: "You do not have permission to use this command."});
                 return;
             }
         }else{
-            message.channel.send("This command requires an admin role but no main admin role has been selected for this server.");
+            message.channel.send({ content: "This command requires an admin role but no main admin role has been selected for this server."});
             return;
         }
         
@@ -40,7 +40,7 @@ module.exports = {
             this.logger.error(err.message);
         }
         if(respCheck.bet_configs[0]){
-            message.channel.send("This server is already in. Use /points_config to change settings!");
+            message.channel.send({ content: "This server is already in. Use /points_config to change settings!"});
             return;
         }
 
@@ -53,9 +53,9 @@ module.exports = {
             this.logger.error(err.message);
         }
         if(respNew.ok){
-            message.channel.send("This server was added to the system. Use /points_config to check your configuration.");
+            message.channel.send({ content: "This server was added to the system. Use /points_config to check your configuration."});
         }else{
-            message.channel.send("There was an error.");
+            message.channel.send({ content: "There was an error."});
         }
     }
 }

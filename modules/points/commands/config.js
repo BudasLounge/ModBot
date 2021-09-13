@@ -18,15 +18,15 @@ module.exports = {
         }
         if(respAdminID.discord_servers[0]){
             if(respAdminID.discord_servers[0].admin_role_id === ""){
-                message.channel.send("This command requires an admin role but no main admin role has been selected for this server.");
+                message.channel.send({ content: "This command requires an admin role but no main admin role has been selected for this server."});
                 return;
             }
             else if(!message.member.roles.cache.has(respAdminID.discord_servers[0].admin_role_id)){
-                message.channel.send("You do not have permission to use this command.");
+                message.channel.send({ content: "You do not have permission to use this command."});
                 return;
             }
         }else{
-            message.channel.send("This command requires an admin role but no main admin role has been selected for this server.");
+            message.channel.send({ content: "This command requires an admin role but no main admin role has been selected for this server."});
             return;
         }
         try{
@@ -51,13 +51,13 @@ module.exports = {
                     this.logger.error(err.message);
                 }
                 if(respUpdate.ok){
-                    message.channel.send("Successfully updated this server's config");
+                    message.channel.send({ content: "Successfully updated this server's config"});
                 }
             }else{
-                message.channel.send("That option doesn't exist try:point_name, recharge_amount, base_amount, recharge_cooldown, bet_buyin_time\n")
+                message.channel.send({ content: "That option doesn't exist try:point_name, recharge_amount, base_amount, recharge_cooldown, bet_buyin_time\n"})
             }
         }else{
-            message.channel.send("That server hasn't been set up yet. Use /point_start_server to get a config loaded");
+            message.channel.send({ content: "That server hasn't been set up yet. Use /point_start_server to get a config loaded"});
         }
 
     }

@@ -32,7 +32,7 @@ module.exports ={
                 this.logger.error(status_error);
                 item = respServer.minecraft_servers[0].display_name + " is currently offline!";
                 ListEmbed.addField("status: ", item);
-                message.channel.send(ListEmbed);
+                message.channel.send({ embeds: [ListEmbed]});
                 flag = true;
             }
             this.logger.info(item);
@@ -43,10 +43,10 @@ module.exports ={
                     output += "- " + item.players.sample[i].name + "\n";
                 }
                 ListEmbed.addField("status: ", output);
-                message.channel.send(ListEmbed);
+                message.channel.send({ embeds: [ListEmbed]});
             }
         }else{
-            message.channel.send("Sorry, couldn't find a server with that shortname, try /listmc for a list of all servers.");
+            message.channel.send({ content: "Sorry, couldn't find a server with that shortname, try /listmc for a list of all servers."});
         }
     }
 };

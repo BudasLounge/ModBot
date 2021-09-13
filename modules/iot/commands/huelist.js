@@ -16,7 +16,7 @@ module.exports = {
         var lightResp = await axios.get(`http://192.168.1.58/api/${token}/lights`, {
 
         });
-        message.channel.send("Compiling light list...");
+        message.channel.send({ content: "Compiling light list..."});
         var lightCount = [];
         for(var key in lightResp.data){
             this.logger.info("Pushing key: " + key);
@@ -51,7 +51,7 @@ module.exports = {
                 output += lightArray[i].name + " has lightID: " + lightCount[i] + " and is OFF\n";
             }
         }
-        message.channel.send(output);
+        message.channel.send({ content: output});
     }
 }
 

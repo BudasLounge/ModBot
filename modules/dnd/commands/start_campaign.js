@@ -10,7 +10,7 @@ module.exports = {
         var api = extra.api;
 
         console.log(">>start_campaign");
-        message.channel.send("<@" + message.member.id + "> "+"please fill out the information!");
+        message.channel.send({ content: "<@" + message.member.id + "> "+"please fill out the information!"});
         const Discord = require(`discord.js`);
 
         let Author = message.author;
@@ -28,7 +28,7 @@ module.exports = {
         const filter1 = response1 => {
             return response1.author.id === Authorid;
         }
-        message.channel.send("<@" + message.member.id + "> "+"What is the module you are using?").then(() => {
+        message.channel.send({ content: "<@" + message.member.id + "> "+"What is the module you are using?"}).then(() => {
         message.channel.awaitMessages(filter1, { max: 1 })
         .then(collected1 => {
             const response1 = collected1.first();
@@ -37,7 +37,7 @@ module.exports = {
         const filter2 = response2 => {
             return response2.author.id === Authorid;
         }
-        message.channel.send("<@" + message.member.id + "> "+"What is the start date? (Format YYYY-MM-DD)").then(() => {
+        message.channel.send({ content: "<@" + message.member.id + "> "+"What is the start date? (Format YYYY-MM-DD)"}).then(() => {
         message.channel.awaitMessages(filter2, { max: 1 })
         .then(collected2 => {  
             const response2 = collected2.first();
@@ -46,7 +46,7 @@ module.exports = {
         const filter3 = response3 => {
             return response3.author.id === Authorid;
         }
-        message.channel.send("<@" + message.member.id + "> "+"How many days in between sessions? (enter only the numeric value)").then(() => {
+        message.channel.send({ content: "<@" + message.member.id + "> "+"How many days in between sessions? (enter only the numeric value)"}).then(() => {
         message.channel.awaitMessages(filter3, { max: 1 })
         .then(collected3 => {
             const response3 = collected3.first();
@@ -55,7 +55,7 @@ module.exports = {
         const filter4 = response4 => {
             return response4.author.id === Authorid;
         }
-        message.channel.send("<@" + message.member.id + "> "+"What is the name of the role for your players?").then(() => {
+        message.channel.send({ content: "<@" + message.member.id + "> "+"What is the name of the role for your players?"}).then(() => {
         message.channel.awaitMessages(filter4, { max: 1 })
         .then(collected4 => {
             const response4 = collected4.first();
@@ -64,7 +64,7 @@ module.exports = {
         const filter5 = response5 => {
             return response5.author.id === Authorid;
         }
-        message.channel.send("<@" + message.member.id + "> "+"What is the name you want your folder to be?").then(() => {
+        message.channel.send({ content: "<@" + message.member.id + "> "+"What is the name you want your folder to be?"}).then(() => {
         message.channel.awaitMessages(filter5, { max: 1 })
         .then(collected5 => {
             const response5 = collected5.first();
@@ -73,7 +73,7 @@ module.exports = {
         const filter6 = response6 => {
             return response5.author.id === Authorid;
         }
-        message.channel.send("<@" + message.member.id + "> "+"How many text channels do you need?").then(() => {
+        message.channel.send({ content: "<@" + message.member.id + "> "+"How many text channels do you need?"}).then(() => {
         message.channel.awaitMessages(filter6, { max: 1 })
         .then(collected6 => {
             const response6 = collected6.first();
@@ -82,7 +82,7 @@ module.exports = {
         const filter7 = response7 => {
             return response7.author.id === Authorid;
         }
-        message.channel.send("<@" + message.member.id + "> "+"How many voice channels do you need?").then(() => {
+        message.channel.send({ content: "<@" + message.member.id + "> "+"How many voice channels do you need?"}).then(() => {
         message.channel.awaitMessages(filter7, { max: 1 })
         .then(collected7 => {
             const response7 = collected7.first();
@@ -95,7 +95,7 @@ module.exports = {
             const filter8 = response8 => {
                 return response8.author.id === Authorid;
             }
-            message.channel.send("<@" + message.member.id + "> "+"What is the name of text channel " + i + "?").then(() => {
+            message.channel.send({ content: "<@" + message.member.id + "> "+"What is the name of text channel " + i + "?"}).then(() => {
             message.channel.awaitMessages(filter8, { max: 1 })
             .then(collected8 => {
                 const response8 = collected8.first();
@@ -110,7 +110,7 @@ module.exports = {
             const filter8 = response8 => {
                 return response8.author.id === Authorid;
             }
-            message.channel.send("<@" + message.member.id + "> "+"What is the name of voice channel " + i + "?").then(() => {
+            message.channel.send({ content: "<@" + message.member.id + "> "+"What is the name of voice channel " + i + "?"}).then(() => {
             message.channel.awaitMessages(filter8, { max: 1 })
             .then(collected8 => {
                 const response8 = collected8.first();
@@ -121,7 +121,7 @@ module.exports = {
         });
         }
         
-        message.channel.send("<@" + message.member.id + "> "+"Here is what you entered:\n" + module + "\n" + start_date + "\n" + schedule_type + "\n" + role_name + "\n" + category_name + "\n" + text_amount + "\n" + voice_amount);
+        message.channel.send({ content: "<@" + message.member.id + "> "+"Here is what you entered:\n" + module + "\n" + start_date + "\n" + schedule_type + "\n" + role_name + "\n" + category_name + "\n" + text_amount + "\n" + voice_amount});
         });
         });
         });

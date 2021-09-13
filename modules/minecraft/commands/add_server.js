@@ -21,7 +21,7 @@ module.exports = {
                 console.error(error);
             } 
             if(!respServer.minecraft_servers[0]){
-                message.channel.send("Adding server " + args[1] + " to the database, here we goooooooo");
+                message.channel.send({ content: "Adding server " + args[1] + " to the database, here we goooooooo"});
                 if(!Number.isInteger(args[5])){
                     args[5] = "none";
                 }
@@ -38,15 +38,15 @@ module.exports = {
                     });
                 }catch(err){
                     console.error(err);
-                    message.channel.send("I hit a snag...");
+                    message.channel.send({ content: "I hit a snag..."});
                 }
             }
             else{
-                message.channel.send("I found a server with that server_ip already, try again");
+                message.channel.send({ content: "I found a server with that server_ip already, try again"});
             }
             console.log("<<add_server");
         }else{
-            message.channel.send("You don't have permission to use that command!");
+            message.channel.send({ content: "You don't have permission to use that command!"});
         }
     }
 

@@ -18,9 +18,9 @@ module.exports = {
             }
         }
         if(flag == true){
-            message.channel.send(answersArray[args[1]]);
+            message.channel.send({ content: answersArray[args[1]]});
         }else{
-            message.channel.send("Try and find some key words");
+            message.channel.send({ content: "Try and find some key words"});
         }
     }
 };

@@ -15,7 +15,7 @@ module.exports = {
             });
 
             if(respModule.modules.length <= 0) {
-                message.channel.send("Sorry, I couldn't find that module!");
+                message.channel.send({ content: "Sorry, I couldn't find that module!"});
                 return;
             }
 
@@ -31,9 +31,9 @@ module.exports = {
                     module_id: parseInt(target_module_id),
                     server_id: message.channel.guild.id
                 });
-                message.channel.send("Successfully enabled module on this server!");
+                message.channel.send({ content: "Successfully enabled module on this server!"});
             } else {
-                message.channel.send("That module is already enabled on this server!");
+                message.channel.send({ content: "That module is already enabled on this server!"});
             }
         } else if(args[1] == "disable") {
             var respModule = await api.get('module', {
@@ -41,7 +41,7 @@ module.exports = {
             });
 
             if(respModule.modules.length <= 0) {
-                message.channel.send("Sorry, I couldn't find that module!");
+                message.channel.send({ content: "Sorry, I couldn't find that module!"});
                 return;
             }
 
@@ -53,13 +53,13 @@ module.exports = {
             });
 
             if(respEnabled.enabled_modules.length == 0) {
-                message.channel.send("That module is already disabled on this server!");
+                message.channel.send({ content: "That module is already disabled on this server!"});
             } else {
                 console.log("Deleting link: " + respEnabled.enabled_modules[0].link_id);
                 var respDelete = await api.delete('enabled_module', {
                     link_id: parseInt(respEnabled.enabled_modules[0].link_id)
                 });
-                message.channel.send("Successfully disabled module on this server!");
+                message.channel.send({ content: "Successfully disabled module on this server!"});
             }
         } else if(args[1] == "status") {
             var respModule = await api.get('module', {
@@ -67,7 +67,7 @@ module.exports = {
             });
 
             if(respModule.modules.length <= 0) {
-                message.channel.send("Sorry, I couldn't find that module!");
+                message.channel.send({ content: "Sorry, I couldn't find that module!"});
                 return;
             }
 
@@ -79,12 +79,12 @@ module.exports = {
             });
 
             if(respEnabled.enabled_modules.length == 0) {
-                message.channel.send("Module Status: Disabled");
+                message.channel.send({ content: "Module Status: Disabled"});
             } else {
-                message.channel.send("Module Status: Enabled");
+                message.channel.send({ content: "Module Status: Enabled"});
             }
         } else {
-            message.channel.send("Unrecognized argument! Syntax: " + this.syntax);
+            message.channel.send({ content: "Unrecognized argument! Syntax: " + this.syntax.toString()});
         }
     }
 };

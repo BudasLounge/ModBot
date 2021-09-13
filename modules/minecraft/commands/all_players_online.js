@@ -45,7 +45,7 @@ module.exports = {
                 }
             }
         }
-        message.channel.send(ListEmbed);
+        message.channel.send({ embeds: [ListEmbed]});
 	} catch (error) {
 		console.error(error);
     }

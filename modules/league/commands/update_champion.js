@@ -39,16 +39,16 @@ module.exports = {
                     changedInfo += "role_secondary: " + respUpdate.league_champion.role_secondary + "\n";
                     this.logger.info("filled changedInfo variable");
                     ListEmbed.addField("A post function update: ", changedInfo);
-                    message.channel.send(ListEmbed);
+                    message.channel.send({ embeds: [ListEmbed]});
                 }
             }catch(error2){
                 this.logger.error({error: error2.response});
             }
         }else{
-            message.channel.send("No champion with that name here!");
+            message.channel.send({ content: "No champion with that name here!"});
         }
     }else{
-        message.channel.send("You don't have permission to use that command!");
+        message.channel.send({ content: "You don't have permission to use that command!"});
     }
     }
 };

@@ -30,9 +30,9 @@ module.exports = {
                         output+=respChampsCustom.league_pref_champs[i].champ_name +"\n";
                     }
                 }else{
-                    message.channel.send("That person hasn't approved any champions yet!");
+                    message.channel.send({ content: "That person hasn't approved any champions yet!"});
                 }
-                message.channel.send(output, {split:true});
+                message.channel.send({ content: output});
             }else{
                 try{
                     respChamps = await api.get("league_champion",{
@@ -43,10 +43,10 @@ module.exports = {
                 }
                 if(respChamps.league_champions[0]){
                     var output = "Champion: " + respChamps.league_champions[0].name + "\nPrimary role: " + respChamps.league_champions[0].role_primary + "\nSecondary role: " + respChamps.league_champions[0].role_secondary + "\nDamage type: " + respChamps.league_champions[0].ad_ap;
-                    message.author.send(output);
-                    message.channel.send("Sent a PM!");
+                    message.author.send({ content: output});
+                    message.channel.send({ content: "Sent a PM!"});
                 }else{
-                    message.channel.send("Couldn't find a champion by that name!");
+                    message.channel.send({ content: "Couldn't find a champion by that name!"});
                 }
             }
         }
@@ -62,16 +62,16 @@ module.exports = {
             for(var i = 0; i<respChamps.league_champions.length;i++){
                 output += respChamps.league_champions[i].name + " - " + respChamps.league_champions[i].role_primary + "/" +respChamps.league_champions[i].role_secondary +"\n";
             } 
-            message.author.send(output, {split:true});
+            message.author.send({ content: output});
             /*const ListEmbed = new Discord.MessageEmbed()
                 .setColor("#f92f03")
                 .setTitle("A list of all champions: ");
             var embeds = extra.MessageHelper.split_embed(ListEmbed, output);
             for(var e = 0;e<embeds.length;e++){
-                message.channel.send(embeds[e]);
+                message.channel.send({ content: embeds[e]);
             }*/
         
-        message.channel.send("Sent a PM!");
+        message.channel.send({ content: "Sent a PM!"});
         }
     }
 };

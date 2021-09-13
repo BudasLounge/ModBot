@@ -43,12 +43,12 @@ module.exports = {
                     }
                 }
                 ListEmbed.addField(num_players, msg);
-                message.channel.send(ListEmbed);
+                message.channel.send({ embeds: [ListEmbed]});
             }else{
-                message.channel.send("That server doesn't appear to be online right now!");
+                message.channel.send({ content: "That server doesn't appear to be online right now!"});
             }
         }else{
-            message.channel.send("That server doesn't appear to have status_api mod installed!");
+            message.channel.send({ content: "That server doesn't appear to have status_api mod installed!"});
         }
 	} catch (error) {
 		console.error(error);

@@ -13,12 +13,12 @@ module.exports = {
     if(!state.data.has("name")) {
       if(args.length == 2) {
         state.add_data("name", "STRING", args[1]);
-        message.channel.send("Okay, " + state.data.get("name").data + ". I'll remember your name until this state times out!");
-      } else {
-        message.channel.send("Hi there! My name is ModBot! What's yours? (run /state_example <your_name>)");
+        message.channel.send({ content: "Okay, " + state.data.get("name").data + ". I'll remember your name until this state times out!"});
+      } else{
+        message.channel.send({ content: "Hi there! My name is ModBot! What's yours? (run /state_example <your_name>)"});
       }
     } else {
-      message.channel.send("Hello again, " + state.data.get("name").data);
+      message.channel.send({ content: "Hello again, " + state.data.get("name").data.toString()});
     }
   }
 };

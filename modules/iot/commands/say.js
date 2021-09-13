@@ -27,7 +27,7 @@ module.exports = {
                 opening_time = deadline.diff(now, "hours") + ' hrs, ' + (deadline.diff(now, "minutes") % 60) + ' mins'
                 //opening_time = deadline.from(now);
             }
-            message.channel.send("This command is closed. It will open again " + opening_time + ". Try again later!");
+            message.channel.send({ content: "This command is closed. It will open again " + opening_time.toString() + ". Try again later!"});
             return;
         }
         var approvedWords = [];
@@ -52,14 +52,14 @@ module.exports = {
         args.shift();
         var sayMessage = args.join();
         if(filter.isProfane(sayMessage)){
-            message.channel.send("No bad words for now!");
+            message.channel.send({ content: "No bad words for now!"});
             return;
         }
         if(sayMessage.length<=200){
             say.speak(sayMessage);
-            message.channel.send("Message was spoken!");
+            message.channel.send({ content: "Message was spoken!"});
         }else{
-            message.channel.send("That message is too long, no more than 200 characters per message!");
+            message.channel.send({ content: "That message is too long, no more than 200 characters per message!"});
         }
         //say.stop();
 

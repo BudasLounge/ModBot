@@ -19,7 +19,7 @@ module.exports = {
             });
 
             if(respGetModule.modules.length <= 0) {
-                message.channel.send("Sorry, that module doesn't exist in the server-specific registries!");
+                message.channel.send({ content: "Sorry, that module doesn't exist in the server-specific registries!"});
                 return;
             }
 
@@ -72,15 +72,15 @@ module.exports = {
 
                     if(num_lines >= 14) {
                         output += "```";
-                        message.channel.send(output);
+                        message.channel.send({ content: output});
                         output = "```";
                         num_lines = 0;
                     }
                 }
                 output += "```";
-                message.channel.send(output);
+                message.channel.send({ content: output});
             } else {
-                message.channel.send("Sorry, I couldn't find that module!");
+                message.channel.send({ content: "Sorry, I couldn't find that module!"});
             }
         } else {
             var longest_syntax = "";
@@ -93,7 +93,7 @@ module.exports = {
                 });
 
                 if(respModule.modules.length <= 0) {
-                    message.channel.send("Oops, something went wrong!");
+                    message.channel.send({ content: "Oops, something went wrong!"});
                     return;
                 }
 
@@ -127,7 +127,7 @@ module.exports = {
                 });
 
                 if(respModule.modules.length <= 0) {
-                    message.channel.send("Oops, something went wrong!");
+                    message.channel.send({ content: "Oops, something went wrong!"});
                     return;
                 }
 
@@ -165,7 +165,7 @@ module.exports = {
                         num_lines++;
                         if(num_lines >= 14) {
                             output += "```";
-                            message.channel.send(output);
+                            message.channel.send({ content: output});
                             output = "```";
                             num_lines = 0;
                         }
@@ -173,7 +173,7 @@ module.exports = {
                 }
             }
             output += "```";
-            message.channel.send(output);
+            message.channel.send({ content: output});
         }
     }
 };

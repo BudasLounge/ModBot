@@ -29,7 +29,7 @@ module.exports = {
                     if(!args[2]){
                         this.logger.info(respChampsCustom);
                         var seedCustom = (Math.floor(Math.random() * respChampsCustom.league_pref_champs.length));
-                        message.channel.send("<@" + message.member.id + "> "+"Your champ is: " + respChampsCustom.league_pref_champs[seedCustom].champ_name);
+                        message.channel.send({ content: "<@" + message.member.id + "> "+"Your champ is: " + respChampsCustom.league_pref_champs[seedCustom].champ_name});
                     }else if(roles.indexOf(args[2]) > -1){
                         var champs = [];
                         this.logger.info(respChampsCustom);
@@ -53,10 +53,10 @@ module.exports = {
                         this.logger.info("new champ list -->" + champs);
                         var seedCustom = (Math.floor(Math.random() * champs.length));
                         this.logger.info("This is the seed: "+ seedCustom + "\nthis is the max alloted seed: "+ champs.length);
-                        message.channel.send("<@" + message.member.id + "> "+"Your champ is: " + champs[seedCustom].name);
+                        message.channel.send({ content: "<@" + message.member.id + "> "+"Your champ is: " + champs[seedCustom].name});
                     }
                 }else{
-                    message.channel.send("That person hasn't approved any champions yet!");
+                    message.channel.send({ content: "That person hasn't approved any champions yet!"});
                 }
             }else if(args[1] == "ad"){
                 var respChampsAd;
@@ -69,7 +69,7 @@ module.exports = {
                     this.logger.error(errorAdMessage, errorAd.response);
                 }
                 var seedAd = (Math.floor(Math.random() * respChampsAd.league_champions.length));
-                message.channel.send("<@" + message.member.id + "> "+"Your AD champ is: " + respChampsAd.league_champions[seedAd].name);
+                message.channel.send({ content: "<@" + message.member.id + "> "+"Your AD champ is: " + respChampsAd.league_champions[seedAd].name});
             }else if(args[1] == "ap"){
                 var respChampsAp;
                 try{
@@ -81,7 +81,7 @@ module.exports = {
                     this.logger.error(errorApMessage, errorAp.response);
                 }
                 var seedAp = (Math.floor(Math.random() * respChampsAp.league_champions.length));
-                message.channel.send("<@" + message.member.id + "> "+"Your AP champ is: " + respChampsAp.league_champions[seedAp].name);
+                message.channel.send({ content: "<@" + message.member.id + "> "+"Your AP champ is: " + respChampsAp.league_champions[seedAp].name});
             }else{
                 if(roles.indexOf(args[1]) > -1){
                     try{
@@ -103,9 +103,9 @@ module.exports = {
                     var respChamps = [].concat(respChampsPrim.league_champions, respChampsSec.league_champions, respChampsPrim.league_champions);
                     //this.logger.info(respChamps);
                     var seed = (Math.floor(Math.random() * respChamps.length));
-                    message.channel.send("<@" + message.member.id + "> "+"Your " + args[1] + " champ is: " + respChamps[seed].name);
+                    message.channel.send({ content: "<@" + message.member.id + "> "+"Your " + args[1] + " champ is: " + respChamps[seed].name});
                 }else{
-                    message.channel.send("That role doesn't exist! Try:\nmid, top, sup, adc, jg");
+                    message.channel.send({ content: "That role doesn't exist! Try:\nmid, top, sup, adc, jg"});
                 }
             }
         }
@@ -119,7 +119,7 @@ module.exports = {
             }
             var seed = (Math.floor(Math.random() * respAllChamps.league_champions.length));
             try{
-                message.channel.send("<@" + message.member.id + "> "+respAllChamps.league_champions[seed].name);
+                message.channel.send({ content: "<@" + message.member.id + "> "+respAllChamps.league_champions[seed].name});
             }catch(error2){
                 this.logger.error(error2.message);
             }

@@ -7,6 +7,6 @@ module.exports = {
     needs_api: false,
     has_state: false,
     execute(message, args, extra) {
-      message.channel.send("Hue Pong!");
+      message.channel.send({ content: "Hue Pong!"});
     }
 };

@@ -27,7 +27,7 @@ module.exports = {
                 opening_time = deadline.diff(now, "hours") + ' hrs, ' + (deadline.diff(now, "minutes") % 60) + ' mins'
                 //opening_time = deadline.from(now);
             }
-            message.channel.send("This command is closed. It will open again " + opening_time + ". Try again later!");
+            message.channel.send({ content: "This command is closed. It will open again " + opening_time.toString() + ". Try again later!"});
             return;
         }
 
@@ -51,12 +51,12 @@ module.exports = {
             var start = args[2].substring(0, args[2].indexOf("-"));
             var end = args[2].substring(args[2].indexOf("-")+1);
             if(!Number.isInteger(parseInt(start)) || !Number.isInteger(parseInt(end))){
-                message.channel.send("Please enter a valid range of lightIDs (make sure the values are numeric)");
+                message.channel.send({ content: "Please enter a valid range of lightIDs (make sure the values are numeric)"});
                 return;
             }
         }else{
             if(!Number.isInteger(parseInt(args[2]))){
-                message.channel.send("Please enter a valid lightID");
+                message.channel.send({ content: "Please enter a valid lightID"});
                 return;
             }
         }
@@ -71,7 +71,7 @@ module.exports = {
         if((Number.isInteger(parseInt(args[3])) && Number.isInteger(parseInt(args[4])) && Number.isInteger(parseInt(args[5]))) || args[1] == "off"){
             
         }else{
-            message.channel.send("Invalid RGB, defaulting to 100 100 100");
+            message.channel.send({ content: "Invalid RGB, defaulting to 100 100 100"});
             args[3] = 100;
             args[4] = 100;
             args[5] = 100;
@@ -106,11 +106,11 @@ module.exports = {
                     });
                 } catch (err) {
                     this.logger.error(err);
-                    message.channel.send("Err!");
+                    message.channel.send({ content: "Err!"});
                     return;
                 }
             }
-            message.channel.send("Multiple lights controlled!");
+            message.channel.send({ content: "Multiple lights controlled!"});
           }else{
             try {
                 if(lightID === "12"){
@@ -126,10 +126,10 @@ module.exports = {
                 }
             } catch (err) {
                 this.logger.error(err);
-                message.channel.send("Err!");
+                message.channel.send({ content: "Err!"});
                 return;
             }
-            message.channel.send("Light controlled!");
+            message.channel.send({ content: "Light controlled!"});
         }
       }else if(args[1] == "off"){
         if(multi){
@@ -143,11 +143,11 @@ module.exports = {
                     });
                 } catch (err) {
                     this.logger.error(err);
-                    message.channel.send("Err!");
+                    message.channel.send({ content: "Err!"});
                     return;
                 }
             }
-            message.channel.send("Multiple lights controlled!");
+            message.channel.send({ content: "Multiple lights controlled!"});
         }else{
             try {
                 lightResp = await axios.put(url, {
@@ -155,14 +155,14 @@ module.exports = {
                 });
             } catch (err) {
                 this.logger.error(err);
-                message.channel.send("Err!");
+                message.channel.send({ content: "Err!"});
                 return;
             }
-            message.channel.send("Light controlled!");
+            message.channel.send({ content: "Light controlled!"});
         }   
       }
       else{
-          message.channel.send("Usage: /light_ctrl [on/off] [lightID] [R] [G] [B]")
+          message.channel.send({ content: "Usage: /lctrl [on/off] [lightID] [R] [G] [B]"})
       }
     
     }

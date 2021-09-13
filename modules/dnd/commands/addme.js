@@ -19,9 +19,9 @@ module.exports = {
         }
 
         if(respFound.dnd_players[0]){
-            message.channel.send("That player is already in the database, good to go!");
+            message.channel.send({ content: "That player is already in the database, good to go!"});
         }else{
-            message.channel.send("let's get you added");
+            message.channel.send({ content: "let's get you added"});
             try{
                 var respPlayer = await api.post("dnd_player", {
                     discord_id: message.member.id,
@@ -42,11 +42,11 @@ module.exports = {
             message.member.roles.add(role);
             let rem_role = message.guild.cache.find(role => role.id === "670370134925508717");
             message.member.roles.remove(rem_role);
-            message.channel.send("Added a player to the database! Ask an admin for help if you can't see the players lounge!");
+            message.channel.send({ content: "Added a player to the database! Ask an admin for help if you can't see the players lounge!"});
         }
         
         if(args[1] == "dm"){
-            message.channel.send("Let's get you added as a DM");
+            message.channel.send({ content: "Let's get you added as a DM"});
             try{
                 var respPlayer = await api.put("dnd_player", {
                     discord_id: message.member.id,
@@ -66,9 +66,9 @@ module.exports = {
             let dmRole = message.guild.cache.find(role => role.id === "735644461627080765");
             message.member.roles.add(dmRole);
             if(respFound.dnd_players[0].is_dm){
-                message.channel.send("You're listed as a dm now");
+                message.channel.send({ content: "You're listed as a dm now"});
             }else{
-                message.channel.send("Something went wrong...try again or ask a mod for help.");
+                message.channel.send({ content: "Something went wrong...try again or ask a mod for help."});
             }
         }
         

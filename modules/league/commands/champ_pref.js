@@ -27,13 +27,13 @@ module.exports = {
                 });
                 this.logger.info(respUpdate);
                 if(respUpdate.ok == true){
-                    message.channel.send(respChamps.league_champions[0].name + " is now <@" + message.member.id + "> approved");
+                    message.channel.send({ content: respChamps.league_champions[0].name.toString() + " is now <@" + message.member.id.toSTring() + "> approved"});
                 }
             }catch(error2){
                 this.logger.error({error: error2.response});
             }
         }else{
-            message.channel.send("No champion with that name here!");
+            message.channel.send({ content: "No champion with that name here!"});
         }
     }
 };

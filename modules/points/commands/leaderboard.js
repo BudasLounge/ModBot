@@ -69,15 +69,15 @@ module.exports = {
                 }*/
                 //ListEmbed.addField("The list: ", output);
                 ListEmbed2.addField("Placements:",output);
-                //message.channel.send(ListEmbed);
-                message.channel.send(ListEmbed2);
-                //message.channel.send(outputTitle + output);
+                //message.channel.send({ content: ListEmbed);
+                message.channel.send({ embeds: [ListEmbed2]});
+                //message.channel.send({ content: outputTitle + output);
             }else{
-                message.channel.send("Hit an error");
+                message.channel.send({ content: "Hit an error"});
                 return;
             }
         }else{
-            message.channel.send("This server doesn't have a loaded config. Have an admin use /point_start_server to get it loaded.");
+            message.channel.send({ content: "This server doesn't have a loaded config. Have an admin use /point_start_server to get it loaded."});
         }
     }
 }

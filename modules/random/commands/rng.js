@@ -23,6 +23,6 @@ module.exports = {
             }
         }
         var rng = Math.floor(Math.random() * (ending - starting + 1)) + parseInt(starting);
-        message.channel.send(rng);
+        message.channel.send({ content: rng});
     }
 }

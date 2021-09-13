@@ -9,11 +9,11 @@ module.exports = {
     async execute(message, args, extra) {
         if(args[1]){
             if(args[1]>99){
-                message.channel.send("http://www.scpwiki.com/scp-"+args[1]);
+                message.channel.send({ content: "http://www.scpwiki.com/scp-"+args[1]});
             }else if(9<args[1]&&args[1]<99){
-                message.channel.send("http://www.scpwiki.com/scp-0"+args[1]);
+                message.channel.send({ content: "http://www.scpwiki.com/scp-0"+args[1]});
             }else{
-                message.channel.send("http://www.scpwiki.com/scp-00"+args[1]);
+                message.channel.send({ content: "http://www.scpwiki.com/scp-00"+args[1]});
             }
         }
     }

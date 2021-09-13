@@ -21,7 +21,7 @@ module.exports = {
                     this.logger.error(error.message);
                 }
                 if(respGame.game_joining_masters[0]){
-                    message.channel.send("You already have a live game! Close it out with /game end");
+                    message.channel.send({ content: "You already have a live game! Close it out with /game end"});
                 }else{
                     this.logger.info(respGame[0]);
                     try{
@@ -32,13 +32,13 @@ module.exports = {
                         this.logger.error(error2.message);
                     }
                     if(respGame.ok){
-                        message.channel.send("Created a game! Others can now join with /game join @host");
+                        message.channel.send({ content: "Created a game! Others can now join with /game join @host"});
                     }
                 }
             break;
             case "join":
                 if(!args[2]||args[2].indexOf("@") === -1||message.mentions.members.size == 0){
-                    message.channel.send("Make sure to @ the host of the game you are joining when running this command.");
+                    message.channel.send({ content: "Make sure to @ the host of the game you are joining when running this command."});
                 }else{
                     var respGame;
                     var respPlayers;
@@ -61,15 +61,15 @@ module.exports = {
                                 this.logger.error(error5.message);
                             }
                             if(respPlayers.ok){
-                                message.channel.send("Succesfully joined the game!");
+                                message.channel.send({ content: "Succesfully joined the game!"});
                             }else{
-                                message.channel.send("There was an error joining the game.");
+                                message.channel.send({ content: "There was an error joining the game."});
                             }
                         }else{
-                            message.channel.send("This game is already in progress and cannot be joined.");
+                            message.channel.send({ content: "This game is already in progress and cannot be joined."});
                         }
                     }else{
-                        message.channel.send("That user does not have an active game!");
+                        message.channel.send({ content: "That user does not have an active game!"});
                     }
                 }
                 break;
@@ -89,10 +89,10 @@ module.exports = {
                             status:"started"
                         });
                         if(respGame.ok){
-                            message.channel.send("Succesfully started your game!");
+                            message.channel.send({ content: "Succesfully started your game!"});
                         }
                     }else{
-                        message.channel.send("This game is already in progress.");
+                        message.channel.send({ content: "This game is already in progress."});
                     }
                 }
                 break;
@@ -134,10 +134,10 @@ module.exports = {
                         game_id:Number(respGame.game_joining_masters[0].game_id)
                     });
                     if(respGame.ok && respPlayers.ok){
-                        message.channel.send("Succesfully ended game.");
+                        message.channel.send({ content: "Succesfully ended game."});
                     }
                 }else{
-                    message.channel.send("No game was found for that user.");
+                    message.channel.send({ content: "No game was found for that user."});
                 }
                 break;
             case "options":
@@ -181,13 +181,13 @@ module.exports = {
                             for(var l = 0;l<team2.length;l++){
                                 output2 += "<@" + team2[l] + ">\n";
                             }
-                            message.channel.send(output1 + "\n" + output2);
+                            message.channel.send({ content: output1 + "\n" + output2});
                         }else{
-                            message.channel.send("You do not currently own a game, use:\n/game open\nto start a game session.");
+                            message.channel.send({ content: "You do not currently own a game, use:\n/game open\nto start a game session."});
                         }
                     break;
                 default:
-                    message.channel.send("Here is a list of the current options: randomize");
+                    message.channel.send({ content: "Here is a list of the current options: randomize"});
                 }
                 break;
             case "list":
@@ -198,20 +198,20 @@ module.exports = {
                     });
                 } catch(error9){
                     this.logger.error(error9.message);
-                    message.channel.send("Hit an error, check the logs");
+                    message.channel.send({ content: "Hit an error, check the logs}"});
                 }
                 if(respGame.game_joining_masters[0]){
                     var output = "Here is the list of people with games still open:\n";
                     for(var i =0;i<respGame.game_joining_masters.length;i++){
                         output += "<@"+ respGame.game_joining_masters[i].host_id + ">\n"
                     }
-                    message.channel.send(output);
+                    message.channel.send({ content: output});
                 }else{
-                    message.channel.send("There are no open games at this time");
+                    message.channel.send({ content: "There are no open games at this time"});
                 }
                 break;
             default:
-                message.channel.send("Here is a list of the current commands:\nopen - this will open a new game for you\noptions - these are options that you can apply to your game. Further list can be found with /game options\nstart - this closes the game from new players joining\nend - this deletes the game from the system")
+                message.channel.send({ content: "Here is a list of the current commands:\nopen - this will open a new game for you\noptions - these are options that you can apply to your game. Further list can be found with /game options\nstart - this closes the game from new players joining\nend - this deletes the game from the system"})
             }
         }
 };

@@ -3,7 +3,7 @@ var api = new ApiClient();
 const Discord = require('discord.js');
 //var client = new Discord.Client();
 /*function onMessageReactionAdd(messageReaction, user) {
-    messageReaction.message.channel.get("650871820538347520").send("[Admin] A reaction was added!")
+    messageReaction.message.channel.get("650871820538347520").send({ content: "[Admin] A reaction was added!")
 }*/
 
 async function onUserJoin(member){
@@ -16,7 +16,7 @@ async function onUserJoin(member){
         console.log(error);
     }
     if(respServer.discord_servers[0]){
-            member.guild.channels.cache.find(channel => channel.id === respServer.discord_servers[0].welcome_channel_id).send("Hi! <@" + member.id + "> "+respServer.discord_servers[0].welcome_message);
+            member.guild.channels.cache.find(channel => channel.id === respServer.discord_servers[0].welcome_channel_id).send({ content: "Hi! <@" + member.id + "> "+respServer.discord_servers[0].welcome_message});
             member.roles.add(respServer.discord_servers[0].default_role_id);
     }
 }

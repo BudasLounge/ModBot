@@ -22,7 +22,7 @@ module.exports = {
             this.logger.error(err.message);
         }
         if(respCheck.bet_points[0]){
-            message.channel.send("You are already in the system!");
+            message.channel.send({ content: "You are already in the system!"});
             return;
         }
 
@@ -52,12 +52,12 @@ module.exports = {
                 if(respCheckServer.bet_configs[0].point_name.charAt(respCheckServer.bet_configs[0].point_name.length-1) === "s"){
                     respCheckServer.bet_configs[0].point_name = respCheckServer.bet_configs[0].point_name.substring(0, respCheckServer.bet_configs[0].point_name.length-1);
                 }
-                message.channel.send("<@" + message.member.id + ">, you have received " + respCheckServer.bet_configs[0].base_amount + " " + respCheckServer.bet_configs[0].point_name + "s and are now in the system. Have fun!");
+                message.channel.send({ content: "<@" + message.member.id + ">, you have received " + respCheckServer.bet_configs[0].base_amount + " " + respCheckServer.bet_configs[0].point_name + "s and are now in the system. Have fun!"});
             }else{
-                message.channel.send("There was an error.");
+                message.channel.send({ content: "There was an error."});
             }
         }else{
-            message.channel.send("This server doesn't have a loaded config. Have an admin use /point_start_server to get it loaded.");
+            message.channel.send({ content: "This server doesn't have a loaded config. Have an admin use /point_start_server to get it loaded."});
         }
     }
 }

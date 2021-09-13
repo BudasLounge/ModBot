@@ -17,13 +17,13 @@ module.exports = {
                 this.logger.error(err);
             }
             if(respApprovedWords.ok){
-                message.channel.send("Word deleted!");
+                message.channel.send({ content: "Word deleted!"});
             }
             else{
-                message.channel.send("Failed to delete, try again!");
+                message.channel.send({ content: "Failed to delete, try again!"});
             }
         }else{
-            message.channel.send("You are not approved to do that function");
+            message.channel.send({ content: "You are not approved to do that function"});
         }
     }
 }

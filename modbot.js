@@ -37,10 +37,10 @@ async function botInit () {
     var channel = await client.channels.fetch(config.default_channel);
     
     if(fs.existsSync("updated.txt")) {
-        channel.send(config.startup_messages.update);
+        channel.send({ content: config.startup_messages.update});
         fs.unlinkSync("updated.txt");
     } else {
-        channel.send(config.startup_messages.restart);
+        channel.send({ content: config.startup_messages.restart});
     }
 
     client.user.setActivity(config.bot_activity.name, { type: config.bot_activity.type });

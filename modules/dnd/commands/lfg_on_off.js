@@ -11,11 +11,11 @@ module.exports = {
 
         if(args[1] == "on"){
             message.member.addRole(role);
-            message.channel.send("You were added to the lfg group!");
+            message.channel.send({ content: "You were added to the lfg group!"});
         }
         else if(args[1] == "off"){
             message.member.removeRole(role);
-            message.channel.send("You were taken out of the lfg group!");
+            message.channel.send({ content: "You were taken out of the lfg group!"});
         }
     }
 };

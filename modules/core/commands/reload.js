@@ -21,6 +21,6 @@ module.exports = {
             num_commands += current_module.commands.size;
         }
 
-        message.channel.send("Reload Complete! Loaded " + mod_handler.modules.size + " modules and " + num_commands + " commands.");
+        message.channel.send({ content: "Reload Complete! Loaded " + mod_handler.modules.size + " modules and " + num_commands + " commands."});
     }
 };

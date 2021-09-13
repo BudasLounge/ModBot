@@ -27,10 +27,10 @@ module.exports = {
                 }
 
                 if(respApprovedWords.ok){
-                    message.channel.send("Word approved!");
+                    message.channel.send({ content: "Word approved!"});
                 }
                 else{
-                    message.channel.send("Failed to approve, try again!");
+                    message.channel.send({ content: "Failed to approve, try again!"});
                 }
             }else{
                 try{
@@ -43,15 +43,15 @@ module.exports = {
                 }
 
                 if(respUpdateApprovedWords.ok){
-                    message.channel.send("Word approved!");
+                    message.channel.send({ content: "Word approved!"});
                 }
                 else{
-                    message.channel.send("Failed to approve, try again!");
+                    message.channel.send({ content: "Failed to approve, try again!"});
                 }
             }
         }else{
             if(respCheckWord[0]){
-                message.channel.send("That word is already being queued for approval.");
+                message.channel.send({ content: "That word is already being queued for approval."});
             }else{
                 try{
                     var respApprovedWords = await api.post("allowed_word",{
@@ -62,10 +62,10 @@ module.exports = {
                     this.logger.error(err);
                 }
                 if(respApprovedWords.ok){
-                    message.channel.send("Word was sent for approval!");
+                    message.channel.send({ content: "Word was sent for approval!"});
                 }
                 else{
-                    message.channel.send("Failed to send for approval, try again!");
+                    message.channel.send({ content: "Failed to send for approval, try again!"});
                 }
             }
         }
