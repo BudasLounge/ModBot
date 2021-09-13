@@ -67,7 +67,7 @@ client.on('message', (message) => {
     modules.handle_command(message);
 });
 
-client.on('clickButton'), (button => {
+client.on('clickButton', (button) => {
     logger.info(button.id);
     button.defer();
-})
+});
