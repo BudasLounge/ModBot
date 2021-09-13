@@ -2,6 +2,7 @@ var ApiClient = require("../../core/js/APIClient.js");
 var api = new ApiClient();
 
 async function onButtonClick(interaction){
+    if(!interaction.isButton()) return;
 	this.logger.info(interaction);
     
 }
