@@ -55,7 +55,7 @@ async function onButtonClick(interaction){
 function register_handlers(event_registry) {
     //event_registry.register('messageReactionAdd', onMessageReactionAdd);
     event_registry.register('guildMemberAdd', onUserJoin);
-    event_registry.register('clickButton', onButtonClick());
+    event_registry.register('clickButton', onButtonClick);
     //event_registry.register('raw', parseRaw);
 }
 
