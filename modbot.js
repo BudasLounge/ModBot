@@ -4,7 +4,8 @@ var request = require('request');
 var shell = require('shelljs');
 
 var discord = require('discord.js');
-const client = new discord.Client();
+var Intents = require('discord.js');
+const client = new discord.Client({ intents: [Intents.FLAGS.GUILDS] });
 
 var config = JSON.parse(fs.readFileSync('modbot.json'));
 
