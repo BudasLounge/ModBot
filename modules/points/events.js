@@ -3,7 +3,7 @@ var api = new ApiClient();
 
 async function onButtonClick(button){
     if (!button.isButton()) return;
-	console.log(button.id);
+	button.channel.send({content: "You clicked it!"});
     button.deferUpdate();
 }
 

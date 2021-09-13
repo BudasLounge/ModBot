@@ -66,9 +66,3 @@ client.on('message', (message) => {
     //Add ability to check first time someone sends a message (not command) and grant them points
     modules.handle_command(message);
 });
-
-/*client.on('interactionCreate', (button) => {
-    if (!button.isButton()) return;
-    logger.info(button.id);
-    button.deferUpdate();
-}); */
