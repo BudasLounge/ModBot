@@ -3,6 +3,7 @@ var api = new ApiClient();
 
 async function onButtonClick(button){
 	this.logger.info(button.id);
+    button.defer();
 }
 
 function register_handlers(event_registry) {
