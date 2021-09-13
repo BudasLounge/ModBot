@@ -8,16 +8,27 @@ module.exports = {
     has_state: false,//if this command uses the state engine
     async execute(message, args, extra) {
         var api = extra.api;
-        var better = message.member.user.id;
+        var serial = makeid(10);
         const {MessageButton,MessageActionRow} = require('discord.js');
         const row = new MessageActionRow()
 			.addComponents(
 				new MessageButton()
-					.setCustomId(better)
+					.setCustomId(serial)
 					.setLabel('Primary')
 					.setStyle('PRIMARY'),
 			);
 
         await message.reply({content: "Returned!", components: [row]});
     }
+}
+
+function makeid(length) {
+    var result           = '';
+    var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var charactersLength = characters.length;
+    for ( var i = 0; i < length; i++ ) {
+      result += characters.charAt(Math.floor(Math.random() * 
+ charactersLength));
+   }
+   return result;
 }
