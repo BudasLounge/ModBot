@@ -3,7 +3,7 @@ var api = new ApiClient();
 
 async function onButtonClick(button){
     if (!button.isButton()) return;
-	this.logger.info(button.id);
+	console.log(button.id);
     button.deferUpdate();
 }
 
