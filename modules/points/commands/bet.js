@@ -8,7 +8,7 @@ module.exports = {
     has_state: false,//if this command uses the state engine
     async execute(message, args, extra) {
         var api = extra.api;
-        const MessageButton, MessageActionRow = require('discord.js');
+        const {MessageButton, MessageActionRow}= require('discord.js');
 
         const row = new MessageActionRow()
         .addComponents(
