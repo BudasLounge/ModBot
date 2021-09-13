@@ -21,6 +21,11 @@ async function onUserJoin(member){
     }
 }
 
+async function onButtonClick(interaction){
+    if(!interaction.isButton()) return;
+	this.logger.info(interaction);
+}
+
 /*async function parseRaw(packet) {
     // We don't want this to run on unrelated packets
     if (!['MESSAGE_REACTION_ADD', 'MESSAGE_REACTION_REMOVE'].includes(packet.t)) return;
@@ -50,6 +55,7 @@ async function onUserJoin(member){
 function register_handlers(event_registry) {
     //event_registry.register('messageReactionAdd', onMessageReactionAdd);
     event_registry.register('guildMemberAdd', onUserJoin);
+    event_registry.register('clickButton', onButtonClick());
     //event_registry.register('raw', parseRaw);
 }
 
