@@ -17,6 +17,6 @@ module.exports = {
 					.setStyle('PRIMARY'),
 			);
 
-        await message.channel.reply({content: "Returned!", components: [row]});
+        await message.reply({content: "Returned!", components: [row]});
     }
 }
