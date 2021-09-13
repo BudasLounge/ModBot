@@ -36,6 +36,7 @@ class EventRegistry {
      * Simple utility function that registers an event handler function to the given event.
      */
     register(eventName, handler) {
+        this.logger.info("Here is the event firing: " + eventName + " " + handler);
         this.client.on(eventName, handler);
     }
 }
