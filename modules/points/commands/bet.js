@@ -8,11 +8,12 @@ module.exports = {
     has_state: false,//if this command uses the state engine
     async execute(message, args, extra) {
         var api = extra.api;
+        var better = message.member.user.id;
         const {MessageButton,MessageActionRow} = require('discord.js');
         const row = new MessageActionRow()
 			.addComponents(
 				new MessageButton()
-					.setCustomId('primary')
+					.setCustomId(better)
 					.setLabel('Primary')
 					.setStyle('PRIMARY'),
 			);
