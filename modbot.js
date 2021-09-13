@@ -70,5 +70,5 @@ client.on('message', (message) => {
 client.on('interactionCreate', (button) => {
     if (!button.isButton()) return;
     logger.info(button.id);
-    button.defer();
+    button.deferUpdate();
 }); 
