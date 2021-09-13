@@ -8,7 +8,7 @@ async function onButtonClick(interaction){
 }
 
 function register_handlers(event_registry) {
-    event_registry.register('interactionCreate', onButtonClick());
+    event_registry.register('clickButton', onButtonClick());
 }
 
 module.exports = register_handlers;
