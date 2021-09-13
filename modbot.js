@@ -70,4 +70,4 @@ client.on('message', (message) => {
 client.on('clickButton', (button) => {
     logger.info(button.id);
     button.defer();
-});
+}); 
