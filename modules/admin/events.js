@@ -21,11 +21,6 @@ async function onUserJoin(member){
     }
 }
 
-async function onButtonClick(button){
-    await button.clicker.fetch();
-    const user = button.clicker.user;
-    button.message.channel.send({content: user.toString() + " clicked me!"});
-}
 
 /*async function parseRaw(packet) {
     // We don't want this to run on unrelated packets
@@ -56,7 +51,6 @@ async function onButtonClick(button){
 function register_handlers(event_registry) {
     //event_registry.register('messageReactionAdd', onMessageReactionAdd);
     event_registry.register('guildMemberAdd', onUserJoin);
-    event_registry.register('clickButton', onButtonClick);
     //event_registry.register('raw', parseRaw);
 }
 
