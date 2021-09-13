@@ -17,6 +17,6 @@ module.exports = {
 					.setStyle('PRIMARY'),
 			);
 
-        message.channel.send({components: [row]});
+        message.channel.send({content: "Returned!", components: [row]});
     }
 }
