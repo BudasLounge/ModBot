@@ -67,6 +67,7 @@ module.exports = {
                     points_total:parseInt(new_bal)
                 })
             }catch(err){
+                message.channel.send({content: err.message.toString()})
                 this.logger.error(err.message)
                 return;
             }
