@@ -40,8 +40,8 @@ module.exports = {
             var serial = makeid(10);
             var init_name = message.member.user.username;
             var bet_amount;
-            if(Number.isInteger(parseInt(args[1])) || args[1].slice(0,-1)==="%"){
-                if(Number.isInteger(parseInt(args[1].slice(0,-1))) && args[1].slice(0,-1)==="%"){
+            if(Number.isInteger(parseInt(args[1])) || args[1].charAt(args[1].length-1)==="%"){
+                if(Number.isInteger(parseInt(args[1].slice(0,-1))) && args[1].charAt(args[1].length-1)==="%"){
                     percent = parseInt(args[1].slice(0,-1))/100
                     bet_amount = Math.floor(parseInt(respCheckBal.bet_points[0].points_total) * percent);
                     message.channel.send({content: "Created bet with " + bet_amount.toString() + " and percent: " + percent.toString()+" together that is: "+Math.floor(parseInt(respCheckBal.bet_points[0].points_total) * percent).toString()});
