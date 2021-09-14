@@ -70,7 +70,7 @@ module.exports = {
                 this.logger.error(err.message)
                 return;
             }
-                message.channel.send({content: respBalUpdate});
+                this.logger.info(respBalUpdate);
 
             const {MessageButton,MessageActionRow} = require('discord.js');
             const ForBet = new MessageActionRow()
