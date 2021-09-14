@@ -34,13 +34,14 @@ module.exports = {
         var serial = makeid(10);
         var init_name = message.member.user.username;
         var bet_amount;
-        if(Number.isInteger(parseInt(args[1].slice(0,-1)))){
-            
-        }
-        if(Number.isInteger(parseInt(args[1]))){
-            
-        }
+        if(args[1]){
+            if(Number.isInteger(parseInt(args[1].slice(0,-1)))){
+                
+            }
+            if(Number.isInteger(parseInt(args[1]))){
 
+            }
+        }
 
         const {MessageButton,MessageActionRow} = require('discord.js');
         const row = new MessageActionRow()
