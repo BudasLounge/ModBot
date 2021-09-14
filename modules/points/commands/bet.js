@@ -106,11 +106,11 @@ module.exports = {
                 const BetWin = new MessageActionRow()
                 .addComponents(
                     new MessageButton()
-                        .setCustomId(serial+"w")
+                        .setCustomId(serial+"-w")
                         .setLabel('Creator Won')
                         .setStyle('SUCCESS'),
                         new MessageButton()
-                        .setCustomId(serial+"l")
+                        .setCustomId(serial+"-l")
                         .setLabel('Creator Lost')
                         .setStyle('DANGER'),
                 );
