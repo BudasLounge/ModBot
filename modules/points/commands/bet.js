@@ -37,7 +37,9 @@ module.exports = {
         if(Number.isInteger(parseInt(args[1].slice(0,-1)))){
             
         }
-        if(Number.isInteger(parseInt(args[1])))
+        if(Number.isInteger(parseInt(args[1]))){
+            
+        }
 
 
         const {MessageButton,MessageActionRow} = require('discord.js');
