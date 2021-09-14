@@ -103,7 +103,7 @@ module.exports = {
                 const outputEmbed = new MessageEmbed()
                 .setTitle("New bet created")
                 .addField(init_name.toString() + " has placed a bet for: " + bet_amount.toString() + " " + respCheckServer.bet_configs[0].point_name + "s", "Use the buttons below to partake in the bet!");
-                await message.reply({content: "New bet", embeds: [outputEmbed], components: [BetWin, ForBet, AgainstBet]});
+                await message.reply({/*content: "New bet",*/ embeds: [outputEmbed], components: [BetWin, ForBet, AgainstBet]});
             }
         }
 }
