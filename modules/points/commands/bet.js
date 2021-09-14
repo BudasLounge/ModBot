@@ -40,11 +40,11 @@ module.exports = {
             var serial = makeid(10);
             var init_name = message.member.user.username;
             var bet_amount;
-            if(args[1]){
-                if(Number.isInteger(parseInt(args[1].slice(0,-1))) && args[1].slice(0,-1)==="%"){
+            if(Number.isInteger(args[1]) || args[1].slice(0,-1)==="%"){
+                if(Number.isInteger(args[1].slice(0,-1)) && args[1].slice(0,-1)==="%"){
                     bet_amount = parseInt(respCheckBal.bet_points[0].points_total) * args[1];
                 }
-                if(Number.isInteger(parseInt(args[1]))){
+                if(Number.isInteger(args[1])){
                     bet_amount = parseInt(args[1]);
                 }
             }
@@ -99,7 +99,7 @@ module.exports = {
                 }
                 const outputEmbed = new MessageEmbed()
                 .setTitle("New bet created")
-                .addField(message.member.user.username.toString() + " has placed a bet for: " + bet_amount.toString() + " " + respCheckServer.bet_configs[0].point_name + "s", "Use the buttons below to partake in the bet!");
+                .addField(init_name.toString() + " has placed a bet for: " + bet_amount.toString() + " " + respCheckServer.bet_configs[0].point_name + "s", "Use the buttons below to partake in the bet!");
                 await message.reply({content: "New bet", embeds: [outputEmbed], components: [BetWin, ForBet, AgainstBet]});
             }
         }
