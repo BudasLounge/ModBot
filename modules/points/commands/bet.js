@@ -40,11 +40,11 @@ module.exports = {
             var serial = makeid(10);
             var init_name = message.member.user.username;
             var bet_amount;
-            if(Number.isInteger(args[1]) || args[1].slice(0,-1)==="%"){
-                if(Number.isInteger(args[1].slice(0,-1)) && args[1].slice(0,-1)==="%"){
-                    bet_amount = parseInt(respCheckBal.bet_points[0].points_total) * args[1];
-                }
-                if(Number.isInteger(args[1])){
+            if(Number.isInteger(parseInt(args[1])) || args[1].slice(0,-1)==="%"){
+                if(Number.isInteger(parseInt(args[1].slice(0,-1))) && args[1].slice(0,-1)==="%"){
+                    percent = parseInt(args[1].slice(0,-1))/100
+                    bet_amount = Math.floor(parseInt(respCheckBal.bet_points[0].points_total) * percent);
+                }else {
                     bet_amount = parseInt(args[1]);
                 }
             }else{
