@@ -47,31 +47,27 @@ module.exports = {
         const ForBet = new MessageActionRow()
             .addComponents(
                 new MessageButton()
-                    .setColor("#01A01C")
                     .setCustomId(serial+"for")
                     .setLabel('For Bet')
-                    .setStyle('PRIMARY'),
+                    .setStyle('SUCCESS'),
             );
             const AgainstBet = new MessageActionRow()
             .addComponents(
                 new MessageButton()
-                    .setColor("#FF0000")
                     .setCustomId(serial+"against")
                     .setLabel('Against Bet')
-                    .setStyle('PRIMARY'),
+                    .setStyle('DANGER'),
             );
             const BetWin = new MessageActionRow()
             .addComponents(
                 new MessageButton()
-                    .setColor("#01A01C")
                     .setCustomId(serial+"w")
                     .setLabel('Creator Won')
-                    .setStyle('PRIMARY'),
+                    .setStyle('SUCCESS'),
                     new MessageButton()
-                    .setColor("#FF0000")
                     .setCustomId(serial+"l")
                     .setLabel('Creator Lost')
-                    .setStyle('PRIMARY'),
+                    .setStyle('DANGER'),
             );
 
         await message.reply({content: "Returned!", components: [BetWin, ForBet, AgainstBet]});
