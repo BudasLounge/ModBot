@@ -54,30 +54,30 @@ module.exports = {
                 .addComponents(
                     new MessageButton()
                         .setCustomId(serial+"-f"+Math.floor(bet_amount/2))
-                        .setLabel('Bet Half')
+                        .setLabel('Bet Half ('+Math.floor(bet_amount/2)+")")
                         .setStyle('SUCCESS'),
                     new MessageButton()
                         .setCustomId(serial+"-f"+Math.floor(bet_amount))
-                        .setLabel('Bet Equal')
+                        .setLabel('Bet Equal ('+Math.floor(bet_amount)+")")
                         .setStyle('SUCCESS'),
                     new MessageButton()
                         .setCustomId(serial+"-f"+Math.floor(bet_amount*2))
-                        .setLabel('Bet Double')
+                        .setLabel('Bet Double ('+Math.floor(bet_amount*2)+")")
                         .setStyle('SUCCESS'),
                 );
                 const AgainstBet = new MessageActionRow()
                 .addComponents(
                     new MessageButton()
                         .setCustomId(serial+"-l"+Math.floor(bet_amount/2))
-                        .setLabel('Bet Half')
+                        .setLabel('Bet Half ('+Math.floor(bet_amount/2)+")")
                         .setStyle('DANGER'),
                     new MessageButton()
                         .setCustomId(serial+"-l"+Math.floor(bet_amount))
-                        .setLabel('Bet Equal')
+                        .setLabel('Bet Equal ('+Math.floor(bet_amount)+")")
                         .setStyle('DANGER'),
                     new MessageButton()
                         .setCustomId(serial+"-l"+Math.floor(bet_amount*2))
-                        .setLabel('Bet Double')
+                        .setLabel('Bet Double ('+Math.floor(bet_amount*2)+")")
                         .setStyle('DANGER'),
                 );
                 const BetWin = new MessageActionRow()
