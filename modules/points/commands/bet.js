@@ -30,7 +30,7 @@ module.exports = {
             }
             if(respCheckBal.bet_points[0]){
                 if(!respCheckBal.bet_points[0].points_total>0){
-                    message.channel.send({content : "You don't have enough to do that bet!"});
+                    message.channel.send({content : "You don't have enough to bet at all!"});
                     return;
                 }
             }else{
@@ -48,7 +48,10 @@ module.exports = {
                     bet_amount = parseInt(args[1]);
                 }
             }
-
+            if(respCheckBal.bet_points[0].points_total<bet_amount){
+                message.channel.send({content : "You don't have enough to bet that amount!"});
+                return;
+            }
             const {MessageButton,MessageActionRow} = require('discord.js');
             const ForBet = new MessageActionRow()
                 .addComponents(
