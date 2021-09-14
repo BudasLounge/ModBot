@@ -44,6 +44,7 @@ module.exports = {
                 if(Number.isInteger(parseInt(args[1].slice(0,-1))) && args[1].slice(0,-1)==="%"){
                     percent = parseInt(args[1].slice(0,-1))/100
                     bet_amount = Math.floor(parseInt(respCheckBal.bet_points[0].points_total) * percent);
+                    message.channel.send({content: "Created bet with " + bet_amount.toString() + " and percent: " + percent.toString()+" together that is: "+Math.floor(parseInt(respCheckBal.bet_points[0].points_total) * percent).toString()});
                 }else {
                     bet_amount = parseInt(args[1]);
                 }
