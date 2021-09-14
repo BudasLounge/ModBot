@@ -45,21 +45,32 @@ module.exports = {
 
         const {MessageButton,MessageActionRow} = require('discord.js');
         const ForBet = new MessageActionRow()
-			.addComponents(
-				new MessageButton()
-					.setCustomId(serial+"for")
-					.setLabel('For Bet')
-					.setStyle('PRIMARY'),
-			);
+            .addComponents(
+                new MessageButton()
+                    .setCustomId(serial+"for")
+                    .setLabel('For Bet')
+                    .setStyle('PRIMARY'),
+            );
             const AgainstBet = new MessageActionRow()
-			.addComponents(
-				new MessageButton()
-					.setCustomId(serial+"against")
-					.setLabel('Against Bet')
-					.setStyle('PRIMARY'),
-			);
+            .addComponents(
+                new MessageButton()
+                    .setCustomId(serial+"against")
+                    .setLabel('Against Bet')
+                    .setStyle('PRIMARY'),
+            );
+            const BetWin = new MessageActionRow()
+            .addComponents(
+                new MessageButton()
+                    .setCustomId(serial+"w")
+                    .setLabel('Creator Won')
+                    .setStyle('PRIMARY'),
+                    new MessageButton()
+                    .setCustomId(serial+"l")
+                    .setLabel('Creator Lost')
+                    .setStyle('PRIMARY'),
+            );
 
-        await message.reply({content: "Returned!", components: [ForBet, AgainstBet]});
+        await message.reply({content: "Returned!", components: [BetWin, ForBet, AgainstBet]});
     }
 }
 
