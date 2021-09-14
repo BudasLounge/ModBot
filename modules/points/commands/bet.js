@@ -52,26 +52,26 @@ module.exports = {
                     .setStyle('SUCCESS'),
                 new MessageButton()
                     .setCustomId(serial+"-forequal")
-                    .setLabel('Bet equal')
+                    .setLabel('Bet Equal')
                     .setStyle('SUCCESS'),
                 new MessageButton()
                     .setCustomId(serial+"-fordouble")
-                    .setLabel('Bet double')
+                    .setLabel('Bet Double')
                     .setStyle('SUCCESS'),
             );
             const AgainstBet = new MessageActionRow()
             .addComponents(
                 new MessageButton()
                     .setCustomId(serial+"-againsthalf")
-                    .setLabel('Against Bet')
+                    .setLabel('Bet Half')
                     .setStyle('DANGER'),
                 new MessageButton()
                     .setCustomId(serial+"-againstequal")
-                    .setLabel('Against Bet')
+                    .setLabel('Bet Equal')
                     .setStyle('DANGER'),
                 new MessageButton()
                     .setCustomId(serial+"-againstdouble")
-                    .setLabel('Against Bet')
+                    .setLabel('Bet Double')
                     .setStyle('DANGER'),
             );
             const BetWin = new MessageActionRow()
