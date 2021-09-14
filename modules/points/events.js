@@ -1,5 +1,6 @@
 var ApiClient = require("../../core/js/APIClient.js");
 var api = new ApiClient();
+var LogHandler = require('../core/js/log_handler.js');
 var logger = LogHandler.build_logger("../" + __dirname + "/" + config.log_folder);
 
 async function onButtonClick(button){
