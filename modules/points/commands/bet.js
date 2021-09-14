@@ -60,6 +60,7 @@ module.exports = {
             message.channel.send({content: "Updating a bet, here is the data: " + respCheckBal.bet_points[0].discord_server_id.toString() + " " + respCheckBal.bet_points[0].discord_user_id.toString() + " " + new_bal.toString()})
             try{
                 var respBalUpdate = await api.put("bet_point",{
+                    point_id:respCheckBal.bet_points[0].point_id,
                     discord_server_id:respCheckBal.bet_points[0].discord_server_id,
                     discord_user_id:respCheckBal.bet_points[0].discord_user_id,
                     points_total:new_bal
