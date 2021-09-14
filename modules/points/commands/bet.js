@@ -53,30 +53,30 @@ module.exports = {
             const ForBet = new MessageActionRow()
                 .addComponents(
                     new MessageButton()
-                        .setCustomId(serial+"-forhalf")
+                        .setCustomId(serial+"-f"+(bet_amount/2))
                         .setLabel('Bet Half')
                         .setStyle('SUCCESS'),
                     new MessageButton()
-                        .setCustomId(serial+"-forequal")
+                        .setCustomId(serial+"-f"+bet_amount)
                         .setLabel('Bet Equal')
                         .setStyle('SUCCESS'),
                     new MessageButton()
-                        .setCustomId(serial+"-fordouble")
+                        .setCustomId(serial+"-f"+(bet_amount*2))
                         .setLabel('Bet Double')
                         .setStyle('SUCCESS'),
                 );
                 const AgainstBet = new MessageActionRow()
                 .addComponents(
                     new MessageButton()
-                        .setCustomId(serial+"-againsthalf")
+                        .setCustomId(serial+"-l"+(bet_amount/2))
                         .setLabel('Bet Half')
                         .setStyle('DANGER'),
                     new MessageButton()
-                        .setCustomId(serial+"-againstequal")
+                        .setCustomId(serial+"-l"+bet_amount)
                         .setLabel('Bet Equal')
                         .setStyle('DANGER'),
                     new MessageButton()
-                        .setCustomId(serial+"-againstdouble")
+                        .setCustomId(serial+"-l"+(bet_amount*2))
                         .setLabel('Bet Double')
                         .setStyle('DANGER'),
                 );
