@@ -61,7 +61,7 @@ module.exports = {
             var respBalUpdate;
             try{
                 respBalUpdate = await api.put("bet_point",{
-                    point_id:respCheckBal.bet_points[0].point_id,
+                    point_id:parseInt(respCheckBal.bet_points[0].point_id),
                     discord_server_id:respCheckBal.bet_points[0].discord_server_id,
                     discord_user_id:respCheckBal.bet_points[0].discord_user_id,
                     points_total:parseInt(new_bal)
