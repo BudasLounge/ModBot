@@ -67,13 +67,10 @@ module.exports = {
                     points_total:parseInt(new_bal)
                 })
             }catch(err){
-                message.channel.send({content: err.message.toString()})
                 this.logger.error(err.message)
                 return;
             }
-            if(!respBalUpdate.ok){
-                message.channel.send({content: "Didn't work"});
-            }
+                message.channel.send({content: respBalUpdate});
 
             const {MessageButton,MessageActionRow} = require('discord.js');
             const ForBet = new MessageActionRow()
