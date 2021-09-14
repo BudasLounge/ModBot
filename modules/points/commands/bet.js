@@ -47,6 +47,7 @@ module.exports = {
                     message.channel.send({content: "Created bet with " + bet_amount.toString() + " and percent: " + percent.toString()+" together that is: "+Math.floor(parseInt(respCheckBal.bet_points[0].points_total) * percent).toString()});
                 }else {
                     bet_amount = parseInt(args[1]);
+                    message.channel.send({content: "No percents here"});
                 }
             }else{
                 message.channel.send({content: "Please input a valid amount to bet!"});
