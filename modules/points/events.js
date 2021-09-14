@@ -3,7 +3,8 @@ var api = new ApiClient();
 
 async function onButtonClick(button){
     if (!button.isButton()) return;
-	console.log(button)
+	var serial = button.customId.substring(0,9);
+    button.channel.send({content: "Serial: " + serial});
     button.deferUpdate();
 }
 
