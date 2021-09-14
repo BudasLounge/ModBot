@@ -13,7 +13,7 @@ module.exports = {
         var respCheckServer;
         try{
             respCheckServer = await api.get("bet_config",{
-                discord_server_id:server_id
+                discord_server_id:message.guild.id
             })
         }catch(err){
             this.logger.error(err.message);
