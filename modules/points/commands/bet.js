@@ -61,30 +61,30 @@ module.exports = {
             const ForBet = new MessageActionRow()
                 .addComponents(
                     new MessageButton()
-                        .setCustomId(serial+"-f"+Math.ceil(bet_amount/2))
-                        .setLabel('Bet Half ('+Math.floor(bet_amount/2)+")")
+                        .setCustomId(serial+"-fh"+Math.ceil(bet_amount/2))
+                        .setLabel('Bet Half ('+Math.ceil(bet_amount/2)+")")
                         .setStyle('SUCCESS'),
                     new MessageButton()
-                        .setCustomId(serial+"-f"+Math.floor(bet_amount))
+                        .setCustomId(serial+"-fe"+Math.floor(bet_amount))
                         .setLabel('Bet Equal ('+Math.floor(bet_amount)+")")
                         .setStyle('SUCCESS'),
                     new MessageButton()
-                        .setCustomId(serial+"-f"+Math.floor(bet_amount*2))
+                        .setCustomId(serial+"-fd"+Math.floor(bet_amount*2))
                         .setLabel('Bet Double ('+Math.floor(bet_amount*2)+")")
                         .setStyle('SUCCESS'),
                 );
                 const AgainstBet = new MessageActionRow()
                 .addComponents(
                     new MessageButton()
-                        .setCustomId(serial+"-l"+Math.ceil(bet_amount/2))
-                        .setLabel('Bet Half ('+Math.floor(bet_amount/2)+")")
+                        .setCustomId(serial+"-lh"+Math.ceil(bet_amount/2))
+                        .setLabel('Bet Half ('+Math.ceil(bet_amount/2)+")")
                         .setStyle('DANGER'),
                     new MessageButton()
-                        .setCustomId(serial+"-l"+Math.floor(bet_amount))
+                        .setCustomId(serial+"-le"+Math.floor(bet_amount))
                         .setLabel('Bet Equal ('+Math.floor(bet_amount)+")")
                         .setStyle('DANGER'),
                     new MessageButton()
-                        .setCustomId(serial+"-l"+Math.floor(bet_amount*2))
+                        .setCustomId(serial+"-ld"+Math.floor(bet_amount*2))
                         .setLabel('Bet Double ('+Math.floor(bet_amount*2)+")")
                         .setStyle('DANGER'),
                 );
