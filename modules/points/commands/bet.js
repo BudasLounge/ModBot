@@ -55,6 +55,18 @@ module.exports = {
                 message.channel.send({content : "You don't have enough to bet that amount!\nHere is your remaining balance: " + respCheckBal.bet_points[0].points_total.toString()});
                 return;
             }
+
+            var new_bal = respCheckBal.bet_points[0].points_total-bet_amount;
+            try{
+                var respBalUpdate = await api.put("bet_point",{
+                    discord_server_id:respCheckBal.bet_points[0].discord_server_id,
+                    discord_user_id:respCheckBal.bet_points[0].discord_user_id,
+                    points_total:new_bal
+                })
+            }catch(err){
+                this.logger.error(err.message)
+            }
+
             const {MessageButton,MessageActionRow} = require('discord.js');
             const ForBet = new MessageActionRow()
                 .addComponents(
