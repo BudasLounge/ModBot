@@ -2,7 +2,7 @@ module.exports = {
     name: 'bet',
     description: 'Opens up a bet.',
     syntax: 'bet [any] [additional] [arguments]',
-    num_args: 0,//minimum amount of arguments to accept
+    num_args: 2,//minimum amount of arguments to accept
     args_to_lower: true,//if the arguments should be lower case
     needs_api: true,//if this command needs access to the api
     has_state: false,//if this command uses the state engine
@@ -44,15 +44,22 @@ module.exports = {
         }
 
         const {MessageButton,MessageActionRow} = require('discord.js');
-        const row = new MessageActionRow()
+        const ForBet = new MessageActionRow()
 			.addComponents(
 				new MessageButton()
-					.setCustomId(serial)
-					.setLabel('Primary')
+					.setCustomId(serial+"for")
+					.setLabel('For Bet')
+					.setStyle('PRIMARY'),
+			);
+            const AgainstBet = new MessageActionRow()
+			.addComponents(
+				new MessageButton()
+					.setCustomId(serial+"against")
+					.setLabel('Against Bet')
 					.setStyle('PRIMARY'),
 			);
 
-        await message.reply({content: "Returned!", components: [row]});
+        await message.reply({content: "Returned!", components: [ForBet, AgainstBet]});
     }
 }
 
