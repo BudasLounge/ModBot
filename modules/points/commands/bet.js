@@ -63,7 +63,7 @@ module.exports = {
                     point_id:respCheckBal.bet_points[0].point_id,
                     discord_server_id:respCheckBal.bet_points[0].discord_server_id,
                     discord_user_id:respCheckBal.bet_points[0].discord_user_id,
-                    points_total:new_bal
+                    points_total:parseInt(new_bal)
                 })
             }catch(err){
                 this.logger.error(err.message)
