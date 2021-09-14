@@ -49,7 +49,7 @@ module.exports = {
                 }
             }
             if(respCheckBal.bet_points[0].points_total<bet_amount){
-                message.channel.send({content : "You don't have enough to bet that amount!"});
+                message.channel.send({content : "You don't have enough to bet that amount!\nHere is your remaining balance: " + respCheckBal.bet_points[0].points_total.toString()});
                 return;
             }
             const {MessageButton,MessageActionRow} = require('discord.js');
