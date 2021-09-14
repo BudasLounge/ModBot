@@ -1,7 +1,7 @@
 module.exports = {
     name: 'bet',
     description: 'Opens up a bet.',
-    syntax: 'bet [any] [additional] [arguments]',
+    syntax: 'bet [amount/percentage] [reason for bet]',
     num_args: 2,//minimum amount of arguments to accept
     args_to_lower: true,//if the arguments should be lower case
     needs_api: true,//if this command needs access to the api
@@ -61,7 +61,7 @@ module.exports = {
             const ForBet = new MessageActionRow()
                 .addComponents(
                     new MessageButton()
-                        .setCustomId(serial+"-f"+Math.floor(bet_amount/2))
+                        .setCustomId(serial+"-f"+Math.ceil(bet_amount/2))
                         .setLabel('Bet Half ('+Math.floor(bet_amount/2)+")")
                         .setStyle('SUCCESS'),
                     new MessageButton()
@@ -76,7 +76,7 @@ module.exports = {
                 const AgainstBet = new MessageActionRow()
                 .addComponents(
                     new MessageButton()
-                        .setCustomId(serial+"-l"+Math.floor(bet_amount/2))
+                        .setCustomId(serial+"-l"+Math.ceil(bet_amount/2))
                         .setLabel('Bet Half ('+Math.floor(bet_amount/2)+")")
                         .setStyle('DANGER'),
                     new MessageButton()
