@@ -113,7 +113,7 @@ module.exports = {
                     serial:serial,
                     bet_stance:"for",
                     better_discord_id:init_id,
-                    better_discord_id:message.member.user.username
+                    better_discord_username:message.member.user.username
                 })
             }catch(err){
                 this.logger.info(err.message);
