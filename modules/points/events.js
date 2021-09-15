@@ -6,7 +6,7 @@ async function onButtonClick(button){
 	var serial = button.customId.substring(0,10);
     var stance = await button.customId.substring(button.customId.indexOf('-')+1, button.customId.indexOf('-')+3);
     var bet_amount = await button.customId.substring(button.customId.indexOf('-')+3);
-    button.channel.send({content: bet + " " + stance});
+    button.channel.send({content: bet_amount + " " + stance});
     var respCheckMaster;
     try{
         respCheckMaster = await api.get("bet_master",{
