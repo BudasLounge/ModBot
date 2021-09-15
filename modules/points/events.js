@@ -62,6 +62,7 @@ async function onButtonClick(button){
     }
     if(respIntCheck.bet_interactions[0]){
         button.channel.send("You have already participated in this bet! All bets are final and unchangeable!");
+        button.deferUpdate();
         return;
     }
 
