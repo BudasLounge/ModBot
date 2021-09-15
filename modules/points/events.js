@@ -31,7 +31,7 @@ async function onButtonClick(button){
         if(respCheckAllInt.bet_interactions[0]){
             for(var i = 0;i<respCheckAllInt.bet_interactions.length;i++){
                 if(respCheckAllInt.bet_interactions[i].bet_stance === "for"){
-                    forBet.push(respCheckAllInt.bet_interactions[i].better_discord_id)
+                    forBet.push(respCheckAllInt.bet_interactions[i])
                     pot += parseInt(respCheckAllInt.bet_interactions[i].bet_value)
                 }else{
                     againstBet.push(respCheckAllInt.bet_interactions[i].better_discord_id)
@@ -52,7 +52,7 @@ async function onButtonClick(button){
                 }catch(err){
                     this.logger.error(err);
                 }*/
-                this.logger.info(forBet);
+                this.logger.info(forBet[j].better_discord_id);
             }
             for(var k = 0;k<againstBet.length;k++){
 
