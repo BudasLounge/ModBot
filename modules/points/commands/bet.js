@@ -37,6 +37,23 @@ module.exports = {
                 message.channel.send({content: "You need to run /point_start in order to get in the system!"});
                 return;
             }
+            var init_name = message.member.user.username;
+            var bet_amount;
+            if(Number.isInteger(parseInt(args[1])) || args[1].charAt(args[1].length-1)==="%"){
+                if(Number.isInteger(parseInt(args[1].slice(0,-1))) && args[1].charAt(args[1].length-1)==="%"){
+                    percent = parseInt(args[1].slice(0,-1))/100
+                    bet_amount = Math.floor(parseInt(respCheckBal.bet_points[0].points_total) * percent);
+                }else {
+                    bet_amount = parseInt(args[1]);
+                }
+            }else{
+                message.channel.send({content: "Please input a valid amount to bet!"});
+                return;
+            }
+            if(respCheckBal.bet_points[0].points_total<bet_amount){
+                message.channel.send({content : "You don't have enough to bet that amount!\nHere is your remaining balance: " + respCheckBal.bet_points[0].points_total.toString()});
+                return;
+            }
             var flag = true;
             var serial = makeid(10);
             var respCheckBet;
@@ -57,23 +74,22 @@ module.exports = {
                 }
                 flag = false
             }
-            var init_name = message.member.user.username;
-            var bet_amount;
-            if(Number.isInteger(parseInt(args[1])) || args[1].charAt(args[1].length-1)==="%"){
-                if(Number.isInteger(parseInt(args[1].slice(0,-1))) && args[1].charAt(args[1].length-1)==="%"){
-                    percent = parseInt(args[1].slice(0,-1))/100
-                    bet_amount = Math.floor(parseInt(respCheckBal.bet_points[0].points_total) * percent);
-                }else {
-                    bet_amount = parseInt(args[1]);
-                }
-            }else{
-                message.channel.send({content: "Please input a valid amount to bet!"});
-                return;
+            args.shift();
+            args.shift();
+            var reason = args.join();
+            var respUploadMaster;
+            try{
+                respUploadMaster = await api.post("bet_master",{
+                    serial:serial,
+                    initiator_discord_id:init_id,
+                    initiator_discord_username:message.member.user.username,
+                    status:open,
+                    bet_reason:reason
+                })
+            }catch(err){
+                this.logger.error(err.message);
             }
-            if(respCheckBal.bet_points[0].points_total<bet_amount){
-                message.channel.send({content : "You don't have enough to bet that amount!\nHere is your remaining balance: " + respCheckBal.bet_points[0].points_total.toString()});
-                return;
-            }
+            
 
             var new_bal = respCheckBal.bet_points[0].points_total-bet_amount;
             message.channel.send({content: "Updating a bet, here is the data: " + respCheckBal.bet_points[0].point_id + " " + respCheckBal.bet_points[0].discord_server_id.toString() + " " + respCheckBal.bet_points[0].discord_user_id.toString() + " " + new_bal.toString()})
