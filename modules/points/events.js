@@ -71,6 +71,20 @@ async function onButtonClick(button){
     }else{
         stance = "against"
     }
+    var new_bal = respCheckBal.bet_points[0].points_total-bet_amount;
+    button.channel.send({content: "Updating a bet, here is the data: " + respCheckBal.bet_points[0].point_id + " " + respCheckBal.bet_points[0].discord_server_id.toString() + " " + respCheckBal.bet_points[0].discord_user_id.toString() + " " + new_bal.toString()})
+    var respBalUpdate;
+    try{
+        respBalUpdate = await api.put("bet_point",{
+            point_id:parseInt(respCheckBal.bet_points[0].point_id),
+            discord_server_id:respCheckBal.bet_points[0].discord_server_id,
+            discord_user_id:respCheckBal.bet_points[0].discord_user_id,
+            points_total:parseInt(new_bal)
+        })
+    }catch(err){
+        this.logger.error(err.message)
+        return;
+    }
     var respUploadInt;
     try{
         respUploadInt = await api.post("bet_interaction",{
