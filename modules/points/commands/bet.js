@@ -109,7 +109,7 @@ module.exports = {
             var respUploadInteraction;
             try{
                 respUploadInteraction = await api.post("bet_interation",{
-                    bet_value:bet_amount,
+                    bet_value:parseInt(bet_amount),
                     serial:serial,
                     bet_stance:"for",
                     better_discord_id:init_id,
