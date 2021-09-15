@@ -29,10 +29,10 @@ async function onButtonClick(button){
         if(respCheckAllInt.bet_interactions[0]){
             for(var i = 0;i<respCheckAllInt.bet_interactions.length;i++){
                 if(respCheckAllInt.bet_interactions[i].bet_stance === "for"){
-                    forBet.push(respCheckAllInt.bet_interactions[i].bet_id)
+                    forBet.push(respCheckAllInt.bet_interactions[i])
                     pot += parseInt(respCheckAllInt.bet_interactions[i].bet_value)
                 }else{
-                    againstBet.push(respCheckAllInt.bet_interactions[i].bet_id)
+                    againstBet.push(respCheckAllInt.bet_interactions[i])
                     pot += parseInt(respCheckAllInt.bet_interactions[i].bet_value)
                 }
             }
@@ -40,7 +40,15 @@ async function onButtonClick(button){
         button.channel.send({content: "Bet with total pot of: " + pot + ". Which had " + forBet.length + " for it and " + againstBet.length + " against it"});
         if(stance === "fw"){
             for(var j = 0;j<forBet.length;j++){
-
+                /*try{
+                    var respWin = await api.put("bet_point",{
+                        discord_user_id:forBet[j].respCheckAllInt.bet_interactions[0].better_discord_id,
+                        discord_server_id:button.guild.id,
+                    })
+                }catch(err){
+                    this.logger.error(err);
+                }*/
+                this.logger.info(forBet[j]);
             }
             for(var k = 0;k<againstBet.length;k++){
 
