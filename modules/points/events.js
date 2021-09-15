@@ -6,8 +6,53 @@ async function onButtonClick(button){
     var serial = button.customId.substring(0,10);
     var stance = await button.customId.substring(button.customId.indexOf('-')+1, button.customId.indexOf('-')+3);
     var bet_amount = 0;
+    var respCheckMaster;
+    try{
+        respCheckMaster = await api.get("bet_master",{
+            serial:serial
+        })
+    }catch(err){
+        this.logger.error(err.message);
+    }
     if(stance === "fw" || stance === "al"){
-        button.channel.send({content: "Still working on this part..."});
+        var forBet = [];
+        var againstBet = [];
+        var pot;
+        try{
+            var respCheckAllInt = await api.get("bet_interaction",{
+                _limit: 500,
+                serial:serial
+            })
+        }catch(err){
+            this.logger.error(err.message);
+        }
+        if(respCheckAllInt.bet_interactions[0]){
+            for(var i = 0;i<respCheckAllInt.bet_interactions.length;i++){
+                if(respCheckAllInt.bet_interactions[i].bet_stance === "for"){
+                    forBet.push(respCheckAllInt.bet_interactions[i].bet_id)
+                    pot += parseInt(respCheckAllInt.bet_interactions[i].bet_value)
+                }else{
+                    againstBet.push(respCheckAllInt.bet_interactions[i].bet_id)
+                    pot += parseInt(respCheckAllInt.bet_interactions[i].bet_value)
+                }
+            }
+        }
+        button.channel.send({content: "Bet with total pot of: " + pot + ". Which had " + forBet.length + " for it and " + againstBet.length + " against it"});
+        if(stance === "fw"){
+            for(var j = 0;j<forBet.length;j++){
+
+            }
+            for(var k = 0;k<againstBet.length;k++){
+
+            }
+        }else{
+            for(var j = 0;j<forBet.length;j++){
+
+            }
+            for(var k = 0;k<againstBet.length;k++){
+
+            }
+        }
         return;
     }else{
         bet_amount = await button.customId.substring(button.customId.indexOf('-')+3);
