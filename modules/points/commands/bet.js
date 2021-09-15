@@ -118,6 +118,7 @@ module.exports = {
             }catch(err){
                 this.logger.info(err.message);
             }
+            this.logger.info(respUploadInteraction);
 
             const {MessageButton,MessageActionRow} = require('discord.js');
             const ForBet = new MessageActionRow()
