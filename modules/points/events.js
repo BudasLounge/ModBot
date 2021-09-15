@@ -4,7 +4,7 @@ var api = new ApiClient();
 async function onButtonClick(button){
     if (!button.isButton()) return;
 	var serial = button.customId.substring(0,10);
-    var betAndStance = await button.customId.substring(button.customId.indexOf('-'));
+    var betAndStance = await button.customId.substring(button.customId.indexOf('-')+1);
     button.channel.send({content: betAndStance});
     var respCheckMaster;
     try{
