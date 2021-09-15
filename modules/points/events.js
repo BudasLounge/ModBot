@@ -76,9 +76,7 @@ async function onButtonClick(button){
     }
     if(respCheckBal.bet_points[0]){
         if(parseInt(respCheckBal.bet_points[0].points_total)<parseInt(bet_amount)){
-            
-            button.channel.send({content: bet_amount})
-            button.channel.send({content : "You don't have enough to bet!" + respCheckBal.bet_points[0].points_total});
+            button.channel.send({content : "You don't have enough to bet! Here is your current balance: " + respCheckBal.bet_points[0].points_total});
             return;
         }
     }else{
