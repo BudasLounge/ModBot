@@ -40,14 +40,6 @@ module.exports = {
             var flag = true;
             var serial = makeid(10);
             var respCheckBet;
-            try{
-                respCheckBet = await api.get("bet_master",{
-                    serial:serial
-                })
-            }catch(err){
-                this.logger.error(err.message);
-            }
-            this.logger.info(respCheckBet);
             while(flag){
                 try{
                     respCheckBet = await api.get("bet_master",{
@@ -57,11 +49,11 @@ module.exports = {
                     this.logger.error(err.message);
                 }
                 this.logger.info(respCheckBet);
-                /*if(!respCheckBet.bet_masters[0]){
+                if(!respCheckBet.bet_masters[0]){
                     flag = false;
                 }else{
                     serial = await makeid(10);
-                }*/
+                }
                 flag = false
             }
             var init_name = message.member.user.username;
