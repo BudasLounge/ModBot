@@ -29,6 +29,7 @@ async function onButtonClick(button){
         if(respCheckAllInt.bet_interactions[0]){
             for(var i = 0;i<respCheckAllInt.bet_interactions.length;i++){
                 if(respCheckAllInt.bet_interactions[i].bet_stance === "for"){
+                    this.logger.info(respCheckAllInt.bet_interactions[i])
                     forBet.push(respCheckAllInt.bet_interactions[i])
                     pot += parseInt(respCheckAllInt.bet_interactions[i].bet_value)
                 }else{
