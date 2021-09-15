@@ -51,7 +51,7 @@ module.exports = {
                 if(!respCheckBet.bet_masters[0]){
                     flag = false;
                 }else{
-                    serial = makeid(10);
+                    serial = await makeid(10);
                 }
             }
             var init_name = message.member.user.username;
