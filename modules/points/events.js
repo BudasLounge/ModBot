@@ -18,8 +18,9 @@ async function onButtonClick(button){
         var forBet = [];
         var againstBet = [];
         var pot = 0;
+        var respCheckAllInt;
         try{
-            var respCheckAllInt = await api.get("bet_interaction",{
+            respCheckAllInt = await api.get("bet_interaction",{
                 _limit: 500,
                 serial:serial
             })
