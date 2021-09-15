@@ -4,6 +4,8 @@ var api = new ApiClient();
 async function onButtonClick(button){
     if (!button.isButton()) return;
 	var serial = button.customId.substring(0,10);
+    var betAndStance = button.customId.substring(button.customId.indexOf('-'+1));
+    button.channel.send({content: betAndStance});
     var respCheckMaster;
     try{
         respCheckMaster = await api.get("bet_master",{
@@ -17,8 +19,6 @@ async function onButtonClick(button){
         return;
     }
 
-    console.log(button.customId);
-    button.channel.send({content: "Serial: " + serial});
     button.deferUpdate();
 }
 
