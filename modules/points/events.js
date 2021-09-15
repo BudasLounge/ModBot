@@ -17,7 +17,7 @@ async function onButtonClick(button){
     if(stance === "fw" || stance === "al"){
         var forBet = [];
         var againstBet = [];
-        var pot;
+        var pot = 0;
         try{
             var respCheckAllInt = await api.get("bet_interaction",{
                 _limit: 500,
