@@ -83,7 +83,7 @@ module.exports = {
                     serial:serial,
                     initiator_discord_id:init_id,
                     initiator_discord_username:message.member.user.username,
-                    status:open,
+                    status:"open",
                     bet_reason:reason
                 })
             }catch(err){
