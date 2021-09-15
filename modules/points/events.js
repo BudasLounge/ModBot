@@ -52,7 +52,7 @@ async function onButtonClick(button){
                 }catch(err){
                     this.logger.error(err);
                 }*/
-                this.logger.info(forBet[j]);
+                this.logger.info(forBet);
             }
             for(var k = 0;k<againstBet.length;k++){
 
