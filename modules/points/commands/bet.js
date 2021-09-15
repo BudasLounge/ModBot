@@ -37,7 +37,23 @@ module.exports = {
                 message.channel.send({content: "You need to run /point_start in order to get in the system!"});
                 return;
             }
+            var flag = true;
             var serial = makeid(10);
+            var respCheckBet;
+            while(flag){
+                try{
+                    respCheckBet = await api.get("bet_master",{
+                        serial:serial
+                    })
+                }catch(err){
+                    this.logger.error(err.message);
+                }
+                if(!respCheckBet.bet_masters[0]){
+                    flag = false;
+                }else{
+                    serial = makeid(10);
+                }
+            }
             var init_name = message.member.user.username;
             var bet_amount;
             if(Number.isInteger(parseInt(args[1])) || args[1].charAt(args[1].length-1)==="%"){
