@@ -48,7 +48,7 @@ module.exports = {
                 }catch(err){
                     this.logger.error(err.message);
                 }
-                if(!respCheckBet.bet_master[0]){
+                if(!respCheckBet.bet_masters[0]){
                     flag = false;
                 }else{
                     serial = await makeid(10);
