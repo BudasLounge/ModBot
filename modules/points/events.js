@@ -6,7 +6,11 @@ async function onButtonClick(button){
 	var serial = button.customId.substring(0,10);
     var stance = await button.customId.substring(button.customId.indexOf('-')+1, button.customId.indexOf('-')+3);
     var bet_amount = 0;
-    bet_amount = await button.customId.substring(button.customId.indexOf('-')+3);
+    if(stance === "fw" || stance === "al"){
+
+    }else{
+        bet_amount = await button.customId.substring(button.customId.indexOf('-')+3);
+    }
     button.channel.send({content: bet_amount.toString() + " " + stance});
     var respCheckMaster;
     try{
