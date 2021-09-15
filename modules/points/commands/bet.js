@@ -41,6 +41,7 @@ module.exports = {
             var serial = makeid(10);
             var respCheckBet;
             while(flag){
+                this.logger.info("In while loop");
                 try{
                     respCheckBet = await api.get("bet_master",{
                         serial:serial
