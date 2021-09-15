@@ -4,6 +4,14 @@ var api = new ApiClient();
 async function onButtonClick(button){
     if (!button.isButton()) return;
 	var serial = button.customId.substring(0,10);
+    var respCheckMaster;
+    try{
+        respCheckMaster = await api.get("bet_master",{
+
+        })
+    }catch(err){
+        this.logger.error(err.message);
+    }
     console.log(button.customId);
     button.channel.send({content: "Serial: " + serial});
     button.deferUpdate();
