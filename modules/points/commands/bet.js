@@ -48,7 +48,7 @@ module.exports = {
                 }catch(err){
                     this.logger.error(err.message);
                 }
-                this.logger.info(respCheckBet);
+                this.logger.info(respCheckBet.bet_masters);
                 /*if(!respCheckBet.bet_masters[0]){
                     flag = false;
                 }else{
