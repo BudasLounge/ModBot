@@ -40,6 +40,14 @@ module.exports = {
             var flag = true;
             var serial = makeid(10);
             var respCheckBet;
+            try{
+                respCheckBet = await api.get("bet_master",{
+                    serial:serial
+                })
+            }catch(err){
+                this.logger.error(err.message);
+            }
+            this.logger.info(respCheckBet);
             while(flag){
                 try{
                     respCheckBet = await api.get("bet_master",{
