@@ -38,6 +38,8 @@ async function onButtonClick(button){
                     pot += parseInt(respCheckAllInt.bet_interactions[i].bet_value)
                 }
             }
+        }else{
+            button.channel.send({content: "Did not find"});
         }
         button.channel.send({content: "Bet with total pot of: " + pot + ". Which had " + forBet.length + " for it and " + againstBet.length + " against it"});
         if(stance === "fw"){
