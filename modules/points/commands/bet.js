@@ -76,7 +76,7 @@ module.exports = {
             }
             args.shift();
             args.shift();
-            var reason = args.join();
+            var reason = args.join(" ");
             var respUploadMaster;
             try{
                 respUploadMaster = await api.post("bet_master",{
