@@ -105,7 +105,19 @@ module.exports = {
                 this.logger.error(err.message)
                 return;
             }
-                this.logger.info(respBalUpdate);
+
+            var respUploadInteraction;
+            try{
+                respUploadInteraction = await api.post("bet_interation",{
+                    bet_value:bet_amount,
+                    serial:serial,
+                    bet_stance:"for",
+                    better_discord_id:init_id,
+                    better_discord_id:message.member.user.username
+                })
+            }catch(err){
+                this.logger.info(err.message);
+            }
 
             const {MessageButton,MessageActionRow} = require('discord.js');
             const ForBet = new MessageActionRow()
