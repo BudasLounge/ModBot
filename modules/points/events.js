@@ -21,7 +21,7 @@ async function onButtonClick(button){
         var respCheckAllInt;
         try{
             respCheckAllInt = await api.get("bet_interaction",{
-                _limit: 500,
+                _limit: 400,
                 serial:serial
             })
         }catch(err){
