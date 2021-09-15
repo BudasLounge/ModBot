@@ -56,7 +56,6 @@ async function onButtonClick(button){
         return;
     }else{
         bet_amount = await button.customId.substring(button.customId.indexOf('-')+3);
-        button.channel.send({content: bet_amount})
     }
     var respCheckServer;
     try{
@@ -77,6 +76,8 @@ async function onButtonClick(button){
     }
     if(respCheckBal.bet_points[0]){
         if(respCheckBal.bet_points[0].points_total<bet_amount){
+            
+            button.channel.send({content: bet_amount})
             button.channel.send({content : "You don't have enough to bet!" + respCheckBal.bet_points[0].points_total});
             return;
         }
