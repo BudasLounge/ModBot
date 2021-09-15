@@ -27,7 +27,7 @@ async function onButtonClick(button){
         }catch(err){
             this.logger.error(err.message);
         }
-        this.logger.info(respCheckAllInt);
+        this.logger.info(respCheckAllInt.bet_interactions[0]);
         if(respCheckAllInt.bet_interactions[0]){
             for(var i = 0;i<respCheckAllInt.bet_interactions.length;i++){
                 if(respCheckAllInt.bet_interactions[i].bet_stance === "for"){
