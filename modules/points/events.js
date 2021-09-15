@@ -52,7 +52,7 @@ async function onButtonClick(button){
                 }catch(err){
                     this.logger.error(err);
                 }*/
-                this.logger.info(forBet[j].better_discord_id);
+                this.logger.info(forBet[j].better_discord_username);
             }
             for(var k = 0;k<againstBet.length;k++){
 
