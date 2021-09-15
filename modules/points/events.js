@@ -31,7 +31,7 @@ async function onButtonClick(button){
         if(respCheckAllInt.bet_interactions[0]){
             for(var i = 0;i<respCheckAllInt.bet_interactions.length;i++){
                 if(respCheckAllInt.bet_interactions[i].bet_stance === "for"){
-                    forBet.push(respCheckAllInt.bet_interactions[i].better_discord_username)
+                    forBet.push(respCheckAllInt.bet_interactions[i].bet_value)
                     pot += parseInt(respCheckAllInt.bet_interactions[i].bet_value)
                 }else{
                     againstBet.push(respCheckAllInt.bet_interactions[i].better_discord_id)
