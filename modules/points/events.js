@@ -19,6 +19,10 @@ async function onButtonClick(button){
             button.channel.send({content: "Only the bet initiator can determine if they won or lost. If you feel there has been an issue, contact an admin."});
             return;
         }
+        if(respCheckMaster.bet_masters[0].status === "closed"){
+            button.channel.send({content: "This bet has already been decided and payed out. If you feel there has been an issue, contact an admin."})
+            return;
+        }
         var forBet = [];
         var againstBet = [];
         var pot = 0;
@@ -96,6 +100,14 @@ async function onButtonClick(button){
                 output += againstBet[j].better_discord_username + " " + new_bal + "\n"
             }
             button.channel.send({content: "Here is the winners: " + output });
+        }
+        try{
+            var respUploadMaster = await api.put("bet_master",{
+                serial:serial,
+                status:"closed"
+            })
+        }catch(err){
+            console.log(err.message)
         }
         return;
     }else{
