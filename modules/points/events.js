@@ -25,16 +25,16 @@ async function onButtonClick(button){
                 serial:serial
             })
         }catch(err){
-            this.logger.error(err.message);
+            console.log(err.message);
         }
         //this.logger.info(respCheckAllInt.bet_interactions[0]);
         if(respCheckAllInt.bet_interactions[0]){
             for(var i = 0;i<respCheckAllInt.bet_interactions.length;i++){
                 if(respCheckAllInt.bet_interactions[i].bet_stance === "for"){
-                    forBet.push(respCheckAllInt.bet_interactions[i].bet_value)
+                    forBet.push(respCheckAllInt.bet_interactions[i])
                     pot += parseInt(respCheckAllInt.bet_interactions[i].bet_value)
                 }else{
-                    againstBet.push(respCheckAllInt.bet_interactions[i].better_discord_id)
+                    againstBet.push(respCheckAllInt.bet_interactions[i])
                     pot += parseInt(respCheckAllInt.bet_interactions[i].bet_value)
                 }
             }
@@ -52,15 +52,9 @@ async function onButtonClick(button){
                 }catch(err){
                     this.logger.error(err);
                 }*/
-                this.logger.info(forBet[j]);
-            }
-            for(var k = 0;k<againstBet.length;k++){
-
+                button.channel.send({content: forBet[j]});
             }
         }else{
-            for(var j = 0;j<forBet.length;j++){
-
-            }
             for(var k = 0;k<againstBet.length;k++){
 
             }
