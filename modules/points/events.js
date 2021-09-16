@@ -170,9 +170,9 @@ async function onButtonClick(button){
             if(respLog.bet_interactions[0]){
                 for(var i = 0;i<respLog.bet_interactions.length;i++){
                     if(respLog.bet_interactions[i].bet_stance === "for"){
-                        forOutput += respLog.bet_interactions[i].better_discord_username
+                        forOutput += respLog.bet_interactions[i].better_discord_username + "\n"
                     }else{
-                        againstOutput += respLog.bet_interactions[i].better_discord_username
+                        againstOutput += respLog.bet_interactions[i].better_discord_username + "\n"
                     }
                 }
                 if(forOutput === ""){
