@@ -168,7 +168,7 @@ async function onButtonClick(button){
             var forOutput = "";
             var againstOutput = "";
             if(respLog.bet_interactions[0]){
-                button.channel.send({content: respLog.bet_interactions.length})
+                button.channel.send({content: respLog.bet_interactions.length.toString()})
                 for(var i = 0;i<respLog.bet_interactions.length;i++){
                     if(respLog.bet_interactions[i].bet_stance === "for"){
                         forOutput += respLog.bet_interactions[i].better_discord_username + "\n"
