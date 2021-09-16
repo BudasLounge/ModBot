@@ -69,8 +69,28 @@ async function onButtonClick(button){
             button.channel.send({content: "Here is the winners: " + output });
         }else{
             for(var k = 0;k<againstBet.length;k++){
-
+                try{
+                    var respWinBal = await api.get("bet_point",{
+                        discord_user_id:againstBet[j].better_discord_id,
+                        discord_server_id:button.guild.id
+                    })
+                }catch(err){
+                    console.log(err.message)
+                }
+                var new_bal = parseInt(respWinBal.bet_points[0].points_total) + parseInt(againstBet[j].bet_value) + parseInt(pot/againstBet.length)
+                try{
+                    var respWin = await api.put("bet_point",{
+                        point_id:parseInt(respWinBal.bet_points[0].point_id),
+                        discord_user_id:againstBet[j].better_discord_id,
+                        discord_server_id:button.guild.id,
+                        points_total:parseInt(new_bal)
+                    })
+                }catch(err){
+                    console.log(err);
+                }
+                output += againstBet[j].better_discord_username + " " + new_bal + "\n"
             }
+            button.channel.send({content: "Here is the winners: " + output });
         }
         return;
     }else{
