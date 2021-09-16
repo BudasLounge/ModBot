@@ -53,9 +53,10 @@ async function onButtonClick(button){
                 }catch(err){
                     console.log(err.message)
                 }
-                var new_bal = respWinBal.bet_points[0].points_total + forBet[j].bet_value + pot/forBet.length
+                var new_bal = parseInt(respWinBal.bet_points[0].points_total) + parseInt(forBet[j].bet_value) + parseInt(pot/forBet.length)
                 try{
                     var respWin = await api.put("bet_point",{
+                        point_id:parseInt(respWinBal.bet_points[0].point_id),
                         discord_user_id:forBet[j].better_discord_id,
                         discord_server_id:button.guild.id,
                         points_total:parseInt(new_bal)
