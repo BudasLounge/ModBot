@@ -162,6 +162,17 @@ module.exports = {
                         .setLabel('Creator Lost')
                         .setStyle('DANGER'),
                 );
+                const BetUtils = new MessageActionRow()
+                .addComponents(
+                    new MessageButton()
+                        .setCustomId(serial+"-bl")
+                        .setLabel("Who's in this bet?")
+                        .setStyle('SECONDARY'),
+                    new MessageButton()
+                        .setCustomeId(serial+"-bo")
+                        .setLabel("Current Odds")
+                        .setStyle('SECONDARY'),
+                )
                 if(respCheckServer.bet_configs[0].point_name.charAt(respCheckServer.bet_configs[0].point_name.length-1) === "s"){
                     respCheckServer.bet_configs[0].point_name = respCheckServer.bet_configs[0].point_name.substring(0, respCheckServer.bet_configs[0].point_name.length-1);
                 }
@@ -169,7 +180,7 @@ module.exports = {
                 .setTitle("New bet created")
                 .addField(init_name.toString() + " has placed a bet for: " + bet_amount.toString() + " " + respCheckServer.bet_configs[0].point_name + "s", "The subject of the bet is: \n" + reason)
                 .addField("Use the buttons below to partake in the bet!", "Green means you agree, red means you disagree")
-                await message.reply({/*content: "New bet",*/ embeds: [outputEmbed], components: [BetWin, ForBet, AgainstBet]});
+                await message.reply({/*content: "New bet",*/ embeds: [outputEmbed], components: [BetWin, ForBet, AgainstBet, BetUtils]});
             }
         }
 }

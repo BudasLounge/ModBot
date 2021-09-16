@@ -55,13 +55,23 @@ async function onButtonClick(button){
         }else{
             button.channel.send({content: "Did not find"});
         }
-        //if()
         button.channel.send({content: "Bet with total pot of: " + pot + ". Which had " + forBet.length + " for it and " + againstBet.length + " against it"});
         var output = "";
         if(stance === "fw"){
             if(forBet.length===0){
                 output+="Looks like no one won this time!";
             }else{
+                for(var l = 0;l<forBet.length;l++){
+                    try{
+                        var respWinBal = await api.get("bet_point",{
+                            discord_user_id:forBet[l].better_discord_id,
+                            discord_server_id:button.guild.id
+                        })
+                    }catch(err){
+                        console.log(err.message)
+                    }
+                    pot -= parseInt(forBet[l].bet_value)
+                }
                 for(var j = 0;j<forBet.length;j++){
                     try{
                         var respWinBal = await api.get("bet_point",{
@@ -95,6 +105,17 @@ async function onButtonClick(button){
             if(againstBet.length === 0){
                 output+="Looks like no one won this time!";
             }else{
+                for(var l = 0;l<againstBet.length;l++){
+                    try{
+                        var respWinBal = await api.get("bet_point",{
+                            discord_user_id:againstBet[l].better_discord_id,
+                            discord_server_id:button.guild.id
+                        })
+                    }catch(err){
+                        console.log(err.message)
+                    }
+                    pot -= parseInt(againstBet[l].bet_value)
+                }
                 for(var k = 0;k<againstBet.length;k++){
                     try{
                         var respWinBalL = await api.get("bet_point",{
