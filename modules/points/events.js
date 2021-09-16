@@ -79,7 +79,7 @@ async function onButtonClick(button){
             const listWinners = new MessageEmbed()
             .setColor("#f92f03")
             .setTitle("Here are the winners of this bet: ")
-            .addField("Winners: ", output);
+            .addField("Winners: ", output.toString());
 
             button.channel.send({embeds: [listWinners] });
         }else{
@@ -108,7 +108,7 @@ async function onButtonClick(button){
             const listWinners = new MessageEmbed()
             .setColor("#f92f03")
             .setTitle("Here are the winners of this bet: ")
-            .addField("Winners: ", output);
+            .addField("Winners: ", output.toString());
 
             button.channel.send({embeds: [listWinners] });
         }
