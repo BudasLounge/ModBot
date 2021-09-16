@@ -160,6 +160,7 @@ async function onButtonClick(button){
         if(stance === "bl"){
             try{
                 var respLog = await api.get("bet_interaction",{
+                    _limit:400,
                     serial:serial
                 })
             }catch(err){
