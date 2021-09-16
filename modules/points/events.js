@@ -186,7 +186,9 @@ async function onButtonClick(button){
                 .setTitle("Here are the current standings: ")
                 .addField("For: ", forOutput.toString())
                 .addField("Against: ", againstOutput.toString());
+                button.channel.send({embeds: [listBetters]})
                 button.deferUpdate();
+                return;
             }else{
                 button.channel.send({content: "Did not find"});
             }
