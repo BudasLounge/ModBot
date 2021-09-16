@@ -98,7 +98,7 @@ async function onButtonClick(button){
                 for(var k = 0;k<againstBet.length;k++){
                     try{
                         var respWinBalL = await api.get("bet_point",{
-                            discord_user_id:againstBet[j].better_discord_id,
+                            discord_user_id:againstBet[k].better_discord_id,
                             discord_server_id:button.guild.id
                         })
                     }catch(err){
