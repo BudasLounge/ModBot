@@ -97,17 +97,17 @@ async function onButtonClick(button){
             }else{
                 for(var k = 0;k<againstBet.length;k++){
                     try{
-                        var respWinBal = await api.get("bet_point",{
+                        var respWinBalL = await api.get("bet_point",{
                             discord_user_id:againstBet[j].better_discord_id,
                             discord_server_id:button.guild.id
                         })
                     }catch(err){
                         console.log(err.message)
                     }
-                    var new_bal = parseInt(respWinBal.bet_points[0].points_total) + parseInt(againstBet[j].bet_value) + parseInt(pot/againstBet.length)
+                    var new_bal = parseInt(respWinBalL.bet_points[0].points_total) + parseInt(againstBet[j].bet_value) + parseInt(pot/againstBet.length)
                     try{
                         var respWin = await api.put("bet_point",{
-                            point_id:parseInt(respWinBal.bet_points[0].point_id),
+                            point_id:parseInt(respWinBalL.bet_points[0].point_id),
                             discord_user_id:againstBet[j].better_discord_id,
                             discord_server_id:button.guild.id,
                             points_total:parseInt(new_bal)
