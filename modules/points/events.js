@@ -42,18 +42,30 @@ async function onButtonClick(button){
             button.channel.send({content: "Did not find"});
         }
         button.channel.send({content: "Bet with total pot of: " + pot + ". Which had " + forBet.length + " for it and " + againstBet.length + " against it"});
+        var output = "";
         if(stance === "fw"){
             for(var j = 0;j<forBet.length;j++){
-                /*try{
-                    var respWin = await api.put("bet_point",{
-                        discord_user_id:forBet[j].respCheckAllInt.bet_interactions[0].better_discord_id,
-                        discord_server_id:button.guild.id,
+                try{
+                    var respWinBal = await api.get("bet_point",{
+                        discord_user_id:forBet[j].better_discord_id,
+                        discord_server_id:button.guild.id
                     })
                 }catch(err){
-                    this.logger.error(err);
-                }*/
-                console.log(forBet[j])
+                    console.log(err.message)
+                }
+                var new_bal = respWinBal.bet_points[0].points_total + forBet[j].bet_value + pot/forBet.length
+                try{
+                    var respWin = await api.put("bet_point",{
+                        discord_user_id:forBet[j].better_discord_id,
+                        discord_server_id:button.guild.id,
+                        points_total:parseInt(new_bal)
+                    })
+                }catch(err){
+                    console.log(err);
+                }
+                output += forBet[j].better_discord_username + " " + new_bal + "\n"
             }
+            button.channel.send({content: "Here is the winners: " + output });
         }else{
             for(var k = 0;k<againstBet.length;k++){
 
