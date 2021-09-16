@@ -59,27 +59,31 @@ async function onButtonClick(button){
         button.channel.send({content: "Bet with total pot of: " + pot + ". Which had " + forBet.length + " for it and " + againstBet.length + " against it"});
         var output = "";
         if(stance === "fw"){
-            for(var j = 0;j<forBet.length;j++){
-                try{
-                    var respWinBal = await api.get("bet_point",{
-                        discord_user_id:forBet[j].better_discord_id,
-                        discord_server_id:button.guild.id
-                    })
-                }catch(err){
-                    console.log(err.message)
+            if(forBet.length===0){
+                output+="Looks like no one won this time!";
+            }else{
+                for(var j = 0;j<forBet.length;j++){
+                    try{
+                        var respWinBal = await api.get("bet_point",{
+                            discord_user_id:forBet[j].better_discord_id,
+                            discord_server_id:button.guild.id
+                        })
+                    }catch(err){
+                        console.log(err.message)
+                    }
+                    var new_bal = parseInt(respWinBal.bet_points[0].points_total) + parseInt(forBet[j].bet_value) + parseInt(pot/forBet.length)
+                    try{
+                        var respWin = await api.put("bet_point",{
+                            point_id:parseInt(respWinBal.bet_points[0].point_id),
+                            discord_user_id:forBet[j].better_discord_id,
+                            discord_server_id:button.guild.id,
+                            points_total:parseInt(new_bal)
+                        })
+                    }catch(err){
+                        console.log(err);
+                    }
+                    output += forBet[j].better_discord_username + " added " + parseInt(pot/forBet.length) + " to their wealth\n";
                 }
-                var new_bal = parseInt(respWinBal.bet_points[0].points_total) + parseInt(forBet[j].bet_value) + parseInt(pot/forBet.length)
-                try{
-                    var respWin = await api.put("bet_point",{
-                        point_id:parseInt(respWinBal.bet_points[0].point_id),
-                        discord_user_id:forBet[j].better_discord_id,
-                        discord_server_id:button.guild.id,
-                        points_total:parseInt(new_bal)
-                    })
-                }catch(err){
-                    console.log(err);
-                }
-                output += forBet[j].better_discord_username + " added " + parseInt(pot/forBet.length) + " to their wealth\n";
             }
             const listWinners = new MessageEmbed()
             .setColor("#f92f03")
@@ -88,27 +92,31 @@ async function onButtonClick(button){
 
             button.channel.send({embeds: [listWinners] });
         }else{
-            for(var k = 0;k<againstBet.length;k++){
-                try{
-                    var respWinBal = await api.get("bet_point",{
-                        discord_user_id:againstBet[j].better_discord_id,
-                        discord_server_id:button.guild.id
-                    })
-                }catch(err){
-                    console.log(err.message)
+            if(againstBet.length === 0){
+                output+="Looks like no one won this time!";
+            }else{
+                for(var k = 0;k<againstBet.length;k++){
+                    try{
+                        var respWinBal = await api.get("bet_point",{
+                            discord_user_id:againstBet[j].better_discord_id,
+                            discord_server_id:button.guild.id
+                        })
+                    }catch(err){
+                        console.log(err.message)
+                    }
+                    var new_bal = parseInt(respWinBal.bet_points[0].points_total) + parseInt(againstBet[j].bet_value) + parseInt(pot/againstBet.length)
+                    try{
+                        var respWin = await api.put("bet_point",{
+                            point_id:parseInt(respWinBal.bet_points[0].point_id),
+                            discord_user_id:againstBet[j].better_discord_id,
+                            discord_server_id:button.guild.id,
+                            points_total:parseInt(new_bal)
+                        })
+                    }catch(err){
+                        console.log(err);
+                    }
+                    output += againstBet[j].better_discord_username + " added " + parseInt(pot/forBet.length) + " to their wealth\n";
                 }
-                var new_bal = parseInt(respWinBal.bet_points[0].points_total) + parseInt(againstBet[j].bet_value) + parseInt(pot/againstBet.length)
-                try{
-                    var respWin = await api.put("bet_point",{
-                        point_id:parseInt(respWinBal.bet_points[0].point_id),
-                        discord_user_id:againstBet[j].better_discord_id,
-                        discord_server_id:button.guild.id,
-                        points_total:parseInt(new_bal)
-                    })
-                }catch(err){
-                    console.log(err);
-                }
-                output += againstBet[j].better_discord_username + " added " + parseInt(pot/forBet.length) + " to their wealth\n";
             }
             const listWinners = new MessageEmbed()
             .setColor("#f92f03")
