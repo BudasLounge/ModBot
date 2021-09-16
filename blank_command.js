@@ -10,6 +10,8 @@ module.exports = {
 
     }
 }
+
+//<message>.reference.messageId - references a message if it is replied to
 //Code to check if the user has admin perms. Temp until I can make some extra headers.
 var api = extra.api;
 var respAdminID = "";
