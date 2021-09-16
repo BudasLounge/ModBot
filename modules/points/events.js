@@ -15,10 +15,15 @@ async function onButtonClick(button){
         this.logger.error(err.message);
     }
     if(stance === "fw" || stance === "al"){
+        if(button.user.id != respCheckMaster.bet_masters[0].initiator_discord_id){
+            button.channel.send({content: "Only the bet initiator can determine if they won or lost. If you feel there has been an issue, contact an admin."});
+            return;
+        }
         var forBet = [];
         var againstBet = [];
         var pot = 0;
         var respCheckAllInt;
+        var respCheckBal;
         try{
             respCheckAllInt = await api.get("bet_interaction",{
                 _limit: 400,
@@ -104,7 +109,6 @@ async function onButtonClick(button){
     }catch(err){
         this.logger.error(err.message);
     }
-    var respCheckBal;
     try{
         respCheckBal = await api.get("bet_point",{
             discord_user_id:button.user.id,
