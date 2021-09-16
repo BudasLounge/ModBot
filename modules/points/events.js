@@ -39,6 +39,10 @@ async function onButtonClick(button){
         }
         //this.logger.info(respCheckAllInt.bet_interactions[0]);
         if(respCheckAllInt.bet_interactions[0]){
+            if(respCheckAllInt.bet_interactions.length<2){
+                button.channel.send({content: "At least 2 people need to participate in this bet in order to pay out."});
+                return;
+            }
             for(var i = 0;i<respCheckAllInt.bet_interactions.length;i++){
                 if(respCheckAllInt.bet_interactions[i].bet_stance === "for"){
                     forBet.push(respCheckAllInt.bet_interactions[i])
@@ -51,6 +55,7 @@ async function onButtonClick(button){
         }else{
             button.channel.send({content: "Did not find"});
         }
+        //if()
         button.channel.send({content: "Bet with total pot of: " + pot + ". Which had " + forBet.length + " for it and " + againstBet.length + " against it"});
         var output = "";
         if(stance === "fw"){
@@ -120,6 +125,7 @@ async function onButtonClick(button){
         }catch(err){
             console.log(err.message)
         }
+        button.deferUpdate();
         return;
     }else{
         bet_amount = await button.customId.substring(button.customId.indexOf('-')+3);
