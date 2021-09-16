@@ -3,6 +3,7 @@ var api = new ApiClient();
 
 async function onButtonClick(button){
     if (!button.isButton()) return;
+    const {MessageEmbed} = require('discord.js');
     var serial = button.customId.substring(0,10);
     var stance = await button.customId.substring(button.customId.indexOf('-')+1, button.customId.indexOf('-')+3);
     var bet_amount = 0;
@@ -73,9 +74,14 @@ async function onButtonClick(button){
                 }catch(err){
                     console.log(err);
                 }
-                output += forBet[j].better_discord_username + " " + new_bal + "\n"
+                output += forBet[j].better_discord_username + " added " + parseInt(pot/forBet.length) + " to their wealth\n";
             }
-            button.channel.send({content: "Here is the winners: " + output });
+            const listWinners = new MessageEmbed()
+            .setColor("#f92f03")
+            .setTitle("Here are the winners of this bet: ")
+            .addField("Winners: ", output);
+
+            button.channel.send({embeds: [listWinners] });
         }else{
             for(var k = 0;k<againstBet.length;k++){
                 try{
@@ -97,9 +103,14 @@ async function onButtonClick(button){
                 }catch(err){
                     console.log(err);
                 }
-                output += againstBet[j].better_discord_username + " " + new_bal + "\n"
+                output += againstBet[j].better_discord_username + " added " + parseInt(pot/forBet.length) + " to their wealth\n";
             }
-            button.channel.send({content: "Here is the winners: " + output });
+            const listWinners = new MessageEmbed()
+            .setColor("#f92f03")
+            .setTitle("Here are the winners of this bet: ")
+            .addField("Winners: ", output);
+
+            button.channel.send({embeds: [listWinners] });
         }
         try{
             var respUploadMaster = await api.put("bet_master",{
