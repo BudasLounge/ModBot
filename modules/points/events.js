@@ -175,11 +175,18 @@ async function onButtonClick(button){
                         againstOutput += respLog.bet_interactions[i].better_discord_username
                     }
                 }
+                if(forOutput === ""){
+                    forOutput = "none";
+                }
+                if(againstOutput === ""){
+                    againstOutput = "none";
+                }
                 const listBetters = new MessageEmbed()
                 .setColor("#f92f03")
                 .setTitle("Here are the current standings: ")
                 .addField("For: ", forOutput.toString())
                 .addField("Against: ", againstOutput.toString());
+                button.deferUpdate();
             }else{
                 button.channel.send({content: "Did not find"});
             }
