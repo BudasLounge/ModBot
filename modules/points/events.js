@@ -163,7 +163,7 @@ async function onButtonClick(button){
         button.channel.send({content: "You need to run /point_start in order to get in the system!"});
         return;
     }
-    button.channel.send({content: bet_amount.toString() + " " + stance});
+    //button.channel.send({content: bet_amount.toString() + " " + stance});
     var respCheckMaster;
     try{
         respCheckMaster = await api.get("bet_master",{
@@ -201,7 +201,7 @@ async function onButtonClick(button){
         stance = "against"
     }
     var new_bal = respCheckBal.bet_points[0].points_total-bet_amount;
-    button.channel.send({content: "Updating a bet, here is the data: " + respCheckBal.bet_points[0].point_id + " " + respCheckBal.bet_points[0].discord_server_id.toString() + " " + respCheckBal.bet_points[0].discord_user_id.toString() + " " + new_bal.toString()})
+    //button.channel.send({content: "Updating a bet, here is the data: " + respCheckBal.bet_points[0].point_id + " " + respCheckBal.bet_points[0].discord_server_id.toString() + " " + respCheckBal.bet_points[0].discord_user_id.toString() + " " + new_bal.toString()})
     var respBalUpdate;
     try{
         respBalUpdate = await api.put("bet_point",{
