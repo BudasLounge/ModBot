@@ -31,7 +31,7 @@ module.exports = {
         if(respCheckServer.bet_configs[0]){
             if(respUsers.bet_points[0]){
                 for(var i = 0;i<respUsers.bet_points.length;i++){
-                    pointUsers.push([respUsers.bet_points[i].discord_username, respUsers.bet_points[i].points_total]);
+                    pointUsers.push([respUsers.bet_points[i].discord_username, parseInt(respUsers.bet_points[i].points_total)]);
                 }
 
                 pointUsers.sort(compareSecondColumn);
