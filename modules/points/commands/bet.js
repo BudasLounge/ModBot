@@ -167,7 +167,8 @@ module.exports = {
                 }
                 const outputEmbed = new MessageEmbed()
                 .setTitle("New bet created")
-                .addField(init_name.toString() + " has placed a bet for: " + bet_amount.toString() + " " + respCheckServer.bet_configs[0].point_name + "s", "The subject of the bet is: " + reason + "\nUse the buttons below to partake in the bet!\nGreen means you agree, red means you disagree");
+                .addField(init_name.toString() + " has placed a bet for: " + bet_amount.toString() + " " + respCheckServer.bet_configs[0].point_name + "s", "The subject of the bet is: \n" + reason)
+                .addField("Use the buttons below to partake in the bet!", "Green means you agree, red means you disagree")
                 await message.reply({/*content: "New bet",*/ embeds: [outputEmbed], components: [BetWin, ForBet, AgainstBet]});
             }
         }
