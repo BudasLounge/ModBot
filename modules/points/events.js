@@ -156,6 +156,34 @@ async function onButtonClick(button){
         }
         button.deferUpdate();
         return;
+    }else if(stance === "bl" || stance === "bo"){
+        if(stance === "bl"){
+            try{
+                var respLog = await api.get("bet_interaction",{
+                    serial:serial
+                })
+            }catch(err){
+                console.log(err.message)
+            }
+            var forOutput = "";
+            var againstOutput = "";
+            if(respLog.bet_interactions[0]){
+                for(var i = 0;i<respLog.bet_interactions.length;i++){
+                    if(respLog.bet_interactions[i].bet_stance === "for"){
+                        forOutput += respLog.bet_interactions[i].better_discord_username
+                    }else{
+                        againstOutput += respLog.bet_interactions[i].better_discord_username
+                    }
+                }
+                const listBetters = new MessageEmbed()
+                .setColor("#f92f03")
+                .setTitle("Here are the current standings: ")
+                .addField("For: ", forOutput.toString())
+                .addField("Against: ", againstOutput.toString());
+            }else{
+                button.channel.send({content: "Did not find"});
+            }
+        }
     }else{
         bet_amount = await button.customId.substring(button.customId.indexOf('-')+3);
     }
