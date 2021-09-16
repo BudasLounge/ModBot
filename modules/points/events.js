@@ -176,6 +176,10 @@ async function onButtonClick(button){
         button.channel.send({content: "Couldn't find that bet, ask an admin for help"});
         return;
     }
+    if(respCheckMaster.bet_masters[0].status === "closed"){
+        button.channel.send({content: "That bet has already been payed out!"});
+        return;
+    }
     var respIntCheck;
     try{
         respIntCheck = await api.get("bet_interaction",{
