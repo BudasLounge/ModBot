@@ -168,13 +168,16 @@ async function onButtonClick(button){
             }
             var forOutput = "";
             var againstOutput = "";
+            var forCount = 0;
+            var againstCount = 0;
             if(respLog.bet_interactions[0]){
-                button.channel.send({content: respLog.bet_interactions.length.toString()})
                 for(var i = 0;i<respLog.bet_interactions.length;i++){
                     if(respLog.bet_interactions[i].bet_stance === "for"){
                         forOutput += respLog.bet_interactions[i].better_discord_username + "\n"
+                        forCount++
                     }else{
                         againstOutput += respLog.bet_interactions[i].better_discord_username + "\n"
+                        againstCount++
                     }
                 }
                 if(forOutput === ""){
@@ -186,8 +189,8 @@ async function onButtonClick(button){
                 const listBetters = new MessageEmbed()
                 .setColor("#f92f03")
                 .setTitle("Here are the current standings: ")
-                .addField("For: ", forOutput.toString())
-                .addField("Against: ", againstOutput.toString());
+                .addField(forCount + " For: ", forOutput.toString())
+                .addField(againstCount + " Against: ", againstOutput.toString());
                 button.channel.send({embeds: [listBetters]})
                 button.deferUpdate();
                 return;

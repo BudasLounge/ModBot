@@ -171,7 +171,8 @@ module.exports = {
                     new MessageButton()
                         .setCustomId(serial+"-bo")
                         .setLabel("Current Odds")
-                        .setStyle('SECONDARY'),
+                        .setStyle('SECONDARY')
+                        .setDisabled("true"),
                 )
                 if(respCheckServer.bet_configs[0].point_name.charAt(respCheckServer.bet_configs[0].point_name.length-1) === "s"){
                     respCheckServer.bet_configs[0].point_name = respCheckServer.bet_configs[0].point_name.substring(0, respCheckServer.bet_configs[0].point_name.length-1);
