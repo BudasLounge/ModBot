@@ -52,7 +52,7 @@ async function onButtonClick(button){
                 }catch(err){
                     this.logger.error(err);
                 }*/
-                button.channel.send({content: forBet[j].toString()});
+                console.log(forBet[j])
             }
         }else{
             for(var k = 0;k<againstBet.length;k++){
