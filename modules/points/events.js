@@ -223,7 +223,7 @@ async function onButtonClick(button){
             return;
         }
     }else{
-        button.channel.send({content: "You need to run /point_start in order to get in the system!"});
+        button.channel.reply({content: "You need to run /point_start in order to get in the system!"});
         return;
     }
     //button.channel.send({content: bet_amount.toString() + " " + stance});
