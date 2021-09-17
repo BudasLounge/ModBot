@@ -171,8 +171,7 @@ module.exports = {
                     new MessageButton()
                         .setCustomId(serial+"-bd")
                         .setLabel("Delete Bet")
-                        .setStyle('SECONDARY')
-                        .setDisabled("true"),
+                        .setStyle('SECONDARY'),
                 )
                 if(respCheckServer.bet_configs[0].point_name.charAt(respCheckServer.bet_configs[0].point_name.length-1) === "s"){
                     respCheckServer.bet_configs[0].point_name = respCheckServer.bet_configs[0].point_name.substring(0, respCheckServer.bet_configs[0].point_name.length-1);
