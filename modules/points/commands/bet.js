@@ -180,52 +180,52 @@ module.exports = {
                         .setPlaceholder('Nothing selected')
                         .addOptions([
 						{
-							label: 'Select me',
+							label: Math.floor(bet_amount*.1),
 							description: 'This is a description',
 							value: 'first_option',
 						},
 						{
-							label: 'You can select me too',
+							label: Math.floor(bet_amount*.2),
 							description: 'This is also a description',
 							value: 'second_option',
 						},
                         {
-							label: 'Select me',
+							label: Math.floor(bet_amount*.3),
 							description: 'This is a description',
 							value: 'third_option',
 						},
 						{
-							label: 'You can select me too',
+							label: Math.floor(bet_amount*.4),
 							description: 'This is also a description',
 							value: 'fourth_option',
 						},
                         {
-							label: 'Select me',
+							label: Math.floor(bet_amount*.5),
 							description: 'This is a description',
 							value: 'fifth_option',
 						},
 						{
-							label: 'You can select me too',
+							label: Math.floor(bet_amount*.6),
 							description: 'This is also a description',
 							value: 'sixth_option',
 						},
                         {
-							label: 'Select me',
+							label: Math.floor(bet_amount*.7),
 							description: 'This is a description',
 							value: 'seventh_option',
 						},
 						{
-							label: 'You can select me too',
+							label: Math.floor(bet_amount*.8),
 							description: 'This is also a description',
 							value: 'eigth_option',
 						},
                         {
-							label: 'Select me',
+							label: Math.floor(bet_amount*.9),
 							description: 'This is a description',
 							value: 'ninth_option',
 						},
 						{
-							label: 'You can select me too',
+							label: Math.floor(bet_amount*1.5),
 							description: 'This is also a description',
 							value: 'tenth_option',
 						},
