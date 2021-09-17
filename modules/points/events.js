@@ -3,6 +3,7 @@ var api = new ApiClient();
 
 async function onButtonClick(button){
 if (button.isButton() || button.isSelectMenu()){
+if(button.isButton()){
     const {MessageEmbed} = require('discord.js');
     var serial = button.customId.substring(0,10);
     var stance = await button.customId.substring(button.customId.indexOf('-')+1, button.customId.indexOf('-')+3);
@@ -377,6 +378,9 @@ if (button.isButton() || button.isSelectMenu()){
     }
     button.channel.send({content: button.user.username + " has joined the bet with " + bet_amount + " " + respCheckServer.bet_configs[0].point_name + "s."});
     button.deferUpdate();
+}else{
+    button.channel.send({content: "Selected a menu item!"});
+}
 }else{
     return;
 }
