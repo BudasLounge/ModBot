@@ -71,7 +71,7 @@ async function onButtonClick(button){
                     }catch(err){
                         console.log(err.message)
                     }
-                    winTotal += forBet[l].bet_value
+                    winTotal += parseInt(forBet[l].bet_value)
                 }
                 for(var l = 0;l<forBet.length;l++){
                     try{
@@ -130,7 +130,7 @@ async function onButtonClick(button){
                     }catch(err){
                         console.log(err.message)
                     }
-                    winTotal += againstBet[l].bet_value
+                    winTotal += parseInt(againstBet[l].bet_value)
                 }
                 for(var l = 0;l<againstBet.length;l++){
                     try{
