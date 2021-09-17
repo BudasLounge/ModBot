@@ -239,10 +239,15 @@ async function onButtonClick(button){
         try{
             respInt = await api.get("bet_interaction",{
                 serial:serial,
-                better_discord_id:respCheckMaster.bet_masters[0].initiator_discord_id
+                better_discord_id:respCheckMaster.bet_masters[0].initiator_discord_id,
+                _limit:2
             })
         }catch(err){
             console.log(err.message);
+        }
+        if(respInt.bet_interactions.count>1){
+            button.channel.send({content: "Currently cannot delete a bet with more than just the creator in it since that makes it a valid bet."})
+            return;
         }
         var respGetBal;
         try{
@@ -264,6 +269,17 @@ async function onButtonClick(button){
         }catch(err){
             console.log(err.message);
         }
+        try{
+            var respMasterClose = await api.put("bet_master",{
+                serial:serial,
+                status:"closed"
+            })
+        }catch(err){
+            console.log(err.message)
+        }
+        button.deferUpdate()
+        button.channel.send({content: "Bet was closed and points were refunded."})
+        return;
     }
     else{
         bet_amount = await button.customId.substring(button.customId.indexOf('-')+3);
