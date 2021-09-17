@@ -269,6 +269,7 @@ async function onButtonClick(button){
         }catch(err){
             console.log(err.message);
         }
+        console.log(respRefund);
         try{
             var respMasterClose = await api.put("bet_master",{
                 serial:serial,
