@@ -262,8 +262,7 @@ async function onButtonClick(button){
         var respRefund;
         try{
             respRefund = await api.put("bet_point",{
-                discord_user_id:respCheckMaster.bet_masters[0].initiator_discord_id,
-                discord_server_id:button.guild.id,
+                point_id:respGetBal.bet_points[0].point_id,
                 points_total:parseInt(new_bal)
             })
         }catch(err){
