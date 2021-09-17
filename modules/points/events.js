@@ -93,7 +93,8 @@ async function onButtonClick(button){
                     }catch(err){
                         console.log(err.message)
                     }
-                    var new_bal = parseInt(respWinBal.bet_points[0].points_total) + parseInt(forBet[j].bet_value) + parseInt(pot/forBet.length)
+                    var winnings = (winTotal/parseInt(forBet[j].bet_value)) * pot
+                    var new_bal = parseInt(respWinBal.bet_points[0].points_total) + parseInt(forBet[j].bet_value) + parseInt(winnings)
                     try{
                         var respWin = await api.put("bet_point",{
                             point_id:parseInt(respWinBal.bet_points[0].point_id),
@@ -104,7 +105,6 @@ async function onButtonClick(button){
                     }catch(err){
                         console.log(err);
                     }
-                    var winnings = (winTotal/parseInt(forBet[j].bet_value)) * pot
                     output += forBet[j].better_discord_username + " added " + winnings + " to their wealth\n";
                 }
             }
@@ -149,7 +149,8 @@ async function onButtonClick(button){
                     }catch(err){
                         console.log(err.message)
                     }
-                    var new_bal = parseInt(respWinBalL.bet_points[0].points_total) + parseInt(againstBet[k].bet_value) + parseInt(pot/againstBet.length)
+                    var winnings = (winTotal/parseInt(againstBet[j].bet_value)) * pot
+                    var new_bal = parseInt(respWinBalL.bet_points[0].points_total) + parseInt(againstBet[k].bet_value) + parseInt(winnings)
                     try{
                         var respWin = await api.put("bet_point",{
                             point_id:parseInt(respWinBalL.bet_points[0].point_id),
