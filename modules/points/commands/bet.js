@@ -11,6 +11,7 @@ module.exports = {
         const {MessageEmbed} = require('discord.js');
         if(message.reference.messageId > -1){
             message.channel.send({content: message.reference.messageId})
+            return;
         }
         var init_id = message.member.user.id;
         var respCheckServer;
