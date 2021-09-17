@@ -164,7 +164,7 @@ async function onButtonClick(button){
                     }catch(err){
                         console.log(err);
                     }
-                    output += againstBet[k].better_discord_username + " added " + parseInt(pot/againstBet.length) + " to their wealth\n";
+                    output += againstBet[k].better_discord_username + " added " + winnings.toString() + " to their wealth\n";
                 }
             }
             const listWinners = new MessageEmbed()
