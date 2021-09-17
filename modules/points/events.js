@@ -2,7 +2,7 @@ var ApiClient = require("../../core/js/APIClient.js");
 var api = new ApiClient();
 
 async function onButtonClick(button){
-    if (!button.isButton()) return;
+if (button.isButton() || button.isSelectMenu()){
     const {MessageEmbed} = require('discord.js');
     var serial = button.customId.substring(0,10);
     var stance = await button.customId.substring(button.customId.indexOf('-')+1, button.customId.indexOf('-')+3);
@@ -377,6 +377,9 @@ async function onButtonClick(button){
     }
     button.channel.send({content: button.user.username + " has joined the bet with " + bet_amount + " " + respCheckServer.bet_configs[0].point_name + "s."});
     button.deferUpdate();
+}else{
+    return;
+}
 }
 
 function register_handlers(event_registry) {
