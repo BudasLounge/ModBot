@@ -8,7 +8,7 @@ module.exports = {
     has_state: false,//if this command uses the state engine
     async execute(message, args, extra) {
         var api = extra.api;
-        const {MessageEmbed} = require('discord.js');
+        const {MessageEmbed, MessageSelectMenu} = require('discord.js');
         var init_id = message.member.user.id;
         var respCheckServer;
         try{
@@ -173,6 +173,24 @@ module.exports = {
                         .setLabel("Delete Bet")
                         .setStyle('SECONDARY'),
                 )
+                const SelectMenu = new MessageActionRow()
+			    .addComponents(
+				    new MessageSelectMenu()
+                        .setCustomId('select')
+                        .setPlaceholder('Nothing selected')
+                        .addOptions([
+						{
+							label: 'Select me',
+							description: 'This is a description',
+							value: 'first_option',
+						},
+						{
+							label: 'You can select me too',
+							description: 'This is also a description',
+							value: 'second_option',
+						},
+					]),
+			);
                 if(respCheckServer.bet_configs[0].point_name.charAt(respCheckServer.bet_configs[0].point_name.length-1) === "s"){
                     respCheckServer.bet_configs[0].point_name = respCheckServer.bet_configs[0].point_name.substring(0, respCheckServer.bet_configs[0].point_name.length-1);
                 }
@@ -180,7 +198,7 @@ module.exports = {
                 .setTitle("New bet created")
                 .addField(init_name.toString() + " has placed a bet for: " + bet_amount.toString() + " " + respCheckServer.bet_configs[0].point_name + "s", "The subject of the bet is: \n" + reason)
                 .addField("Use the buttons below to partake in the bet!", "Green means you agree, red means you disagree")
-                await message.reply({embeds: [outputEmbed], components: [BetWin, ForBet, AgainstBet, BetUtils], content: "Reference number: " + serial});
+                await message.reply({embeds: [outputEmbed], components: [BetWin, ForBet, AgainstBet, BetUtils, SelectMenu], content: "Reference number: " + serial});
         }
     }
 }
