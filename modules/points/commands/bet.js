@@ -180,52 +180,52 @@ module.exports = {
                         .setPlaceholder('Nothing selected')
                         .addOptions([
 						{
-							label: Math.floor(bet_amount*.1),
+							label: Math.floor(bet_amount*.1).toString(),
 							description: 'This is a description',
 							value: 'first_option',
 						},
 						{
-							label: Math.floor(bet_amount*.2),
+							label: Math.floor(bet_amount*.2).toString(),
 							description: 'This is also a description',
 							value: 'second_option',
 						},
                         {
-							label: Math.floor(bet_amount*.3),
+							label: Math.floor(bet_amount*.3).toString(),
 							description: 'This is a description',
 							value: 'third_option',
 						},
 						{
-							label: Math.floor(bet_amount*.4),
+							label: Math.floor(bet_amount*.4).toString(),
 							description: 'This is also a description',
 							value: 'fourth_option',
 						},
                         {
-							label: Math.floor(bet_amount*.5),
+							label: Math.floor(bet_amount*.5).toString(),
 							description: 'This is a description',
 							value: 'fifth_option',
 						},
 						{
-							label: Math.floor(bet_amount*.6),
+							label: Math.floor(bet_amount*.6).toString(),
 							description: 'This is also a description',
 							value: 'sixth_option',
 						},
                         {
-							label: Math.floor(bet_amount*.7),
+							label: Math.floor(bet_amount*.7).toString(),
 							description: 'This is a description',
 							value: 'seventh_option',
 						},
 						{
-							label: Math.floor(bet_amount*.8),
+							label: Math.floor(bet_amount*.8).toString(),
 							description: 'This is also a description',
 							value: 'eigth_option',
 						},
                         {
-							label: Math.floor(bet_amount*.9),
+							label: Math.floor(bet_amount*.9).toString(),
 							description: 'This is a description',
 							value: 'ninth_option',
 						},
 						{
-							label: Math.floor(bet_amount*1.5),
+							label: Math.floor(bet_amount*1.5).toString(),
 							description: 'This is also a description',
 							value: 'tenth_option',
 						},
