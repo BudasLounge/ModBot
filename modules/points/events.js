@@ -93,10 +93,10 @@ async function onButtonClick(button){
                     }catch(err){
                         console.log(err.message)
                     }
-                    var winnings = (parseInt(winTotal)/parseInt(forBet[j].bet_value)) * parseInt(pot)
-                    button.channel.send({content: "Winnings after equation: " + winnings.toString() + " and here was the percentage: " + (parseInt(winTotal)/parseInt(forBet[j].bet_value))})
+                    var winnings = (parseInt(forBet[j].bet_value)/parseInt(winTotal)) * parseInt(pot)
+                    button.channel.send({content: "Winnings after equation: " + winnings.toString() + " and here was the percentage: " + (parseInt(forBet[j].bet_value)/parseInt(winTotal))})
                     var new_bal = parseInt(respWinBal.bet_points[0].points_total) + parseInt(forBet[j].bet_value) + parseInt(winnings)
-                    button.channel.send({content: "New_bal after equation: " + new_Bal.toString()})
+                    button.channel.send({content: "New_bal after equation: " + new_bal.toString()})
                     try{
                         var respWin = await api.put("bet_point",{
                             point_id:parseInt(respWinBal.bet_points[0].point_id),
