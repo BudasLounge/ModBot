@@ -9,6 +9,9 @@ module.exports = {
     async execute(message, args, extra) {
         var api = extra.api;
         const {MessageEmbed} = require('discord.js');
+        if(message.reference.messageId > -1){
+            message.channel.send({content: message.reference.messageId})
+        }
         var init_id = message.member.user.id;
         var respCheckServer;
         try{
