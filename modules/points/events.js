@@ -307,7 +307,7 @@ if(button.isButton()){
             return;
         }
     }else{
-        button.reply({content: "You need to run /point_start in order to get in the system!"});
+        button.channel.send({content: "You need to run /point_start in order to get in the system!"});
         return;
     }
     //button.channel.send({content: bet_amount.toString() + " " + stance});
@@ -376,7 +376,7 @@ if(button.isButton()){
     if(respCheckServer.bet_configs[0].point_name.charAt(respCheckServer.bet_configs[0].point_name.length-1) === "s"){
         respCheckServer.bet_configs[0].point_name = respCheckServer.bet_configs[0].point_name.substring(0, respCheckServer.bet_configs[0].point_name.length-1);
     }
-    button.reply({content: button.user.username + " has joined the bet with " + bet_amount + " " + respCheckServer.bet_configs[0].point_name + "s."});
+    button.channel.send({content: button.user.username + " has joined the bet with " + bet_amount + " " + respCheckServer.bet_configs[0].point_name + "s."});
     button.deferUpdate();
 }else{
     button.channel.send({content: "Selected a menu item!"});
