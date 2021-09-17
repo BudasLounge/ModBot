@@ -380,6 +380,7 @@ if(button.isButton()){
     button.deferUpdate();
 }else{
     button.channel.send({content: "Selected a menu item!"});
+    button.deferUpdate()
 }
 }else{
     return;
