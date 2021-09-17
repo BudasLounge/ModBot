@@ -177,7 +177,7 @@ module.exports = {
 			    .addComponents(
 				    new MessageSelectMenu()
                         .setCustomId('select')
-                        .setPlaceholder('Nothing selected')
+                        .setPlaceholder('Select a bet amount')
                         .setDisabled("true")
                         .addOptions([
 						{
