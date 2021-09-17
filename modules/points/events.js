@@ -93,11 +93,11 @@ async function onButtonClick(button){
                     }catch(err){
                         console.log(err.message)
                     }
-                    var winnings = (parseInt(forBet[j].bet_value)/parseInt(winTotal)) * parseInt(pot)
-                    button.channel.send({content: "Here is the equation: Bet Value " + forBet[j].bet_value.toString() + "/ Win Total " + winTotal.toString() + " times the pot of " + pot.toString()})
-                    button.channel.send({content: "Winnings after equation: " + winnings.toString() + " and here was the percentage: " + (parseInt(forBet[j].bet_value)/parseInt(winTotal))})
+                    var winnings = Math.round((parseInt(forBet[j].bet_value)/parseInt(winTotal)) * parseInt(pot))
+                    /*button.channel.send({content: "Here is the equation: Bet Value " + forBet[j].bet_value.toString() + "/ Win Total " + winTotal.toString() + " times the pot of " + pot.toString()})
+                    button.channel.send({content: "Winnings after equation: " + winnings.toString() + " and here was the percentage: " + (parseInt(forBet[j].bet_value)/parseInt(winTotal))})*/
                     var new_bal = parseInt(respWinBal.bet_points[0].points_total) + parseInt(forBet[j].bet_value) + parseInt(winnings)
-                    button.channel.send({content: "New_bal after equation: " + new_bal.toString()})
+                    //button.channel.send({content: "New_bal after equation: " + new_bal.toString()})
                     try{
                         var respWin = await api.put("bet_point",{
                             point_id:parseInt(respWinBal.bet_points[0].point_id),
@@ -152,7 +152,7 @@ async function onButtonClick(button){
                     }catch(err){
                         console.log(err.message)
                     }
-                    var winnings = (parseInt(againstBet[k].bet_value)/parseInt(winTotal)) * parseInt(pot)
+                    var winnings = Math.round((parseInt(againstBet[k].bet_value)/parseInt(winTotal)) * parseInt(pot))
                     var new_bal = parseInt(respWinBalL.bet_points[0].points_total) + parseInt(againstBet[k].bet_value) + parseInt(winnings)
                     try{
                         var respWin = await api.put("bet_point",{
