@@ -169,8 +169,8 @@ module.exports = {
                         .setLabel("Who's in this bet?")
                         .setStyle('SECONDARY'),
                     new MessageButton()
-                        .setCustomId(serial+"-bo")
-                        .setLabel("Current Odds")
+                        .setCustomId(serial+"-bd")
+                        .setLabel("Delete Bet")
                         .setStyle('SECONDARY')
                         .setDisabled("true"),
                 )

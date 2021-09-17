@@ -184,7 +184,7 @@ async function onButtonClick(button){
         }
         button.deferUpdate();
         return;
-    }else if(stance === "bl" || stance === "bo"){
+    }else if(stance === "bl"){
         if(stance === "bl"){
             try{
                 var respLog = await api.get("bet_interaction",{
@@ -226,7 +226,46 @@ async function onButtonClick(button){
                 button.channel.send({content: "Did not find"});
             }
         }
-    }else{
+    }else if(stance === "bd"){
+        if(button.user.id != respCheckMaster.bet_masters[0].initiator_discord_id){
+            button.channel.send({content: "Only the bet initiator can determine if they won or lost. If you feel there has been an issue, contact an admin."});
+            return;
+        }
+        if(respCheckMaster.bet_masters[0].status === "closed"){
+            button.channel.send({content: "This bet has already been decided and payed out. If you feel there has been an issue, contact an admin."})
+            return;
+        }
+        var respInt;
+        try{
+            respInt = await api.get("bet_interaction",{
+                serial:serial,
+                better_discord_id:respCheckMaster.bet_masters[0].initiator_discord_id
+            })
+        }catch(err){
+            console.log(err.message);
+        }
+        var respGetBal;
+        try{
+            var respGetBal = await api.get("bet_point",{
+                discord_user_id:respCheckMaster.bet_masters[0].initiator_discord_id,
+                discord_server_id:button.guild.id
+            })
+        }catch(err){
+            console.log(err.message)
+        }
+        var new_bal = parseInt(respGetBal.bet_points[0].points_total) + parseInt(respInt.bet_interactions[0].bet_value)
+        var respRefund;
+        try{
+            respRefund = await api.put("bet_point",{
+                discord_user_id:respCheckMaster.bet_masters[0].initiator_discord_id,
+                discord_server_id:button.guild.id,
+                points_total:parseInt(new_bal)
+            })
+        }catch(err){
+            console.log(err.message);
+        }
+    }
+    else{
         bet_amount = await button.customId.substring(button.customId.indexOf('-')+3);
     }
     var respCheckServer;
