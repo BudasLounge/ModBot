@@ -178,6 +178,7 @@ module.exports = {
 				    new MessageSelectMenu()
                         .setCustomId('select')
                         .setPlaceholder('Nothing selected')
+                        .setDisabled("true")
                         .addOptions([
 						{
 							label: Math.floor(bet_amount*.1).toString(),
