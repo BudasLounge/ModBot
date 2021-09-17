@@ -9,10 +9,6 @@ module.exports = {
     async execute(message, args, extra) {
         var api = extra.api;
         const {MessageEmbed} = require('discord.js');
-        if(message.reference.messageId > -1){
-            message.channel.send({content: message.reference.messageId})
-            return;
-        }
         var init_id = message.member.user.id;
         var respCheckServer;
         try{
@@ -186,6 +182,13 @@ module.exports = {
                 .addField(init_name.toString() + " has placed a bet for: " + bet_amount.toString() + " " + respCheckServer.bet_configs[0].point_name + "s", "The subject of the bet is: \n" + reason)
                 .addField("Use the buttons below to partake in the bet!", "Green means you agree, red means you disagree")
                 await message.reply({embeds: [outputEmbed], components: [BetWin, ForBet, AgainstBet, BetUtils], content: "Reference number: " + serial});
+                const filter = (response) => response.reference.messageId > -1;
+                const options = {time: 60000, errors: ['time']};
+                message.channel.awaitMessages(filter, options)
+                .then((collected) => {
+                    message.channel.send({content: message.reference.messageId})
+                    return;
+                })
             }
         }
 }
