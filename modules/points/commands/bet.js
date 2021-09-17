@@ -189,6 +189,9 @@ module.exports = {
                     message.channel.send({content: collected.reference.messageId})
                     return;
                 })
+                .catch((collected) =>
+                    console.log(`After a minute, only collected ${collected.size} messages.`),
+                );
             }
         }
 }
