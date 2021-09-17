@@ -186,7 +186,7 @@ module.exports = {
                 const options = {time: 60000, errors: ['time']};
                 message.channel.awaitMessages(filter, options)
                 .then((collected) => {
-                    message.channel.send({content: message.reference.messageId})
+                    message.channel.send({content: collected.reference.messageId})
                     return;
                 })
             }
