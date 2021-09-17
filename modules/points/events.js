@@ -27,6 +27,7 @@ async function onButtonClick(button){
         var forBet = [];
         var againstBet = [];
         var pot = 0;
+        var winTotal = 0;
         var respCheckAllInt;
         var respCheckBal;
         try{
@@ -70,6 +71,17 @@ async function onButtonClick(button){
                     }catch(err){
                         console.log(err.message)
                     }
+                    winTotal += forBet[l].bet_value
+                }
+                for(var l = 0;l<forBet.length;l++){
+                    try{
+                        var respWinBal = await api.get("bet_point",{
+                            discord_user_id:forBet[l].better_discord_id,
+                            discord_server_id:button.guild.id
+                        })
+                    }catch(err){
+                        console.log(err.message)
+                    }
                     pot -= parseInt(forBet[l].bet_value)
                 }
                 for(var j = 0;j<forBet.length;j++){
@@ -92,7 +104,8 @@ async function onButtonClick(button){
                     }catch(err){
                         console.log(err);
                     }
-                    output += forBet[j].better_discord_username + " added " + parseInt(pot/forBet.length) + " to their wealth\n";
+                    var winnings = (winTotal/parseInt(forBet[j].bet_value)) * pot
+                    output += forBet[j].better_discord_username + " added " + winnings + " to their wealth\n";
                 }
             }
             const listWinners = new MessageEmbed()
@@ -105,6 +118,17 @@ async function onButtonClick(button){
             if(againstBet.length === 0){
                 output+="Looks like no one won this time!";
             }else{
+                for(var l = 0;l<againstBet.length;l++){
+                    try{
+                        var respWinBal = await api.get("bet_point",{
+                            discord_user_id:againstBet[l].better_discord_id,
+                            discord_server_id:button.guild.id
+                        })
+                    }catch(err){
+                        console.log(err.message)
+                    }
+                    winTotal += againstBet[l].bet_value
+                }
                 for(var l = 0;l<againstBet.length;l++){
                     try{
                         var respWinBal = await api.get("bet_point",{
