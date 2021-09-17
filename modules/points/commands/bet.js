@@ -181,19 +181,17 @@ module.exports = {
                 .setTitle("New bet created")
                 .addField(init_name.toString() + " has placed a bet for: " + bet_amount.toString() + " " + respCheckServer.bet_configs[0].point_name + "s", "The subject of the bet is: \n" + reason)
                 .addField("Use the buttons below to partake in the bet!", "Green means you agree, red means you disagree")
-                await message.reply({embeds: [outputEmbed], components: [BetWin, ForBet, AgainstBet, BetUtils], content: "Reference number: " + serial});
+                await message.reply({embeds: [outputEmbed], components: [BetWin, ForBet, AgainstBet, BetUtils], content: "Reference number: " + serial}).then(() => {
                 const filter = (response) => response.reference.messageId > -1;
                 const options = {time: 60000, errors: ['time']};
                 message.channel.awaitMessages(filter, options)
                 .then((collected) => {
                     message.channel.send({content: collected.reference.messageId})
                     return;
-                })
-                .catch((collected) =>
-                    console.log(`After a minute, only collected ${collected.size} messages.`),
-                );
-            }
+                });       
+            });
         }
+    }
 }
 
 function makeid(length) {
