@@ -152,7 +152,7 @@ async function onButtonClick(button){
                     }catch(err){
                         console.log(err.message)
                     }
-                    var winnings = (parseInt(winTotal)/parseInt(againstBet[j].bet_value)) * parseInt(pot)
+                    var winnings = (parseInt(winTotal)/parseInt(againstBet[k].bet_value)) * parseInt(pot)
                     var new_bal = parseInt(respWinBalL.bet_points[0].points_total) + parseInt(againstBet[k].bet_value) + parseInt(winnings)
                     try{
                         var respWin = await api.put("bet_point",{
