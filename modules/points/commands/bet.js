@@ -189,6 +189,46 @@ module.exports = {
 							description: 'This is also a description',
 							value: 'second_option',
 						},
+                        {
+							label: 'Select me',
+							description: 'This is a description',
+							value: 'third_option',
+						},
+						{
+							label: 'You can select me too',
+							description: 'This is also a description',
+							value: 'fourth_option',
+						},
+                        {
+							label: 'Select me',
+							description: 'This is a description',
+							value: 'fifth_option',
+						},
+						{
+							label: 'You can select me too',
+							description: 'This is also a description',
+							value: 'sixth_option',
+						},
+                        {
+							label: 'Select me',
+							description: 'This is a description',
+							value: 'seventh_option',
+						},
+						{
+							label: 'You can select me too',
+							description: 'This is also a description',
+							value: 'eigth_option',
+						},
+                        {
+							label: 'Select me',
+							description: 'This is a description',
+							value: 'ninth_option',
+						},
+						{
+							label: 'You can select me too',
+							description: 'This is also a description',
+							value: 'tenth_option',
+						},
 					]),
 			);
                 if(respCheckServer.bet_configs[0].point_name.charAt(respCheckServer.bet_configs[0].point_name.length-1) === "s"){
