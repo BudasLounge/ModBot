@@ -183,54 +183,44 @@ module.exports = {
                         .setDisabled("true")
                         .addOptions([
 						{
-							label: Math.floor(bet_amount*.1).toString(),
-							description: 'This is a description',
+							label: Math.floor(bet_amount*1.25).toString(),
+							description: 'For - 125%',
 							value: 'first_option',
 						},
 						{
-							label: Math.floor(bet_amount*.2).toString(),
-							description: 'This is also a description',
+							label: Math.floor(bet_amount*1.25).toString(),
+							description: 'Against - 125%',
 							value: 'second_option',
 						},
                         {
-							label: Math.floor(bet_amount*.3).toString(),
-							description: 'This is a description',
+							label: Math.floor(bet_amount*1.5).toString(),
+							description: 'For - 150%',
 							value: 'third_option',
 						},
 						{
-							label: Math.floor(bet_amount*.4).toString(),
-							description: 'This is also a description',
+							label: Math.floor(bet_amount*1.5).toString(),
+							description: 'Against - 150%',
 							value: 'fourth_option',
 						},
                         {
-							label: Math.floor(bet_amount*.5).toString(),
-							description: 'This is a description',
+							label: Math.floor(bet_amount*1.75).toString(),
+							description: 'For - 175%',
 							value: 'fifth_option',
 						},
 						{
-							label: Math.floor(bet_amount*.6).toString(),
-							description: 'This is also a description',
+							label: Math.floor(bet_amount*1.75).toString(),
+							description: 'Against - 175%',
 							value: 'sixth_option',
 						},
                         {
-							label: Math.floor(bet_amount*.7).toString(),
-							description: 'This is a description',
+							label: Math.floor(bet_amount*2).toString(),
+							description: 'For - 200%',
 							value: 'seventh_option',
 						},
 						{
-							label: Math.floor(bet_amount*.8).toString(),
-							description: 'This is also a description',
+							label: Math.floor(bet_amount*2).toString(),
+							description: 'Against - 200%',
 							value: 'eigth_option',
-						},
-                        {
-							label: Math.floor(bet_amount*.9).toString(),
-							description: 'This is a description',
-							value: 'ninth_option',
-						},
-						{
-							label: Math.floor(bet_amount*1.5).toString(),
-							description: 'This is also a description',
-							value: 'tenth_option',
 						},
 					]),
 			);
