@@ -57,7 +57,7 @@ if(button.isButton()){
         }else{
             button.channel.send({content: "Did not find"});
         }
-        button.channel.send({content: "Bet with total pot of: " + pot + ". Which had " + forBet.length + " for it and " + againstBet.length + " against it"});
+        button.channel.send({content: "Bet with total pot of: " + pot + ". Which had " + forBet.length + " for it and " + againstBet.length + " against it. The winners will split: " + winTotal.toString()});
         var output = "";
         if(stance === "fw"){
             if(forBet.length===0){
