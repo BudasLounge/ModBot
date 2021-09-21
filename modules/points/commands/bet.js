@@ -126,7 +126,8 @@ module.exports = {
                     new MessageButton()
                         .setCustomId(serial+"-fh"+Math.ceil(bet_amount/2))
                         .setLabel('Bet Half ('+Math.ceil(bet_amount/2)+")")
-                        .setStyle('SUCCESS'),
+                        .setStyle('SUCCESS')
+                        .setDisabled("true"),
                     new MessageButton()
                         .setCustomId(serial+"-fe"+Math.floor(bet_amount))
                         .setLabel('Bet Equal ('+Math.floor(bet_amount)+")")
@@ -141,7 +142,8 @@ module.exports = {
                     new MessageButton()
                         .setCustomId(serial+"-lh"+Math.ceil(bet_amount/2))
                         .setLabel('Bet Half ('+Math.ceil(bet_amount/2)+")")
-                        .setStyle('DANGER'),
+                        .setStyle('DANGER')
+                        .setDisabled("true"),
                     new MessageButton()
                         .setCustomId(serial+"-le"+Math.floor(bet_amount))
                         .setLabel('Bet Equal ('+Math.floor(bet_amount)+")")
