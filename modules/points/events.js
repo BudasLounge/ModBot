@@ -246,7 +246,7 @@ if(button.isButton()){
         }catch(err){
             console.log(err.message);
         }
-        if(respInt.bet_interactions.count>1){
+        if(respInt.bet_interactions.length>1){
             button.channel.send({content: "Currently cannot delete a bet with more than just the creator in it since that makes it a valid bet."})
             return;
         }
