@@ -74,7 +74,8 @@ module.exports = {
                     serial = await makeid(10);
                 }
             }
-            var closing_time = moment.add(respCheckServer.bet_configs[0].bet_buyin_time, 'minutes').unix();
+            var closing_time = moment.unix();
+            closing_time.add(respCheckServer.bet_configs[0].bet_buyin_time, 'minutes');
             args.shift();
             args.shift();
             var reason = args.join(" ");
