@@ -72,7 +72,6 @@ module.exports = {
                 }else{
                     serial = await makeid(10);
                 }
-                flag = false
             }
             args.shift();
             args.shift();
