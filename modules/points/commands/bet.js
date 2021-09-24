@@ -74,7 +74,7 @@ module.exports = {
                     serial = await makeid(10);
                 }
             }
-            var now = moment().unix();
+            var now = moment();
             var closing_time = now.add(parseInt(respCheckServer.bet_configs[0].bet_buyin_time), 'minutes');
             message.channel.send({content: closing_time.toString()})
             args.shift();
