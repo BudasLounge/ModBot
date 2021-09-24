@@ -76,7 +76,7 @@ module.exports = {
             }
             var now = moment();
             var closing_time = now.add(parseInt(respCheckServer.bet_configs[0].bet_buyin_time), 'minutes');
-            message.channel.send({content: closing_time.toString()})
+            message.channel.send({content: closing_time.unix().toString()})
             args.shift();
             args.shift();
             var reason = args.join(" ");
