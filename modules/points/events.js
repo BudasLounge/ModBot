@@ -5,6 +5,7 @@ async function onButtonClick(button){
 if (button.isButton() || button.isSelectMenu()){
 if(button.isButton()){
     const {MessageEmbed} = require('discord.js');
+    const moment = require("moment");
     var serial = button.customId.substring(0,10);
     var stance = await button.customId.substring(button.customId.indexOf('-')+1, button.customId.indexOf('-')+3);
     var bet_amount = 0;
@@ -15,6 +16,12 @@ if(button.isButton()){
         })
     }catch(err){
         this.logger.error(err.message);
+    }
+    var now = moment();
+    var close_time = moment.unix(respCheckMaster.bet_masters[0].bet_closing_time);
+    if(now.isAfter(close_time)){
+        button.channel.send({content: "This bet will no longer take more participants!"});
+        return;
     }
     if(stance === "fw" || stance === "al"){
         if(button.user.id != respCheckMaster.bet_masters[0].initiator_discord_id){
