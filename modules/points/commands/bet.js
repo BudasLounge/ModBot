@@ -76,9 +76,6 @@ module.exports = {
             }
             var now = moment();
             var closing_time = now.add(parseInt(respCheckServer.bet_configs[0].bet_buyin_time), 'minutes');
-            message.channel.send({content: respCheckServer.bet_configs[0].bet_buyin_time})
-            message.channel.send({content: "<t:"+ closing_time.unix().toString()+":T>"})
-            message.channel.send({content: "<t:"+ closing_time.unix().toString()+":R>"})
             args.shift();
             args.shift();
             var reason = args.join(" ");
@@ -237,7 +234,7 @@ module.exports = {
                 .setTitle("New bet created")
                 .addField(init_name.toString() + " has placed a bet for: " + bet_amount.toString() + " " + respCheckServer.bet_configs[0].point_name + "s", "The subject of the bet is: \n" + reason)
                 .addField("Use the buttons below to partake in the bet!", "Green means you agree, red means you disagree")
-                await message.reply({embeds: [outputEmbed], components: [BetWin, ForBet, AgainstBet, BetUtils, SelectMenu], content: "Reference number: " + serial});
+                await message.reply({embeds: [outputEmbed], components: [BetWin, ForBet, AgainstBet, BetUtils, SelectMenu], content: "Reference number: " + serial + "\nThe bet will close: <t:"+ closing_time.unix().toString()+":R>"});
         }
     }
 }
