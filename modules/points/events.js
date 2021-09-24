@@ -17,11 +17,15 @@ if(button.isButton()){
     }catch(err){
         this.logger.error(err.message);
     }
-    var now = moment();
-    var close_time = moment.unix(respCheckMaster.bet_masters[0].bet_closing_time);
-    if(now.isAfter(close_time)){
-        button.channel.send({content: "This bet will no longer take more participants!"});
-        return;
+    if(stance === "fw" || stance === "al" || stance === "bl" || stance === "bd"){
+
+    }else{
+        var now = moment();
+        var close_time = moment.unix(respCheckMaster.bet_masters[0].bet_closing_time);
+        if(now.isAfter(close_time)){
+            button.channel.send({content: "This time window for joining this bet has closed!"});
+            return;
+        }
     }
     if(stance === "fw" || stance === "al"){
         if(button.user.id != respCheckMaster.bet_masters[0].initiator_discord_id){
