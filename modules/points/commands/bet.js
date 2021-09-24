@@ -7,6 +7,7 @@ module.exports = {
     needs_api: true,//if this command needs access to the api
     has_state: false,//if this command uses the state engine
     async execute(message, args, extra) {
+        const moment = require('moment');
         var api = extra.api;
         const {MessageEmbed, MessageSelectMenu} = require('discord.js');
         var init_id = message.member.user.id;
@@ -73,6 +74,7 @@ module.exports = {
                     serial = await makeid(10);
                 }
             }
+            var closing_time = moment.add(respCheckServer.bet_configs[0].bet_buyin_time, 'minutes').unix();
             args.shift();
             args.shift();
             var reason = args.join(" ");
@@ -83,7 +85,8 @@ module.exports = {
                     initiator_discord_id:init_id,
                     initiator_discord_username:message.member.user.username,
                     status:"open",
-                    bet_reason:reason
+                    bet_reason:reason,
+                    bet_closing_time:closing_time
                 })
             }catch(err){
                 this.logger.error(err.message);
