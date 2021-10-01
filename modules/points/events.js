@@ -179,6 +179,7 @@ if(button.isButton()){
                     output += againstBet[k].better_discord_username + " added " + winnings.toString() + " to their wealth\n";
                 }
             }
+            button.channel.send({content: "Bet with total pot of: " + pot + ". Which had " + forBet.length + " for it and " + againstBet.length + " against it. The winners will split: " + winTotal.toString()});
             const listWinners = new MessageEmbed()
             .setColor("#f92f03")
             .setTitle("Here are the winners of this bet: ")
