@@ -43,7 +43,7 @@ module.exports = {
                 }
                 if(respChamps.league_champions[0]){
                     var output = "Champion: " + respChamps.league_champions[0].name + "\nPrimary role: " + respChamps.league_champions[0].role_primary + "\nSecondary role: " + respChamps.league_champions[0].role_secondary + "\nDamage type: " + respChamps.league_champions[0].ad_ap;
-                    message.author.send({ content: output}, {split: true});
+                    message.author.send({ content: output});
                     message.channel.send({ content: "Sent a PM!"});
                 }else{
                     message.channel.send({ content: "Couldn't find a champion by that name!"});
