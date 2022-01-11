@@ -1,0 +1,13 @@
+module.exports = {
+    name: 'get_unix',
+    description: 'Returns given time in unix time. Time should be in YYYY-MM-DD HH:MM:SS time stamp, surrounded entirely in quotes',
+    syntax: 'get_unix ["date time string"]',
+    num_args: 0,//minimum amount of arguments to accept
+    args_to_lower: false,//if the arguments should be lower case
+    needs_api: true,//if this command needs access to the api
+    has_state: false,//if this command uses the state engine
+    async execute(message, args, extra) {
+        var unixTimeStamp = Math.floor(new Date(args[1]).getTime()/1000);
+        message.channel.send({ content: unnixTimeStamp.toString() });
+    }
+}
