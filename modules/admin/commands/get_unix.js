@@ -7,7 +7,7 @@ module.exports = {
     needs_api: true,//if this command needs access to the api
     has_state: false,//if this command uses the state engine
     async execute(message, args, extra) {
-        if(args[1]==""){
+        if(!args[1]){
             message.channel.send({ content: "Please enter a datetime stamp for this command!"});
             return
         }
