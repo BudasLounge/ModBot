@@ -12,6 +12,6 @@ module.exports = {
             return
         }
         var unixTimeStamp = Math.floor(new Date(args[1]).getTime()/1000);
-        message.channel.send({ content: unnixTimeStamp.toString() });
+        message.channel.send({ content: unixTimeStamp.toString() });
     }
 }
