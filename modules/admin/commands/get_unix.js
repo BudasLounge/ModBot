@@ -13,6 +13,6 @@ module.exports = {
         }
         var dateTime = args[1] + " " + args[2];
         var unixTimeStamp = Math.floor(new Date(dateTime).getTime()/1000);
-        message.channel.send({ content: "Here is the unix timestamp: " + unixTimeStamp.toString() + "\nHere is a countdown timer: <t:" + unixTimeStamp.toString() + ":R>" });
+        message.channel.send({ content: "Here is the unix timestamp: " + unixTimeStamp.toString() + "\nHere is a countdown timer: ```<t:" + unixTimeStamp.toString() + ":R>```" });
     }
 }
