@@ -23,7 +23,7 @@ if(button.isButton()){
         var now = moment();
         var close_time = moment.unix(respCheckMaster.bet_masters[0].bet_closing_time);
         if(now.isAfter(close_time)){
-            button.channel.send({content: button.user.username + ", this time window for joining this bet has closed!"});
+            button.channel.send({content: button.user.username + ", the time window for joining this bet has closed!"});
             return;
         }
     }
