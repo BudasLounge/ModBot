@@ -23,17 +23,17 @@ if(button.isButton()){
         var now = moment();
         var close_time = moment.unix(respCheckMaster.bet_masters[0].bet_closing_time);
         if(now.isAfter(close_time)){
-            button.channel.send({content: "This time window for joining this bet has closed!"});
+            button.channel.send({content: button.user.username + ", this time window for joining this bet has closed!"});
             return;
         }
     }
     if(stance === "fw" || stance === "al"){
         if(button.user.id != respCheckMaster.bet_masters[0].initiator_discord_id){
-            button.channel.send({content: "Only the bet initiator can determine if they won or lost. If you feel there has been an issue, contact an admin."});
+            button.channel.send({content: button.user.username + ", only the bet initiator can determine if they won or lost. If you feel there has been an issue, contact an admin."});
             return;
         }
         if(respCheckMaster.bet_masters[0].status === "closed"){
-            button.channel.send({content: "This bet has already been decided and payed out. If you feel there has been an issue, contact an admin."})
+            button.channel.send({content: button.user.username + ", this bet has already been decided and payed out. If you feel there has been an issue, contact an admin."})
             return;
         }
         var forBet = [];
