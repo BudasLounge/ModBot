@@ -26,8 +26,8 @@ module.exports = {
                     user_id:message.member.id
                 });
                 this.logger.info(respUpdate);
-                if(respUpdate.ok){
-                    message.channel.send({ content: respChamps.league_champions[0].name.toString() + " is now <@" + message.member.id.toSTring() + "> approved"});
+                if(respUpdate.ok == true){
+                    message.channel.send({ content: respChamps.league_champions[0].name.toString() + " is now <@" + message.member.id.toString() + "> approved"});
                 }
             }catch(error2){
                 this.logger.error({error: error2.response});
