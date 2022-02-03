@@ -10,6 +10,6 @@ module.exports = {
         args.shift();
         var query = args.join("+");
         var finalQuery = "https://lmgtfy.app/?q="+query;
-        message.channel.send({content: finalQuesry});
+        message.channel.send({content: finalQuery});
     }
 }
