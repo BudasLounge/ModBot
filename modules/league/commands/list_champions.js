@@ -65,7 +65,7 @@ module.exports = {
             } 
             const messageChunks = Util.splitMessage(output, {
                 maxLength: 2000,
-                char:' '
+                char:'\n'
             });
             messageChunks.forEach(async chunk => {
                 await message.author.send(chunk);
