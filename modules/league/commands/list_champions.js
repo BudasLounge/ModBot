@@ -7,6 +7,7 @@ module.exports = {
     needs_api: true,
     has_state: false,
     async execute(message, args, extra) {
+        const {Util} = require('discord.js');
         var api = extra.api;
         const Discord = require('discord.js');
         var respChamps;
@@ -62,7 +63,14 @@ module.exports = {
             for(var i = 0; i<respChamps.league_champions.length;i++){
                 output += respChamps.league_champions[i].name + " - " + respChamps.league_champions[i].role_primary + "/" +respChamps.league_champions[i].role_secondary +"\n";
             } 
-            message.author.send({ content: output }, {split: true});
+            const messageChunks = Util.splitMessage(output, {
+                maxLength: 2000,
+                char:' '
+            });
+            messageChunks.forEach(async chunk => {
+                await message.author.send(chunk);
+            })
+            //message.author.send({ content: output });
             /*const ListEmbed = new Discord.MessageEmbed()
                 .setColor("#f92f03")
                 .setTitle("A list of all champions: ");

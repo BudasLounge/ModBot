@@ -11,6 +11,6 @@
     },
     "modules_folder": "modules",
     "log_folder": "logs",
-    "max_message_length": 2048,
+    "max_message_length": 2000,
     "max_embed_desc_length": 1024
 }
