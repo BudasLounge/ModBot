@@ -14,6 +14,17 @@ module.exports = {
 Send a message with:
 message.channel.send({ content: ""});
 
+Use This to send a message with more than 2000 characters(Create your string and then name it 'output'):
+const messageChunks = Util.splitMessage(output, {
+    maxLength: 2000,
+    char:'\n'
+});
+messageChunks.forEach(async chunk => {
+    await message.channel.send(chunk);
+})
+
+
+
 //<message>.reference.messageId - references a message if it is replied to
 //Code to check if the user has admin perms. Temp until I can make some extra headers.
 var api = extra.api;
