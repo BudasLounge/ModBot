@@ -15,14 +15,14 @@ module.exports = {
             message.channel.send({content: "Please enter an amount of words to output"});
         }
         
-        if(Number.isInteger(args[2])){
-            min = args[2]
+        if(Number.isInteger(parseInt(args[2]))){
+            min = parseInt(args[2])
             if(min > max){
                 max = min+1;
             }
         }
-        if(Number.isInteger(args[3])){
-            max = args[3]
+        if(Number.isInteger(parseInt(args[3]))){
+            max = parseInt(args[3])
             if(min > max){
                 min = max-1;
             }
