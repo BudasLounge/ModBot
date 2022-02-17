@@ -71,6 +71,7 @@ module.exports = {
         var words = "";
         for(var k = 0;k<count;k++){
             var charCount = Math.floor(Math.random() * (parseInt(max) - parseInt(min) + 1) + parseInt(min));
+            var word = "";
             for(var m = 0;m<charCount;m++){
                 word += flattened[Math.floor(Math.random() * (flattened.length))];
             }
