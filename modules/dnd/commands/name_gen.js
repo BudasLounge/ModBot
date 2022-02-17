@@ -32,6 +32,7 @@ module.exports = {
             max = 9;
             message.channel.send({content: "The numbers you submitted would make one of the variables less than 0, input different amounts please"});
         }
+        message.channel.send({ content: "Max/Min"+max.toString()+"/"+min.toString()});
         var alphabet = [
             ['E',1260],
             ['T',937],
