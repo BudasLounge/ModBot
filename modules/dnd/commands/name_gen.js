@@ -60,12 +60,14 @@ module.exports = {
             ['Q',9],
             ['Z',6]
         ]
+        message.channel.send({ content: "Flattening array"});
         var flattened = [];
         for(var i = 1;i<alphabet.length; i++){
             for (var j = 1;j<alphabet[i][1];j++){
                 flattened.push(alphabet[i][0])
             }
         }
+        message.channel.send({ content: "Generating Words"});
         var words = "";
         for(var k = 0;k<count;k++){
             var charCount = Math.floor(Math.random() * (max - min + 1) + parseInt(min));
