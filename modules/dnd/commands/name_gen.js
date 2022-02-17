@@ -15,24 +15,27 @@ module.exports = {
             message.channel.send({content: "Please enter an amount of words to output"});
             return;
         }
-        
-        if(Number.isInteger(parseInt(args[2]))){
-            min = parseInt(args[2])
-            if(min > max){
-                max = min+1;
+        if(args[2]){
+            if(Number.isInteger(parseInt(args[2]))){
+                min = parseInt(args[2])
+                if(min > max){
+                    max = min+1;
+                }
+            }else{
+                message.channel.send({content:"One of your inputs is not numeric"});
+                return;
             }
-        }else{
-            message.channel.send({content:"One of your inputs is not numeric"});
-            return;
         }
-        if(Number.isInteger(parseInt(args[3]))){
-            max = parseInt(args[3])
-            if(min > max){
-                min = max-1;
+        if(args[3]){
+            if(Number.isInteger(parseInt(args[3]))){
+                max = parseInt(args[3])
+                if(min > max){
+                    min = max-1;
+                }
+            }else{
+                message.channel.send({content:"One of your inputs is not numeric"});
+                return;
             }
-        }else{
-            message.channel.send({content:"One of your inputs is not numeric"});
-            return;
         }
         if(max <= 0 || min <= 0){
             min = 4;
