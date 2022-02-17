@@ -71,7 +71,6 @@ module.exports = {
         var words = "";
         for(var k = 0;k<count;k++){
             var charCount = Math.floor(Math.random() * (max - min + 1)) + parseInt(min);
-            message.channel.send({ content: "charCount-->" + charCount.toString()});
             var word = "";
             for(var m = 0;m<charCount;m++){
                 word += flattened[Math.floor(Math.random() * (flattened.length))];
