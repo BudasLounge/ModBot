@@ -9,10 +9,11 @@ module.exports = {
     async execute(message, args, extra) {
         var min = 4;
         var max = 9;
-        if(Number.isInteger(parseInt(args[3]))){
+        if(Number.isInteger(parseInt(args[1]))){
             var count = args[1];
         }else{
             message.channel.send({content: "Please enter an amount of words to output"});
+            break;
         }
         
         if(Number.isInteger(parseInt(args[2]))){
@@ -20,12 +21,18 @@ module.exports = {
             if(min > max){
                 max = min+1;
             }
+        }else{
+            message.channel.send({content:"One of your inputs is not numeric"});
+            break;
         }
         if(Number.isInteger(parseInt(args[3]))){
             max = parseInt(args[3])
             if(min > max){
                 min = max-1;
             }
+        }else{
+            message.channel.send({content:"One of your inputs is not numeric"});
+            break;
         }
         if(max <= 0 || min <= 0){
             min = 4;
