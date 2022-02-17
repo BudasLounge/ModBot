@@ -9,19 +9,19 @@ module.exports = {
     async execute(message, args, extra) {
         var min = 4;
         var max = 9;
-        if(parseInt(args[3])){
+        if(Number.isInteger(parseInt(args[3]))){
             var count = args[1];
         }else{
             message.channel.send({content: "Please enter an amount of words to output"});
         }
         
-        if(args[2]){
+        if(Number.isInteger(args[2])){
             min = args[2]
             if(min > max){
                 max = min+1;
             }
         }
-        if(args[3]){
+        if(Number.isInteger(args[3])){
             max = args[3]
             if(min > max){
                 min = max-1;
