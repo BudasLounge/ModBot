@@ -70,7 +70,7 @@ module.exports = {
         message.channel.send({ content: "Generating Words"});
         var words = "";
         for(var k = 0;k<count;k++){
-            var charCount = Math.floor(Math.random() * (max - min + 1)) + parseInt(min);
+            var charCount = Math.floor(Math.random() * (max - min + 1) + parseInt(min));
             var word = charCount + ": ";
             for(var m = 0;m<charCount;m++){
                 word += flattened[Math.floor(Math.random() * (flattened.length))];
