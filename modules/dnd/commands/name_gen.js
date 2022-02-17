@@ -62,8 +62,8 @@ module.exports = {
         ]
         message.channel.send({ content: "Flattening array"});
         var flattened = [];
-        for(var i = 1;i<alphabet.length; i++){
-            for (var j = 1;j<alphabet[i][1];j++){
+        for(var i = 0;i<alphabet.length; i++){
+            for (var j = 0;j<alphabet[i][1];j++){
                 flattened.push(alphabet[i][0])
             }
         }
