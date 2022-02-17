@@ -32,7 +32,7 @@ module.exports = {
             max = 9;
             message.channel.send({content: "The numbers you submitted would make one of the variables less than 0, input different amounts please"});
         }
-        message.channel.send({ content: "Max/Min"+max.toString()+"/"+min.toString()});
+        message.channel.send({ content: "Max/Min: "+max.toString()+"/"+min.toString()});
         var alphabet = [
             ['E',1260],
             ['T',937],
@@ -61,7 +61,6 @@ module.exports = {
             ['Q',9],
             ['Z',6]
         ]
-        message.channel.send({ content: "Flattening array"});
         var flattened = [];
         for(var i = 0;i<alphabet.length; i++){
             for (var j = 0;j<alphabet[i][1];j++){
@@ -72,7 +71,6 @@ module.exports = {
         var words = "";
         for(var k = 0;k<count;k++){
             var charCount = Math.floor(Math.random() * (parseInt(max) - parseInt(min) + 1) + parseInt(min));
-            var word = charCount + ": ";
             for(var m = 0;m<charCount;m++){
                 word += flattened[Math.floor(Math.random() * (flattened.length))];
             }
