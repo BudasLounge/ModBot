@@ -13,7 +13,7 @@ module.exports = {
             var count = args[1];
         }else{
             message.channel.send({content: "Please enter an amount of words to output"});
-            break;
+            return;
         }
         
         if(Number.isInteger(parseInt(args[2]))){
@@ -23,7 +23,7 @@ module.exports = {
             }
         }else{
             message.channel.send({content:"One of your inputs is not numeric"});
-            break;
+            return;
         }
         if(Number.isInteger(parseInt(args[3]))){
             max = parseInt(args[3])
@@ -32,12 +32,13 @@ module.exports = {
             }
         }else{
             message.channel.send({content:"One of your inputs is not numeric"});
-            break;
+            return;
         }
         if(max <= 0 || min <= 0){
             min = 4;
             max = 9;
             message.channel.send({content: "The numbers you submitted would make one of the variables less than 0, input different amounts please"});
+            return;
         }
         message.channel.send({ content: "Max/Min: "+max.toString()+"/"+min.toString()});
         var alphabet = [
