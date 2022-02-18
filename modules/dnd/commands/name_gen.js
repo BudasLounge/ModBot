@@ -95,7 +95,7 @@ module.exports = {
             char:'\n'
         });
         messageChunks.forEach(async chunk => {
-            message.channel.send({chunk});
+           await message.channel.send({chunk});
         })
 
         //message.channel.send({content:words});
