@@ -7,6 +7,7 @@ module.exports = {
     needs_api: false,//if this command needs access to the api
     has_state: false,//if this command uses the state engine
     async execute(message, args, extra) {
+        const {Util} = require('discord.js');
         var min = 4;
         var max = 9;
         if(Number.isInteger(parseInt(args[1]))){
@@ -88,6 +89,15 @@ module.exports = {
             }
             words += word + "\n";
         }
-        message.channel.send({content:words});
+
+        const messageChunks = Util.splitMessage(words, {
+            maxLength: 2000,
+            char:'\n'
+        });
+        messageChunks.forEach(async chunk => {
+            message.channel.send({chunk});
+        })
+
+        //message.channel.send({content:words});
     }
 }
