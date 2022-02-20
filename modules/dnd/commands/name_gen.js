@@ -45,7 +45,7 @@ module.exports = {
             return;
         }
         message.channel.send({ content: "Max/Min: "+max.toString()+"/"+min.toString()});
-        var alphabet = [
+        var balancedAlpha = [
             ['E',1260],
             ['T',937],
             ['A',834],
@@ -73,13 +73,52 @@ module.exports = {
             ['Q',9],
             ['Z',6]
         ]
+        var tweakedAlpha = [
+            ['E',1260],
+            ['T',937],
+            ['A',834],
+            ['O',770],
+            ['N',680],
+            ['I',671],
+            ['H',611],
+            ['S',611],
+            ['R',568],
+            ['L',424],
+            ['D',414],
+            ['U',285],
+            ['C',273],
+            ['M',253],
+            ['W',234],
+            ['Y',204],
+            ['F',203],
+            ['G',192],
+            ['P',166],
+            ['B',154],
+            ['V',106],
+            ['K',87],
+            ['J',23],
+            ['X',20],
+            ['Q',9],
+            ['Z',6]
+        ]
+        var alphabet = [];
+        var type = "Balanced";
+        if(!args[4]){
+            alphabet = balancedAlpha;
+        }else{
+            if(args[4] == "tweak"){
+                alphabet = tweakedAlpha;
+                type = "Tweaked";
+            }
+        }
+
         var flattened = [];
         for(var i = 0;i<alphabet.length; i++){
             for (var j = 0;j<alphabet[i][1];j++){
                 flattened.push(alphabet[i][0])
             }
         }
-        message.channel.send({ content: "Generating Words"});
+        message.channel.send({ content: "Generating Words using: " + type});
         var words = "";
         for(var k = 0;k<count;k++){
             var charCount = Math.floor(Math.random() * (parseInt(max) - parseInt(min) + 1) + parseInt(min));
