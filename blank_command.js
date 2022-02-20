@@ -11,10 +11,10 @@ module.exports = {
     }
 }
 
-Send a message with:
+//Send a message with:
 message.channel.send({ content: ""});
 
-Use This to send a message with more than 2000 characters(Create your string and then name it 'output'):
+//Use This to send a message with more than 2000 characters(Create your string and then name it 'output'):
 const messageChunks = Util.splitMessage(output, {
     maxLength: 2000,
     char:'\n'
