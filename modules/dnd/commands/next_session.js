@@ -9,6 +9,13 @@ module.exports = {
     async execute(message, args, extra) {
         var api = extra.api;
         var respDndSession = "";
+        try{
+            respDndSession = await api.get("dnd_campaign",{
+                schedule_channel:message.channel.id
+            });
+        }catch(err){
+            this.logger.error(err.message);
+        }
 
         if(respDndSession.dnd_campaigns[0]){
             if(respDndSession.dnd_campaigns[0].dm_role_id === ""){
@@ -24,13 +31,6 @@ module.exports = {
             return;
         }
 
-        try{
-            respDndSession = await api.get("dnd_campaign",{
-                schedule_channel:message.channel.id
-            });
-        }catch(err){
-            this.logger.error(err.message);
-        }
         if(!args[1] || !args[2]){
             if(respDndSession.dnd_campaigns[0]){
                 if(respDndSession.dnd_campaigns[0].next_session){
