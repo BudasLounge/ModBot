@@ -7,10 +7,6 @@ module.exports = {
     needs_api: true,//if this command needs access to the api
     has_state: false,//if this command uses the state engine
     async execute(message, args, extra) {
-        if(!args[1] || !args[2]){
-            message.channel.send({ content: "Please enter a datetime stamp for this command!\nYYYY-MM-DD HH:MM:SS time stamp"});
-            return
-        }
         var api = extra.api;
         var respDndSession = "";
         try{
@@ -19,6 +15,17 @@ module.exports = {
             });
         }catch(err){
             this.logger.error(err.message);
+        }
+        if(!args[1] || !args[2]){
+            if(respDndSession.dnd_campaigns[0]){
+                if(respDndSession.dnd_campaigns[0].next_session){
+                    var unixTimeStamp = Math.floor(new Date(respDndSession.dnd_campaigns[0].next_session).getTime()/1000);
+                    message.channel.send({content: "<@"+respDndSession.dnd_campaigns[0].role_id.toString()+">, the session starts <t:" + unixTimeStamp.toString() + ":R>"});
+                }else{
+                    message.channel.send({ content: "Please enter a datetime stamp for this command!\nYYYY-MM-DD HH:MM:SS time stamp"});
+                }
+                return;
+            }
         }
         this.logger.info("This is the info: " + respDndSession);
         if(respDndSession.dnd_campaigns[0]){
