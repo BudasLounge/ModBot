@@ -9,6 +9,21 @@ module.exports = {
     async execute(message, args, extra) {
         var api = extra.api;
         var respDndSession = "";
+
+        if(respDndSession.dnd_campaigns[0]){
+            if(respDndSession.dnd_campaigns[0].dm_role_id === ""){
+                message.channel.send({ content: "This command requires an admin role but no main admin role has been selected for this server."});
+                return;
+            }
+            else if(!message.member.roles.cache.has(respDndSession.dnd_campaigns[0].dm_role_id)){
+                message.channel.send({ content: "You do not have permission to use this command."});
+                return;
+            }
+        }else{
+            message.channel.send({ content: "No DnD campaigns were found linked to this channel. Please set up a scheduling channel to use this command."});
+            return;
+        }
+
         try{
             respDndSession = await api.get("dnd_campaign",{
                 schedule_channel:message.channel.id
@@ -27,21 +42,7 @@ module.exports = {
                 return;
             }
         }
-        this.logger.info("This is the info: " + respDndSession);
-        if(respDndSession.dnd_campaigns[0]){
-            if(respDndSession.dnd_campaigns[0].dm_role_id === ""){
-                message.channel.send({ content: "This command requires an admin role but no main admin role has been selected for this server."});
-                return;
-            }
-            else if(!message.member.roles.cache.has(respDndSession.dnd_campaigns[0].dm_role_id)){
-                message.channel.send({ content: "You do not have permission to use this command."});
-                return;
-            }
-        }else{
-            message.channel.send({ content: "No DnD campaigns were found linked to this channel. Please set up a scheduling channel to use this command."});
-            return;
-        }
-
+        
         var dateTime = args[1] + " " + args[2];
         var unixTimeStamp = Math.floor(new Date(dateTime).getTime()/1000);
         message.channel.setTopic("Next Session: <t:" + unixTimeStamp.toString() + ":R>" );
