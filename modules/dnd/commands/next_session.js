@@ -37,6 +37,6 @@ module.exports = {
 
         var dateTime = args[1] + " " + args[2];
         var unixTimeStamp = Math.floor(new Date(dateTime).getTime()/1000);
-        message.channel.setTopic({ content: "Next Session: <t:" + unixTimeStamp.toString() + ":R>" });
+        message.channel.setTopic("Next Session: <t:" + unixTimeStamp.toString() + ":R>" );
     }
 }
