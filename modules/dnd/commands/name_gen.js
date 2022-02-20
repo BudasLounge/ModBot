@@ -109,6 +109,8 @@ module.exports = {
             if(args[4] == "tweak"){
                 alphabet = tweakedAlpha;
                 type = "Tweaked";
+            }else{
+                alphabet = balancedAlpha;
             }
         }
 
