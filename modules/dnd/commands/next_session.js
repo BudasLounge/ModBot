@@ -21,12 +21,12 @@ module.exports = {
             this.logger.error(err.message);
         }
         this.logger.info("This is the info: " + respDndSession);
-        if(respDndSession.dnd_campaign[0]){
-            if(respDndSession.dnd_campaign[0].dm_role_id === ""){
+        if(respDndSession.dnd_campaigns[0]){
+            if(respDndSession.dnd_campaigns[0].dm_role_id === ""){
                 message.channel.send({ content: "This command requires an admin role but no main admin role has been selected for this server."});
                 return;
             }
-            else if(!message.member.roles.cache.has(respDndSession.dnd_campaign[0].dm_role_id)){
+            else if(!message.member.roles.cache.has(respDndSession.dnd_campaigns[0].dm_role_id)){
                 message.channel.send({ content: "You do not have permission to use this command."});
                 return;
             }
