@@ -14,7 +14,7 @@ module.exports = {
         var api = extra.api;
         var respDndSession = "";
         try{
-            respDndSession = await api.get("dnd_campaigns",{
+            respDndSession = await api.get("dnd_campaign",{
                 schedule_channel:message.channel.id
             });
         }catch(err){
