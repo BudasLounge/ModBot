@@ -51,7 +51,7 @@ module.exports = {
                 next_session:dateTime
             })
         }catch(err2){
-            this.logger.error(err.message);
+            this.logger.error(err2.message);
         }
         message.channel.setTopic("Next Session: <t:" + unixTimeStamp.toString() + ":R>" );
     }
