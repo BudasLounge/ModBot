@@ -47,7 +47,7 @@ module.exports = {
         var respNextSession = "";
         try{
             respNextSession = await api.put("dnd_campaign",{
-                campaign_id:respDndSession.dnd_campaigns[0].campaign_id,
+                campaign_id:parseInt(respDndSession.dnd_campaigns[0].campaign_id),
                 next_session:dateTime
             })
         }catch(err2){
