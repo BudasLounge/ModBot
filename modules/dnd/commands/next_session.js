@@ -35,16 +35,24 @@ module.exports = {
             if(respDndSession.dnd_campaigns[0]){
                 if(respDndSession.dnd_campaigns[0].next_session){
                     var unixTimeStamp = Math.floor(new Date(respDndSession.dnd_campaigns[0].next_session).getTime()/1000);
-                    message.channel.send({content: "<@"+respDndSession.dnd_campaigns[0].role_id.toString()+"> , the session starts <t:" + unixTimeStamp.toString() + ":R>"});
+                    message.channel.send({content: "<@"+respDndSession.dnd_campaigns[0].role_id.toString()+">, the session starts <t:" + unixTimeStamp.toString() + ":R>"});
                 }else{
                     message.channel.send({ content: "Please enter a datetime stamp for this command!\nYYYY-MM-DD HH:MM:SS time stamp"});
                 }
                 return;
             }
         }
-        
         var dateTime = args[1] + " " + args[2];
         var unixTimeStamp = Math.floor(new Date(dateTime).getTime()/1000);
+        var respNextSession = "";
+        try{
+            respNextSession = await api.put("dnd_campaign",{
+                campaign_id:respDndSession.dnd_campaigns[0].campaign_id,
+                next_session:dateTime
+            })
+        }catch(err2){
+            this.logger.error(err.message);
+        }
         message.channel.setTopic("Next Session: <t:" + unixTimeStamp.toString() + ":R>" );
     }
 }
