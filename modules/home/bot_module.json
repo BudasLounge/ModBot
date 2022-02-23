@@ -1,0 +1,10 @@
+{
+    "name": "home",
+    "display_name": "home",
+    "version": "1.0.0",
+    "enabled": true,
+    "commands_directory": "commands",
+    "command_prefix": ",",
+    "is_core": false,
+    "event_handler": false
+}
