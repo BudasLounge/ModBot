@@ -12,14 +12,14 @@ module.exports = {
         fs.access(groceryList, fs.F_OK, (err) => {
             if (err) {
               this.logger.error("Could not find the groceryList, creating file");
-              fs.writeFile('groceryList.txt', 'Top of list', (err) => {
+              fs.writeFile(groceryList, 'Top of list', (err) => {
                   if(err) this.logger.error(err.message);
                   this.logger.info("File created");
               });
             }
         })
         var groceries = [];
-        fs.readFile('groceryList.txt', function(err, data) {
+        fs.readFile(groceryList, function(err, data) {
             if(err) throw err;
             groceries = data.toString().split("\n");
         });
@@ -28,7 +28,7 @@ module.exports = {
                 args.shift();
                 args.shift();
                 var item = args.join(" ");
-                fs.appendFile('groceryList' , item,  (err) => {
+                fs.appendFile(groceryList , item,  (err) => {
                     if (err){
                         this.logger.error(err.message);
                         message.channel.send("An error occurred. Item not added.");
@@ -49,7 +49,7 @@ module.exports = {
             for(var i = 0;i<groceries.length;i++){
                 txtGroceries+=groceries[i]+"\n"
             }
-            fs.writeFile('groceryList', txtGroceries, function(err){
+            fs.writeFile(groceryList, txtGroceries, function(err){
                 if(err){
                     this.logger.error(err.message);
                     message.channel.send({content: "An error occurred. Item not dropped."});
@@ -58,7 +58,7 @@ module.exports = {
                 message.channel.send({content: "Added " + item + " to the grocery list"});
             })
         }else if(args[1] == "clear"){
-            fs.writeFile('groceryList','Top of list', function(err){
+            fs.writeFile(groceryList,'Top of list', function(err){
                 if(err){
                     this.logger.error(err.message);
                     message.channel.send({content: "An error occurred. List not cleared."});
