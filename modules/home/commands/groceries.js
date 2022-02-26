@@ -12,7 +12,7 @@ module.exports = {
         fs.access(groceryList, fs.F_OK, (err) => {
             if (err) {
               this.logger.error("Could not find the groceryList, creating file");
-              fs.writeFile('groceryList.txt', function(err){
+              fs.writeFile('groceryList.txt', (err) => {
                   if(err) this.logger.error(err.message);
                   this.logger.info("File created");
               });
