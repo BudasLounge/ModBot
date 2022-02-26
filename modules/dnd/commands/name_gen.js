@@ -7,7 +7,7 @@ module.exports = {
     needs_api: false,//if this command needs access to the api
     has_state: false,//if this command uses the state engine
     async execute(message, args, extra) {
-        const {performance} = require('perf-hooks');
+        const {performance} = require('perf_hooks');
         const {Util} = require('discord.js');
         var min = 4;
         var max = 9;
@@ -141,6 +141,7 @@ module.exports = {
         messageChunks.forEach(async chunk => {
            await message.channel.send({content: chunk});
         })
+
         message.channel.send({content: `It took ${flatEnd - flatStart} milliseconds to flatten the array and ${genEnd - flatStart} milliseconds to flatten and generate the words!`});
         //message.channel.send({content:words});
     }
