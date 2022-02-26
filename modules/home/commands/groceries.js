@@ -55,6 +55,7 @@ module.exports = {
                     message.channel.send({content: "An error occurred. Item not dropped."});
                     return;
                 }
+                message.channel.send({content: "Added " + item + " to the grocery list"});
             })
         }else if(args[1] == "clear"){
             fs.writeFile('groceryList', function(err){
