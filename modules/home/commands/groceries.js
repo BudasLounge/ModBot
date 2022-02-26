@@ -28,7 +28,7 @@ module.exports = {
                 args.shift();
                 args.shift();
                 var item = args.join(" ");
-                fs.appendFile('groceryList' , item, function (err) {
+                fs.appendFile('groceryList' , item,  (err) => {
                     if (err){
                         this.logger.error(err.message);
                         message.channel.send("An error occurred. Item not added.");
