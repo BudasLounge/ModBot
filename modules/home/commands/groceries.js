@@ -12,7 +12,7 @@ module.exports = {
         fs.access(groceryList, fs.F_OK, (err) => {
             if (err) {
               this.logger.error("Could not find the groceryList, creating file");
-              fs.writeFile('groceryList.txt', (err) => {
+              fs.writeFile('groceryList.txt', 'Top of list', (err) => {
                   if(err) this.logger.error(err.message);
                   this.logger.info("File created");
               });
@@ -58,7 +58,7 @@ module.exports = {
                 message.channel.send({content: "Added " + item + " to the grocery list"});
             })
         }else if(args[1] == "clear"){
-            fs.writeFile('groceryList', function(err){
+            fs.writeFile('groceryList','Top of list', function(err){
                 if(err){
                     this.logger.error(err.message);
                     message.channel.send({content: "An error occurred. List not cleared."});
