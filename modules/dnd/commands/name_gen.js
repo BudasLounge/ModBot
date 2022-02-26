@@ -7,6 +7,7 @@ module.exports = {
     needs_api: false,//if this command needs access to the api
     has_state: false,//if this command uses the state engine
     async execute(message, args, extra) {
+        const {performance} = require('perf-hooks');
         const {Util} = require('discord.js');
         var min = 4;
         var max = 9;
@@ -101,6 +102,7 @@ module.exports = {
             ['Q',10],
             ['Z',10]
         ]
+        var flatStart = performance.now();
         var alphabet = [];
         var type = "Balanced";
         if(!args[4]){
@@ -113,14 +115,15 @@ module.exports = {
                 alphabet = balancedAlpha;
             }
         }
-
         var flattened = [];
         for(var i = 0;i<alphabet.length; i++){
             for (var j = 0;j<alphabet[i][1];j++){
                 flattened.push(alphabet[i][0])
             }
         }
+        var flatEnd = performance.now();
         message.channel.send({ content: "Generating Words using: " + type});
+
         var words = "";
         for(var k = 0;k<count;k++){
             var charCount = Math.floor(Math.random() * (parseInt(max) - parseInt(min) + 1) + parseInt(min));
@@ -130,7 +133,7 @@ module.exports = {
             }
             words += word + "\n";
         }
-
+        var genEnd = performance.now();
         const messageChunks = Util.splitMessage(words, {
             maxLength: 2000,
             char:'\n'
@@ -138,7 +141,7 @@ module.exports = {
         messageChunks.forEach(async chunk => {
            await message.channel.send({content: chunk});
         })
-
+        message.channel.send({content: `It took ${flatEnd - flatStart} milliseconds to flatten the array and ${genEnd - flatStart} milliseconds to flatten and generate the words!`});
         //message.channel.send({content:words});
     }
 }
