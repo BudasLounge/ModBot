@@ -25,7 +25,6 @@ module.exports = {
                     this.logger.error(errorCustomMessage, errorCustom.response);
                 }
                 if(respChampsCustom.league_pref_champs[0]){
-                    console.table(respChampsCustom.league_pref_champs);
                     for(var i = 0;i<respChampsCustom.league_pref_champs.length;i++){
                         this.logger.info("In for loop");
                         this.logger.info("champ data --> " + respChampsCustom.league_pref_champs[i]);
@@ -61,6 +60,8 @@ module.exports = {
                 this.logger.error(error.response);
             }
             var output = "Champion - Primary Role / Secondary Role\n";
+            
+            console.table(respChamps.league_champions);
             for(var i = 0; i<respChamps.league_champions.length;i++){
                 output += respChamps.league_champions[i].name + " - " + respChamps.league_champions[i].role_primary + "/" +respChamps.league_champions[i].role_secondary +"\n";
             } 
