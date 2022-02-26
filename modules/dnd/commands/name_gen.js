@@ -134,6 +134,8 @@ module.exports = {
             words += word + "\n";
         }
         var genEnd = performance.now();
+        var flat = flatEnd-flatStart;
+        var gen = genEnd-flatStart;
         const messageChunks = Util.splitMessage(words, {
             maxLength: 2000,
             char:'\n'
@@ -142,7 +144,7 @@ module.exports = {
            await message.channel.send({content: chunk});
         })
 
-        message.channel.send({content: `It took ${flatEnd - flatStart} milliseconds to flatten the array and ${genEnd - flatStart} milliseconds to flatten and generate the words!`});
+        message.channel.send({content: `It took ${flat} milliseconds to flatten the array and ${gen} milliseconds to flatten and generate the words!`});
         //message.channel.send({content:words});
     }
 }
