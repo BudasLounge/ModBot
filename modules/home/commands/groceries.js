@@ -28,7 +28,6 @@ module.exports = {
                 args.shift();
                 args.shift();
                 var item = args.join(" ");
-                this.logger.info(item + " is being added to the grocery list");
                 fs.appendFile(groceryList , item,  (err) => {
                     if (err){
                         this.logger.error(err.message);
