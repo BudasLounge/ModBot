@@ -48,8 +48,6 @@ module.exports ={
             }else{
                 this.logger.info("Adding listEmbed for online server");
                 if(isNaN(respServer.minecraft_servers[i].status_api_port)){
-                    
-                }else{
                     var respTPS = await axios.get("http://192.168.1.2:" + respServer.minecraft_servers[0].status_api_port + "/tps", {});
                 }
                 if(item.players.online>0){
