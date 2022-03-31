@@ -48,7 +48,8 @@ module.exports ={
             }else{
                 this.logger.info("Adding listEmbed for online server");
                 if(isNaN(respServer.minecraft_servers[i].status_api_port)){
-                    var respTPS = await axios.get("http://192.168.1.2:" + respServer.minecraft_servers[0].status_api_port + "/tps", {});
+                    this.logger.info("Found a status API!")
+                    var respTPS = await axios.get("http://192.168.1.2:" + /*respServer.minecraft_servers[0].status_api_port*/ + "11051/tps", {});
                 }
                 if(item.players.online>0){
                     var nextItem = respServer.minecraft_servers[i].display_name + " is currently online with: " + item.players.online + " players online!\n";
