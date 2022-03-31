@@ -25,7 +25,7 @@ module.exports = {
         }else{
             var output = "";
             for(var i = start;i<end;i+=interval){
-                if(separator == '\\\n'){
+                if(separator == '\\n'){
                     output+= i + "\n";
                 }else{
                     output+= i + " " + separator;
