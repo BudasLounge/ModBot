@@ -59,7 +59,7 @@ module.exports ={
                 }else{
                     var nextItem = respServer.minecraft_servers[i].display_name + " is currently online but no players are.\n\n";
                 }
-                ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:", "TPS: " + respTPS.data.tps + "\n" + nextItem);
+                ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:", "TPS: " + respTPS + "\n" + nextItem);
                 stat_server += nextItem;
             }
         }
