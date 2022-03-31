@@ -50,7 +50,8 @@ module.exports ={
                 this.logger.info("Adding listEmbed for online server");
                 if(respServer.minecraft_servers[i].status_api_port.toString() != "none"){
                     this.logger.info("Found a status API!")
-                    respTPS = await axios.get("http://192.168.1.2:11051/tps" /*respServer.minecraft_servers[0].status_api_port*/, {});
+                    respTPS = await axios.get("http://192.168.1.2:" + respServer.minecraft_servers[0].status_api_port + "/tps", {});
+                    var respUptime = await axios.get("http://192.168.1.2:" + respServer.minecraft_servers[0].status_api_port + "/uptime", {});
                 }
                 if(item.players.online>0){
                     var nextItem = respServer.minecraft_servers[i].display_name + " is currently online with: " + item.players.online + " players online!\n";
