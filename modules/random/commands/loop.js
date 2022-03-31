@@ -25,7 +25,11 @@ module.exports = {
         }else{
             var output = "";
             for(var i = start;i<end;i+=interval){
-                output+= i + " " + separator;
+                if(separator == `\n`){
+                    output+= i + "\n";
+                }else{
+                    output+= i + " " + separator;
+                }
             }
             message.channel.send({ content: output});
         }
