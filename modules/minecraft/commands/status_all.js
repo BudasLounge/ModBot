@@ -45,6 +45,9 @@ module.exports ={
                 stat_server += respServer.minecraft_servers[i].display_name + " server info: " + respServer.minecraft_servers[i].display_name + " is currently offline!\n\n";
             }else{
                 this.logger.info("Adding listEmbed for online server");
+                if(respServer.minecraft_servers[i].status_api_port != "none"){
+                    var respTPS = await axios.get("http://192.168.1.2:" + respServer.minecraft_servers[0].status_api_port + "/tps", {});
+                }
                 if(item.players.online>0){
                     var nextItem = respServer.minecraft_servers[i].display_name + " is currently online with: " + item.players.online + " players online!\n";
                     nextItem += "Players online:\n";
@@ -55,7 +58,7 @@ module.exports ={
                 }else{
                     var nextItem = respServer.minecraft_servers[i].display_name + " is currently online but no players are.\n\n";
                 }
-                ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:", nextItem);
+                ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:", "TPS: " + respTPS.data.tps + "\n" + nextItem);
                 stat_server += nextItem;
             }
         }
