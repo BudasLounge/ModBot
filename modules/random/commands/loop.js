@@ -17,10 +17,10 @@ module.exports = {
         }else{
             separator = " ";
         }
-        if(interval>0 && args[1]>args[2]){
+        if(interval>0 && start>end){
             message.channel.send({ content: "This will cause an error, try with different numbers. Up."});
         }
-        else if(interval<0 && args[1]<args[2]){
+        else if(interval<0 && start<end){
             message.channel.send({ content: "This will cause an error, try with different numbers. Down."});
         }else{
             var output = "";
