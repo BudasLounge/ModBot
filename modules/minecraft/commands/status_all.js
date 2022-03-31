@@ -66,7 +66,7 @@ module.exports ={
                 if(respTPS == ""){
                     ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:",nextItem);
                 }else{
-                    ListEmbed.addField(respServer.minecraft_servers[i].display_name + " (Uptime: " + respUptime.data.uptime+") " + " server info:", "TPS: " + respTPS.data.overallTps + "\n" + nextItem);
+                    ListEmbed.addField(respServer.minecraft_servers[i].display_name  + " server info:", "TPS: " + respTPS.data.overallTps + "\n" + "Uptime: " + respUptime.data.uptime+"\n" + nextItem);
                 }
                 
                 stat_server += nextItem;
