@@ -22,6 +22,7 @@ module.exports ={
         if(!respServer.minecraft_servers[0]){
             return;
         }
+        message.channel.send({content: "Let me get that for you... this might take a moment"});
         this.logger.info(respServer.minecraft_servers.length + " servers found...");
         var stat_server = ""; 
         const ListEmbed = new Discord.MessageEmbed()
