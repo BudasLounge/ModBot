@@ -9,6 +9,7 @@ module.exports ={
     async execute(message, args, extra) {
         var api = extra.api;
         const Discord = require('discord.js');
+        const axios = require('axios');
         const {getStatus} = require("mc-server-status");
         this.logger.info(">>display_all_servers_status");
         var respServer;
