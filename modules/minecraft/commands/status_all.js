@@ -47,7 +47,7 @@ module.exports ={
                 stat_server += respServer.minecraft_servers[i].display_name + " server info: " + respServer.minecraft_servers[i].display_name + " is currently offline!\n\n";
             }else{
                 this.logger.info("Adding listEmbed for online server");
-                if(isNaN(respServer.minecraft_servers[i].status_api_port)){
+                if(!isNaN(respServer.minecraft_servers[i].status_api_port)){
                     this.logger.info("Found a status API!")
                     var respTPS = await axios.get("http://192.168.1.2:11051/tps" /*respServer.minecraft_servers[0].status_api_port*/, {});
                 }
