@@ -49,7 +49,7 @@ module.exports ={
                 var respTPS = "";
                 this.logger.info("Adding listEmbed for online server");
                 if(respServer.minecraft_servers[i].status_api_port.toString() != "none"){
-                    this.logger.info("Found a status API!")
+                    this.logger.info("Found a status API! " +respServer.minecraft_servers[i].display_name + "has a port number of: " + respServer.minecraft_servers[i].status_api_port.toString())
                     respTPS = await axios.get("http://192.168.1.2:" + respServer.minecraft_servers[0].status_api_port.toString() + "/tps", {});
                     var respUptime = await axios.get("http://192.168.1.2:" + respServer.minecraft_servers[0].status_api_port.toString() + "/uptime", {});
                 }
