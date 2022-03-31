@@ -30,7 +30,7 @@ module.exports = {
                 var status = await getServerState(respServer.minecraft_servers[i].display_name, respServer.minecraft_servers[i].port, respServer.minecraft_servers[i].numeric_ip, message.channel);
                 if(status == "online"){
                     var msg = "Players: ";
-                    var respPlayers = await axios.get("http://192.168.1.2:" + respServer.minecraft_servers[i].status_api_port + "/player-list", {});
+                    var respPlayers = await axios.get("http://192.168.1.13:" + respServer.minecraft_servers[i].status_api_port + "/player-list", {});
                     console.log(respPlayers);
                     var isOne = respPlayers.data.players.length == 1;
                     var num_players = "There " + (isOne ? "is" : "are") + " " + respPlayers.data.players.length + (isOne ? " player" : " players") + " on " + respServer.minecraft_servers[i].display_name + " server";
