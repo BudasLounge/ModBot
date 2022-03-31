@@ -46,10 +46,11 @@ module.exports ={
                 ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:", item);
                 stat_server += respServer.minecraft_servers[i].display_name + " server info: " + respServer.minecraft_servers[i].display_name + " is currently offline!\n\n";
             }else{
+                var respTPS = "";
                 this.logger.info("Adding listEmbed for online server");
                 if(respServer.minecraft_servers[i].status_api_port.toString() != "none"){
                     this.logger.info("Found a status API!")
-                    var respTPS = await axios.get("http://192.168.1.2:11051/tps" /*respServer.minecraft_servers[0].status_api_port*/, {});
+                    respTPS = await axios.get("http://192.168.1.2:11051/tps" /*respServer.minecraft_servers[0].status_api_port*/, {});
                 }
                 if(item.players.online>0){
                     var nextItem = respServer.minecraft_servers[i].display_name + " is currently online with: " + item.players.online + " players online!\n";
@@ -61,7 +62,12 @@ module.exports ={
                 }else{
                     var nextItem = respServer.minecraft_servers[i].display_name + " is currently online but no players are.\n\n";
                 }
-                ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:", "TPS: " + respTPS.data.overallTps + "\n" + nextItem);
+                if(respTPS == ""){
+                    ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:",nextItem);
+                }else{
+                    ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:", "TPS: " + respTPS.data.overallTps + "\n" + nextItem);
+                }
+                
                 stat_server += nextItem;
             }
         }
