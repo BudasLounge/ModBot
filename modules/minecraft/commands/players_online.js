@@ -37,7 +37,6 @@ module.exports = {
                 if(respPlayers.data.players.length == 0) {
                     msg += ".";
                 } else {
-                    msg += ":";
                     for(var player of respPlayers.data.players) {
                         msg += "\n  - " + player.username;
                     }
