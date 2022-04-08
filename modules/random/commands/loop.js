@@ -7,7 +7,7 @@ module.exports = {
     needs_api: false,
     has_state: false,
     async execute(message, args, extra) {
-        this.logger.info("Here are the variables:\nstart: " + args[1]+"\nend: " + args[2] +"\ninterval: "+args[3]+"\nseparator: "+ args[4]);
+        this.logger.info("Here are the variables: start: " + args[1]+"  end: " + args[2] +"  interval: "+args[3]+"  separator: "+ args[4]);
         var start = parseInt(args[1]);
         var end = parseInt(args[2]);
         var interval = parseInt(args[3]);
