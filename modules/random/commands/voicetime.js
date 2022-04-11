@@ -16,7 +16,12 @@ module.exports = {
         }catch(error){
             this.logger.error(error);
         }
-        if(!respVoice.voice_trackings[0]) return;
+        
+        if(!respVoice.voice_trackings[0]){
+            message.channel.send({ content: "There is no data available yet..."}) 
+            return;
+        }
+
         this.logger.info("Starting the additive loop");
         var totalTime = [];
         this.logger.info(respVoice.voice_trackings.length);
