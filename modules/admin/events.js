@@ -21,6 +21,16 @@ async function onUserJoin(member){
     }
 }
 
+async function userJoinsVoice(oldMember, newMember){
+    let newUserChannel = newMember.channelID;
+    let oldUserChannel = oldMember.channelID;
+
+    if(newUserChannel != undefined){
+        console.log(newMember.username + " joined a channel with an ID of: " + newUserChannel);
+    }else{
+        console.log(oldMember.username + " left a channel with an ID of: " + oldUserChannel);
+    }
+}
 
 /*async function parseRaw(packet) {
     // We don't want this to run on unrelated packets
@@ -51,6 +61,7 @@ async function onUserJoin(member){
 function register_handlers(event_registry) {
     //event_registry.register('messageReactionAdd', onMessageReactionAdd);
     event_registry.register('guildMemberAdd', onUserJoin);
+    event_registry.register('voiceStateUpdate', userJoinsVoice);
     //event_registry.register('raw', parseRaw);
 }
 
