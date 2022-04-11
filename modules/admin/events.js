@@ -14,7 +14,7 @@ async function onUserJoin(member){
             server_id: member.guild.id
         });
     }catch(error){
-        console.log(error);
+        logger.error(error);
     }
     if(respServer.discord_servers[0]){
             member.guild.channels.cache.find(channel => channel.id === respServer.discord_servers[0].welcome_channel_id).send({ content: "Hi! <@" + member.id + "> "+respServer.discord_servers[0].welcome_message});
@@ -23,10 +23,10 @@ async function onUserJoin(member){
 }
 
 async function userJoinsVoice(oldMember, newMember){
+    const moment = require('moment');
     let newUserChannel = newMember.channelId;
     let oldUserChannel = oldMember.channelId;
-    logger.info("TESTING LOGGER");
-    //console.log(newMember.user.username);
+    console.log(newMember);
     //console.log(oldMember);
     let user = newMember.guild.members.cache.get(newMember.id);
     //console.log(user.user);
@@ -39,14 +39,33 @@ async function userJoinsVoice(oldMember, newMember){
                 disconnect_time:null
             })
         }catch(error){
-            console.error(error)
+            logger.error(error);
         }
         if(respVoice.voice_trackings[0]){
-
+            try{
+                var respVoiceUpdate = await api.put("voice_tracking",{
+                    voice_state_id:parseInt(respVoice.voice_trackings[0].voice_state_id),
+                    disconnect_time:moment()
+                })
+            }catch(error){
+                logger.error(error);
+            }
+        }else{
+            try{
+                var respVoiceNew = await api.post("voice_tracking",{
+                    user_id:newMember.id,
+                    username:user.user.username,
+                    discord_server_id:newMember.guild.id,
+                    connect_time:moment(),
+                    channel_id:newUserChannel
+                })
+            }catch(error){
+                logger.error(error);
+            }
         }
-        console.log(user.user.username + " joined a channel with an ID of: " + newUserChannel);
+        logger.info(user.user.username + " joined a channel with an ID of: " + newUserChannel);
     }else{
-        console.log(user.user.username + " left a channel with an ID of: " + oldUserChannel);
+        logger.info(user.user.username + " left a channel with an ID of: " + oldUserChannel);
     }
 }
 
