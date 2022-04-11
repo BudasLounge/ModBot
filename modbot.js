@@ -66,3 +66,16 @@ client.on('messageCreate', (message) => {
     //Add ability to check first time someone sends a message (not command) and grant them points
     modules.handle_command(message);
 });
+
+client.on('voiceStateUpdate', (oldMember, newMember) => {
+    // check for bot
+    if (oldState.member.user.bot) return;
+    let newUserChannel = newMember.channelID;
+    let oldUserChannel = oldMember.channelID;
+
+    if(newUserChannel != undefined){
+        console.log(newMember.username + " joined a channel with an ID of: " + newUserChannel);
+    }else{
+        console.log(oldMember.username + " left a channel with an ID of: " + oldUserChannel);
+    }
+})
