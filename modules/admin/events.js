@@ -50,8 +50,20 @@ async function userJoinsVoice(oldMember, newMember){
             }catch(error){
                 logger.error(error);
             }
-        }else{
             logger.info("Creating a new tracking");
+            try{
+                var respVoiceNew = await api.post("voice_tracking",{
+                    user_id:newMember.id,
+                    username:user.user.username,
+                    discord_server_id:newMember.guild.id,
+                    connect_time:Math.floor(new Date().getTime() / 1000).toString(),
+                    channel_id:newUserChannel
+                })
+            }catch(error){
+                logger.error(error);
+            }
+        }else{
+            logger.info("Creating a brand new tracking");
             try{
                 var respVoiceNew = await api.post("voice_tracking",{
                     user_id:newMember.id,

@@ -17,26 +17,30 @@ module.exports = {
             this.logger.error(error);
         }
         if(!respVoice.voice_trackings[0]) return;
-        respVoice.voice_trackings.forEach(element => {
-            if(element.disconnect_time != "None"){
-                var diff = Math.floor(element.disconnect_time - element.connect_time), units = [
-                    { d: 60, l: "seconds" },
-                    { d: 60, l: "minutes" },
-                    { d: 24, l: "hours" },
-                    { d: 7, l: "days" }
-                  ];
-                
-                  var s = '';
-                  for (var i = 0; i < units.length; ++i) {
-                    s = (diff % units[i].d) + " " + units[i].l + " " + s;
-                    diff = Math.floor(diff / units[i].d);
-                  }
-                this.logger.info(s.toString())
+        var totalTime = [];
+        for(var i = 0;i<respVoice.voice_trackings.length;i++){
+            for(var j = 0;j<totalTime.length;j++){
+                if(totalTime[j][0] == respVoice.voice_trackings[i].username){
+                    totalTime[j][1] += Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))
+                }
             }
+        }
 
-        });
-
-
+        for(var k = 0;k<totalTime.length;k++){
+            var diff = Math.floor(totalTime[k][1]), units = [
+                { d: 60, l: "seconds" },
+                { d: 60, l: "minutes" },
+                { d: 24, l: "hours" },
+                { d: 7, l: "days" }
+            ];
+        
+            var s = '';
+            for (var i = 0; i < units.length; ++i) {
+            s = (diff % units[i].d) + " " + units[i].l + " " + s;
+            diff = Math.floor(diff / units[i].d);
+            }
+            this.logger.info(s.toString())
+        }
 
     }
 }
