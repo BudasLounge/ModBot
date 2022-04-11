@@ -25,7 +25,7 @@ async function userJoinsVoice(oldMember, newMember){
     let newUserChannel = newMember.channelId;
     let oldUserChannel = oldMember.channelId;
 
-    newMember.guild.members.forEach(element => console.log(element));
+    console.log(newMember.guild.members);
     //console.log(oldMember);
     let user = newMember.guild.members.cache.get(newMember.id);
     if(newUserChannel != undefined){
