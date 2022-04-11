@@ -29,7 +29,7 @@ async function userJoinsVoice(oldMember, newMember){
     //console.log(oldMember);
     let user = newMember.guild.members.cache.get(newMember.id);
     //console.log(user.user);
-    if(newUserChannel != undefined){
+    if(newUserChannel != undefined || newUserChannel == newMember.guild.afkChannelId){
         var respVoice;
         try{
             respVoice = await api.get("voice_tracking", {
@@ -58,6 +58,7 @@ async function userJoinsVoice(oldMember, newMember){
                     username:user.user.username,
                     discord_server_id:newMember.guild.id,
                     connect_time:Math.floor(new Date().getTime() / 1000).toString(),
+                    selfmute:newMember.selfmumte,
                     channel_id:newUserChannel
                 })
             }catch(error){
@@ -71,6 +72,7 @@ async function userJoinsVoice(oldMember, newMember){
                     username:user.user.username,
                     discord_server_id:newMember.guild.id,
                     connect_time:Math.floor(new Date().getTime() / 1000).toString(),
+                    selfmute:newMember.selfmumte,
                     channel_id:newUserChannel
                 })
             }catch(error){
