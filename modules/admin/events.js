@@ -25,7 +25,7 @@ async function onUserJoin(member){
 async function userJoinsVoice(oldMember, newMember){
     let newUserChannel = newMember.channelId;
     let oldUserChannel = oldMember.channelId;
-    this.logger.info("TESTING LOGGER");
+    logger.info("TESTING LOGGER");
     //console.log(newMember.user.username);
     //console.log(oldMember);
     let user = newMember.guild.members.cache.get(newMember.id);
