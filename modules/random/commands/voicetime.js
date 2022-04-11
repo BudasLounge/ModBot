@@ -53,7 +53,7 @@ module.exports = {
             s = (diff % units[i].d) + " " + units[i].l + " " + s;
             diff = Math.floor(diff / units[i].d);
             }
-            output += s.toString()
+            output += totalTime[k][0] + ": " + s.toString()
         }
         message.channel.send("Here is the leaderboard:\n" + output)
     }
