@@ -58,7 +58,7 @@ async function userJoinsVoice(oldMember, newMember){
                     username:user.user.username,
                     discord_server_id:newMember.guild.id,
                     connect_time:Math.floor(new Date().getTime() / 1000).toString(),
-                    selfmute:newMember.selfmute,
+                    selfmute:newMember.selfMute,
                     channel_id:newUserChannel
                 })
             }catch(error){
@@ -72,7 +72,7 @@ async function userJoinsVoice(oldMember, newMember){
                     username:user.user.username,
                     discord_server_id:newMember.guild.id,
                     connect_time:Math.floor(new Date().getTime() / 1000).toString(),
-                    selfmute:newMember.selfmute,
+                    selfmute:newMember.selfMute,
                     channel_id:newUserChannel
                 })
             }catch(error){
