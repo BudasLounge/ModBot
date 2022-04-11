@@ -65,6 +65,26 @@ async function userJoinsVoice(oldMember, newMember){
         }
         logger.info(user.user.username + " joined a channel with an ID of: " + newUserChannel);
     }else{
+        var respVoice;
+        try{
+            respVoice = await api.get("voice_tracking", {
+                user_id:newMember.id,
+                username:user.user.username,
+                disconnect_time:null
+            })
+        }catch(error){
+            logger.error(error);
+        }
+        if(respVoice.voice_trackings[0]){
+            try{
+                var respVoiceUpdate = await api.put("voice_tracking",{
+                    voice_state_id:parseInt(respVoice.voice_trackings[0].voice_state_id),
+                    disconnect_time:Math.floor(new Date().getTime() / 1000).toString()
+                })
+            }catch(error){
+                logger.error(error);
+            }
+        }
         logger.info(user.user.username + " left a channel with an ID of: " + oldUserChannel);
     }
 }
