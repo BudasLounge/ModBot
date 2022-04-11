@@ -33,8 +33,7 @@ module.exports = {
             }
             if(!flag){
                 this.logger.info("Creating a new row.")
-                totalTime[totalTime.length][0] = respVoice.voice_trackings[i].username
-                totalTime[totalTime.length][1] = Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))
+                totalTime.push([respVoice.voice_trackings[i].username, Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))])
             }
                 
         }
