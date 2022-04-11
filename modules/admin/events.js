@@ -35,6 +35,7 @@ async function userJoinsVoice(oldMember, newMember){
             respVoice = await api.get("voice_tracking", {
                 user_id:newMember.id,
                 username:user.user.username,
+                discord_server_id:newMember.guild.id,
                 disconnect_time:"None"
             })
         }catch(error){
