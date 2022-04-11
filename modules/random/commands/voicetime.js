@@ -22,16 +22,21 @@ module.exports = {
         this.logger.info(respVoice.voice_trackings.length);
         this.logger.info(totalTime.length);
         for(var i = 0;i<respVoice.voice_trackings.length;i++){
+            var flag = false;
             for(var j = 0;j<totalTime.length;j++){
                 if(totalTime[j][0] == respVoice.voice_trackings[i].username){
                     this.logger.info("Adding to existing row.")
                     totalTime[j][1] += Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))
-                }else{
-                    this.logger.info("Creating a new row.")
-                    totalTime[j][0] == respVoice.voice_trackings[i].username
-                    totalTime[j][1] = Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))
+                    flag = true;
+                    break;
                 }
             }
+            if(flag){
+                this.logger.info("Creating a new row.")
+                totalTime[totalTime.length][0] == respVoice.voice_trackings[i].username
+                totalTime[totalTime.length][1] = Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))
+            }
+                
         }
         this.logger.info("Printing array to a table, will only show up in live console, not logs...")
         console.table(totalTime);
