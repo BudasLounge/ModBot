@@ -19,6 +19,8 @@ module.exports = {
         if(!respVoice.voice_trackings[0]) return;
         this.logger.info("Starting the additive loop");
         var totalTime = [];
+        this.logger.info(respVoice.voice_trackings.length);
+        this.logger.info(totalTime.length);
         for(var i = 0;i<respVoice.voice_trackings.length;i++){
             for(var j = 0;j<totalTime.length;j++){
                 if(totalTime[j][0] == respVoice.voice_trackings[i].username){
