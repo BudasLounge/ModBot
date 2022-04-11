@@ -26,6 +26,8 @@ module.exports = {
                 }
             }
         }
+        this.logger.info("Printing array to a table, will only show up in live console, not logs...")
+        console.table(totalTime);
         var output = "";
         for(var k = 0;k<totalTime.length;k++){
             var diff = Math.floor(totalTime[k][1]), units = [
