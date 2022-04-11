@@ -19,7 +19,7 @@ module.exports = {
         if(!respVoice.voice_trackings[0]) return;
         respVoice.voice_trackings.forEach(element => {
             if(element.disconnect_time != null){
-                var diff = Math.floor((element.disconnect_time - element.connect_time) / 1000), units = [
+                var diff = Math.floor(element.disconnect_time - element.connect_time), units = [
                     { d: 60, l: "seconds" },
                     { d: 60, l: "minutes" },
                     { d: 24, l: "hours" },
