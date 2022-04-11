@@ -1,6 +1,7 @@
 var ApiClient = require("../../core/js/APIClient.js");
 var api = new ApiClient();
 const Discord = require('discord.js');
+var logger;
 //var client = new Discord.Client();
 /*function onMessageReactionAdd(messageReaction, user) {
     messageReaction.message.channel.get("650871820538347520").send({ content: "[Admin] A reaction was added!")
@@ -24,7 +25,7 @@ async function onUserJoin(member){
 async function userJoinsVoice(oldMember, newMember){
     let newUserChannel = newMember.channelId;
     let oldUserChannel = oldMember.channelId;
-    //this.logger.info("TESTING LOGGER");
+    this.logger.info("TESTING LOGGER");
     //console.log(newMember.user.username);
     //console.log(oldMember);
     let user = newMember.guild.members.cache.get(newMember.id);
@@ -76,6 +77,7 @@ async function userJoinsVoice(oldMember, newMember){
 //}
 
 function register_handlers(event_registry) {
+    logger = event_registry.logger;
     //event_registry.register('messageReactionAdd', onMessageReactionAdd);
     event_registry.register('guildMemberAdd', onUserJoin);
     event_registry.register('voiceStateUpdate', userJoinsVoice);
