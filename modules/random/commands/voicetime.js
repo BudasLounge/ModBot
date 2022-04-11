@@ -16,7 +16,7 @@ module.exports = {
         }catch(error){
             this.logger.error(error);
         }
-        
+
         if(!respVoice.voice_trackings[0]){
             message.channel.send({ content: "There is no data available yet..."}) 
             return;
@@ -45,6 +45,9 @@ module.exports = {
         this.logger.info("Printing array to a table, will only show up in live console, not logs...")
         console.table(totalTime);
         var output = "";
+
+        totalTime.sort(compareSecondColumn);
+
         for(var k = 0;k<totalTime.length;k++){
             var diff = Math.floor(totalTime[k][1]), units = [
                 { d: 60, l: "seconds" },
@@ -61,5 +64,15 @@ module.exports = {
             output += totalTime[k][0] + ": " + s.toString()
         }
         message.channel.send("Here is the leaderboard:\n" + output)
+    }
+}
+
+
+function compareSecondColumn(a, b) {
+    if (a[1] === b[1]) {
+        return 0;
+    }
+    else {
+        return (a[1] < b[1]) ? -1 : 1;
     }
 }
