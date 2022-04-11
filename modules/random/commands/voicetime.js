@@ -18,7 +18,11 @@ module.exports = {
         }
         if(!respVoice.voice_trackings[0]) return;
         respVoice.voice_trackings.forEach(element => {
-            this.logger.info(element);
+            if(element.disconnect_time != null){
+                var secondBetweenTwoDate = Math.abs((element.disconnect_time.getTime() - element.connect_time.getTime()) / 1000);
+                this.logger.info(secondBetweenTwoDate.toString())
+            }
+
         });
 
 
