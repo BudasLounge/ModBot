@@ -8,7 +8,7 @@ module.exports = {
     has_state: false,//if this command uses the state engine
     async execute(message, args, extra) {
         var api = extra.api;
-
+        this.logger.info("Gathering all voice timings");
         try{
             var respVoice = await api.get("voice_tracking",{
 
@@ -17,6 +17,7 @@ module.exports = {
             this.logger.error(error);
         }
         if(!respVoice.voice_trackings[0]) return;
+        this.logger.info("Starting the additive loop");
         var totalTime = [];
         for(var i = 0;i<respVoice.voice_trackings.length;i++){
             for(var j = 0;j<totalTime.length;j++){
@@ -25,7 +26,7 @@ module.exports = {
                 }
             }
         }
-
+        var output = "";
         for(var k = 0;k<totalTime.length;k++){
             var diff = Math.floor(totalTime[k][1]), units = [
                 { d: 60, l: "seconds" },
