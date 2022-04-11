@@ -23,7 +23,6 @@ async function onUserJoin(member){
 }
 
 async function userJoinsVoice(oldMember, newMember){
-    const moment = require('moment');
     let newUserChannel = newMember.channelId;
     let oldUserChannel = oldMember.channelId;
     console.log(newMember);
@@ -42,6 +41,7 @@ async function userJoinsVoice(oldMember, newMember){
             logger.error(error);
         }
         if(respVoice.voice_trackings[0]){
+            logger.info("Updating an existing tracking");
             try{
                 var respVoiceUpdate = await api.put("voice_tracking",{
                     voice_state_id:parseInt(respVoice.voice_trackings[0].voice_state_id),
@@ -51,6 +51,7 @@ async function userJoinsVoice(oldMember, newMember){
                 logger.error(error);
             }
         }else{
+            logger.info("Creating a new tracking");
             try{
                 var respVoiceNew = await api.post("voice_tracking",{
                     user_id:newMember.id,
