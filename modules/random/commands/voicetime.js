@@ -11,7 +11,7 @@ module.exports = {
         this.logger.info("Gathering all voice timings");
         try{
             var respVoice = await api.get("voice_tracking",{
-
+                discord_server_id:message.guild.id
             })
         }catch(error){
             this.logger.error(error);
