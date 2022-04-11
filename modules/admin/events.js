@@ -25,11 +25,11 @@ async function onUserJoin(member){
 async function userJoinsVoice(oldMember, newMember){
     let newUserChannel = newMember.channelId;
     let oldUserChannel = oldMember.channelId;
-    console.log(newMember);
+    //console.log(newMember);
     //console.log(oldMember);
     let user = newMember.guild.members.cache.get(newMember.id);
     //console.log(user.user);
-    if(newUserChannel != undefined || newUserChannel == newMember.guild.afkChannelId){
+    if(newUserChannel != undefined || newUserChannel === newMember.guild.afkChannelId){
         var respVoice;
         try{
             respVoice = await api.get("voice_tracking", {
