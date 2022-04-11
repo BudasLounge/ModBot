@@ -24,12 +24,25 @@ async function onUserJoin(member){
 async function userJoinsVoice(oldMember, newMember){
     let newUserChannel = newMember.channelId;
     let oldUserChannel = oldMember.channelId;
-
+    this.logger.info("TESTING LOGGER");
     //console.log(newMember.user.username);
     //console.log(oldMember);
     let user = newMember.guild.members.cache.get(newMember.id);
     //console.log(user.user);
     if(newUserChannel != undefined){
+        var respVoice;
+        try{
+            respVoice = await api.get("voice_tracking", {
+                user_id:newMember.id,
+                username:user.user.username,
+                disconnect_time:null
+            })
+        }catch(error){
+            console.error(error)
+        }
+        if(respVoice.voice_trackings[0]){
+
+        }
         console.log(user.user.username + " joined a channel with an ID of: " + newUserChannel);
     }else{
         console.log(user.user.username + " left a channel with an ID of: " + oldUserChannel);
