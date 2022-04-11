@@ -29,7 +29,7 @@ async function userJoinsVoice(oldMember, newMember){
     //console.log(oldMember);
 
     if(newUserChannel != undefined){
-        console.log(newMember.username + " joined a channel with an ID of: " + newUserChannel);
+        console.log(newMember.guild.members.cache.get(newMember.id).username + " joined a channel with an ID of: " + newUserChannel);
     }else{
         console.log(oldMember.username + " left a channel with an ID of: " + oldUserChannel);
     }
