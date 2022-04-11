@@ -19,8 +19,19 @@ module.exports = {
         if(!respVoice.voice_trackings[0]) return;
         respVoice.voice_trackings.forEach(element => {
             if(element.disconnect_time != null){
-                var secondBetweenTwoDate = Math.abs((element.disconnect_time.getTime() - element.connect_time.getTime()) / 1000);
-                this.logger.info(secondBetweenTwoDate.toString())
+                var diff = Math.floor((element.disconnect_time - element.connect_time) / 1000), units = [
+                    { d: 60, l: "seconds" },
+                    { d: 60, l: "minutes" },
+                    { d: 24, l: "hours" },
+                    { d: 7, l: "days" }
+                  ];
+                
+                  var s = '';
+                  for (var i = 0; i < units.length; ++i) {
+                    s = (diff % units[i].d) + " " + units[i].l + " " + s;
+                    diff = Math.floor(diff / units[i].d);
+                  }
+                this.logger.info(s.toString())
             }
 
         });
