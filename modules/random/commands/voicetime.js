@@ -53,8 +53,8 @@ module.exports = {
             s = (diff % units[i].d) + " " + units[i].l + " " + s;
             diff = Math.floor(diff / units[i].d);
             }
-            this.logger.info(s.toString())
+            output =+ s.toString()
         }
-
+        message.channel.send("Here is the leaderboard:\n"+output)
     }
 }
