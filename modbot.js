@@ -67,15 +67,13 @@ client.on('messageCreate', (message) => {
     modules.handle_command(message);
 });
 
-client.on('voiceStateUpdate', (oldMember, newMember) => {
+client.on('voiceStateUpdate', (oldState, newState) => {
     // check for bot
     if (oldState.member.user.bot) return;
-    let newUserChannel = newMember.channelID;
-    let oldUserChannel = oldMember.channelID;
-
-    if(newUserChannel != undefined){
-        console.log(newMember.username + " joined a channel with an ID of: " + newUserChannel);
-    }else{
-        console.log(oldMember.username + " left a channel with an ID of: " + oldUserChannel);
-    }
+    if(newState.channelID === null) //left
+        console.log('user left channel', oldState.channelID);
+    else if(oldState.channelID === null) // joined
+        console.log('user joined channel', newState.channelID);
+    else // moved
+        console.log('user moved channels', oldState.channelID, newState.channelID);
 })
