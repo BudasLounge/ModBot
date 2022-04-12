@@ -69,10 +69,17 @@ module.exports = {
             }
             ListEmbed.addField(totalTime[k][0], s.toString());
         }
-        message.channel.send({embeds: [ListEmbed]});
         this.logger.info("Sent Voice Leaderboard!")
 
-
+        const timingFilters = new MessageActionRow()
+        .addComponents(
+            new MessageButton()
+                .setCustomId("non-muted")
+                .setLabel("Non-muted times only")
+                .setStyle('PRIMARY')
+                .setDisabled("true"),
+        );
+        message.channel.send({embeds: [ListEmbed], components: [timingFilters]});
     }
 }
 
