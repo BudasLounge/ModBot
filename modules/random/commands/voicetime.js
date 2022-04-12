@@ -79,6 +79,6 @@ function compareSecondColumn(a, b) {
         return 0;
     }
     else {
-        return (a[1] < b[1]) ? -1 : 1;
+        return (a[1] > b[1]) ? -1 : 1;
     }
 }
