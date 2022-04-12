@@ -50,7 +50,7 @@ module.exports = {
         totalTime.sort(compareSecondColumn);
         const ListEmbed = new Discord.MessageEmbed()
         .setColor("#c586b6")
-        .setTitle("Voice Channel Leaderboard")
+        .setTitle("Voice Channel Leaderboard");
         for(var k = 0;k<totalTime.length;k++){
             var diff = Math.floor(totalTime[k][1]), units = [
                 { d: 60, l: "seconds" },
