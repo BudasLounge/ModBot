@@ -83,6 +83,16 @@ module.exports = {
                 .setLabel("By Channel")
                 .setStyle('PRIMARY')
                 .setDisabled("true"),
+            new MessageButton()
+                .setCustomId("30days")
+                .setLabel("Top - Last 30 Days")
+                .setStyle('PRIMARY')
+                .setDisabled("true"),
+            new MessageButton()
+                .setCustomId("7days")
+                .setLabel("Top - Last 7 Days")
+                .setStyle('PRIMARY')
+                .setDisabled("true"),
         );
 
         message.channel.send({components: [timingFilters], embeds: [ListEmbed]});
