@@ -9,6 +9,7 @@ module.exports = {
     async execute(message, args, extra) {
         var api = extra.api;
         const Discord = require('discord.js');
+        const {MessageActionRow, MessageButton, MessageEmbed} = require('discord.js');
         this.logger.info("Gathering all voice timings");
         try{
             var respVoice = await api.get("voice_tracking",{
@@ -50,7 +51,7 @@ module.exports = {
         var output = "";
 
         totalTime.sort(compareSecondColumn);
-        const ListEmbed = new Discord.MessageEmbed()
+        const ListEmbed = new MessageEmbed()
         .setColor("#c586b6")
         .setTitle("Voice Channel Leaderboard");
         for(var k = 0;k<totalTime.length;k++){
@@ -70,6 +71,8 @@ module.exports = {
         }
         message.channel.send({embeds: [ListEmbed]});
         this.logger.info("Sent Voice Leaderboard!")
+
+
     }
 }
 
