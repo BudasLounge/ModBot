@@ -79,7 +79,7 @@ module.exports = {
                 .setStyle('PRIMARY')
                 .setDisabled("true"),
         );
-        message.channel.send({embeds: [ListEmbed], components: [timingFilters]});
+        message.channel.send({components: [timingFilters], embeds: [ListEmbed]});
     }
 }
 
