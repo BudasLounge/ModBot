@@ -9,7 +9,7 @@ module.exports = {
     async execute(message, args, extra) {
         var api = extra.api;
         const Discord = require('discord.js');
-        const {MessageActionRow, MessageButton, MessageEmbed} = require('discord.js');
+        const {MessageActionRow, MessageButton, MessageEmbed, MessageSelectMenu} = require('discord.js');
         this.logger.info("Gathering all voice timings");
         try{
             var respVoice = await api.get("voice_tracking",{
@@ -78,7 +78,13 @@ module.exports = {
                 .setLabel("Non-muted times only")
                 .setStyle('PRIMARY')
                 .setDisabled("true"),
+            new MessageButton()
+                .setCustomId("channel")
+                .setLabel("By Channel")
+                .setStyle('PRIMARY')
+                .setDisabled("true"),
         );
+
         message.channel.send({components: [timingFilters], embeds: [ListEmbed]});
     }
 }
