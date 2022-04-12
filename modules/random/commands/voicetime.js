@@ -8,6 +8,7 @@ module.exports = {
     has_state: false,//if this command uses the state engine
     async execute(message, args, extra) {
         var api = extra.api;
+        const Discord = require('discord.js');
         this.logger.info("Gathering all voice timings");
         try{
             var respVoice = await api.get("voice_tracking",{
@@ -47,7 +48,9 @@ module.exports = {
         var output = "";
 
         totalTime.sort(compareSecondColumn);
-
+        const ListEmbed = new Discord.MessageEmbed()
+        .setColor("#c586b6")
+        .setTitle("Voice Channel Leaderboard")
         for(var k = 0;k<totalTime.length;k++){
             var diff = Math.floor(totalTime[k][1]), units = [
                 { d: 60, l: "seconds" },
@@ -61,9 +64,10 @@ module.exports = {
             s = (diff % units[i].d) + " " + units[i].l + " " + s;
             diff = Math.floor(diff / units[i].d);
             }
-            output += totalTime[k][0] + ": " + s.toString()
+            ListEmbed.addField(totalTime[k][0], s.toString());
         }
-        message.channel.send("Here is the leaderboard:\n" + output)
+        message.channel.send({embeds: [ListEmbed]});
+        this.logger.info("Sent Voice Leaderboard!")
     }
 }
 
