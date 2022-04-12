@@ -83,6 +83,9 @@ module.exports = {
                 .setLabel("By Channel")
                 .setStyle('PRIMARY')
                 .setDisabled("true"),
+        );
+        const timingFilters2 = new MessageActionRow()
+        .addComponents(
             new MessageButton()
                 .setCustomId("30days")
                 .setLabel("Top - Last 30 Days")
@@ -95,7 +98,7 @@ module.exports = {
                 .setDisabled("true"),
         );
 
-        message.channel.send({components: [timingFilters], embeds: [ListEmbed]});
+        message.channel.send({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
     }
 }
 
