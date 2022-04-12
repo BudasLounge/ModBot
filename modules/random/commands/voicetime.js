@@ -28,21 +28,22 @@ module.exports = {
         this.logger.info(respVoice.voice_trackings.length);
         this.logger.info(totalTime.length);
         for(var i = 0;i<respVoice.voice_trackings.length;i++){
-            if(respVoice.voice_trackings[i].disconnect_time != "None"){
-                var flag = false;
-                for(var j = 0;j<totalTime.length;j++){
-                    if(totalTime[j][0] == respVoice.voice_trackings[i].username){
-                        this.logger.info("Adding to existing row.")
-                        totalTime[j][1] += Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))
-                        flag = true;
-                        break;
-                    }
+            if(respVoice.voice_trackings[i].disconnect_time == "None"){
+                respVoice.voice_trackings[i].disconnect_time = Math.floor(new Date().getTime() / 1000).toString()
+            }
+            var flag = false;
+            for(var j = 0;j<totalTime.length;j++){
+                if(totalTime[j][0] == respVoice.voice_trackings[i].username){
+                    this.logger.info("Adding to existing row.")
+                    totalTime[j][1] += Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))
+                    flag = true;
+                    break;
                 }
-                if(!flag){
-                    this.logger.info("Creating a new row.")
-                    totalTime.push([respVoice.voice_trackings[i].username, Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))])
-                }
-            } 
+            }
+            if(!flag){
+                this.logger.info("Creating a new row.")
+                totalTime.push([respVoice.voice_trackings[i].username, Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))])
+            }
         }
         this.logger.info("Printing array to a table, will only show up in live console, not logs...")
         console.table(totalTime);
