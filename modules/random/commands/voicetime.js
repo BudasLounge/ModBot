@@ -80,7 +80,7 @@ module.exports = {
                 .setDisabled("true"),
             new MessageButton()
                 .setCustomId("channel")
-                .setLabel("By Channel")
+                .setLabel("Top - By Channel")
                 .setStyle('PRIMARY')
                 .setDisabled("true"),
         );
