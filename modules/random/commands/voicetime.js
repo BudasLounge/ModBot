@@ -79,8 +79,13 @@ module.exports = {
                 .setStyle('PRIMARY')
                 .setDisabled("true"),
             new MessageButton()
-                .setCustomId("channel")
-                .setLabel("Top - By Channel")
+                .setCustomId("lonely")
+                .setLabel("Alone times only")
+                .setStyle('PRIMARY')
+                .setDisabled("true"),
+            new MessageButton()
+                .setCustomId("bottom")
+                .setLabel("Bottom Talkers")
                 .setStyle('PRIMARY')
                 .setDisabled("true"),
         );
@@ -94,6 +99,11 @@ module.exports = {
             new MessageButton()
                 .setCustomId("7days")
                 .setLabel("Top - Last 7 Days")
+                .setStyle('PRIMARY')
+                .setDisabled("true"),
+                new MessageButton()
+                .setCustomId("channel")
+                .setLabel("Top - By Channel")
                 .setStyle('PRIMARY')
                 .setDisabled("true"),
         );
