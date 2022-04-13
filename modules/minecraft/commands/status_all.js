@@ -57,7 +57,7 @@ module.exports ={
                     var nextItem = respServer.minecraft_servers[i].display_name + " is currently online with: " + item.players.online + " players online!\n";
                     nextItem += "Players online:\n";
                     for(var j = 0;j<item.players.online;j++){
-                        nextItem += "- " + item.players.sample[j].name + "\n";
+                        nextItem += `- ${item.players.sample[j].name}\n`;
                     }
                     nextItem += "\n";
                 }else{
