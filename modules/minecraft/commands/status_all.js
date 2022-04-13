@@ -55,7 +55,7 @@ module.exports ={
                 }
                 if(item.players.online>0){
                     var isOne = item.players.online == 1;
-                    var nextItem = respServer.minecraft_servers[i].display_name + " is currently online with: " + item.players.online + (isOne ? " player" : " players") + " online\n";
+                    var nextItem = respServer.minecraft_servers[i].display_name + " is currently online with " + item.players.online + (isOne ? " player" : " players") + " online\n";
                     //var nextItem = respServer.minecraft_servers[i].display_name + " is currently online with: " + item.players.online + " players online!\n";
                     var SensitiveCharacters = [ "\\", "*", "_", "~", "`", "|", ">" ];
                     nextItem += "Players online:\n";
