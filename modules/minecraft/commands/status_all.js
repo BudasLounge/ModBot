@@ -7,6 +7,8 @@ module.exports ={
     needs_api: true,
     has_state: false,
     async execute(message, args, extra) {
+        const {performance} = require('perf_hooks');
+        var perfStart = performance.now();
         var api = extra.api;
         const Discord = require('discord.js');
         const axios = require('axios');
@@ -77,7 +79,7 @@ module.exports ={
                 stat_server += nextItem;
             }
         }
-        message.channel.send({ embeds: [ListEmbed]});
+        message.channel.send({ embeds: [ListEmbed], content:`It took ${perfStart-performance.now} milliseconds to run this command`});
         //message.channel.send({ content: stat_server);
         this.logger.info("<<display_all_servers_status");
     }
