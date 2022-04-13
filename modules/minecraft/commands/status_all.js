@@ -79,7 +79,7 @@ module.exports ={
                 stat_server += nextItem;
             }
         }
-        message.channel.send({ embeds: [ListEmbed], content:`It took ${perfStart-performance.now()} milliseconds to get this list:`});
+        message.channel.send({ embeds: [ListEmbed], content:`It took ${((performance.now()-perfStart)/1000).toFixed(2)} milliseconds to get this list:`});
         //message.channel.send({ content: stat_server);
         this.logger.info("<<display_all_servers_status");
     }
