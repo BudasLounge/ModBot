@@ -55,8 +55,11 @@ module.exports ={
                 }
                 if(item.players.online>0){
                     var nextItem = respServer.minecraft_servers[i].display_name + " is currently online with: " + item.players.online + " players online!\n";
+                    var SensitiveCharacters = [ "\\", "*", "_", "~", "`", "|", ">" ];
                     nextItem += "Players online:\n";
                     for(var j = 0;j<item.players.online;j++){
+                        var cleanedString;
+                        SensitiveCharacters.forEach(unsafe => item.players.sample[j].name = item.players.sample[j].name.replaceAll(unsafe, `\\${unsafe}`));
                         nextItem += `- ${item.players.sample[j].name}\n`;
                     }
                     nextItem += "\n";
