@@ -21,7 +21,7 @@ async function onUserJoin(member){
             member.roles.add(respServer.discord_servers[0].default_role_id);
     }
 }
-
+/*
 async function userJoinsVoice(oldMember, newMember){
     let newUserChannel = newMember.channelId;
     let oldUserChannel = oldMember.channelId;
@@ -106,7 +106,7 @@ async function userJoinsVoice(oldMember, newMember){
         logger.info(user.user.username + " left a channel with an ID of: " + oldUserChannel);
     }
 }
-
+*/
 /*async function parseRaw(packet) {
     // We don't want this to run on unrelated packets
     if (!['MESSAGE_REACTION_ADD', 'MESSAGE_REACTION_REMOVE'].includes(packet.t)) return;
