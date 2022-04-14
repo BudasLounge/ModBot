@@ -53,8 +53,10 @@ module.exports = {
         totalTime.sort(compareSecondColumn);
         const ListEmbed = new MessageEmbed()
         .setColor("#c586b6")
-        .setTitle("Voice Channel Leaderboard");
-        for(var k = 0;k<totalTime.length;k++){
+        .setTitle("Voice Channel Leaderboard (Top 10)");
+        var count = 10;
+        if(totalTime.length<count) {count = totalTime.length;}
+        for(var k = 0;k<count;k++){
             var diff = Math.floor(totalTime[k][1]), units = [
                 { d: 60, l: "seconds" },
                 { d: 60, l: "minutes" },
@@ -69,7 +71,7 @@ module.exports = {
             }
             ListEmbed.addField(totalTime[k][0], s.toString());
         }
-        this.logger.info("Sent Voice Leaderboard!")
+        
 
         const timingFilters = new MessageActionRow()
         .addComponents(
@@ -109,6 +111,7 @@ module.exports = {
         );
 
         message.channel.send({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
+        this.logger.info("Sent Voice Leaderboard!")
     }
 }
 
