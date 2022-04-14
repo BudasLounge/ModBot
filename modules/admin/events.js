@@ -137,7 +137,7 @@ function register_handlers(event_registry) {
     logger = event_registry.logger;
     //event_registry.register('messageReactionAdd', onMessageReactionAdd);
     event_registry.register('guildMemberAdd', onUserJoin);
-    event_registry.register('voiceStateUpdate', userJoinsVoice);
+    //event_registry.register('voiceStateUpdate', userJoinsVoice);
     //event_registry.register('raw', parseRaw);
 }
 

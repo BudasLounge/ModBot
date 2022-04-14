@@ -7,20 +7,6 @@ var logger;
     messageReaction.message.channel.get("650871820538347520").send({ content: "[Admin] A reaction was added!")
 }*/
 
-async function onUserJoin(member){
-	var respServer;
-    try{
-        respServer = await api.get("discord_server", {
-            server_id: member.guild.id
-        });
-    }catch(error){
-        logger.error(error);
-    }
-    if(respServer.discord_servers[0]){
-            member.guild.channels.cache.find(channel => channel.id === respServer.discord_servers[0].welcome_channel_id).send({ content: "Hi! <@" + member.id + "> "+respServer.discord_servers[0].welcome_message});
-            member.roles.add(respServer.discord_servers[0].default_role_id);
-    }
-}
 
 async function userJoinsVoice(oldMember, newMember){
     let newUserChannel = newMember.channelId;
@@ -136,7 +122,7 @@ async function userJoinsVoice(oldMember, newMember){
 function register_handlers(event_registry) {
     logger = event_registry.logger;
     //event_registry.register('messageReactionAdd', onMessageReactionAdd);
-    event_registry.register('guildMemberAdd', onUserJoin);
+    //event_registry.register('guildMemberAdd', onUserJoin);
     event_registry.register('voiceStateUpdate', userJoinsVoice);
     //event_registry.register('raw', parseRaw);
 }
