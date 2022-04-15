@@ -34,7 +34,7 @@ module.exports = {
             }
             var flag = false;
             for(var j = 0;j<totalTime.length;j++){
-                if(totalTime[j][0] == respVoice.voice_trackings[i].username + " (" + respVoice.voice_trackings[i].nickname + ")"){
+                if(totalTime[j][0] == respVoice.voice_trackings[i].username){
                     this.logger.info("Adding to existing row.")
                     totalTime[j][1] += Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))
                     flag = true;
@@ -43,7 +43,7 @@ module.exports = {
             }
             if(!flag){
                 this.logger.info("Creating a new row.")
-                totalTime.push([respVoice.voice_trackings[i].username + " (" + respVoice.voice_trackings[i].nickname + ")", Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))])
+                totalTime.push([respVoice.voice_trackings[i].username, Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))])
             }
         }
         this.logger.info("Printing array to a table, will only show up in live console, not logs...")
