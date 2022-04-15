@@ -11,13 +11,13 @@ async function onButtonClick(button){
         if(button.customId.length>10) return;
         const Discord = require('discord.js');
         const {MessageActionRow, MessageButton, MessageEmbed, MessageSelectMenu} = require('discord.js');
-        this.logger.info("Gathering all voice timings");
+        logger.info("Gathering all voice timings");
         try{
             var respVoice = await api.get("voice_tracking",{
                 discord_server_id:message.guild.id
             })
         }catch(error){
-            this.logger.error(error);
+            logger.error(error);
         }
 
         if(!respVoice.voice_trackings[0]){
@@ -25,10 +25,10 @@ async function onButtonClick(button){
             return;
         }
 
-        this.logger.info("Starting the additive loop");
+        logger.info("Starting the additive loop");
         var totalTime = [];
-        this.logger.info(respVoice.voice_trackings.length);
-        this.logger.info(totalTime.length);
+        logger.info(respVoice.voice_trackings.length);
+        logger.info(totalTime.length);
         for(var i = 0;i<respVoice.voice_trackings.length;i++){
             if(respVoice.voice_trackings[i].disconnect_time == "None"){
                 respVoice.voice_trackings[i].disconnect_time = Math.floor(new Date().getTime() / 1000).toString()
@@ -36,18 +36,18 @@ async function onButtonClick(button){
             var flag = false;
             for(var j = 0;j<totalTime.length;j++){
                 if(totalTime[j][0] == respVoice.voice_trackings[i].username){
-                    this.logger.info("Adding to existing row.")
+                    logger.info("Adding to existing row.")
                     totalTime[j][1] += Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))
                     flag = true;
                     break;
                 }
             }
             if(!flag){
-                this.logger.info("Creating a new row.")
+                logger.info("Creating a new row.")
                 totalTime.push([respVoice.voice_trackings[i].username, Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))])
             }
         }
-        this.logger.info("Printing array to a table, will only show up in live console, not logs...")
+        logger.info("Printing array to a table, will only show up in live console, not logs...")
         console.table(totalTime);
         var output = "";
 
@@ -112,7 +112,7 @@ async function onButtonClick(button){
         );
 
         message.channel.send({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
-        this.logger.info("Sent Voice Leaderboard!")
+        logger.info("Sent Voice Leaderboard!")
         button.channel.send({content: "Coming from Random!"});
         button.deferUpdate()
     }
