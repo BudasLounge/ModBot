@@ -7,6 +7,12 @@ var logger;
     messageReaction.message.channel.get("650871820538347520").send({ content: "[Admin] A reaction was added!")
 }*/
 
+async function onButtonClick(button){
+    if (button.isButton()){
+        button.channel.send({content: "Coming from Random!"});
+        button.deferUpdate()
+    }
+}
 
 async function userJoinsVoice(oldMember, newMember){
     let newUserChannel = newMember.channelId;
@@ -121,10 +127,8 @@ async function userJoinsVoice(oldMember, newMember){
 
 function register_handlers(event_registry) {
     logger = event_registry.logger;
-    //event_registry.register('messageReactionAdd', onMessageReactionAdd);
-    //event_registry.register('guildMemberAdd', onUserJoin);
     event_registry.register('voiceStateUpdate', userJoinsVoice);
-    //event_registry.register('raw', parseRaw);
+    event_registry.register('interactionCreate', onButtonClick);
 }
 
 module.exports = register_handlers;
