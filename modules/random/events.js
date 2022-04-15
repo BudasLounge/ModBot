@@ -7,6 +7,107 @@ async function onButtonClick(button){
         if(button.customId.length>10) return;
         const Discord = require('discord.js');
         const {MessageActionRow, MessageButton, MessageEmbed, MessageSelectMenu} = require('discord.js');
+        switch(button.customId){
+        case "bottom":
+            logger.info("Gathering all voice timings");
+            try{
+                var respVoice = await api.get("voice_tracking",{
+                    discord_server_id:button.guild.id
+                })
+            }catch(error){
+                logger.error(error);
+            }
+
+            logger.info("Starting the additive loop");
+            var totalTime = [];
+            logger.info(respVoice.voice_trackings.length);
+            logger.info(totalTime.length);
+            for(var i = 0;i<respVoice.voice_trackings.length;i++){
+                if(respVoice.voice_trackings[i].disconnect_time == "None"){
+                    respVoice.voice_trackings[i].disconnect_time = Math.floor(new Date().getTime() / 1000).toString()
+                }
+                var flag = false;
+                for(var j = 0;j<totalTime.length;j++){
+                    if(totalTime[j][0] == respVoice.voice_trackings[i].username){
+                        logger.info("Adding to existing row.")
+                        totalTime[j][1] += Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))
+                        flag = true;
+                        break;
+                    }
+                }
+                if(!flag){
+                    logger.info("Creating a new row.")
+                    totalTime.push([respVoice.voice_trackings[i].username, Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))])
+                }
+            }
+            logger.info("Printing array to a table, will only show up in live console, not logs...")
+            console.table(totalTime);
+            var output = "";
+
+            totalTime.sort(compareSecondColumnReverse);
+            var ListEmbed = new MessageEmbed()
+            .setColor("#c586b6")
+            .setTitle("Voice Channel Leaderboard (Bottom 10)");
+            var count = 10;
+            if(totalTime.length<count) {count = totalTime.length;}
+            for(var k = 0;k<count;k++){
+                var diff = Math.floor(totalTime[k][1]), units = [
+                    { d: 60, l: "seconds" },
+                    { d: 60, l: "minutes" },
+                    { d: 24, l: "hours" },
+                    { d: 7, l: "days" }
+                ];
+            
+                var s = '';
+                for (var i = 0; i < units.length; ++i) {
+                s = (diff % units[i].d) + " " + units[i].l + " " + s;
+                diff = Math.floor(diff / units[i].d);
+                }
+                ListEmbed.addField(totalTime[k][0], s.toString());
+            }
+            
+
+            var timingFilters = new MessageActionRow()
+            .addComponents(
+                new MessageButton()
+                    .setCustomId("non-muted")
+                    .setLabel("Non-muted times only")
+                    .setStyle('PRIMARY')
+                    .setDisabled("true"),
+                new MessageButton()
+                    .setCustomId("muted")
+                    .setLabel("Muted times only")
+                    .setStyle('PRIMARY')
+                    .setDisabled("true"),
+                new MessageButton()
+                    .setCustomId("top")
+                    .setLabel("Top Talkers")
+                    .setStyle('PRIMARY')
+                    .setDisabled("true"),
+            );
+            var timingFilters2 = new MessageActionRow()
+            .addComponents(
+                new MessageButton()
+                    .setCustomId("30days")
+                    .setLabel("Top - Last 30 Days")
+                    .setStyle('PRIMARY')
+                    .setDisabled("true"),
+                new MessageButton()
+                    .setCustomId("7days")
+                    .setLabel("Top - Last 7 Days")
+                    .setStyle('PRIMARY')
+                    .setDisabled("true"),
+                    new MessageButton()
+                    .setCustomId("channel")
+                    .setLabel("Top - By Channel")
+                    .setStyle('PRIMARY')
+                    .setDisabled("true"),
+            );
+
+        await button.update({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
+        logger.info("Sent Voice Leaderboard!")
+    break;
+    case "top":
         logger.info("Gathering all voice timings");
         try{
             var respVoice = await api.get("voice_tracking",{
@@ -14,11 +115,6 @@ async function onButtonClick(button){
             })
         }catch(error){
             logger.error(error);
-        }
-
-        if(!respVoice.voice_trackings[0]){
-            button.channel.send({ content: "There is no data available yet..."}) 
-            return;
         }
 
         logger.info("Starting the additive loop");
@@ -48,9 +144,9 @@ async function onButtonClick(button){
         var output = "";
 
         totalTime.sort(compareSecondColumn);
-        const ListEmbed = new MessageEmbed()
+        var ListEmbed = new MessageEmbed()
         .setColor("#c586b6")
-        .setTitle("Voice Channel Leaderboard (Bottom 10)");
+        .setTitle("Voice Channel Leaderboard (Top 10)");
         var count = 10;
         if(totalTime.length<count) {count = totalTime.length;}
         for(var k = 0;k<count;k++){
@@ -70,7 +166,7 @@ async function onButtonClick(button){
         }
         
 
-        const timingFilters = new MessageActionRow()
+        var timingFilters = new MessageActionRow()
         .addComponents(
             new MessageButton()
                 .setCustomId("non-muted")
@@ -83,12 +179,12 @@ async function onButtonClick(button){
                 .setStyle('PRIMARY')
                 .setDisabled("true"),
             new MessageButton()
-                .setCustomId("top")
-                .setLabel("Top Talkers")
+                .setCustomId("bottom")
+                .setLabel("Bottom Talkers")
                 .setStyle('PRIMARY')
-                .setDisabled("true"),
+                .setDisabled("false"),
         );
-        const timingFilters2 = new MessageActionRow()
+        var timingFilters2 = new MessageActionRow()
         .addComponents(
             new MessageButton()
                 .setCustomId("30days")
@@ -107,8 +203,10 @@ async function onButtonClick(button){
                 .setDisabled("true"),
         );
 
-        await button.update({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
-        logger.info("Sent Voice Leaderboard!")
+    await button.update({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
+    logger.info("Sent Voice Leaderboard!")
+    break;
+    }
         //button.channel.send({content: "Coming from Random!"});
         //button.deferUpdate()
     }
@@ -232,11 +330,19 @@ function register_handlers(event_registry) {
 }
 
 module.exports = register_handlers;
-function compareSecondColumn(a, b) {
+function compareSecondColumnReverse(a, b) {
     if (a[1] === b[1]) {
         return 0;
     }
     else {
         return (a[1] < b[1]) ? -1 : 1;
+    }
+}
+function compareSecondColumn(a, b) {
+    if (a[1] === b[1]) {
+        return 0;
+    }
+    else {
+        return (a[1] > b[1]) ? -1 : 1;
     }
 }
