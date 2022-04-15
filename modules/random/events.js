@@ -83,10 +83,10 @@ async function onButtonClick(button){
                 .setStyle('PRIMARY')
                 .setDisabled("true"),
             new MessageButton()
-                .setCustomId("bottom")
-                .setLabel("Bottom Talkers")
+                .setCustomId("top")
+                .setLabel("Top Talkers")
                 .setStyle('PRIMARY')
-                .setDisabled("true"),
+                .setDisabled("false"),
         );
         const timingFilters2 = new MessageActionRow()
         .addComponents(
