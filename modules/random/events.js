@@ -83,7 +83,7 @@ async function onButtonClick(button){
                     .setCustomId("top")
                     .setLabel("Top Talkers")
                     .setStyle('PRIMARY')
-                    .setDisabled("true"),
+                    .setDisabled("false"),
             );
             var timingFilters2 = new MessageActionRow()
             .addComponents(
