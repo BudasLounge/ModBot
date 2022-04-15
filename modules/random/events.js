@@ -81,7 +81,7 @@ async function onButtonClick(button){
                 .setCustomId("non-muted")
                 .setLabel("Non-muted times only")
                 .setStyle('PRIMARY')
-                .setDisabled("false"),
+                .setDisabled("true"),
             new MessageButton()
                 .setCustomId("lonely")
                 .setLabel("Alone times only")

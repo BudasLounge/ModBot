@@ -79,7 +79,7 @@ module.exports = {
                 .setCustomId("non-muted")
                 .setLabel("Non-muted times only")
                 .setStyle('PRIMARY')
-                .setDisabled("false"),
+                .setDisabled("true"),
             new MessageButton()
                 .setCustomId("lonely")
                 .setLabel("Alone times only")
@@ -89,7 +89,7 @@ module.exports = {
                 .setCustomId("bottom")
                 .setLabel("Bottom Talkers")
                 .setStyle('PRIMARY')
-                .setDisabled("true"),
+                .setDisabled("false"),
         );
         const timingFilters2 = new MessageActionRow()
         .addComponents(
