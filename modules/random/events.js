@@ -31,7 +31,7 @@ async function onButtonClick(button){
             }
             var flag = false;
             for(var j = 0;j<totalTime.length;j++){
-                if(totalTime[j][0] == respVoice.voice_trackings[i].username){
+                if(totalTime[j][0] == respVoice.voice_trackings[i].username + " (" + respVoice.voice_trackings[i].nickname + ")"){
                     logger.info("Adding to existing row.")
                     totalTime[j][1] += Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))
                     flag = true;
