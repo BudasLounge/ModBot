@@ -107,7 +107,7 @@ async function onButtonClick(button){
                 .setDisabled("true"),
         );
 
-        button.channel.send({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
+        await button.update({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
         logger.info("Sent Voice Leaderboard!")
         //button.channel.send({content: "Coming from Random!"});
         button.deferUpdate()
