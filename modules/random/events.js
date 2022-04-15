@@ -109,7 +109,7 @@ async function onButtonClick(button){
 
         button.channel.send({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
         logger.info("Sent Voice Leaderboard!")
-        button.channel.send({content: "Coming from Random!"});
+        //button.channel.send({content: "Coming from Random!"});
         button.deferUpdate()
     }
 }
