@@ -1,10 +1,6 @@
 var ApiClient = require("../../core/js/APIClient.js");
 var api = new ApiClient();
 const Discord = require('discord.js');
-//var client = new Discord.Client();
-/*function onMessageReactionAdd(messageReaction, user) {
-    messageReaction.message.channel.get("650871820538347520").send({ content: "[Admin] A reaction was added!")
-}*/
 
 async function onButtonClick(button){
     if (button.isButton()){
@@ -14,14 +10,14 @@ async function onButtonClick(button){
         logger.info("Gathering all voice timings");
         try{
             var respVoice = await api.get("voice_tracking",{
-                discord_server_id:message.guild.id
+                discord_server_id:button.guild.id
             })
         }catch(error){
             logger.error(error);
         }
 
         if(!respVoice.voice_trackings[0]){
-            message.channel.send({ content: "There is no data available yet..."}) 
+            button.channel.send({ content: "There is no data available yet..."}) 
             return;
         }
 
@@ -111,7 +107,7 @@ async function onButtonClick(button){
                 .setDisabled("true"),
         );
 
-        message.channel.send({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
+        button.channel.send({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
         logger.info("Sent Voice Leaderboard!")
         button.channel.send({content: "Coming from Random!"});
         button.deferUpdate()
@@ -216,7 +212,7 @@ async function userJoinsVoice(oldMember, newMember){
         // Emojis can have identifiers of name:id format, so we have to account for that case as well
         const emoji = packet.d.emoji.id ? `${packet.d.emoji.name}:${packet.d.emoji.id}` : packet.d.emoji.name;
         // This gives us the reaction we need to emit the event properly, in top of the message object
-        const reaction = message.reactions.get(emoji);
+        const reaction = button.reactions.get(emoji);
         // Adds the currently reacting user to the reaction's users collection.
         if (reaction) reaction.users.set(packet.d.user_id, client.users.get(packet.d.user_id));
         // Check which type of event it is before emitting
