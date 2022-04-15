@@ -1,12 +1,10 @@
 var ApiClient = require("../../core/js/APIClient.js");
 var api = new ApiClient();
-const Discord = require('discord.js');
+const {MessageActionRow, MessageButton, MessageEmbed, MessageSelectMenu} = require('discord.js');
 
 async function onButtonClick(button){
     if (button.isButton()){
         if(button.customId.length>10) return;
-        const Discord = require('discord.js');
-        const {MessageActionRow, MessageButton, MessageEmbed, MessageSelectMenu} = require('discord.js');
         switch(button.customId){
         case "bottom":
             logger.info("Gathering all voice timings");
@@ -107,7 +105,7 @@ async function onButtonClick(button){
         await button.update({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
         logger.info("Sent Voice Leaderboard!")
     break;
-    case "top":
+        case "top":
         logger.info("Gathering all voice timings");
         try{
             var respVoice = await api.get("voice_tracking",{

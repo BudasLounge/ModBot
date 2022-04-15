@@ -8,7 +8,6 @@ module.exports = {
     has_state: false,//if this command uses the state engine
     async execute(message, args, extra) {
         var api = extra.api;
-        const Discord = require('discord.js');
         const {MessageActionRow, MessageButton, MessageEmbed, MessageSelectMenu} = require('discord.js');
         this.logger.info("Gathering all voice timings");
         try{
