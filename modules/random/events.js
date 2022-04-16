@@ -61,7 +61,7 @@ async function onButtonClick(button){
                 s = (diff % units[i].d) + " " + units[i].l + " " + s;
                 diff = Math.floor(diff / units[i].d);
                 }
-                ListEmbed.addField(totalTime[k][0], s.toString());
+                ListEmbed.addField((k+1).toString() + ". " + totalTime[k][0], s.toString());
             }
             
 
@@ -160,7 +160,7 @@ async function onButtonClick(button){
             s = (diff % units[i].d) + " " + units[i].l + " " + s;
             diff = Math.floor(diff / units[i].d);
             }
-            ListEmbed.addField(totalTime[k][0], s.toString());
+            ListEmbed.addField((k+1).toString() + ". " + totalTime[k][0], s.toString());
         }
         
 
@@ -204,7 +204,7 @@ async function onButtonClick(button){
     await button.update({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
     logger.info("Sent Voice Leaderboard!")
     break;
-    }
+}
         //button.channel.send({content: "Coming from Random!"});
         //button.deferUpdate()
     }

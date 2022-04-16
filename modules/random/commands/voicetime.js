@@ -68,7 +68,7 @@ module.exports = {
             s = (diff % units[i].d) + " " + units[i].l + " " + s;
             diff = Math.floor(diff / units[i].d);
             }
-            ListEmbed.addField(totalTime[k][0], s.toString());
+            ListEmbed.addField((k+1).toString() + ". " + totalTime[k][0], s.toString());
         }
         
 
