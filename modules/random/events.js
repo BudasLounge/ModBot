@@ -210,7 +210,7 @@ async function onButtonClick(button){
         try{
             var respVoice = await api.get("voice_tracking",{
                 discord_server_id:button.guild.id,
-                selfmute:parseInt(1)
+                selfmute:true
             })
         }catch(error){
             logger.error(error);
@@ -310,7 +310,7 @@ async function onButtonClick(button){
         try{
             var respVoice = await api.get("voice_tracking",{
                 discord_server_id:button.guild.id,
-                selfmute:parseInt(0)
+                selfmute:false
             })
         }catch(error){
             logger.error(error);
