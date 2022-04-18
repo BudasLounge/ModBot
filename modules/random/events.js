@@ -246,7 +246,7 @@ async function onButtonClick(button){
         console.table(totalTime);
         var output = "";
 
-        totalTime.sort(compareSecondColumnReverse);
+        totalTime.sort(compareSecondColumn);
         var ListEmbed = new MessageEmbed()
         .setColor("#c586b6")
         .setTitle("Voice Channel Leaderboard (Top 10 muters)");
@@ -348,7 +348,7 @@ async function onButtonClick(button){
         console.table(totalTime);
         var output = "";
 
-        totalTime.sort(compareSecondColumnReverse);
+        totalTime.sort(compareSecondColumn);
         var ListEmbed = new MessageEmbed()
         .setColor("#c586b6")
         .setTitle("Voice Channel Leaderboard (Top 10 non-muters)");
