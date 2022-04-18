@@ -78,7 +78,12 @@ module.exports = {
                 .setCustomId("non-muted")
                 .setLabel("Non-muted times only")
                 .setStyle('PRIMARY')
-                .setDisabled("true"),
+                .setDisabled("false"),
+            new MessageButton()
+                .setCustomId("muted")
+                .setLabel("Muted times only")
+                .setStyle('PRIMARY')
+                .setDisabled("false"),
             new MessageButton()
                 .setCustomId("lonely")
                 .setLabel("Alone times only")
