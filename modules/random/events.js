@@ -217,6 +217,7 @@ async function onButtonClick(button){
         }
         if(!respVoice.voice_trackings[0]){
             button.channel.send({ content: "There is no data available yet..."}) 
+            button.deferUpdate();
             return;
         }
         logger.info("Starting the additive loop");
@@ -304,7 +305,9 @@ async function onButtonClick(button){
                 .setStyle('PRIMARY')
                 .setDisabled("true"),
         );
-    break;
+        await button.update({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
+        logger.info("Sent Voice Leaderboard!")
+        break;
     case "non-muted":
         logger.info("Gathering all voice timings");
         try{
@@ -404,7 +407,9 @@ async function onButtonClick(button){
                 .setStyle('PRIMARY')
                 .setDisabled("true"),
         );
-    break;
+        await button.update({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
+        logger.info("Sent Voice Leaderboard!")
+        break;
 }
         //button.channel.send({content: "Coming from Random!"});
         //button.deferUpdate()
