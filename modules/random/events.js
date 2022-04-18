@@ -305,7 +305,7 @@ async function onButtonClick(button){
                 .setDisabled("true"),
         );
     break;
-    case "muted":
+    case "non-muted":
         logger.info("Gathering all voice timings");
         try{
             var respVoice = await api.get("voice_tracking",{
@@ -315,7 +315,10 @@ async function onButtonClick(button){
         }catch(error){
             logger.error(error);
         }
-
+        if(!respVoice.voice_trackings[0]){
+            button.channel.send({ content: "There is no data available yet..."}) 
+            return;
+        }
         logger.info("Starting the additive loop");
         var totalTime = [];
         logger.info(respVoice.voice_trackings.length);
