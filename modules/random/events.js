@@ -215,7 +215,10 @@ async function onButtonClick(button){
         }catch(error){
             logger.error(error);
         }
-
+        if(!respVoice.voice_trackings[0]){
+            button.channel.send({ content: "There is no data available yet..."}) 
+            return;
+        }
         logger.info("Starting the additive loop");
         var totalTime = [];
         logger.info(respVoice.voice_trackings.length);
