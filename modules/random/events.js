@@ -145,6 +145,8 @@ async function onButtonClick(button){
         var output = "";
 
         totalTime.sort(compareSecondColumn);
+        logger.info("Printing array to a table after sorting...")
+            console.table(totalTime);
         var ListEmbed = new MessageEmbed()
         .setColor("#c586b6")
         .setTitle("Voice Channel Leaderboard (Top 10)");
