@@ -40,7 +40,7 @@ module.exports = {
             }
             let role = message.guild.roles.cache.find(role => role.id === "735631143583481987");
             message.member.roles.add(role);
-            let rem_role = message.guild.cache.find(role => role.id === "670370134925508717");
+            let rem_role = message.guild.roles.cache.find(role => role.id === "670370134925508717");
             message.member.roles.remove(rem_role);
             message.channel.send({ content: "Added a player to the database! Ask an admin for help if you can't see the players lounge!"});
         }
