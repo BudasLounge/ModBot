@@ -14,7 +14,7 @@ module.exports = {
         var now = moment();
         
 
-        if((hours >= 8 && (hours < 23)) || message.author.id === "185223223892377611"){
+        if((hours >= 8 && (hours < 23)) || message.author.id === "185223223892377611" || message.author.id == "965738635343302697"){
 
         }else{
             var deadline = now.clone().hour(8).minute(0).second(0);
