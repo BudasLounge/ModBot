@@ -24,7 +24,7 @@ module.exports = {
         }
         console.log("Found a server!");
         if(respServer.minecraft_servers[0].status_api_port.toLowerCase() != "none"){
-            var status = await getStatus(respServer.minecraft_servers[0].display_name, respServer.minecraft_servers[0].port, respServer.minecraft_servers[0].numeric_ip, message.channel);
+            var status = await getStatus(respServer.minecraft_servers[0].server_ip);
             this.logger.info(status);
             if(status == "online"){
                 console.log("Making listEmbed now!");
