@@ -35,7 +35,7 @@ module.exports = {
                 var isOne = respPlayers.data.players.length == 1;
                 var num_players = "There " + (isOne ? "is" : "are") + " " + respPlayers.data.players.length + (isOne ? " player" : " players") + " on " + respServer.minecraft_servers[0].display_name + " server";
                 if(respPlayers.data.players.length == 0) {
-                    msg += ".";
+                    msg += "None";
                 } else {
                     for(var player of respPlayers.data.players) {
                         msg += "\n  - " + player.username;
