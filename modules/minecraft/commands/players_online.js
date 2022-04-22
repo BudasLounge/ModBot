@@ -24,9 +24,16 @@ module.exports = {
         }
         console.log("Found a server!");
         if(respServer.minecraft_servers[0].status_api_port.toLowerCase() != "none"){
-            var status = await getStatus(respServer.minecraft_servers[0].server_ip);
-            this.logger.info(status);
-            if(status){
+            var status;
+            var flag = false;
+            try{
+                status = await getStatus(respServer.minecraft_servers[i].server_ip);
+            }catch(status_error){
+                this.logger.error(status_error + ", setting flag to true");
+                status = respServer.minecraft_servers[i].display_name + " is currently offline!\n\n";
+                flag = true;
+            }
+            if(!flag){
                 console.log("Making listEmbed now!");
                 const ListEmbed = new Discord.MessageEmbed()
                 .setColor("#f92f03")
