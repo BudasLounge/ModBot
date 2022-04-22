@@ -38,7 +38,7 @@ module.exports = {
                     msg += "None";
                 } else {
                     for(var player of respPlayers.data.players) {
-                        msg += "\n  - " + player.username;
+                        msg += "\n" + player.username;
                     }
                 }
                 ListEmbed.addField(num_players, msg);
