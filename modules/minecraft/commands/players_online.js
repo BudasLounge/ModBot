@@ -30,7 +30,7 @@ module.exports = {
                 .setColor("#f92f03")
                 .setTitle("List of all players on " + respServer.minecraft_servers[0].display_name + ": ");
                 var msg = "Players: ";
-                var respPlayers = await axios.get(respServer.minecraft_servers[0].numeric_ip + respServer.minecraft_servers[0].status_api_port + "/player-list", {});
+                var respPlayers = await axios.get(respServer.minecraft_servers[0].numeric_ip + ":" + respServer.minecraft_servers[0].status_api_port + "/player-list", {});
                 console.log(respPlayers);
                 var isOne = respPlayers.data.players.length == 1;
                 var num_players = "There " + (isOne ? "is" : "are") + " " + respPlayers.data.players.length + (isOne ? " player" : " players") + " on " + respServer.minecraft_servers[0].display_name + " server";
