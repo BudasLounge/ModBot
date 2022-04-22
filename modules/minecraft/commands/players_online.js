@@ -11,6 +11,7 @@ module.exports = {
 
         const axios = require('axios');
         const Discord = require('discord.js');
+        const {getStatus} = require("mc-server-status");
         console.log(">>players_online");
 	try {
         var respServer;
@@ -23,7 +24,8 @@ module.exports = {
         }
         console.log("Found a server!");
         if(respServer.minecraft_servers[0].status_api_port.toLowerCase() != "none"){
-            var status = await getServerState(respServer.minecraft_servers[0].display_name, respServer.minecraft_servers[0].port, respServer.minecraft_servers[0].numeric_ip, message.channel);
+            var status = await getStatus(respServer.minecraft_servers[0].display_name, respServer.minecraft_servers[0].port, respServer.minecraft_servers[0].numeric_ip, message.channel);
+            this.logger.info(status);
             if(status == "online"){
                 console.log("Making listEmbed now!");
                 const ListEmbed = new Discord.MessageEmbed()
