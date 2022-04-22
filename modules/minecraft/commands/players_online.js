@@ -26,7 +26,7 @@ module.exports = {
         if(respServer.minecraft_servers[0].status_api_port.toLowerCase() != "none"){
             var status = await getStatus(respServer.minecraft_servers[0].server_ip);
             this.logger.info(status);
-            if(status == "online"){
+            if(status){
                 console.log("Making listEmbed now!");
                 const ListEmbed = new Discord.MessageEmbed()
                 .setColor("#f92f03")
