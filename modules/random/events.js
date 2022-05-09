@@ -567,7 +567,7 @@ async function onButtonClick(button){
             }
             var flag = false;
             for(var j = 0;j<totalTime.length;j++){
-                if(totalTime[j][0] == channelNameUse){
+                if(totalTime[j][0] == channelNameUse.name){
                     logger.info("Adding to existing row.")
                     totalTime[j][1] += Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))
                     flag = true;
@@ -576,7 +576,7 @@ async function onButtonClick(button){
             }
             if(!flag){
                 logger.info("Creating a new row.")
-                totalTime.push([channelNameUse, Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))])
+                totalTime.push([channelNameUse.name, Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))])
             }
         }
         logger.info("Printing array to a table, will only show up in live console, not logs...")
