@@ -436,6 +436,7 @@ async function onButtonClick(button){
             logger.info(totalTime.length);
             for(var i = 0;i<respVoice.voice_trackings.length;i++){
                 var channelName = button.guild.channels.cache.get(respVoice.voice_trackings[i].channel_id).toString()
+                logger.info(channelName)
                 if(respVoice.voice_trackings[i].disconnect_time == "None"){
                     respVoice.voice_trackings[i].disconnect_time = Math.floor(new Date().getTime() / 1000).toString()
                 }
