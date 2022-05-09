@@ -32,7 +32,7 @@ module.exports = {
             var flag = false;
             for(var j = 0;j<totalTime.length;j++){
                 if(totalTime[j][0] == respVoice.voice_trackings[i].username){
-                    this.logger.info("Adding to existing row.")
+                    this.logger.info("Adding to existing row: " + respVoice.voice_trackings[i].username + ": " + Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time)))
                     totalTime[j][1] += Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))
                     flag = true;
                     break;
