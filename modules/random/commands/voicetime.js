@@ -113,6 +113,11 @@ module.exports = {
                 .setLabel("Top Talkers - By Channel")
                 .setStyle('PRIMARY')
                 .setDisabled("false"),
+                new MessageButton()
+                .setCustomId("channelUse")
+                .setLabel("Top Channels by use")
+                .setStyle('PRIMARY')
+                .setDisabled("false"),
         );
 
         message.channel.send({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
