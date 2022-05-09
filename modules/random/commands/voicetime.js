@@ -66,6 +66,7 @@ module.exports = {
             for (var i = 0; i < units.length; ++i) {
             s = (diff % units[i].d) + " " + units[i].l + " " + s;
             diff = Math.floor(diff / units[i].d);
+            this.logger.info("diff: " + diff.toString())
             }
             ListEmbed.addField((k+1).toString() + ". " + totalTime[k][0], s.toString());
         }
