@@ -59,6 +59,7 @@ module.exports = {
                 { d: 60, l: "seconds" },
                 { d: 60, l: "minutes" },
                 { d: 24, l: "hours" },
+                //change 365 to a higher number if someone hits 365 days of cumulative voice timings
                 { d: 365, l: "days" }
             ];
         
