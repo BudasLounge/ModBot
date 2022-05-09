@@ -460,7 +460,7 @@ async function onButtonClick(button){
             totalTime.sort(compareSecondColumn);
             var ListEmbed = new MessageEmbed()
             .setColor("#c586b6")
-            .setTitle("Voice Channel Leaderboard (Top 10 channels)");
+            .setTitle("Voice Channel Leaderboard (Top 10 channel times)");
             var count = 10;
             if(totalTime.length<count) {count = totalTime.length;}
             for(var k = 0;k<count;k++){
