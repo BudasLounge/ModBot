@@ -436,13 +436,12 @@ async function onButtonClick(button){
             logger.info(totalTime.length);
             for(var i = 0;i<respVoice.voice_trackings.length;i++){
                 var channelName = button.guild.channels.cache.get(respVoice.voice_trackings[i].channel_id)
-                logger.info(channelName.name)
                 if(respVoice.voice_trackings[i].disconnect_time == "None"){
                     respVoice.voice_trackings[i].disconnect_time = Math.floor(new Date().getTime() / 1000).toString()
                 }
                 var flag = false;
                 for(var j = 0;j<totalTime.length;j++){
-                    if(totalTime[j][0] == respVoice.voice_trackings[i].username + " " + channelName){
+                    if(totalTime[j][0] == respVoice.voice_trackings[i].username + " " + channelName.name){
                         logger.info("Adding to existing row.")
                         totalTime[j][1] += Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))
                         flag = true;
@@ -451,7 +450,7 @@ async function onButtonClick(button){
                 }
                 if(!flag){
                     logger.info("Creating a new row.")
-                    totalTime.push([respVoice.voice_trackings[i].username + " " + channelName, Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))])
+                    totalTime.push([respVoice.voice_trackings[i].username + " " + channelName.name, Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))])
                 }
             }
             logger.info("Printing array to a table, will only show up in live console, not logs...")
