@@ -594,7 +594,7 @@ async function onButtonClick(button){
                 { d: 60, l: "seconds" },
                 { d: 60, l: "minutes" },
                 { d: 24, l: "hours" },
-                { d: 365, l: "days" }
+                { d: 1000, l: "days" }
             ];
         
             var s = '';
