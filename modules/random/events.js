@@ -512,7 +512,7 @@ async function onButtonClick(button){
                 .setCustomId("channel")
                 .setLabel("Top - By Channel")
                 .setStyle('PRIMARY')
-                .setDisabled("false"),
+                .setDisabled("true"),
         );
         await button.update({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
         logger.info("Sent Voice Leaderboard!")
