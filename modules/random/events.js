@@ -56,7 +56,7 @@ async function onButtonClick(button){
                     { d: 60, l: "seconds" },
                     { d: 60, l: "minutes" },
                     { d: 24, l: "hours" },
-                    { d: 7, l: "days" }
+                    { d: 365, l: "days" }
                 ];
             
                 var s = '';
@@ -157,7 +157,7 @@ async function onButtonClick(button){
                 { d: 60, l: "seconds" },
                 { d: 60, l: "minutes" },
                 { d: 24, l: "hours" },
-                { d: 7, l: "days" }
+                { d: 365, l: "days" }
             ];
         
             var s = '';
@@ -262,7 +262,7 @@ async function onButtonClick(button){
                 { d: 60, l: "seconds" },
                 { d: 60, l: "minutes" },
                 { d: 24, l: "hours" },
-                { d: 7, l: "days" }
+                { d: 365, l: "days" }
             ];
         
             var s = '';
@@ -364,7 +364,7 @@ async function onButtonClick(button){
                 { d: 60, l: "seconds" },
                 { d: 60, l: "minutes" },
                 { d: 24, l: "hours" },
-                { d: 7, l: "days" }
+                { d: 365, l: "days" }
             ];
         
             var s = '';
