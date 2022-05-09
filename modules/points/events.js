@@ -3,7 +3,7 @@ var api = new ApiClient();
 
 async function onButtonClick(button){
 if (button.isButton() || button.isSelectMenu()){
-    if(button.customId.length<10) return;
+    if(button.customId.length<=13) return;
 if(button.isButton()){
     const {MessageEmbed} = require('discord.js');
     const moment = require("moment");

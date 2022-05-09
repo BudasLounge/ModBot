@@ -110,7 +110,7 @@ module.exports = {
                 .setDisabled("true"),
                 new MessageButton()
                 .setCustomId("channel")
-                .setLabel("Top - By Channel")
+                .setLabel("Top Talkers - By Channel")
                 .setStyle('PRIMARY')
                 .setDisabled("false"),
         );
