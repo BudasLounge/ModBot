@@ -112,7 +112,7 @@ module.exports = {
                 .setCustomId("channel")
                 .setLabel("Top - By Channel")
                 .setStyle('PRIMARY')
-                .setDisabled("true"),
+                .setDisabled("false"),
         );
 
         message.channel.send({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
