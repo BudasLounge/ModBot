@@ -58,8 +58,8 @@ module.exports = {
             var diff = Math.floor(totalTime[k][1]), units = [
                 { d: 60, l: "seconds" },
                 { d: 60, l: "minutes" },
-                { d: 24, l: "hours" },
-                { d: 7, l: "days" }
+                { d: 24, l: "hours" }
+                //{ d: 7, l: "days" }
             ];
         
             var s = '';
