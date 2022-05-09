@@ -25,8 +25,6 @@ module.exports = {
 
         this.logger.info("Starting the additive loop");
         var totalTime = [];
-        this.logger.info(respVoice.voice_trackings.length);
-        this.logger.info(totalTime.length);
         for(var i = 0;i<respVoice.voice_trackings.length;i++){
             if(respVoice.voice_trackings[i].disconnect_time == "None"){
                 respVoice.voice_trackings[i].disconnect_time = Math.floor(new Date().getTime() / 1000).toString()
@@ -47,6 +45,7 @@ module.exports = {
         }
         this.logger.info("Printing array to a table, will only show up in live console, not logs...")
         console.table(totalTime);
+        this.logger.info(totalTime);
         var output = "";
 
         totalTime.sort(compareSecondColumn);
