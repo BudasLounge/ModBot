@@ -102,7 +102,7 @@ async function onButtonClick(button){
                     .setCustomId("channel")
                     .setLabel("Top - By Channel")
                     .setStyle('PRIMARY')
-                    .setDisabled("true"),
+                    .setDisabled("false"),
             );
 
         await button.update({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
@@ -203,7 +203,7 @@ async function onButtonClick(button){
                 .setCustomId("channel")
                 .setLabel("Top - By Channel")
                 .setStyle('PRIMARY')
-                .setDisabled("true"),
+                .setDisabled("false"),
         );
 
     await button.update({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
@@ -307,7 +307,7 @@ async function onButtonClick(button){
                 .setCustomId("channel")
                 .setLabel("Top - By Channel")
                 .setStyle('PRIMARY')
-                .setDisabled("true"),
+                .setDisabled("false"),
         );
         await button.update({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
         logger.info("Sent Voice Leaderboard!")
@@ -409,7 +409,7 @@ async function onButtonClick(button){
                 .setCustomId("channel")
                 .setLabel("Top - By Channel")
                 .setStyle('PRIMARY')
-                .setDisabled("true"),
+                .setDisabled("false"),
         );
         await button.update({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
         logger.info("Sent Voice Leaderboard!")
