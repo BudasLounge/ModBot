@@ -102,7 +102,7 @@ module.exports = {
                 .setCustomId("30days")
                 .setLabel("Top - Last 30 Days")
                 .setStyle('PRIMARY')
-                .setDisabled("true"),
+                .setDisabled("false"),
             new MessageButton()
                 .setCustomId("7days")
                 .setLabel("Top - Last 7 Days")
