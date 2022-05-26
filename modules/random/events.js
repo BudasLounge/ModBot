@@ -569,6 +569,7 @@ async function onButtonClick(button){
             }
             var flag = false;
             for(var j = 0;j<totalTime.length;j++){
+                logger.info(totalTime[j][0])
                 if(totalTime[j][0] == channelNameUse.name){
                     logger.info("Adding to existing row.")
                     totalTime[j][1] += Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))
