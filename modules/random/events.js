@@ -578,6 +578,7 @@ async function onButtonClick(button){
             }
             if(!flag){
                 logger.info("Creating a new row.")
+                logger.info("Channel name: " + channelNameUse.name)
                 totalTime.push(channelNameUse.name, Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time)))
             }
         }
