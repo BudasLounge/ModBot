@@ -657,7 +657,7 @@ async function onButtonClick(button){
         try{
             var respVoice = await api.get("voice_tracking",{
                 discord_server_id:button.guild.id,
-                _filter: "disconnect_time > " + startDate.toString()
+                _filter: "disconnect_time > " + startDate
             })
         }catch(error){
             logger.error(error);
