@@ -746,7 +746,7 @@ async function onButtonClick(button){
                 .setCustomId("7days")
                 .setLabel("Top - Last 7 Days")
                 .setStyle('PRIMARY')
-                .setDisabled("true"),
+                .setDisabled("false"),
                 new MessageButton()
                 .setCustomId("channel")
                 .setLabel("Top Talkers - By Channel")
@@ -767,7 +767,6 @@ async function onButtonClick(button){
             logger.info("Gathering all voice timings");
             var today = Math.floor(new Date().getTime() / 1000);
             var startDate = (today - (7*24*60*60));
-            await button.channel.send({content: startDate.toString()});
         try{
             var respVoice = await api.get("voice_tracking",{
                 discord_server_id:button.guild.id,
