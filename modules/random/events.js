@@ -578,7 +578,7 @@ async function onButtonClick(button){
             }
             if(!flag){
                 logger.info("Creating a new row.")
-                totalTime.push(channelName.name, Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))])
+                totalTime.push(channelName.name, Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time)))
             }
         }
         logger.info("Printing array to a table, will only show up in live console, not logs...")
