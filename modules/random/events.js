@@ -651,7 +651,7 @@ async function onButtonClick(button){
         break;
         case "30days":
             logger.info("Gathering all voice timings");
-            var today = new Date();
+            var today = Math.floor(new Date().getTime() / 1000);
             var startDate = new Date(today.getTime() - 30*24*60*60*1000);
             await button.channel.send({content: startDate.toString()});
         try{
