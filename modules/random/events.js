@@ -676,7 +676,7 @@ async function onButtonClick(button){
             if(respVoice.voice_trackings[i].disconnect_time == "None"){
                 respVoice.voice_trackings[i].disconnect_time = Math.floor(new Date().getTime() / 1000).toString()
             }
-            if(parseInt(respVoice.voice_trackings[i].connect_time)<parseInt(startDate))respVoice.voice_trackings[i].connect_time=parseInt(startDate);
+            if(parseInt(respVoice.voice_trackings[i].connect_time)<parseInt(startDate))respVoice.voice_trackings[i].connect_time=startDate;
             var flag = false;
             for(var j = 0;j<totalTime.length;j++){
                 if(totalTime[j][0] == respVoice.voice_trackings[i].username){
