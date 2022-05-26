@@ -107,7 +107,7 @@ module.exports = {
                 .setCustomId("7days")
                 .setLabel("Top - Last 7 Days")
                 .setStyle('PRIMARY')
-                .setDisabled("true"),
+                .setDisabled("false"),
                 new MessageButton()
                 .setCustomId("channel")
                 .setLabel("Top Talkers - By Channel")
