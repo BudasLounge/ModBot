@@ -542,6 +542,8 @@ async function onButtonClick(button){
         await button.update({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
         logger.info("Sent Voice Leaderboard!")
         break;
+       
+       
         case "channelUse":
             logger.info("Gathering all voice timings");
         try{
@@ -561,12 +563,13 @@ async function onButtonClick(button){
         logger.info(respVoice.voice_trackings.length);
         logger.info(totalTime.length);
         for(var i = 0;i<respVoice.voice_trackings.length;i++){
+            var channelName = button.guild.channels.cache.get(respVoice.voice_trackings[i].channel_id)
             if(respVoice.voice_trackings[i].disconnect_time == "None"){
                 respVoice.voice_trackings[i].disconnect_time = Math.floor(new Date().getTime() / 1000).toString()
             }
             var flag = false;
             for(var j = 0;j<totalTime.length;j++){
-                if(totalTime[j][0] == respVoice.voice_trackings[i].username){
+                if(totalTime[j][0] == respVoice.voice_trackings[i].channelName){
                     logger.info("Adding to existing row.")
                     totalTime[j][1] += Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))
                     flag = true;
@@ -575,7 +578,7 @@ async function onButtonClick(button){
             }
             if(!flag){
                 logger.info("Creating a new row.")
-                totalTime.push([respVoice.voice_trackings[i].username, Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))])
+                totalTime.push([respVoice.voice_trackings[i].channelName, Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))])
             }
         }
         logger.info("Printing array to a table, will only show up in live console, not logs...")
@@ -593,9 +596,9 @@ async function onButtonClick(button){
                 { d: 60, l: "seconds" },
                 { d: 60, l: "minutes" },
                 { d: 24, l: "hours" },
-                { d: 1000, l: "days" }
+                { d: 365, l: "days" }
             ];
-        
+
             var s = '';
             for (var i = 0; i < units.length; ++i) {
             s = (diff % units[i].d) + " " + units[i].l + " " + s;
@@ -649,6 +652,8 @@ async function onButtonClick(button){
         await button.update({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
         logger.info("Sent Voice Leaderboard!")
         break;
+        
+        
         case "30days":
             logger.info("Gathering all voice timings");
             var today = Math.floor(new Date().getTime() / 1000);
