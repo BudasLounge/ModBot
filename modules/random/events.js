@@ -652,7 +652,7 @@ async function onButtonClick(button){
         case "30days":
             logger.info("Gathering all voice timings");
             var today = Math.floor(new Date().getTime() / 1000);
-            var startDate = (today - (30*24*60*60));
+            var startDate = (today - (30*24*60*60*1000));
         try{
             var respVoice = await api.get("voice_tracking",{
                 discord_server_id:button.guild.id,
@@ -766,7 +766,7 @@ async function onButtonClick(button){
         case "7days":
             logger.info("Gathering all voice timings");
             var today = Math.floor(new Date().getTime() / 1000);
-            var startDate = (today - (7*24*60*60));
+            var startDate = (today - (7*24*60*60*1000));
         try{
             var respVoice = await api.get("voice_tracking",{
                 discord_server_id:button.guild.id,
