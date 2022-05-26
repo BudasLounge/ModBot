@@ -596,7 +596,7 @@ async function onButtonClick(button){
                 { d: 60, l: "seconds" },
                 { d: 60, l: "minutes" },
                 { d: 24, l: "hours" },
-                { d: 365, l: "days" }
+                { d: 1000, l: "days" }
             ];
 
             var s = '';
@@ -632,12 +632,12 @@ async function onButtonClick(button){
                 .setCustomId("30days")
                 .setLabel("Top - Last 30 Days")
                 .setStyle('PRIMARY')
-                .setDisabled("true"),
+                .setDisabled("false"),
             new MessageButton()
                 .setCustomId("7days")
                 .setLabel("Top - Last 7 Days")
                 .setStyle('PRIMARY')
-                .setDisabled("true"),
+                .setDisabled("false"),
                 new MessageButton()
                 .setCustomId("channel")
                 .setLabel("Top Talkers - By Channel")
