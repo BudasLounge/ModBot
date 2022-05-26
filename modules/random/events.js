@@ -662,6 +662,7 @@ async function onButtonClick(button){
         }catch(error){
             logger.error(error);
         }
+        logger.info(respVoice)
         if(!respVoice.voice_trackings[0]){
             button.channel.send({ content: "There is no data available yet..."}) 
             return;
