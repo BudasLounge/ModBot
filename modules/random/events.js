@@ -22,7 +22,7 @@ async function onButtonClick(button){
             logger.info(totalTime.length);
             for(var i = 0;i<respVoice.voice_trackings.length;i++){
                 if(!respVoice.voice_trackings[i].disconnect_time){
-                    respVoice.voice_trackings[i].disconnect_time = Math.floor(new Date().getTime() / 1000).toString()
+                    respVoice.voice_trackings[i].disconnect_time = Math.floor(new Date().getTime() / 1000)
                 }
                 var flag = false;
                 for(var j = 0;j<totalTime.length;j++){
