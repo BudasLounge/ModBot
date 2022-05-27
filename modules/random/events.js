@@ -434,6 +434,9 @@ async function onButtonClick(button){
         await button.update({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
         logger.info("Sent Voice Leaderboard!")
         break;
+
+
+
         case "channel":
 
 
@@ -522,7 +525,7 @@ async function onButtonClick(button){
                 .setCustomId("30days")
                 .setLabel("Top - Last 30 Days")
                 .setStyle('PRIMARY')
-                .setDisabled("true"),
+                .setDisabled("false"),
             new MessageButton()
                 .setCustomId("7days")
                 .setLabel("Top - Last 7 Days")
