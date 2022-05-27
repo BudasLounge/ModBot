@@ -958,7 +958,7 @@ async function userJoinsVoice(oldMember, newMember){
             respVoice = await api.get("voice_tracking", {
                 user_id:newMember.id,
                 username:user.user.username,
-                disconnect_time:null
+                _filter: "disconnect_time = null"
             })
         }catch(error){
             logger.error(error);
