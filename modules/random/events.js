@@ -778,7 +778,6 @@ async function onButtonClick(button){
                 discord_server_id:button.guild.id,
                 _filter: "disconnect_time > '" + startDate + "'"
             });
-            logger.info(respVoice.voice_trackings)
         }catch(error){
             logger.error(error);
         }
@@ -810,6 +809,7 @@ async function onButtonClick(button){
                 logger.info("Creating a new row.")
                 totalTime.push([respVoice.voice_trackings[i].username, Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))])
             }
+            logger.info("Added to user '" + respVoice.voice_trackings[i].username + "' time: " + Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time)))
         }
         logger.info("Printing array to a table, will only show up in live console, not logs...")
         console.table(totalTime);
