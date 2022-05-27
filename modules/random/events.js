@@ -918,7 +918,7 @@ async function userJoinsVoice(oldMember, newMember){
             try{
                 var respVoiceUpdate = await api.put("voice_tracking",{
                     voice_state_id:parseInt(respVoice.voice_trackings[0].voice_state_id),
-                    disconnect_time:Math.floor(new Date().getTime() / 1000).toString()
+                    disconnect_time:Math.floor(new Date().getTime() / 1000)
                 })
             }catch(error){
                 logger.error(error);
