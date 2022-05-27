@@ -22,7 +22,7 @@ async function onButtonClick(button){
             logger.info(totalTime.length);
             for(var i = 0;i<respVoice.voice_trackings.length;i++){
                 if(!respVoice.voice_trackings[i].disconnect_time){
-                    respVoice.voice_trackings[i].disconnect_time = Math.floor(new Date().getTime() / 1000).toString()
+                    respVoice.voice_trackings[i].disconnect_time = Math.floor(new Date().getTime() / 1000)
                 }
                 var flag = false;
                 for(var j = 0;j<totalTime.length;j++){
@@ -434,6 +434,9 @@ async function onButtonClick(button){
         await button.update({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
         logger.info("Sent Voice Leaderboard!")
         break;
+
+
+
         case "channel":
 
 
@@ -522,7 +525,7 @@ async function onButtonClick(button){
                 .setCustomId("30days")
                 .setLabel("Top - Last 30 Days")
                 .setStyle('PRIMARY')
-                .setDisabled("true"),
+                .setDisabled("false"),
             new MessageButton()
                 .setCustomId("7days")
                 .setLabel("Top - Last 7 Days")
@@ -915,7 +918,7 @@ async function userJoinsVoice(oldMember, newMember){
             try{
                 var respVoiceUpdate = await api.put("voice_tracking",{
                     voice_state_id:parseInt(respVoice.voice_trackings[0].voice_state_id),
-                    disconnect_time:Math.floor(new Date().getTime() / 1000).toString()
+                    disconnect_time:Math.floor(new Date().getTime() / 1000)
                 })
             }catch(error){
                 logger.error(error);
@@ -926,7 +929,7 @@ async function userJoinsVoice(oldMember, newMember){
                     user_id:newMember.id,
                     username:user.user.username,
                     discord_server_id:newMember.guild.id,
-                    connect_time:Math.floor(new Date().getTime() / 1000).toString(),
+                    connect_time:Math.floor(new Date().getTime() / 1000),
                     selfmute:newMember.selfMute,
                     channel_id:newUserChannel
                 })
@@ -940,7 +943,7 @@ async function userJoinsVoice(oldMember, newMember){
                     user_id:newMember.id,
                     username:user.user.username,
                     discord_server_id:newMember.guild.id,
-                    connect_time:Math.floor(new Date().getTime() / 1000).toString(),
+                    connect_time:Math.floor(new Date().getTime() / 1000),
                     selfmute:newMember.selfMute,
                     channel_id:newUserChannel
                 })
@@ -963,7 +966,7 @@ async function userJoinsVoice(oldMember, newMember){
             try{
                 var respVoiceUpdate = await api.put("voice_tracking",{
                     voice_state_id:parseInt(respVoice.voice_trackings[0].voice_state_id),
-                    disconnect_time:Math.floor(new Date().getTime() / 1000).toString()
+                    disconnect_time:Math.floor(new Date().getTime() / 1000)
                 })
             }catch(error){
                 logger.error(error);
