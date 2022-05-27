@@ -27,7 +27,7 @@ module.exports = {
         var totalTime = [];
         for(var i = 0;i<respVoice.voice_trackings.length;i++){
             if(respVoice.voice_trackings[i].disconnect_time == "None"){
-                respVoice.voice_trackings[i].disconnect_time = Math.floor(new Date().getTime() / 1000).toString()
+                respVoice.voice_trackings[i].disconnect_time = Math.floor(new Date().getTime() / 1000)
             }
             var flag = false;
             for(var j = 0;j<totalTime.length;j++){
@@ -67,7 +67,6 @@ module.exports = {
             for (var i = 0; i < units.length; ++i) {
             s = (diff % units[i].d) + " " + units[i].l + " " + s;
             diff = Math.floor(diff / units[i].d);
-            this.logger.info(totalTime[k][0] + " diff: " + diff.toString() + " s: "+ s);
             }
             ListEmbed.addField((k+1).toString() + ". " + totalTime[k][0], s.toString());
         }
