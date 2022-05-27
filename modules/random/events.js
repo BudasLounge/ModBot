@@ -773,6 +773,7 @@ async function onButtonClick(button){
             logger.info("Gathering all voice timings");
             var today = Math.floor(new Date().getTime() / 1000);
             var startDate = (today - (7*24*60*60));
+            logger.info("Start Date: " + startDate);
         try{
             var respVoice = await api.get("voice_tracking",{
                 discord_server_id:button.guild.id,
