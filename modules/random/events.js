@@ -777,7 +777,8 @@ async function onButtonClick(button){
             var respVoice = await api.get("voice_tracking",{
                 discord_server_id:button.guild.id,
                 _filter: "disconnect_time > '" + startDate + "'"
-            })
+            });
+            logger.info(respVoice.voice_trackings)
         }catch(error){
             logger.error(error);
         }
