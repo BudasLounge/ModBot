@@ -908,7 +908,8 @@ async function userJoinsVoice(oldMember, newMember){
             respVoice = await api.get("voice_tracking", {
                 user_id:newMember.id,
                 username:user.user.username,
-                discord_server_id:newMember.guild.id
+                discord_server_id:newMember.guild.id,
+                _reverse_sort: true
             })
         }catch(error){
             logger.error(error);
