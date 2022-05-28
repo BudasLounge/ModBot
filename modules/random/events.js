@@ -915,7 +915,6 @@ async function userJoinsVoice(oldMember, newMember){
             logger.error(error);
         }
         if(respVoice.voice_trackings[0]){
-            logger.info(respVoice.voice_trackings[0].disconnect_time)
             if(!respVoice.voice_trackings[0].disconnect_time){
                 logger.info("Updating an existing tracking");
                 try{
@@ -939,9 +938,8 @@ async function userJoinsVoice(oldMember, newMember){
                 }catch(error){
                     logger.error(error);
                 }
-            }
-        }else{
-            logger.info("Creating a brand new tracking");
+            }else{
+                logger.info("Creating a brand new tracking");
             try{
                 var respVoiceNew = await api.post("voice_tracking",{
                     user_id:newMember.id,
@@ -953,6 +951,7 @@ async function userJoinsVoice(oldMember, newMember){
                 })
             }catch(error){
                 logger.error(error);
+            }
             }
         }
         logger.info(user.user.username + " joined a channel with an ID of: " + newUserChannel);
