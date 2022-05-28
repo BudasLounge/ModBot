@@ -915,27 +915,29 @@ async function userJoinsVoice(oldMember, newMember){
             logger.error(error);
         }
         if(respVoice.voice_trackings[0]){
-            logger.info("Updating an existing tracking");
-            try{
-                var respVoiceUpdate = await api.put("voice_tracking",{
-                    voice_state_id:parseInt(respVoice.voice_trackings[0].voice_state_id),
-                    disconnect_time:Math.floor(new Date().getTime() / 1000)
-                })
-            }catch(error){
-                logger.error(error);
-            }
-            logger.info("Creating a new tracking");
-            try{
-                var respVoiceNew = await api.post("voice_tracking",{
-                    user_id:newMember.id,
-                    username:user.user.username,
-                    discord_server_id:newMember.guild.id,
-                    connect_time:Math.floor(new Date().getTime() / 1000),
-                    selfmute:newMember.selfMute,
-                    channel_id:newUserChannel
-                })
-            }catch(error){
-                logger.error(error);
+            if(!respVoice.voice_trackings[0].disconnect_time){
+                logger.info("Updating an existing tracking");
+                try{
+                    var respVoiceUpdate = await api.put("voice_tracking",{
+                        voice_state_id:parseInt(respVoice.voice_trackings[0].voice_state_id),
+                        disconnect_time:Math.floor(new Date().getTime() / 1000)
+                    })
+                }catch(error){
+                    logger.error(error);
+                }
+                logger.info("Creating a new tracking");
+                try{
+                    var respVoiceNew = await api.post("voice_tracking",{
+                        user_id:newMember.id,
+                        username:user.user.username,
+                        discord_server_id:newMember.guild.id,
+                        connect_time:Math.floor(new Date().getTime() / 1000),
+                        selfmute:newMember.selfMute,
+                        channel_id:newUserChannel
+                    })
+                }catch(error){
+                    logger.error(error);
+                }
             }
         }else{
             logger.info("Creating a brand new tracking");
