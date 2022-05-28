@@ -915,6 +915,7 @@ async function userJoinsVoice(oldMember, newMember){
             logger.error(error);
         }
         if(respVoice.voice_trackings[0]){
+            logger.info(respVoice.voice_trackings[0].disconnect_time)
             if(!respVoice.voice_trackings[0].disconnect_time){
                 logger.info("Updating an existing tracking");
                 try{
