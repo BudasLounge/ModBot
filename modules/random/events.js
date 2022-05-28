@@ -947,7 +947,8 @@ async function userJoinsVoice(oldMember, newMember){
                         discord_server_id:newMember.guild.id,
                         connect_time:Math.floor(new Date().getTime() / 1000),
                         selfmute:newMember.selfMute,
-                        channel_id:newUserChannel
+                        channel_id:newUserChannel,
+                        disconnect_time:null
                     })
                 }catch(error){
                     logger.error(error);
