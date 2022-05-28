@@ -916,7 +916,7 @@ async function userJoinsVoice(oldMember, newMember){
         }
         if(respVoice.voice_trackings[0]){
             if(!respVoice.voice_trackings[0].disconnect_time){
-                logger.info("Updating an existing tracking");
+                logger.info("Updating an existing tracking with id: " + respVoice.voice_trackings[0].voice_state_id);
                 try{
                     var respVoiceUpdate = await api.put("voice_tracking",{
                         voice_state_id:parseInt(respVoice.voice_trackings[0].voice_state_id),
@@ -940,18 +940,18 @@ async function userJoinsVoice(oldMember, newMember){
                 }
             }else{
                 logger.info("Creating a brand new tracking");
-            try{
-                var respVoiceNew = await api.post("voice_tracking",{
-                    user_id:newMember.id,
-                    username:user.user.username,
-                    discord_server_id:newMember.guild.id,
-                    connect_time:Math.floor(new Date().getTime() / 1000),
-                    selfmute:newMember.selfMute,
-                    channel_id:newUserChannel
-                })
-            }catch(error){
-                logger.error(error);
-            }
+                try{
+                    var respVoiceNew = await api.post("voice_tracking",{
+                        user_id:newMember.id,
+                        username:user.user.username,
+                        discord_server_id:newMember.guild.id,
+                        connect_time:Math.floor(new Date().getTime() / 1000),
+                        selfmute:newMember.selfMute,
+                        channel_id:newUserChannel
+                    })
+                }catch(error){
+                    logger.error(error);
+                }
             }
         }
         logger.info(user.user.username + " joined a channel with an ID of: " + newUserChannel);
