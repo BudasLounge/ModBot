@@ -26,6 +26,7 @@ module.exports = {
         this.logger.info("Starting the additive loop");
         var totalTime = [];
         for(var i = 0;i<respVoice.voice_trackings.length;i++){
+            logger.info(respVoice.voice_trackings[i].disconnect_time)
             if(respVoice.voice_trackings[i].disconnect_time === 0){
                 respVoice.voice_trackings[i].disconnect_time = Math.floor(new Date().getTime() / 1000)
             }
