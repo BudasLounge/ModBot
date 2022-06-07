@@ -10,7 +10,7 @@ module.exports = {
         var api = extra.api;
 
         var respServer;
-        if(message.member.roles.cache.some(role => role.name === "586313447965327365") || message.member.roles.cache.some(role => role.name === "670379823239004161")){
+        if(message.member.roles.cache.some(role => role.name === "MCadmin")){
             try{
                 respServer = await api.get("minecraft_server", {
                     short_name: args[1]
