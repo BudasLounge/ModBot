@@ -32,7 +32,7 @@ module.exports = {
 
         filter.removeWords(...approvedWords);
         args.shift();
-        var sayMessage = args.join();
+        var sayMessage = args.join(' ');
         if(filter.isProfane(sayMessage)){
             sayMessage = "That had some bad words in it, bitch, try again";
         }
