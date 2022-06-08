@@ -54,8 +54,8 @@ module.exports = {
         }
         
         if(voiceConnection.status===Discord.VoiceConnectionStatus.Connected){
-            voiceConnection.Discord.subscribe(audioPlayer);
-            audioPlayer.Discord.play(audioResource);
+            voiceConnection.subscribe(audioPlayer);
+            audioPlayer.play(audioResource);
         }
 
         audioPlayer.on(Discord.audioPlayerStatus.Idle, () => {
