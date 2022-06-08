@@ -44,7 +44,7 @@ module.exports = {
         const audioResource=Discord.createAudioResource(stream, {inputType: Discord.StreamType.Arbitrary, inlineVolume:true});
         const connectionCheck = Discord.getVoiceConnection(message.member.voice.channelId)
         this.logger.info(connectionCheck);
-        if(!voiceConnection || voiceConnection?.status===VoiceConnectionStatus.Disconnected){
+        if(!voiceConnection || voiceConnection?.status===Discord.VoiceConnectionStatus.Disconnected){
             voiceConnection = Discord.joinVoiceChannel({
                 channelId: message.member.voice.channelId,
                 guildId: message.guildId,
