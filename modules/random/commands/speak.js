@@ -10,6 +10,8 @@ module.exports = {
 
         const discordTTS=require("discord-tts");
         const {AudioPlayer, createAudioResource, StreamType, entersState, VoiceConnectionStatus, joinVoiceChannel} = require('discord.js');
+        let voiceConnection;
+        let audioPlayer=new AudioPlayer();
 
         args.shift();
         var sayMessage = args.join();
