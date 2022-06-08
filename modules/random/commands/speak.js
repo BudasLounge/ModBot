@@ -51,7 +51,7 @@ module.exports = {
             voiceConnection=await entersState(voiceConnection, VoiceConnectionStatus.Connecting, 5_000);
         }
         if(voiceConnection.status===VoiceConnectionStatus.Connected){
-            try {
+            /*try {
                 await entersState(audioPlayer, AudioPlayerStatus.Playing, 5_000);
                 // The player has entered the Playing state within 5 seconds
                 this.logger.info('Playback has started!');
@@ -60,7 +60,7 @@ module.exports = {
                 // 1) The 'error' event has been emitted and should be handled
                 // 2) 5 seconds have passed
                 this.logger.error(error.message);
-            }
+            }*/
             voiceConnection.subscribe(audioPlayer);
             audioPlayer.play(audioResource);
         }
