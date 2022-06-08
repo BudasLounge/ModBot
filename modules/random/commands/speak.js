@@ -11,7 +11,7 @@ module.exports = {
         const discordTTS=require("discord-tts");
         const Discord = require("@discordjs/voice");
         let voiceConnection;
-        let audioPlayer=new AudioPlayer();
+        let audioPlayer=new Discord.AudioPlayer();
 
         var approvedWords = [];
         try{
