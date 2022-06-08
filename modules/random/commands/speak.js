@@ -40,6 +40,7 @@ module.exports = {
             message.channel.send({ content: "That message is too long, no more than 200 characters per message!"});
             return;
         }
+        if(AudioPlayerStatus.Playing)return;
         const stream=discordTTS.getVoiceStream(sayMessage);
         const audioResource=createAudioResource(stream, {inputType: StreamType.Arbitrary, inlineVolume:true});
         const connectionCheck = getVoiceConnection(message.member.voice.channelId)
@@ -51,7 +52,6 @@ module.exports = {
             });
             voiceConnection=await entersState(voiceConnection, VoiceConnectionStatus.Connecting, 5_000);
         }
-        //if(AudioPlayerStatus.Playing)return;
         if(voiceConnection.status===VoiceConnectionStatus.Connected){
             voiceConnection.subscribe(audioPlayer);
             audioPlayer.play(audioResource);
