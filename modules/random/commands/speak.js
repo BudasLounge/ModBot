@@ -24,7 +24,7 @@ module.exports = {
                 }
             }
         }catch(err){
-            this.logger.error(err);
+            this.logger.error(err.message);
         }
 
         const Filter = require('bad-words');
