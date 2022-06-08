@@ -47,7 +47,12 @@ module.exports = {
         audioPlayer = null
         audioQueue = []
         if(voiceConnection === null) {
-            //create voice connection
+            voiceConnection = joinVoiceChannel({
+                channelId: message.member.voice.channelId,
+                guildId: message.guildId,
+                adapterCreator: message.guild.voiceAdapterCreator,
+            });
+            voiceConnection=await entersState(voiceConnection, VoiceConnectionStatus.Connecting, 5_000);
         }
         if(audioPlayer === null) {
             audioPlayer = new AudioPlayer();
