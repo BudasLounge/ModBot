@@ -53,7 +53,7 @@ module.exports = {
             voiceConnection=await Discord.entersState(voiceConnection, Discord.VoiceConnectionStatus.Connecting, 5_000);
         }
         
-        if(voiceConnection.status===VoiceConnectionStatus.Connected){
+        if(voiceConnection.status===Discord.VoiceConnectionStatus.Connected){
             voiceConnection.Discord.subscribe(audioPlayer);
             audioPlayer.Discord.play(audioResource);
         }
