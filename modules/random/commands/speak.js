@@ -28,7 +28,8 @@ module.exports = {
         
         if(voiceConnection.status===VoiceConnectionStatus.Connected){
             voiceConnection.subscribe(audioPlayer);
-            audioPlayer.play(audioResource);
+            await audioPlayer.play(audioResource);
         }
+        message.guild.me.voice.channel.leave();
     }
 }
