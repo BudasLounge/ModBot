@@ -55,6 +55,7 @@ module.exports = {
             voiceConnection.subscribe(audioPlayer);
             await audioPlayer.play(audioResource);
         }
-        //voiceConnection.destroy();
+        await sleep(10000); 
+        voiceConnection.destroy();
     }
 }
