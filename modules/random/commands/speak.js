@@ -13,7 +13,35 @@ module.exports = {
         let voiceConnection;
         let audioPlayer=new AudioPlayer();
 
+        var approvedWords = [];
+        try{
+            var respApprovedWords = await api.get("allowed_word", {
+                //approved: "true"
+            });
+            for(var i = 0;i<respApprovedWords.allowed_words.length;i++){
+                if(respApprovedWords.allowed_words[i].approved === "1"){
+                    approvedWords.push(respApprovedWords.allowed_words[i].word);
+                }
+            }
+        }catch(err){
+            this.logger.error(err);
+        }
+
+        const Filter = require('bad-words');
+        filter = new Filter();
+
+        filter.removeWords(...approvedWords);
+        const say = require('say');
         args.shift();
+        var sayMessage = args.join();
+        if(filter.isProfane(sayMessage)){
+            message.channel.send({ content: "No bad words for now!"});
+            return;
+        }
+        if(sayMessage.length>200){
+            message.channel.send({ content: "That message is too long, no more than 200 characters per message!"});
+            return;
+        }
         var sayMessage = args.join();
         const stream=discordTTS.getVoiceStream(sayMessage);
         const audioResource=createAudioResource(stream, {inputType: StreamType.Arbitrary, inlineVolume:true});
