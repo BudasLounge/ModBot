@@ -53,10 +53,10 @@ module.exports = {
         
         if(voiceConnection.status===VoiceConnectionStatus.Connected){
             voiceConnection.subscribe(audioPlayer);
-            await audioPlayer.play(audioResource);
+            audioPlayer.play(audioResource);
         }
-        await sleep(10000); 
-        voiceConnection.destroy();
+        //await sleep(10000); 
+        //voiceConnection.destroy();
     }
 }
 
