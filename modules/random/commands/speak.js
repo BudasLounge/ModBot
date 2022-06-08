@@ -59,3 +59,8 @@ module.exports = {
         voiceConnection.destroy();
     }
 }
+
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
