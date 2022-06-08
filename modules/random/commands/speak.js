@@ -9,7 +9,7 @@ module.exports = {
     async execute(message, args, extra) {
 
         const discordTTS=require("discord-tts");
-        const {AudioPlayer, createAudioResource, StreamType, entersState, VoiceConnectionStatus, joinVoiceChannel} = require('discord.js');
+        const {AudioPlayer, createAudioResource, StreamType, entersState, VoiceConnectionStatus, joinVoiceChannel} = require('discord.js/voice');
         let voiceConnection;
         let audioPlayer=new AudioPlayer();
 
