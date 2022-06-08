@@ -31,7 +31,6 @@ module.exports = {
         filter = new Filter();
 
         filter.removeWords(...approvedWords);
-        const say = require('say');
         args.shift();
         var sayMessage = args.join();
         if(filter.isProfane(sayMessage)){
