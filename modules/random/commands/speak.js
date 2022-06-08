@@ -13,9 +13,9 @@ module.exports = {
         let voiceConnection;
         let audioPlayer=new AudioPlayer();
 
-        //args.shift();
-        //var sayMessage = args.join();
-        const stream=discordTTS.getVoiceStream("hello text to speech world");
+        args.shift();
+        var sayMessage = args.join();
+        const stream=discordTTS.getVoiceStream(sayMessage);
         const audioResource=createAudioResource(stream, {inputType: StreamType.Arbitrary, inlineVolume:true});
         if(!voiceConnection || voiceConnection?.status===VoiceConnectionStatus.Disconnected){
             voiceConnection = joinVoiceChannel({
