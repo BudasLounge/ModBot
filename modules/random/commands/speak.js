@@ -42,7 +42,7 @@ module.exports = {
         }
         const stream=discordTTS.getVoiceStream(sayMessage);
         const audioResource=createAudioResource(stream, {inputType: StreamType.Arbitrary, inlineVolume:true});
-        this.logger.info(voiceConnection.status);
+        this.logger.info(voiceConnection);
         if(!voiceConnection || voiceConnection?.status===VoiceConnectionStatus.Disconnected){
             voiceConnection = joinVoiceChannel({
                 channelId: message.member.voice.channelId,
