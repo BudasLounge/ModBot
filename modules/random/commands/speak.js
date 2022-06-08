@@ -7,8 +7,25 @@ module.exports = {
     needs_api: true,//if this command needs access to the api
     has_state: false,//if this command uses the state engine
     async execute(message, args, extra) {
+
+        const discordTTS=require("discord-tts");
+
         args.shift();
         var sayMessage = args.join();
-        message.channel.send({ content: sayMessage, tts: true});
+        const stream=discordTTS.getVoiceStream("hello text to speech world");
+        const audioResource=createAudioResource(stream, {inputType: StreamType.Arbitrary, inlineVolume:true});
+        if(!voiceConnection || voiceConnection?.status===VoiceConnectionStatus.Disconnected){
+            voiceConnection = joinVoiceChannel({
+                channelId: msg.member.voice.channelId,
+                guildId: msg.guildId,
+                adapterCreator: msg.guild.voiceAdapterCreator,
+            });
+            voiceConnection=await entersState(voiceConnection, VoiceConnectionStatus.Connecting, 5_000);
+        }
+        
+        if(voiceConnection.status===VoiceConnectionStatus.Connected){
+            voiceConnection.subscribe(audioPlayer);
+            audioPlayer.play(audioResource);
+        }
     }
 }
