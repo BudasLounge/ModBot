@@ -58,7 +58,7 @@ module.exports = {
             audioPlayer.play(audioResource);
         }
 
-        audioPlayer.on(Discord.audioPlayerStatus.Idle, () => {
+        audioPlayer.on(Discord.AudioPlayerStatus.Idle, () => {
             voiceConnection.destroy();
         })
         //await sleep(10000); 
