@@ -50,7 +50,7 @@ module.exports = {
                 guildId: message.guildId,
                 adapterCreator: message.guild.voiceAdapterCreator,
             });
-            voiceConnection=await Discord.entersState(voiceConnection, VoiceConnectionStatus.Connecting, 5_000);
+            voiceConnection=await Discord.entersState(voiceConnection, Discord.VoiceConnectionStatus.Connecting, 5_000);
         }
         
         if(voiceConnection.status===VoiceConnectionStatus.Connected){
