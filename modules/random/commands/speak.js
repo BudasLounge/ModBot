@@ -34,7 +34,7 @@ module.exports = {
         args.shift();
         var sayMessage = args.join();
         if(filter.isProfane(sayMessage)){
-            sayMessage = "That had some bad words in it, bitch";
+            sayMessage = "That had some bad words in it, bitch, try again";
         }
         if(sayMessage.length>200){
             message.channel.send({ content: "That message is too long, no more than 200 characters per message!"});
