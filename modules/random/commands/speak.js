@@ -52,7 +52,7 @@ module.exports = {
         }
         if(voiceConnection.status===VoiceConnectionStatus.Connected){
             try {
-                await entersState(player, AudioPlayerStatus.Playing, 5_000);
+                await entersState(audioPlayer, AudioPlayerStatus.Playing, 5_000);
                 // The player has entered the Playing state within 5 seconds
                 this.logger.info('Playback has started!');
             } catch (error) {
