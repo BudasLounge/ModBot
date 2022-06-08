@@ -9,7 +9,7 @@ module.exports = {
     async execute(message, args, extra) {
         var api = extra.api;
         const discordTTS=require("discord-tts");
-        const {AudioPlayer, createAudioResource, StreamType, entersState, VoiceConnectionStatus, joinVoiceChannel} = require("@discordjs/voice");
+        const {AudioPlayer, createAudioResource, StreamType, entersState, VoiceConnectionStatus, joinVoiceChannel, getVoiceConnection} = require("@discordjs/voice");
         let voiceConnection;
         let audioPlayer=new AudioPlayer();
 
@@ -42,7 +42,8 @@ module.exports = {
         }
         const stream=discordTTS.getVoiceStream(sayMessage);
         const audioResource=createAudioResource(stream, {inputType: StreamType.Arbitrary, inlineVolume:true});
-        this.logger.info(voiceConnection?.status);
+        const connectionCheck = getVoiceConnection(message.guild.id)
+        this.logger.info(connectionCheck);
         if(!voiceConnection || voiceConnection?.status===VoiceConnectionStatus.Disconnected){
             voiceConnection = joinVoiceChannel({
                 channelId: message.member.voice.channelId,
