@@ -9,9 +9,9 @@ module.exports = {
     async execute(message, args, extra) {
         var api = extra.api;
         const discordTTS=require("discord-tts");
-        const Discord = require("@discordjs/voice");
+        const {AudioPlayer, AudioPlayerStatus, createAudioResource, StreamType, entersState, VoiceConnectionStatus, joinVoiceChannel, getVoiceConnection} = require("@discordjs/voice");
         let voiceConnection;
-        let audioPlayer=new Discord.AudioPlayer();
+        let audioPlayer=new AudioPlayer();
 
         var approvedWords = [];
         try{
@@ -41,24 +41,24 @@ module.exports = {
             return;
         }
         const stream=discordTTS.getVoiceStream(sayMessage);
-        const audioResource=Discord.createAudioResource(stream, {inputType: Discord.StreamType.Arbitrary, inlineVolume:true});
-        const connectionCheck = Discord.getVoiceConnection(message.member.voice.channelId)
+        const audioResource=createAudioResource(stream, {inputType: StreamType.Arbitrary, inlineVolume:true});
+        const connectionCheck = getVoiceConnection(message.member.voice.channelId)
         this.logger.info(connectionCheck);
-        if(!voiceConnection || voiceConnection?.status===Discord.VoiceConnectionStatus.Disconnected){
-            voiceConnection = Discord.joinVoiceChannel({
+        if(!voiceConnection || voiceConnection?.status===VoiceConnectionStatus.Disconnected){
+            voiceConnection = joinVoiceChannel({
                 channelId: message.member.voice.channelId,
                 guildId: message.guildId,
                 adapterCreator: message.guild.voiceAdapterCreator,
             });
-            voiceConnection=await Discord.entersState(voiceConnection, Discord.VoiceConnectionStatus.Connecting, 5_000);
+            voiceConnection=await entersState(voiceConnection, VoiceConnectionStatus.Connecting, 5_000);
         }
         
-        if(voiceConnection.status===Discord.VoiceConnectionStatus.Connected){
+        if(voiceConnection.status===VoiceConnectionStatus.Connected){
             voiceConnection.subscribe(audioPlayer);
             audioPlayer.play(audioResource);
         }
 
-        audioPlayer.on(Discord.AudioPlayerStatus.Idle, () => {
+        audioPlayer.on(AudioPlayerStatus.Idle, () => {
             voiceConnection.destroy();
         })
         //await sleep(10000); 
