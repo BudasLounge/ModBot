@@ -54,7 +54,10 @@ module.exports = {
             voiceConnection.subscribe(audioPlayer);
             audioPlayer.play(audioResource);
         }
-
+        audioPlayer.on('error', error => {
+            this.logger.error(error.message);
+            audioPlayer.play(getNextResource());
+        })
         audioPlayer.on(AudioPlayerStatus.Idle, () => {
             voiceConnection.destroy();
         })
