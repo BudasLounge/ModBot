@@ -30,6 +30,6 @@ module.exports = {
             voiceConnection.subscribe(audioPlayer);
             await audioPlayer.play(audioResource);
         }
-        message.guild.me.voice.channel.leave();
+        voiceConnection.destroy();
     }
 }
