@@ -9,7 +9,7 @@ module.exports = {
     async execute(message, args, extra) {
         var api = extra.api;
         const discordTTS=require("discord-tts");
-        const {AudioPlayer, createAudioResource, StreamType, entersState, VoiceConnectionStatus, joinVoiceChannel, getVoiceConnection} = require("@discordjs/voice");
+        const {AudioPlayer, AudioPlayerStatus, createAudioResource, StreamType, entersState, VoiceConnectionStatus, joinVoiceChannel, getVoiceConnection} = require("@discordjs/voice");
         let voiceConnection;
         let audioPlayer=new AudioPlayer();
 
@@ -57,6 +57,10 @@ module.exports = {
             voiceConnection.subscribe(audioPlayer);
             audioPlayer.play(audioResource);
         }
+
+        audioPlayer.on(audioPlayerStatus.Idle, () => {
+            voiceConnection.destroy();
+        })
         //await sleep(10000); 
         //voiceConnection.destroy();
     }
