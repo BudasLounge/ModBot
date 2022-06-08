@@ -44,7 +44,7 @@ module.exports = {
         const audioResource=createAudioResource(stream, {inputType: StreamType.Arbitrary, inlineVolume:true});
         const connectionCheck = getVoiceConnection(message.member.voice.channelId)
         this.logger.info(AudioPlayerStatus);
-        if(!voiceConnection || voiceConnection?.status===VoiceConnectionStatus.Disconnected){
+        if(!AudioPlayerStatus || AudioPlayerStatus.status===VoiceConnectionStatus.Disconnected){
             voiceConnection = joinVoiceChannel({
                 channelId: message.member.voice.channelId,
                 guildId: message.guildId,
@@ -54,6 +54,7 @@ module.exports = {
         }
         
         if(voiceConnection.status===VoiceConnectionStatus.Connected){
+            if(AudioPlayerStatus.Playing)return;
             voiceConnection.subscribe(audioPlayer);
             audioPlayer.play(audioResource);
         }
