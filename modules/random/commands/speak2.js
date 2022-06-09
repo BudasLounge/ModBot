@@ -1,6 +1,15 @@
 const discordTTS=require("discord-tts");
 const {AudioPlayer, AudioPlayerStatus, createAudioResource, StreamType, entersState, VoiceConnectionStatus, joinVoiceChannel, getVoiceConnection} = require("@discordjs/voice");
 
+const getMethods = (obj) => {
+    let properties = new Set()
+    let currentObj = obj
+    do {
+        Object.getOwnPropertyNames(currentObj).map(item => properties.add(item))
+    } while ((currentObj = Object.getPrototypeOf(currentObj)))
+    return [...properties.keys()].filter(item => typeof obj[item] === 'function')
+}
+
 module.exports = {
     name: 'speak2',
     description: 'Bot joins discord channel and says something',
@@ -37,6 +46,7 @@ module.exports = {
             return;
         } else if(args.length > 1 && args[1] === "<shutup>") {
             this.audioPlayer.pause();
+            this.logger.info(getMethods(this.audioPlayer));
             this.audioPlayer.state(AudioPlayer.AudioPlayerIdleState);
         }
 
