@@ -12,16 +12,16 @@ module.exports = {
     voiceConnection: null,
     audioPlayer: null,
     audioQueue: [],
-    tryPlayNextAudio(self) {
-        if(self.audioQueue.length > 0) {
-            self.audioPlayer.play(self.audioQueue.shift());
-            self.logger.info("Audio Queue: " + self.audioQueue.length);
+    tryPlayNextAudio() {
+        if(this.audioQueue.length > 0) {
+            this.audioPlayer.play(this.audioQueue.shift());
+            this.logger.info("Audio Queue: " + this.audioQueue.length);
         } else {
-            self.logger.info("Stopping Audio Player");
-            self.audioPlayer.stop();
-            self.voiceConnection.destroy()
-            self.audioPlayer = null;
-            self.voiceConnection = null;
+            this.logger.info("Stopping Audio Player");
+            this.audioPlayer.stop();
+            this.voiceConnection.destroy()
+            this.audioPlayer = null;
+            this.voiceConnection = null;
         }
     },
     async execute(message, args, extra) {
@@ -75,7 +75,7 @@ module.exports = {
             if(this.voiceConnection.status === VoiceConnectionStatus.Connected) {
                 this.voiceConnection.subscribe(this.audioPlayer);
 
-                this.audioPlayer.on(AudioPlayerStatus.Idle, this.tryPlayNextAudio(this));
+                this.audioPlayer.on(AudioPlayerStatus.Idle, this.tryPlayNextAudio.bind(this));
 
                 this.audioPlayer.on('error', error => {
                     message.channel.send({ content: "Hit an error!" });
@@ -83,7 +83,7 @@ module.exports = {
                 });
 
                 //Starts the playing the first time since we didn't catch the original idle event
-                this.tryPlayNextAudio(this);
+                this.tryPlayNextAudio();
             }
         }
     }
