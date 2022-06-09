@@ -46,7 +46,7 @@ module.exports = {
             return;
         } else if(args.length > 1 && args[1] === "<shutup>") {
             this.logger.info(getMethods(this.audioPlayer));
-            this.audioPlayer.state = AudioPlayerIdleState;
+            this.audioPlayer.state = new AudioPlayerIdleState();
             message.channel.send({content: "Jeez, fine. I'll stop talking."});
         }
 
