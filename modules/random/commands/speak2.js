@@ -12,6 +12,18 @@ module.exports = {
     voiceConnection: null,
     audioPlayer: null,
     audioQueue: [],
+    tryPlayNextAudio: function() {
+        if(this.audioQueue.length > 0) {
+            message.channel.send({ content: "Playing next audioResource!" });
+            this.audioPlayer.play(this.audioQueue[0]);
+            this.audioQueue.shift(); //Shifts array to left, removing first entry (since we just played it)
+        } else {
+            this.audioPlayer.stop();
+            this.voiceConnection.destroy()
+            this.audioPlayer = null;
+            this.voiceConnection = null;
+        }
+    },
     async execute(message, args, extra) {
         var api = extra.api;
         var is_new_connection = false;
@@ -60,31 +72,15 @@ module.exports = {
             if(this.voiceConnection.status === VoiceConnectionStatus.Connected) {
                 this.voiceConnection.subscribe(this.audioPlayer);
 
-                this.audioPlayer.on(AudioPlayerStatus.Idle, () => {
-                    if(this.audioQueue.length > 0) {
-                        message.channel.send({ content: "Playing next audioResource!" });
-                        this.audioPlayer.play(this.audioQueue[0]);
-                        this.audioQueue.shift(); //Shifts array to left, removing first entry (since we just played it)
-                    } else {
-                        this.audioPlayer.stop();
-                        this.voiceConnection.destroy()
-                        this.audioPlayer = null;
-                        this.voiceConnection = null;
-                    }
-                });
+                this.audioPlayer.on(AudioPlayerStatus.Idle, this.tryPlayNextAudio);
 
                 this.audioPlayer.on('error', error => {
                     message.channel.send({ content: "Hit an error!" });
                     this.logger.error(error);
                 });
 
-                message.channel.send({ content: "Player Status: " + this.audioPlayer.status });
                 //Starts the playing the first time since we didn't catch the original idle event
-                if(this.audioPlayer.status === AudioPlayerStatus.Idle && this.audioQueue.length > 0) {
-                    message.channel.send({ content: "Playing first audioResource!" });
-                    this.audioPlayer.play(this.audioQueue[0]);
-                    this.audioQueue.shift();
-                }
+                this.tryPlayNextAudio();
             }
         }
     }
