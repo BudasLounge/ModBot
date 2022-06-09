@@ -15,9 +15,7 @@ module.exports = {
     tryPlayNextAudio() {
         if(this.audioQueue.length > 0) {
             this.audioPlayer.play(this.audioQueue.shift());
-            this.logger.info("Audio Queue: " + this.audioQueue.length);
         } else {
-            this.logger.info("Stopping Audio Player");
             this.audioPlayer.stop();
             this.voiceConnection.destroy()
             this.audioPlayer = null;
@@ -28,7 +26,16 @@ module.exports = {
         var api = extra.api;
         var is_new_connection = false;
 
-        this.logger.info("Audio Queue Type: " + typeof(this.audioQueue));
+        if(this.args.length > 0 && this.args[0] === "<clear>") {
+            counter = 0;
+            while(this.audioQueue.length > 0) {
+                counter++;
+                this.audioQueue.shift();
+            }
+
+            message.channel.send({ content: "Cleared " + counter + " lines from the queue!" });
+            return;
+        }
 
         if(this.voiceConnection === null || this.audioPlayer === null) {
             this.voiceConnection = joinVoiceChannel({
@@ -71,7 +78,6 @@ module.exports = {
         this.audioQueue.push(audioResource);
 
         if(is_new_connection) {
-            message.channel.send({content: "Was new Connection!"});
             if(this.voiceConnection.status === VoiceConnectionStatus.Connected) {
                 this.voiceConnection.subscribe(this.audioPlayer);
 
