@@ -1,3 +1,6 @@
+const discordTTS=require("discord-tts");
+const {AudioPlayer, AudioPlayerStatus, createAudioResource, StreamType, entersState, VoiceConnectionStatus, joinVoiceChannel, getVoiceConnection} = require("@discordjs/voice");
+
 module.exports = {
     name: 'speak2',
     description: 'Bot joins discord channel and says something',
@@ -6,12 +9,23 @@ module.exports = {
     args_to_lower: false,//if the arguments should be lower case
     needs_api: true,//if this command needs access to the api
     has_state: false,//if this command uses the state engine
+    voiceConnection: null,
+    audioPlayer: null,
+    audioQueue: [],
     async execute(message, args, extra) {
         var api = extra.api;
-        const discordTTS=require("discord-tts");
-        const {AudioPlayer, AudioPlayerStatus, createAudioResource, StreamType, entersState, VoiceConnectionStatus, joinVoiceChannel, getVoiceConnection} = require("@discordjs/voice");
-        let voiceConnection;
-        let audioPlayer=new AudioPlayer();
+        var is_new_connection = false;
+
+        if(this.voiceConnection === null || this.audioPlayer === null) {
+            this.voiceConnection = joinVoiceChannel({
+                channelId: message.member.voice.channelId,
+                guildId: message.guildId,
+                adapterCreator: message.guild.voiceAdapterCreator,
+            });
+            this.voiceConnection = await entersState(this.voiceConnection, VoiceConnectionStatus.Connecting, 5_000);
+            this.audioPlayer = new AudioPlayer();
+            is_new_connection = true;
+        }
 
         var approvedWords = [];
         try{
@@ -29,7 +43,6 @@ module.exports = {
 
         const Filter = require('bad-words');
         filter = new Filter();
-
         filter.removeWords(...approvedWords);
         args.shift();
         var sayMessage = args.join(' ');
@@ -40,38 +53,28 @@ module.exports = {
             message.channel.send({ content: "That message is too long, no more than 200 characters per message!"});
             return;
         }
-        const stream=discordTTS.getVoiceStream(sayMessage);
-        const audioResource=createAudioResource(stream, {inputType: StreamType.Arbitrary, inlineVolume:true});
-        
-        voiceConnection = null
-        audioPlayer = null
-        audioQueue = []
-        if(voiceConnection === null) {
-            voiceConnection = joinVoiceChannel({
-                channelId: message.member.voice.channelId,
-                guildId: message.guildId,
-                adapterCreator: message.guild.voiceAdapterCreator,
-            });
-            voiceConnection=await entersState(voiceConnection, VoiceConnectionStatus.Connecting, 5_000);
-        }
-        if(audioPlayer === null) {
-            audioPlayer = new AudioPlayer();
 
-            audioPlayer.on(AudioPlayerStatus.Idle, () => {
-                if(audioQueue.length > 0) {
-                    audioPlayer.play(audioQueue[0]);
-                    audioQueue.shift(); //Shifts array to left, removing first entry (since we just played it)
-                } else {
-                    //Destroy audio player, disconnect voiceConnection, then...
-                    audioPlayer = null;
-                    voiceConnection = null;
-                }
-            });
-        }
+        const stream = discordTTS.getVoiceStream(sayMessage);
+        const audioResource = createAudioResource(stream, {inputType: StreamType.Arbitrary, inlineVolume:true});
+        this.audioQueue.push(audioResource);
 
-        //Create audio resource
-        
-        audioQueue.push(audioResource);
+        if(is_new_connection) {
+            if(this.voiceConnection.status === VoiceConnectionStatus.Connected) {
+                this.voiceConnection.subscribe(this.audioPlayer);
+
+                this.audioPlayer.on(AudioPlayerStatus.Idle, () => {
+                    if(this.audioQueue.length > 0) {
+                        this.audioPlayer.play(this.audioQueue[0]);
+                        this.audioQueue.shift(); //Shifts array to left, removing first entry (since we just played it)
+                    } else {
+                        this.audioPlayer.stop();
+                        this.voiceConnection.destroy()
+                        this.audioPlayer = null;
+                        this.voiceConnection = null;
+                    }
+                });
+            }
+        }
     }
 }
 
