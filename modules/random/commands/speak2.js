@@ -57,9 +57,7 @@ module.exports = {
         this.audioQueue.push(audioResource);
 
         if(is_new_connection) {
-            message.channel.send({ content: "Was new connection" });
             if(this.voiceConnection.status === VoiceConnectionStatus.Connected) {
-                message.channel.send({ content: "voiceConnection was Connected" });
                 this.voiceConnection.subscribe(this.audioPlayer);
 
                 this.audioPlayer.on(AudioPlayerStatus.Idle, () => {
@@ -80,6 +78,7 @@ module.exports = {
                     this.logger.error(error);
                 });
 
+                message.channel.send({ content: "Player Status: " + this.audioPlayer.status });
                 //Starts the playing the first time since we didn't catch the original idle event
                 if(this.audioPlayer.status === AudioPlayerStatus.Idle && this.audioQueue.length > 0) {
                     message.channel.send({ content: "Playing first audioResource!" });
