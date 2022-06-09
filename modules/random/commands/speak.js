@@ -1,3 +1,6 @@
+const discordTTS=require("discord-tts");
+const {AudioPlayer, AudioPlayerStatus, AudioPlayerIdleState, createAudioResource, StreamType, entersState, VoiceConnectionStatus, joinVoiceChannel, getVoiceConnection} = require("@discordjs/voice");
+
 module.exports = {
     name: 'speak',
     description: 'Bot joins discord channel and says something',
@@ -6,22 +9,59 @@ module.exports = {
     args_to_lower: false,//if the arguments should be lower case
     needs_api: true,//if this command needs access to the api
     has_state: false,//if this command uses the state engine
+    voiceConnection: null,
+    audioPlayer: null,
+    audioQueue: [],
+    tryPlayNextAudio() {
+        if(this.audioQueue.length > 0) {
+            this.audioPlayer.play(this.audioQueue.shift());
+            this.logger.info("Shifted TTS Queue");
+        } else {
+            this.audioPlayer.stop();
+            this.voiceConnection.destroy()
+            this.audioPlayer = null;
+            this.voiceConnection = null;
+        }
+    },
     async execute(message, args, extra) {
         var api = extra.api;
-        const discordTTS=require("discord-tts");
-        const {AudioPlayer, AudioPlayerStatus, createAudioResource, StreamType, entersState, VoiceConnectionStatus, joinVoiceChannel, getVoiceConnection} = require("@discordjs/voice");
-        let voiceConnection;
-        let audioPlayer=new AudioPlayer();
+        var is_new_connection = false;
+
+        if(args.length > 1 && args[1] === "<clear>") {
+            counter = 0;
+            while(this.audioQueue.length > 0) {
+                counter++;
+                this.audioQueue.shift();
+            }
+
+            message.channel.send({ content: "Cleared " + counter + " lines from the queue!" });
+            this.logger.info("TTS Queue cleared");
+            return;
+        } else if(args.length > 1 && args[1] === "<shutup>") {
+            this.audioPlayer.state = { status: AudioPlayerStatus.Idle };
+            message.channel.send({content: "Jeez, fine. I'll stop talking."});
+            this.logger.info("I shut up now");
+            return;
+        }
+
+        if(this.voiceConnection === null || this.audioPlayer === null) {
+            this.voiceConnection = joinVoiceChannel({
+                channelId: message.member.voice.channelId,
+                guildId: message.guildId,
+                adapterCreator: message.guild.voiceAdapterCreator,
+            });
+            this.voiceConnection = await entersState(this.voiceConnection, VoiceConnectionStatus.Connecting, 5_000);
+            this.audioPlayer = new AudioPlayer();
+            is_new_connection = true;
+        }
 
         var approvedWords = [];
         try{
             var respApprovedWords = await api.get("allowed_word", {
-                //approved: "true"
+                approved: parseInt(1)
             });
             for(var i = 0;i<respApprovedWords.allowed_words.length;i++){
-                if(respApprovedWords.allowed_words[i].approved === "1"){
                     approvedWords.push(respApprovedWords.allowed_words[i].word);
-                }
             }
         }catch(err){
             this.logger.error(err.message);
@@ -29,7 +69,6 @@ module.exports = {
 
         const Filter = require('bad-words');
         filter = new Filter();
-
         filter.removeWords(...approvedWords);
         args.shift();
         var sayMessage = args.join(' ');
@@ -40,37 +79,27 @@ module.exports = {
             message.channel.send({ content: "That message is too long, no more than 200 characters per message!"});
             return;
         }
-        const stream=discordTTS.getVoiceStream(sayMessage);
-        const audioResource=createAudioResource(stream, {inputType: StreamType.Arbitrary, inlineVolume:true});
-        if(!voiceConnection || voiceConnection?.status===VoiceConnectionStatus.Disconnected){
-            voiceConnection = joinVoiceChannel({
-                channelId: message.member.voice.channelId,
-                guildId: message.guildId,
-                adapterCreator: message.guild.voiceAdapterCreator,
-            });
-            voiceConnection=await entersState(voiceConnection, VoiceConnectionStatus.Connecting, 5_000);
+
+        const stream = discordTTS.getVoiceStream(sayMessage);
+        const audioResource = createAudioResource(stream, {inputType: StreamType.Arbitrary, inlineVolume:true});
+        this.audioQueue.push(audioResource);
+        this.logger.info("Adding message to TTS Queue");
+
+        if(is_new_connection) {
+            if(this.voiceConnection.status === VoiceConnectionStatus.Connected) {
+                this.voiceConnection.subscribe(this.audioPlayer);
+
+                this.audioPlayer.on(AudioPlayerStatus.Idle, this.tryPlayNextAudio.bind(this));
+
+                this.audioPlayer.on('error', error => {
+                    message.channel.send({ content: "Hit an error!" });
+                    this.logger.error(error);
+                });
+
+                //Starts the playing the first time since we didn't catch the original idle event
+                this.tryPlayNextAudio();
+            }
         }
-        if(voiceConnection.status===VoiceConnectionStatus.Connected){
-            /*try {
-                await entersState(audioPlayer, AudioPlayerStatus.Playing, 5_000);
-                // The player has entered the Playing state within 5 seconds
-                this.logger.info('Playback has started!');
-            } catch (error) {
-                // The player has not entered the Playing state and either:
-                // 1) The 'error' event has been emitted and should be handled
-                // 2) 5 seconds have passed
-                this.logger.error(error.message);
-            }*/
-            voiceConnection.subscribe(audioPlayer);
-            audioPlayer.play(audioResource);
-        }
-        /*audioPlayer.on('error', error => {
-            this.logger.error(error.message);
-            audioPlayer.play(getNextResource());
-        })*/
-        audioPlayer.on(AudioPlayerStatus.Idle, () => {
-            voiceConnection.destroy();
-        })
     }
 }
 
