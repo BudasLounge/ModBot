@@ -12,7 +12,7 @@ module.exports = {
     voiceConnection: null,
     audioPlayer: null,
     audioQueue: [],
-    tryPlayNextAudio: function() {
+    tryPlayNextAudio() {
         if(this.audioQueue.length > 0) {
             this.audioPlayer.play(this.audioQueue.shift());
             this.logger.info("Audio Queue: " + this.audioQueue.length);
