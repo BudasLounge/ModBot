@@ -72,6 +72,7 @@ module.exports = {
         this.audioQueue.push(audioResource);
 
         if(is_new_connection) {
+            message.channel.send({content: "Was new Connection!"});
             if(this.voiceConnection.status === VoiceConnectionStatus.Connected) {
                 this.voiceConnection.subscribe(this.audioPlayer);
 
