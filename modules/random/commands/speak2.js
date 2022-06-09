@@ -16,7 +16,9 @@ module.exports = {
         if(this.audioQueue.length > 0) {
             this.audioPlayer.play(this.audioQueue[0]);
             this.audioQueue.shift(); //Shifts array to left, removing first entry (since we just played it)
+            this.logger.info("Audio Queue: " + this.audioQueue);
         } else {
+            this.logger.info("Stopping Audio Player");
             this.audioPlayer.stop();
             this.voiceConnection.destroy()
             this.audioPlayer = null;
