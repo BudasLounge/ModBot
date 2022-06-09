@@ -24,6 +24,7 @@ module.exports = {
     tryPlayNextAudio() {
         if(this.audioQueue.length > 0) {
             this.audioPlayer.play(this.audioQueue.shift());
+            this.logger.info("Shifted TTS Queue");
         } else {
             this.audioPlayer.stop();
             this.voiceConnection.destroy()
@@ -43,10 +44,12 @@ module.exports = {
             }
 
             message.channel.send({ content: "Cleared " + counter + " lines from the queue!" });
+            this.logger.info("TTS Queue cleared");
             return;
         } else if(args.length > 1 && args[1] === "<shutup>") {
             this.audioPlayer.state = { status: AudioPlayerStatus.Idle };
             message.channel.send({content: "Jeez, fine. I'll stop talking."});
+            this.logger.info("I shut up now");
             return;
         }
 
@@ -89,6 +92,7 @@ module.exports = {
         const stream = discordTTS.getVoiceStream(sayMessage);
         const audioResource = createAudioResource(stream, {inputType: StreamType.Arbitrary, inlineVolume:true});
         this.audioQueue.push(audioResource);
+        this.logger.info("Adding message to TTS Queue");
 
         if(is_new_connection) {
             if(this.voiceConnection.status === VoiceConnectionStatus.Connected) {
