@@ -26,7 +26,7 @@ module.exports = {
         var api = extra.api;
         var is_new_connection = false;
 
-        if(this.args.length > 0 && this.args[0] === "<clear>") {
+        if(args.length > 0 && args[0] === "<clear>") {
             counter = 0;
             while(this.audioQueue.length > 0) {
                 counter++;
