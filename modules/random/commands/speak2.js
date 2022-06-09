@@ -45,9 +45,9 @@ module.exports = {
             message.channel.send({ content: "Cleared " + counter + " lines from the queue!" });
             return;
         } else if(args.length > 1 && args[1] === "<shutup>") {
-            this.logger.info(getMethods(this.audioPlayer));
             this.audioPlayer.state = { status: AudioPlayerStatus.Idle };
             message.channel.send({content: "Jeez, fine. I'll stop talking."});
+            return;
         }
 
         if(this.voiceConnection === null || this.audioPlayer === null) {
