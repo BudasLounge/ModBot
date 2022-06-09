@@ -1,5 +1,5 @@
 const discordTTS=require("discord-tts");
-const {AudioPlayer, AudioPlayerStatus, createAudioResource, StreamType, entersState, VoiceConnectionStatus, joinVoiceChannel, getVoiceConnection} = require("@discordjs/voice");
+const {AudioPlayer, AudioPlayerStatus, AudioPlayerIdleState, createAudioResource, StreamType, entersState, VoiceConnectionStatus, joinVoiceChannel, getVoiceConnection} = require("@discordjs/voice");
 
 const getMethods = (obj) => {
     let properties = new Set()
@@ -46,7 +46,7 @@ module.exports = {
             return;
         } else if(args.length > 1 && args[1] === "<shutup>") {
             this.logger.info(getMethods(this.audioPlayer));
-            this.audioPlayer.state = AudioPlayer.AudioPlayerIdleState;
+            this.audioPlayer.state = AudioPlayerIdleState;
             message.channel.send({content: "Jeez, fine. I'll stop talking."});
         }
 
