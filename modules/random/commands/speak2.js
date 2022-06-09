@@ -30,12 +30,10 @@ module.exports = {
         var approvedWords = [];
         try{
             var respApprovedWords = await api.get("allowed_word", {
-                //approved: "true"
+                approved: parseInt(1)
             });
             for(var i = 0;i<respApprovedWords.allowed_words.length;i++){
-                if(respApprovedWords.allowed_words[i].approved === "1"){
                     approvedWords.push(respApprovedWords.allowed_words[i].word);
-                }
             }
         }catch(err){
             this.logger.error(err.message);
