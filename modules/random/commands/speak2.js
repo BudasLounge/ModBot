@@ -71,6 +71,12 @@ module.exports = {
                         this.voiceConnection = null;
                     }
                 });
+
+                //Starts the playing the first time since we didn't catch the original idle event
+                if(this.audioPlayer.status === AudioPlayerStatus.Idle && this.audioQueue.length > 0) {
+                    this.audioPlayer.play(this.audioQueue[0]);
+                    this.audioQueue.shift();
+                }
             }
         }
     }
