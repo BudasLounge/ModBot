@@ -54,12 +54,12 @@ module.exports = {
 
         const stream = discordTTS.getVoiceStream(sayMessage);
         const audioResource = createAudioResource(stream, {inputType: StreamType.Arbitrary, inlineVolume:true});
-        message.channel.send({ content: "Added audioResource to the queue!" });
         this.audioQueue.push(audioResource);
 
         if(is_new_connection) {
             message.channel.send({ content: "Was new connection" });
             if(this.voiceConnection.status === VoiceConnectionStatus.Connected) {
+                message.channel.send({ content: "voiceConnection was Connected" });
                 this.voiceConnection.subscribe(this.audioPlayer);
 
                 this.audioPlayer.on(AudioPlayerStatus.Idle, () => {
