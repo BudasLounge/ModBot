@@ -15,6 +15,7 @@ module.exports = {
     tryPlayNextAudio() {
         if(this.audioQueue.length > 0) {
             this.audioPlayer.play(this.audioQueue.shift());
+            if(this.audioQueue === undefined) this.audioQueue = [];
             this.logger.info("Audio Queue: " + this.audioQueue.length);
         } else {
             this.logger.info("Stopping Audio Player");
