@@ -74,6 +74,11 @@ module.exports = {
                     }
                 });
 
+                this.audioPlayer.on('error', error => {
+                    message.channel.send({ content: "Hit an error!" });
+                    this.logger.error(error);
+                });
+
                 //Starts the playing the first time since we didn't catch the original idle event
                 if(this.audioPlayer.status === AudioPlayerStatus.Idle && this.audioQueue.length > 0) {
                     message.channel.send({ content: "Playing first audioResource!" });
