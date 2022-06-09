@@ -28,6 +28,8 @@ module.exports = {
         var api = extra.api;
         var is_new_connection = false;
 
+        this.logger.info("Audio Queue Type: " + typeof(this.audioQueue));
+
         if(this.voiceConnection === null || this.audioPlayer === null) {
             this.voiceConnection = joinVoiceChannel({
                 channelId: message.member.voice.channelId,
