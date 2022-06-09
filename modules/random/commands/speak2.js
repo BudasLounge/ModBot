@@ -14,7 +14,6 @@ module.exports = {
     audioQueue: [],
     tryPlayNextAudio: function() {
         if(this.audioQueue.length > 0) {
-            message.channel.send({ content: "Playing next audioResource!" });
             this.audioPlayer.play(this.audioQueue[0]);
             this.audioQueue.shift(); //Shifts array to left, removing first entry (since we just played it)
         } else {
