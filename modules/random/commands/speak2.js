@@ -54,6 +54,7 @@ module.exports = {
 
         const stream = discordTTS.getVoiceStream(sayMessage);
         const audioResource = createAudioResource(stream, {inputType: StreamType.Arbitrary, inlineVolume:true});
+        message.channel.send({ content: "Added audioResource to the queue!" });
         this.audioQueue.push(audioResource);
 
         if(is_new_connection) {
@@ -62,6 +63,7 @@ module.exports = {
 
                 this.audioPlayer.on(AudioPlayerStatus.Idle, () => {
                     if(this.audioQueue.length > 0) {
+                        message.channel.send({ content: "Playing next audioResource!" });
                         this.audioPlayer.play(this.audioQueue[0]);
                         this.audioQueue.shift(); //Shifts array to left, removing first entry (since we just played it)
                     } else {
@@ -74,6 +76,7 @@ module.exports = {
 
                 //Starts the playing the first time since we didn't catch the original idle event
                 if(this.audioPlayer.status === AudioPlayerStatus.Idle && this.audioQueue.length > 0) {
+                    message.channel.send({ content: "Playing first audioResource!" });
                     this.audioPlayer.play(this.audioQueue[0]);
                     this.audioQueue.shift();
                 }
