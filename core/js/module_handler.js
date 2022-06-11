@@ -1,21 +1,25 @@
+var fs = require('fs');
+var APIClient = require('./APIClient.js');
 
 /**
  * @external Discord
  * @see {@link https://discord.js.org/|Discord.js Documentation}
  */
-var Discord = require('discord.js');
-var fs = require('fs');
-var APIClient = require('./APIClient.js');
+ var Discord = require('discord.js');
 
 /**
  * @class Collection
  * @extends external:Discord
  * @see {@link https://discord.js.org/#/docs/collection/main/class/Collection|Collection}
- * 
+ */
+
+/**
  * @class Message
  * @extends external:Discord
  * @see {@link https://discord.js.org/#/docs/discord.js/main/class/Message|Message}
- * 
+ */
+
+/**
  * @external Logger
  * @see {@link https://github.com/winstonjs/winston#creating-your-own-logger|Winston Documentation}
  */
