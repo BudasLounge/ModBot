@@ -5,11 +5,17 @@ var Discord = require('discord.js');
 /**
  * @external Discord
  * @see {@link https://discord.js.org/|Discord.js Documentation}
- * 
+ */
+
+/**
+ * @external Discord
  * @class Discord.Collection
  * @extends external:Discord
  * @see {@link https://discord.js.org/#/docs/collection/main/class/Collection|Collection}
- * 
+ */
+
+/**
+ * @external Discord
  * @class Discord.Message
  * @extends external:Discord
  * @see {@link https://discord.js.org/#/docs/discord.js/main/class/Message|Message}
