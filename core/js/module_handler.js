@@ -4,20 +4,16 @@ var APIClient = require('./APIClient.js');
 /**
  * @external Discord
  * @see {@link https://discord.js.org/|Discord.js Documentation}
- */
- var Discord = require('discord.js');
-
-/**
+ * 
  * @class Collection
  * @extends external:Discord
  * @see {@link https://discord.js.org/#/docs/collection/main/class/Collection|Collection}
- */
-
-/**
+ * 
  * @class Message
  * @extends external:Discord
  * @see {@link https://discord.js.org/#/docs/discord.js/main/class/Message|Message}
  */
+ var Discord = require('discord.js');
 
 /**
  * @external Logger
