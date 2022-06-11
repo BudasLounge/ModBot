@@ -1,35 +1,97 @@
+
+/**
+ * @external Discord
+ * @see {@link https://discord.js.org/|Discord.js Documentation}
+ */
 var Discord = require('discord.js');
 var fs = require('fs');
 var APIClient = require('./APIClient.js');
 
 /**
- * The ModuleHandler class is the meat and bones of ModBot's modular system. This class handles discovering modules, loading modules,
- * checking configs, discovering commands within each module, and running commands.
+ * @class Collection
+ * @extends external:Discord
+ * @see {@link https://discord.js.org/#/docs/collection/main/class/Collection|Collection}
+ * 
+ * @class Message
+ * @extends external:Discord
+ * @see {@link https://discord.js.org/#/docs/discord.js/main/class/Message|Message}
+ * 
+ * @external Logger
+ * @see {@link https://github.com/winstonjs/winston#creating-your-own-logger|Winston Documentation}
+ */
+
+/**
+ * Represents an independent module for this bot. Modules each have their own set of commands and optional event handlers, and can be added and removed independently of
+ * each other. Technically, the bot could run with no modules installed at all, or you could swap out the 'core' module for your own to modify even the core functionality
+ * of the system.
+ * @typedef {Object} Module
+ * @property {ModuleConfig} config - The {@link ModuleConfig} that was loaded directly from the 'bot_module.json' file found in the module's directory.
+ * @property {string} location - The location of this module (relative to {@link ModuleHandler#program_path}). Ex: would be '/modules/core/' for the core module.
+ */
+
+/**
+ * An object containing the configuration for a {@link Module}, which defines the specifics about how the module works.
+ * @typedef {Object} ModuleConfig
+ * @property {string} name - The internal name for this {@link Module}. Should be all lowercase, no spaces, no special symbols by convention.
+ * @property {string} display_name - The 'pretty' version of the name for this {@link Module}. This is what users will see.
+ * @property {string} version - The version of the {@link Module}. Can follow whatever format is desired.
+ * @property {boolean} enabled - Whether this {@link Module} is enabled. If false, the module's commands and event handlers will not be loaded.
+ * @property {string} commands_directory - The name of the directory (without any slashes) inside this module's {@link Module#location} directory where commands can be found. Usually 'commands' by convention.
+ * @property {string} command_prefix - The character or set of characters that indicates a {@link Command} from this {@link Module} follows. For example, if you wanted to have a command triggered by the phrase '/help', the module's command_prefix would be '/'.
+ * @property {boolean} is_core - Whether this is a 'Core Module'. Core Modules are passed an instance of this {@link ModuleHandler} when their commands run, so that they may access the internals of the bot.
+ * @property {(boolean|string)} event_handler - If this {@link Module} uses event handlers, this should be a string containing the name of the file in the {@link Module#location} directory that handles events. If this {@link Module} does not use event handlers, this value should be false.
+ */
+
+/**
+ * Represents a command that users can run. 
+ * @typedef {Object} Command
+ * @property {string} name - The name of this command. This is what users will enter following the {@link ModuleConfig#command_prefix} to invoke a command's execution.
+ * @property {string} description - A description of what the command does. Will be displayed in the 'help' core command, so keep it fairly short.
+ * @property {string} syntax - A string defining the syntax for the command. Not used in parsing, but will be displayed to the user in the help menu or if a command is malformatted.
+ * @property {number} num_args - The minimum number of arguments expected for this command. If less than this amount are provided, the command will not be run and the bot will display the {@link Command#syntax}.
+ * @property {boolean} args_to_lower - All arguments passed with this command will be converted to lowercase before the command runs if this is true.
+ * @property {boolean} needs_api - Whether this command makes use of the integrated RESTful API. If true, an instance of APIClient will be passed as 'extra.api' in the {@link Command#execute} function.
+ * @property {boolean} has_state - Whether this command makes use of the {@link StateManager}. If true, the {@link ModuleHandler} will automatically build a state and pass it via 'extra.state' in the {@link Command#execute} function.
+ * @property {function(external:Discord.Message, string[], Object)} execute - The function that executes the command. This is where all of the command's logic ultimately lies. The array of arguments includes the name of the command itself as the first argument. The 'extra' object has properties that vary: 'extra.api' if {@link Command#needs_api} is true, 'extra.state' if {@link Command#has_state} is true, 'extra.module_handler' if this is a core module ({@link ModuleConfig#is_core} is true).
+ */
+
+/**
+ * The major core system of the bot. This class handles discovering {@link Module}s, loading modules,
+ * checking {@link ModuleConfig}s, discovering {@link Command}s within each module, and figuring out when to run a command.
  */
 class ModuleHandler {
 
     /**
-     * Constructor for ModuleHandler
+     * Constructor for {@link ModuleHandler}
      *
-     * @param {string} program_path The absolute path to the root directory of ModBot
+     * @constructor
+     * @param {string} program_path - The absolute path this ModuleHandler will use as its base working directory
+     * @param {StateManager} state_manager - The instance of StateManager for this ModuleHandler
+     * @param {Logger} logger - The Logger instance for this ModuleHandler
      */
     constructor(program_path, state_manager, logger) {
+        /** @type {string} The absolute path this ModuleHandler will use as its base working directory */
         this.program_path = program_path;
+        /** @type {?external:Discord.Collection<Module>} A {@link external:Discord.Collection} object containing all the modules this bot found. Will be null until {@link ModuleHandler#discover_modules} runs. */
         this.modules = null;
+        /** @type {?external:Discord.Collection<Module>} A {@link external:Discord.Collection} object containing all the modules this bot found but were disabled (by their config). Will be null until {@link ModuleHandler#discover_modules} runs. */
         this.disabled_modules = null;
+        /** @type {StateManager} The {@link StateManager} instance for this {@link ModuleHandler}. Will be passed to commands when they run with the proper states loaded. */
         this.state_manager = state_manager;
+        /** @type {external:Logger} The {@link external:Logger} object for this {@link ModuleHandler}. Will also be passed to commands when they run. */
         this.logger = logger;
     }
 
     /**
-     * As the name says, discovers modules.
+     * As the name says, discovers {@link Module}s.
      *
      * Takes the path of the folder containing modules as a parameter. Checks each directory within the
      * given folder to see if it is a valid module. If the directory contains a bot_module.json file, this function will create the module
-     * and register it with this ModuleHandler (by adding it to this.modules). Note that if a module's config has the module globally disabled,
-     * it will be added to this.disabled_modules instead. Globally disabled modules will not have their commands or event handlers loaded.
+     * and register it with this {@link ModuleHandler} (by adding it to {@link ModuleHandler#modules}). Note that if a module's config has the module globally disabled,
+     * it will be added to {@link ModuleHandler#disabled_modules} instead. Globally disabled modules will not have their commands or event handlers loaded.
      *
-     * @param {string} modules_folder The location of the folder containing the modules for this bot.
+     * @param {string} modules_folder The location of the folder containing the modules for this bot. This will be appended to {@link ModuleHandler#program_path}.
+     * @returns {} Nothing is returned.
      */
     discover_modules(modules_folder) {
         this.modules = new Discord.Collection();
@@ -37,16 +99,16 @@ class ModuleHandler {
 
         this.logger.info("Discovering Modules in: " + modules_folder + " ...");
         var module_folders = fs.readdirSync(modules_folder, { withFileTypes: true });
-        for(var folder of module_folders) {
+        for(var folder of module_folders) { //Iterate all folders in modules directory
             if(folder.isDirectory() && fs.existsSync(modules_folder + "/" + folder.name + "/bot_module.json")) {
-                var module_config = JSON.parse(fs.readFileSync(modules_folder + "/" + folder.name + "/bot_module.json"));
+                var module_config = JSON.parse(fs.readFileSync(modules_folder + "/" + folder.name + "/bot_module.json")); //Load module config if found
                 var the_module = {
                     config: module_config,
                     location: modules_folder + "/" + folder.name + "/"
                 };
 
                 if(the_module.config.enabled) {
-                    this.modules.set(the_module.config.name, the_module);
+                    this.modules.set(the_module.config.name, the_module); //Add module to this ModuleHandler
                 } else {
                     this.disabled_modules.set(the_module.config.name, the_module);
                 }
@@ -55,11 +117,13 @@ class ModuleHandler {
     }
 
     /**
-     * Discovers commands within each module.
+     * Discovers {@link Command}s within each module.
      *
-     * For each enabled module found, this function will check the module's config file for the directory containing
-     * command files. This directory should contain one .js file for each command to be added. The command files require
-     * a specific format, so make sure to look at one as an example.
+     * For each {@link Module} in {@link ModuleHandler#modules}, this function will check the module's {@link ModuleConfig#commands_directory} for the directory containing
+     * command files. This directory should contain one .js file for each command to be added. The command files should each export a single object
+     * following the format of {@link Command}.
+     * 
+     * @returns {} Nothing is returned.
      */
     discover_commands() {
 
@@ -98,22 +162,24 @@ class ModuleHandler {
     }
 
     /**
-     * This function is in charge of handling commands (discovering what command was called, and from which module, then executing the command)
+     * This function is in charge of handling {@link Command} execution (discovering what command was called, and from which module, then executing the command)
      *
-     * This function takes a message as its only parameter. It will loop through all the enabled modules and check the registered command prefix
-     * for that module. If the registered prefix for the module matches the beginning of the message, that module will be checked to see if it
-     * has a command with the name of the command that was run. If a command is found, this function will check the number of arguments provided
-     * to the command to see if it matches the amount of arguments required for that command. If so, its execute() function will be run.
+     * It will loop through all the {@link MessageHandler#modules} and check the registered {@link ModuleConfig#command_prefix}. If the registered prefix for the module
+     * matches the beginning of the message, that module will be checked to see if it has a command with the {@link Command#name} of the command that was run. If a
+     * command is found, this function will check the number of arguments provided to the command to see if it has at least that command's {@link Command#num_args}.
+     * If so, its {@link Command#execute} function will be run.
      *
      * If the module that the command belongs to is registered as a core module, this ModuleHandler will be passed as a parameter to the execute()
-     * function. This allows core modules to access the internals of ModBot.
+     * function in 'extra.module_handler'. This allows core modules to access the internals of ModBot.
      *
-     * Additionally, if the message given is of the format "//[module]:[command]", this function will ONLY check the provided module for the command
+     * Additionally, if the message is of the format "//[module]:[command]", this function will ONLY check the provided {@link Module} for the {@link Command}
      * to run. This is helpful for commands from different modules that use the same name, because normally the bot would just pick the command from
-     * the first module found to run.
+     * the first module it finds to run.
      *
-     * One more thing: every command will be passed an instance of APIClient(), which allows the commands an easy way to get access to the API. For more
-     * information on how to structure a command file, look at one of the existing commands (I reccommend ping, since it's simple).
+     * One more thing: every command will be passed an instance of APIClient() if {@link Command#needs_api} is true, which allows the commands an easy way to get
+     * access to the API. For more information on how to structure a command file, look at one of the existing commands (I reccommend ping, since it's simple).
+     * 
+     * @param {external:Discord.Message} message - The {@link external:Discord.Message} passed to us by the discord.js event handler
      */
     async handle_command(message) {
         var api = new APIClient();
@@ -237,11 +303,11 @@ class ModuleHandler {
     }
 
     /**
-     * This function is called when a command is run, but not enough arguments are provided.
+     * This function is called when a {@link Command} is run, but less than {@link Command#num_args} arguments are provided.
      *
-     * @param current_module The module this command belongs to
-     * @param command The command that was matched to the message
-     * @param message The message the user sent containing this command
+     * @param {Module} current_module The {@link Module} this command belongs to
+     * @param {string} command The {@link Command#name} of the command that was matched to the message
+     * @param {external:Discord.Message} message The message the user sent containing this command
      */
     invalid_syntax(current_module, command, message) {
         var prefix = current_module.config.command_prefix;

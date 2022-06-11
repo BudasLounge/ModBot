@@ -1,9 +1,13 @@
+/**
+ * Entry point for the bot. Sets up the discord client,
+ * loads all the internal systems, then discovers modules and commands.
+ */
+
 var fs = require('fs');
 var axios = require('axios');
 var request = require('request');
 var shell = require('shelljs');
 
-//var discord = require('discord.js');
 const {Intents, Client} = require('discord.js');
 const client = new Client({ intents: [Intents.FLAGS.GUILD_MEMBERS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.DIRECT_MESSAGES, Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_BANS, Intents.FLAGS.GUILD_INVITES, Intents.FLAGS.GUILD_VOICE_STATES] });
 

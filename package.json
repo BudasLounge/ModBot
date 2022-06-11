@@ -6,6 +6,7 @@
   "dependencies": {
     "axios": "^0.21.1",
     "discord.js": "^12.5.3",
+    "jsdoc": "^3.6.10",
     "leagueapiwrapper": "^2.3.1",
     "mc-server-status": "^2.0.2",
     "moment": "^2.29.1",
