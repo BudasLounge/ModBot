@@ -1,0 +1,19 @@
+{
+    "plugins": ["plugins/markdown"],
+    "recurseDepth": 10,
+    "opts": {
+        "recurse": true,
+        "destination": "/var/www/html/modbot/docs/"
+    },
+    "source": {
+        "include": ["."],
+        "includePattern": ".+\\.js(doc|x)?$",
+        "excludePattern": "(node_modules|blank_command)"
+    },
+    "tags": {
+        "dictionaries": ["jsdoc", "closure"]
+    },
+    "templates": {
+        "cleverLinks": true
+    }
+}
