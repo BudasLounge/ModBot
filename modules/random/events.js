@@ -901,8 +901,8 @@ async function onButtonClick(button){
 async function userJoinsVoice(oldMember, newMember){
     let newUserChannel = newMember.channelId;
     let oldUserChannel = oldMember.channelId;
-    //console.log(newMember);
-    //console.log(oldMember);
+    this.logger.info("newMember: " + newMember);
+    this.logger.info("oldMember: " + oldMember);
     let user = newMember.guild.members.cache.get(newMember.id);
     if(newUserChannel === newMember.guild.afkChannelId){
         newUserChannel = undefined
