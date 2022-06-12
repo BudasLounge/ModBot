@@ -25,32 +25,13 @@ var Discord = require('discord.js');
  */
 
 /**
+ * @typedef {Object} Module
+ * @property {ModuleConfig} config - The {@link ModuleConfig} that stores the configuration for this module
+ * @property {string} location - The location of this module (relative to {@link ModuleHandler#program_path}). Ex: would be '/modules/core/' for the core module.
  * Represents an independent module for this bot. Modules each have their own set of commands and optional event handlers, and can be added and removed independently of
  * each other. Technically, the bot could run with no modules installed at all, or you could swap out the 'core' module for your own to modify even the core functionality
  * of the system.
  */
-class Module {
-    /**
-     * The {@link ModuleConfig} that was loaded directly from the 'bot_module.json' file found in the module's directory.
-     * @type {ModuleConfig}
-     */
-    config;
-    /**
-     * The location of this module (relative to {@link ModuleHandler#program_path}). Ex: would be '/modules/core/' for the core module.
-     * @type {string}
-     */
-    location;
-
-    /**
-     * @constructor
-     * @param {ModuleConfig} config 
-     * @param {string} location 
-     */
-    constructor(config, location) {
-        this.config = config;
-        this.location = location;
-    }
-}
 
 /**
  * An object containing the configuration for a {@link Module}, which defines the specifics about how the module works.
