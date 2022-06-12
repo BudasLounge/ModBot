@@ -205,6 +205,7 @@ class ModuleHandler {
      * @param {external:Discord.Message} message - The {@link external:Discord.Message} passed to us by the discord.js event handler
      */
     async handle_command(message) {
+        this.logger.info("Got command: " + message.content);
         var api = new APIClient();
         if(message.author.bot) return; //Ignore messages from bots
 
