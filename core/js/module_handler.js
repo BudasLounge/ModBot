@@ -40,6 +40,16 @@ class Module {
      * @type {string}
      */
     location;
+
+    /**
+     * @constructor
+     * @param {ModuleConfig} config 
+     * @param {string} location 
+     */
+    constructor(config, location) {
+        this.config = config;
+        this.location = location;
+    }
 }
 
 /**
