@@ -4,6 +4,8 @@
   "description": "A modular, modifiable moderator for Discord",
   "author": "Andrew Graber & JR Buda",
   "dependencies": {
+    "@discordjs/voice": "^0.10.0",
+    "libsodium-wrappers": "^0.7.10",
     "axios": "^0.21.1",
     "discord.js": "^12.5.3",
     "jsdoc": "^3.6.10",
