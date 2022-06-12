@@ -8,8 +8,9 @@ var axios = require('axios');
 var request = require('request');
 var shell = require('shelljs');
 
-const {Intents, Client} = require('discord.js');
-const client = new Client({ intents: [Intents.FLAGS.GUILD_MEMBERS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.DIRECT_MESSAGES, Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_BANS, Intents.FLAGS.GUILD_INVITES, Intents.FLAGS.GUILD_VOICE_STATES] });
+const {Intents} = require('discord.js');
+const Discord = require('discord.js');
+const client = new Discord.Client({ intents: [Intents.FLAGS.GUILD_MEMBERS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.DIRECT_MESSAGES, Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_BANS, Intents.FLAGS.GUILD_INVITES, Intents.FLAGS.GUILD_VOICE_STATES] });
 
 var config = JSON.parse(fs.readFileSync('modbot.json'));
 
@@ -65,7 +66,7 @@ function authClient() {
     client.login(token);
 }
 
-client.on('messageCreate', (message) => {
+client.on('message', (message) => {
     logger.info("Got message!");
     //Add ability to check first time someone sends a message (not command) and grant them points
     modules.handle_command(message);
