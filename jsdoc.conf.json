@@ -3,7 +3,8 @@
     "recurseDepth": 10,
     "opts": {
         "recurse": true,
-        "destination": "/var/www/html/modbot/docs/"
+        "destination": "/var/www/html/modbot/docs/",
+        "template": "./node_modules/postman-jsdoc-theme"
     },
     "source": {
         "include": ["."],
