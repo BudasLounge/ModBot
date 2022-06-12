@@ -30,9 +30,9 @@ var Discord = require('discord.js');
  * of the system.
  */
 class Module {
-    /** @member {ModuleConfig} config - The {@link ModuleConfig} that was loaded directly from the 'bot_module.json' file found in the module's directory. */
+    /** @property {ModuleConfig} config - The {@link ModuleConfig} that was loaded directly from the 'bot_module.json' file found in the module's directory. */
     config;
-    /** @member {string} location - The location of this module (relative to {@link ModuleHandler#program_path}). Ex: would be '/modules/core/' for the core module. */
+    /** @property {string} location - The location of this module (relative to {@link ModuleHandler#program_path}). Ex: would be '/modules/core/' for the core module. */
     location;
 }
 
