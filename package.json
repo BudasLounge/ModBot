@@ -11,6 +11,7 @@
     "mc-server-status": "^2.0.2",
     "moment": "^2.29.1",
     "request": "^2.88.0",
-    "winston": "^3.3.3"
+    "winston": "^3.3.3",
+    "postman-jsdoc-theme": "^0.0.3"
   }
 }
