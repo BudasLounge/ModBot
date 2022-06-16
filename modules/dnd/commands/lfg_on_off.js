@@ -7,14 +7,13 @@ module.exports = {
     needs_api: true,
     has_state: false,
     async execute(message, args, extra) {
-        let role = message.guild.cache.find(role => role.id === "761355940955291678");
 
         if(args[1] == "on"){
-            message.member.addRole(role);
+            message.member.addRole("761355940955291678");
             message.channel.send({ content: "You were added to the lfg group!"});
         }
         else if(args[1] == "off"){
-            message.member.removeRole(role);
+            message.member.removeRole("761355940955291678");
             message.channel.send({ content: "You were taken out of the lfg group!"});
         }
     }
