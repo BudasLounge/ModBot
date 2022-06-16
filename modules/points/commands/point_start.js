@@ -57,7 +57,7 @@ module.exports = {
                 message.channel.send({ content: "There was an error."});
             }
         }else{
-            message.channel.send({ content: "This server doesn't have a loaded config. Have an admin use /point_start_server to get it loaded."});
+            message.channel.send({ content: "This server doesn't have a loaded config. Have an admin use ,point_start_server to get it loaded."});
         }
     }
 }
