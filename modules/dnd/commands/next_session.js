@@ -42,7 +42,6 @@ module.exports = {
                 return;
             }
         }
-        var days;
         if(Number.isInteger(args[1])){
             var respLastSession = "";
             try{
