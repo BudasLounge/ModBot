@@ -31,7 +31,7 @@ module.exports = {
             return;
         }
 
-        if(!args[1] || !args[2]){
+        if(!args[1]){
             if(respDndSession.dnd_campaigns[0]){
                 if(respDndSession.dnd_campaigns[0].next_session){
                     var unixTimeStamp = Math.floor(new Date(respDndSession.dnd_campaigns[0].next_session).getTime()/1000);
