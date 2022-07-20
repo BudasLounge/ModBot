@@ -52,7 +52,7 @@ module.exports = {
                 this.logger.error(err3.message);
             }
             var lastDate = Math.floor(new Date(respLastSession.dnd_campaigns[0].next_session).getTime()/1000);
-            var newDate = lastDate + (args[1]*86400*1000);
+            var newDate = lastDate + (args[1]*86400);
             this.logger.info(newDate.toString())
             message.channel.setTopic("Next Session: <t:" + newDate.toString() + ":R>" );
         }else{
