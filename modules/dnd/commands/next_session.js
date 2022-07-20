@@ -54,7 +54,7 @@ module.exports = {
             var lastDate = Math.floor(new Date(respLastSession.dnd_campaigns[0].next_session).getTime()/1000);
             var newDate = lastDate + (args[1]*86400);
             this.logger.info(newDate.toString())
-            message.channel.setTopic("Next Session: <t:" + newDate.toString() + ":R>" );
+            await message.channel.setTopic("Next Session: <t:" + newDate.toString() + ":R>" );
         }else{
             var dateTime = args[1] + " " + args[2];
             var unixTimeStamp = Math.floor(new Date(dateTime).getTime()/1000);
