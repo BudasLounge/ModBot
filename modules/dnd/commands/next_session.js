@@ -54,8 +54,8 @@ module.exports = {
             var lastDate = Math.floor(new Date(respLastSession.dnd_campaigns[0].next_session).getTime()/1000);
             var newDate = lastDate + (args[1]*86400);
             this.logger.info(newDate.toString())
-            var newDateStamp = new Date(newDate)
-            this.logger.info(newDateStamp)
+            var newDateStamp = new Date(newDate*1000)
+            this.logger.info(newDateStamp.toLocaleString())
             var respNextSession = "";
             /*try{
                 respNextSession = await api.put("dnd_campaign",{
