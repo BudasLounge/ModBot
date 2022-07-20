@@ -42,7 +42,7 @@ module.exports = {
                 return;
             }
         }
-        if(Number.isInteger(args[1])){
+        if(!args[2]){
             var respLastSession = "";
             try{
                 respLastSession = await api.get("dnd_campaign",{
