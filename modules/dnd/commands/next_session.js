@@ -42,17 +42,32 @@ module.exports = {
                 return;
             }
         }
-        var dateTime = args[1] + " " + args[2];
-        var unixTimeStamp = Math.floor(new Date(dateTime).getTime()/1000);
-        var respNextSession = "";
-        try{
-            respNextSession = await api.put("dnd_campaign",{
-                campaign_id:parseInt(respDndSession.dnd_campaigns[0].campaign_id),
-                next_session:dateTime
-            })
-        }catch(err2){
-            this.logger.error(err2.message);
+        var days;
+        if(Number.isInteger(args[1])){
+            var respLastSession = "";
+            try{
+                respLastSession = await api.get("dnd_campaign",{
+                    campaign_id:parseInt(respDndSession.dnd_campaigns[0].campaign_id)
+                })
+            }catch(err3){
+                this.logger.error(err3.message);
+            }
+            var lastDate = Math.floor(new Date(respLastSession.dnd_campaigns[0].next_session).getTime()/1000);
+            var newDate = lastDate + (args[1]*86400);
+            message.channel.setTopic("Next Session: <t:" + unixTimeStamp.toString() + ":R>" );
+        }else{
+            var dateTime = args[1] + " " + args[2];
+            var unixTimeStamp = Math.floor(new Date(dateTime).getTime()/1000);
+            var respNextSession = "";
+            try{
+                respNextSession = await api.put("dnd_campaign",{
+                    campaign_id:parseInt(respDndSession.dnd_campaigns[0].campaign_id),
+                    next_session:dateTime
+                })
+            }catch(err2){
+                this.logger.error(err2.message);
+            }
+            message.channel.setTopic("Next Session: <t:" + unixTimeStamp.toString() + ":R>" );
         }
-        message.channel.setTopic("Next Session: <t:" + unixTimeStamp.toString() + ":R>" );
     }
 }
