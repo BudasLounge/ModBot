@@ -55,7 +55,15 @@ module.exports = {
             var newDate = lastDate + (args[1]*86400);
             this.logger.info(newDate.toString())
             var newDateStamp = new Date(newDate*1000)
-            this.logger.info(newDateStamp.toLocaleString())
+            var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            var year = newDateStamp.getFullYear();
+            var month = months[newDateStamp.getMonth()];
+            var date = newDateStamp.getDate();
+            var hour = newDateStamp.getHours();
+            var min = newDateStamp.getMinutes();
+            var sec = newDateStamp.getSeconds();
+            var time = date + ' ' + month + ' ' + year + ' ' + hour + ':' + min + ':' + sec ;
+            this.logger.info(time)
             var respNextSession = "";
             /*try{
                 respNextSession = await api.put("dnd_campaign",{
