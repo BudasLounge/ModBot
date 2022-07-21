@@ -55,10 +55,15 @@ module.exports = {
             var newDate = lastDate + (args[1]*86400);
             this.logger.info(newDate.toString())
             var newDateStamp = new Date(newDate*1000)
-            var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
             var year = newDateStamp.getFullYear();
             var month = newDateStamp.getMonth()+1;
+            if(month<10){
+                month = "0"+month.toString()
+            }
             var date = newDateStamp.getDate();
+            if(date<10){
+                date = "0"+date.toString()
+            }
             var hour = newDateStamp.getHours();
             var min = newDateStamp.getMinutes();
             var sec = newDateStamp.getSeconds();
