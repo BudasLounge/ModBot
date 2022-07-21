@@ -67,6 +67,9 @@ module.exports = {
             var hour = newDateStamp.getHours();
             var min = newDateStamp.getMinutes();
             var sec = newDateStamp.getSeconds();
+            if(sec<10){
+                sec="0"+sec.toString()
+            }
             var time = year + '-' + month + '-' + date + ' ' + hour + ':' + min + ':' + sec ;
             this.logger.info(time)
             var respNextSession = "";
