@@ -62,7 +62,7 @@ module.exports = {
             var hour = newDateStamp.getHours();
             var min = newDateStamp.getMinutes();
             var sec = newDateStamp.getSeconds();
-            var time = date + ' ' + month + ' ' + year + ' ' + hour + ':' + min + ':' + sec ;
+            var time = year + '-' + month + '-' + date + ' ' + hour + ':' + min + ':' + sec ;
             this.logger.info(time)
             var respNextSession = "";
             /*try{
