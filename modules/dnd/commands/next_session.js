@@ -73,14 +73,14 @@ module.exports = {
             var time = year + '-' + month + '-' + date + ' ' + hour + ':' + min + ':' + sec ;
             this.logger.info(time)
             var respNextSession = "";
-            /*try{
+            try{
                 respNextSession = await api.put("dnd_campaign",{
                     campaign_id:parseInt(respDndSession.dnd_campaigns[0].campaign_id),
-                    next_session:newDate
+                    next_session:time
                 })
             }catch(err4){
                 this.logger.error(err4.message);
-            }*/
+            }
             await message.channel.setTopic("Next Session: <t:" + newDate.toString() + ":R>" );
         }else{
             var dateTime = args[1] + " " + args[2];
