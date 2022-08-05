@@ -8,13 +8,13 @@ async function onButtonClick(button){
         if(!button.customId.includes(button.user.id)){
             await button.reply({content: "This invite was not made for you.", ephemeral: true})
         }
-        var IDcheck = button.customId.slice("_");
-        console.log("RIGHT HERE: " +IDcheck)
+        var IDcheck = button.customId.slice("_").pop();
+        logger.info(IDcheck.substring(0))
         if(IDcheck.includes("A")){
             try{
                 var respAddToCampaign = api.post("dnd_players_in_campaign",{
                     discord_id:button.user.id.toString(),
-                    campaign_id:parseInt(IDcheck.substring(0))
+                    campaign_id:parseInt(IDcheck.slice("A"))
                 })
             }catch(error){
                 logger.error(error.message)
