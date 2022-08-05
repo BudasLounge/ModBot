@@ -18,9 +18,7 @@ async function onButtonClick(button){
             }catch(error){
                 logger.error(error.message)
             }
-            await button.update({content:"The invite was accepted. Have fun playing!", components: []})
-            logger.info("Added a new player to the campaign successfully")
-
+            
             try{
                 var respCampaign = api.get("dnd_campaign",{
                     campaign_id:parseInt(IDcheck.substring(1))
@@ -28,7 +26,12 @@ async function onButtonClick(button){
             }catch(error2){
                 logger.error(error2.message)
             }
-
+            if(!respCampaign.dnd_campaigns[0]){
+                message.channel.send({content: "I can't find a campaign linked for you. Ask an admin to help you get started!"});
+                return;
+            }
+            await button.update({content:"The invite was accepted. Have fun playing!", components: []})
+            logger.info("Added a new player to the campaign successfully")
             let playerRole = button.guild.roles.cache.find(role => role.id === respCampaign.dnd_campaigns[0].role_id.toString());
             button.member.roles.add(playerRole);
             button.guild.channels.cache.get(respCampaign.dnd_campaigns[0].schedule_channel.toString()).send({content: "<@" + button.user.id + ">, welcome! This is where you game will take place. Wait for you DM to reach out and have fun!"})
