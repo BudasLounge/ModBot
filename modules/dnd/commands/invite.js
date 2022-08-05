@@ -77,9 +77,7 @@ module.exports = {
 
         const outputEmbed = new MessageEmbed()
         .setTitle("<@" + invitedPlayer.toString() + "> " + ",you have been invited to play!")
-        .addField(message.member.user.username + "has invited you to play in their campaign: " + respFoundCampaign.dnd_campaigns[0].module)
-        .addField("Please choose to accept or deny this request from the buttons below.");
-        this.logger.info(outputEmbed);
+        .addField(message.member.user.username + "has invited you to play in their campaign: " + respFoundCampaign.dnd_campaigns[0].module, "Please choose to accept or deny this request from the buttons below.")
         message.guild.channels.cache.get("1005137919662629004").send({embeds: [outputEmbed], components: [row]});
     }
 };
