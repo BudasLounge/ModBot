@@ -11,20 +11,19 @@ async function onButtonClick(button){
         var IDcheck = button.customId.split("_").pop();
         if(IDcheck.includes("A")){
             try{
-                var respCampaign = api.get("dnd_campaign",{
+                var respCampaign = await api.get("dnd_campaign",{
                     campaign_id:parseInt(IDcheck.substring(1))
                 })
             }catch(error2){
                 logger.error(error2.message)
             }
-            logger.info("Here it is:" + respCampaign)
             if(!respCampaign.dnd_campaigns[0]){
                 message.channel.send({content: "I can't find a campaign linked for you. Ask an admin to help you get started!"});
                 return;
             }
 
             try{
-                var respAddToCampaign = api.post("dnd_players_in_campaign",{
+                var respAddToCampaign = await api.post("dnd_players_in_campaign",{
                     discord_id:button.user.id.toString(),
                     campaign_id:parseInt(IDcheck.substring(1))
                 })
