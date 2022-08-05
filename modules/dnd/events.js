@@ -4,6 +4,7 @@ const {MessageActionRow, MessageButton, MessageEmbed, MessageSelectMenu} = requi
 
 async function onButtonClick(button){
     if (button.isButton()){
+        this.logger.info(IDcheck.slice("A"))
         if(!button.customId.substring(0,3)==="ID-") return;
         if(!button.customId.includes(button.user.id)){
             await button.reply({content: "This invite was not made for you.", ephemeral: true})
