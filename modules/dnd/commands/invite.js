@@ -9,7 +9,7 @@ module.exports = {
     async execute(message, args, extra) {
         if(!args[2]){
             await message.reply({content: "You did not enter enough information, try this:\n,invite [@player] [name of campaign]", ephemeral: true})
-            message.delete()
+            //message.delete()
             return;
         }
         var api = extra.api;
