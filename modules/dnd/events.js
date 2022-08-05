@@ -9,12 +9,12 @@ async function onButtonClick(button){
             await button.reply({content: "This invite was not made for you.", ephemeral: true})
         }
         var IDcheck = button.customId.split("_").pop();
-        logger.info(IDcheck.substring(0))
+        logger.info(IDcheck.substring(1))
         if(IDcheck.includes("A")){
             try{
                 var respAddToCampaign = api.post("dnd_players_in_campaign",{
                     discord_id:button.user.id.toString(),
-                    campaign_id:parseInt(IDcheck.slice("A"))
+                    campaign_id:parseInt(IDcheck.substring(1))
                 })
             }catch(error){
                 logger.error(error.message)
