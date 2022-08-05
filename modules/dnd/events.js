@@ -20,6 +20,18 @@ async function onButtonClick(button){
             }
             await button.update({content:"The invite was accepted. Have fun playing!"})
             logger.info("Added a new player to the campaign successfully")
+
+            try{
+                var respCampaign = api.get("dnd_campaign",{
+                    campaign_id:parseInt(IDcheck.substring(1))
+                })
+            }catch(error2){
+                logger.error(error2.message)
+            }
+
+            let playerRole = button.guild.roles.cache.find(role => role.id === respCampaign.dnd_campaigns[0].role_id.toString());
+            button.member.roles.add(playerRole);
+            button.guild.channels.cache.get(respCampaign.dnd_campaigns[0].schedule_channel.toString()).send({content: "<@" + button.user.id + ">, welcome! This is where you game will take place. Wait for you DM to reach out and have fun!"})
         }
         else if(IDcheck.includes("D")){
             await button.update({content:"The invite was denied. If this was an error, contact your potential DM again."})
