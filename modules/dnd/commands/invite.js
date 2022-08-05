@@ -75,7 +75,7 @@ module.exports = {
                     .setStyle('DANGER'),
             )
 
-        const outputEmbed = new MessagedEmbed()
+        const outputEmbed = new MessageEmbed()
         .setTitle( "<@" + invitedPlayer + "> " + ",you have been invited to play!")
         .addField(message.author.name + "has invited you to play in their campaign: " + respFoundCampaign.dnd_campaigns[0].module)
         .addField("Please choose to accept or deny this request from the buttons below.")
