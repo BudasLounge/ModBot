@@ -14,7 +14,7 @@ async function onButtonClick(button){
             try{
                 var respAddToCampaign = api.post("dnd_players_in_campaign",{
                     discord_id:button.user.id.toString(),
-                    campaign_id:parseInt(IDcheck.slice("A"))
+                    campaign_id:parseInt(IDcheck.substring(0))
                 })
             }catch(error){
                 logger.error(error.message)
