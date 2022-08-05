@@ -8,7 +8,7 @@ async function onButtonClick(button){
         if(!button.customId.includes(button.user.id)){
             await button.reply({content: "This invite was not made for you.", ephemeral: true})
         }
-        var IDcheck = button.customId.slice("_").pop();
+        var IDcheck = button.customId.split("_").pop();
         logger.info(IDcheck.substring(0))
         if(IDcheck.includes("A")){
             try{
