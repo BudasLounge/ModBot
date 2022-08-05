@@ -1,7 +1,7 @@
 module.exports = {
     name: 'invite',
     description: 'Invites a player to your campaign. (must be sent from within the actual campaign folder)',
-    syntax: 'invite [@player]',
+    syntax: 'invite [@player] [name of campaign]',
     num_args: 0,
     args_to_lower: true,
     needs_api: true,
@@ -15,6 +15,10 @@ module.exports = {
         var respPlayersInCampaign;
 
         var invitedPlayer = message.mentions.users.first().id
+
+        args.shift()
+        args.shift()
+        var campaign_name = args.join(" ")
         //validate that the DM is in the player database
         try{
             respFoundPlayer = await api.get("dnd_player", {
@@ -32,7 +36,8 @@ module.exports = {
         //validate that a campaign exists for the DM inviting players (NEED TO ADD FUNCTIONALITY FOR IF THE DM HAS MULTIPLE CAMPAIGNS)
         try{
             respFoundCampaign = await api.get("dnd_campaign",{
-                dm_id: message.member.id
+                dm_id: message.member.id,
+                module:campaign_name
             })
         }catch(error2){
             this.logger.error(error2.message)
@@ -42,10 +47,6 @@ module.exports = {
             message.channel.send({content: "I can't find a campaign linked for you. Ask an admin to help you get started!"});
             return;
         }
-        /*if(!message.channel.parent.id === respFoundCampaign.dnd_campaigns[0].category_id){
-            message.channel.send({content: "Make sure to invite players from within your campaign's designated area."});
-            return;
-        }*/
 
         //check if the invited player already is in the campaign they are being invited to
         try{
