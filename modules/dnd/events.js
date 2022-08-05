@@ -4,12 +4,12 @@ const {MessageActionRow, MessageButton, MessageEmbed, MessageSelectMenu} = requi
 
 async function onButtonClick(button){
     if (button.isButton()){
-        this.logger.info(IDcheck.slice("_"))
         if(!button.customId.substring(0,3)==="ID-") return;
         if(!button.customId.includes(button.user.id)){
             await button.reply({content: "This invite was not made for you.", ephemeral: true})
         }
         var IDcheck = button.customId.slice("_");
+        this.logger.info(IDcheck)
         if(IDcheck.includes("A")){
             try{
                 var respAddToCampaign = api.post("dnd_players_in_campaign",{
