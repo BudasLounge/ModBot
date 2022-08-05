@@ -17,6 +17,7 @@ async function onButtonClick(button){
             }catch(error2){
                 logger.error(error2.message)
             }
+            logger.info(respCampaign)
             if(!respCampaign.dnd_campaigns[0]){
                 message.channel.send({content: "I can't find a campaign linked for you. Ask an admin to help you get started!"});
                 return;
