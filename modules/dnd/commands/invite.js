@@ -7,6 +7,11 @@ module.exports = {
     needs_api: true,
     has_state: false,
     async execute(message, args, extra) {
+        if(!args[2]){
+            message.channel.reply({content: "You did not enter enough information, try this:\n,invite [@player] [name of campaign]", ephemeral: true})
+            message.delete()
+            return;
+        }
         var api = extra.api;
         const { MessageActionRow, MessageButton, MessageEmbed } = require('discord.js');
 
@@ -44,7 +49,7 @@ module.exports = {
         }
 
         if(!respFoundCampaign.dnd_campaigns[0]){
-            message.channel.send({content: "I can't find a campaign linked for you. Ask an admin to help you get started!"});
+            message.channel.send({content: "I can't find a campaign linked with that information, double check spellings and capitalization and try again. Ask an admin to help you get started!"});
             return;
         }
 
