@@ -6,7 +6,7 @@ async function onButtonClick(button){
     if (button.isButton()){
         if(!button.customId.substring(0,3)==="ID-") return;
 
-        
+
     }
 }
 
@@ -15,3 +15,4 @@ function register_handlers(event_registry) {
     logger = event_registry.logger;
     event_registry.register('interactionCreate', onButtonClick);
 }
+module.exports = register_handlers;
