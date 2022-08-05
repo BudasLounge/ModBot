@@ -8,11 +8,20 @@ async function onButtonClick(button){
         if(!button.customId.includes(button.user.id)){
             await button.reply({content: "This invite was not made for you.", ephemeral: true})
         }
-        if(button.customId.substring(button.customId.length-1)=="A"){
-
+        var IDcheck = button.customId.slice("_");
+        if(IDcheck.includes("A")){
+            try{
+                var respAddToCampaign = api.post("dnd_players_in_campaign",{
+                    discord_id:button.user.id.toString(),
+                    campaign_id:IDcheck.slice("A")
+                })
+            }catch(error){
+                this.logger.error(error.message)
+            }
+            await button.update({content:"The invite was accepted. Have fun playing!"})
         }
-        else if(button.customId.substring(button.customId.length-1)=="D"){
-
+        else if(IDcheck.includes("D")){
+            await button.update({content:"The invite was denied. If this was an error, contact your potential DM again."})
         }
 
     }
