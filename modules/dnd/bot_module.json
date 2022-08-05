@@ -6,5 +6,5 @@
     "commands_directory": "commands",
     "command_prefix": ",",
     "is_core": false,
-    "event_handler": false
+    "event_handler": true
 }
