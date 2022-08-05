@@ -18,7 +18,7 @@ async function onButtonClick(button){
             }catch(error){
                 logger.error(error.message)
             }
-            await button.update({content:"The invite was accepted. Have fun playing!"})
+            await button.update({content:"The invite was accepted. Have fun playing!", components: ""})
             logger.info("Added a new player to the campaign successfully")
 
             try{
