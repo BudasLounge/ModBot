@@ -11,15 +11,6 @@ async function onButtonClick(button){
         var IDcheck = button.customId.split("_").pop();
         if(IDcheck.includes("A")){
             try{
-                var respAddToCampaign = api.post("dnd_players_in_campaign",{
-                    discord_id:button.user.id.toString(),
-                    campaign_id:parseInt(IDcheck.substring(1))
-                })
-            }catch(error){
-                logger.error(error.message)
-            }
-            
-            try{
                 var respCampaign = api.get("dnd_campaign",{
                     campaign_id:parseInt(IDcheck.substring(1))
                 })
@@ -30,6 +21,16 @@ async function onButtonClick(button){
                 message.channel.send({content: "I can't find a campaign linked for you. Ask an admin to help you get started!"});
                 return;
             }
+
+            try{
+                var respAddToCampaign = api.post("dnd_players_in_campaign",{
+                    discord_id:button.user.id.toString(),
+                    campaign_id:parseInt(IDcheck.substring(1))
+                })
+            }catch(error){
+                logger.error(error.message)
+            }
+            
             await button.update({content:"The invite was accepted. Have fun playing!", components: []})
             logger.info("Added a new player to the campaign successfully")
             let playerRole = button.guild.roles.cache.find(role => role.id === respCampaign.dnd_campaigns[0].role_id.toString());
