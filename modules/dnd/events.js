@@ -17,7 +17,7 @@ async function onButtonClick(button){
             }catch(error2){
                 logger.error(error2.message)
             }
-            logger.info("IDcheck: "+IDcheck + "\ncustomID: "+button.customId)
+            logger.info("IDcheck: "+IDcheck + " customID: "+button.customId)
             if(!respCampaign.dnd_campaigns[0]){
                 button.channel.send({content: "This invite seems to have an issue. Contact and Admin please.", ephemeral: true});
                 return;
