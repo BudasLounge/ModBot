@@ -1,7 +1,7 @@
 module.exports = {
     name: 'approve_word',
     description: 'Approves words for the /say command',
-    syntax: 'approve [word]',
+    syntax: 'approve_word [word]',
     num_args: 1,
     args_to_lower: true,
     needs_api: true,
