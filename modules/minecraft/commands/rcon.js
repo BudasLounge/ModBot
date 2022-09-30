@@ -23,6 +23,7 @@ module.exports = {
 
         if(!args[2]){
             message.reply({ content: "Please make sure to fill out all arguments. Use 'rcon help' to see how to use it!"});
+            return;
         }
 
         var respServer;
