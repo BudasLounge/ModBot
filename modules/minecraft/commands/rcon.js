@@ -46,7 +46,7 @@ module.exports = {
         // otherwise those commands will fail.
         console.log("Authenticated");
         console.log("Sending command: help")
-        conn.send("help");
+        conn.send(args[2]);
         }).on('response', function(str) {
         console.log("Response: " + str);
         }).on('error', function(err) {
@@ -56,7 +56,7 @@ module.exports = {
         process.exit();
         });
         var output = conn.connect();
-        message.channel.send({content: output})
+        //message.channel.send({content: output})
         //conn.disconnect();
     }
 }
