@@ -38,11 +38,13 @@ module.exports = {
             message.reply({ content: "No server with that shortname exists, use ,listmc to find one!"});
             return;
         }
-
+        var command;
         if(args[3]){
             args.shift()
             args.shift()
-            var command = args.join(' ');
+            command = args.join(' ');
+        }else{
+            command = args[2]
         }
         var conn = new Rcon(respServer.minecraft_servers[0].numeric_ip, respServer.minecraft_servers[0].rcon_port, 'BudasloungeMinecraft');
         message.reply({content: "Sending command to server!"})
