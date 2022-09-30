@@ -19,7 +19,7 @@ module.exports = {
 
         if(respDndSession.dnd_campaigns[0]){
             if(respDndSession.dnd_campaigns[0].dm_role_id === ""){
-                message.channel.send({ content: "This command requires an admin role but no main admin role has been selected for this server."});
+                message.channel.send({ content: "This command requires an DM role but no main DM role has been selected for this category."});
                 return;
             }
             else if(!message.member.roles.cache.has(respDndSession.dnd_campaigns[0].dm_role_id)){
