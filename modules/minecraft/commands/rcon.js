@@ -15,7 +15,7 @@ module.exports = {
             message.reply({ content: "Arguments:\nminecraft_shortname: the short name of the minecraft server. Typically the first part of their IP, can be found with ,listmc\nrcon_command: any in-game server command that would usually follow a //\nMUST BE LISTED AS AN MC ADMIN TO USE THIS COMMAND"});
         }
 
-        if(!message.member.roles.has("586313447965327365")){
+        if(!message.member.roles.cache.some(role => role.name === "MCadmin")){
             message.reply({content: "You are not an MC Admin, you cannot use this command."})
             return;
         }
