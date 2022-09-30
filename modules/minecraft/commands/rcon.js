@@ -39,6 +39,11 @@ module.exports = {
             return;
         }
 
+        if(args[3]){
+            args.shift()
+            args.shift()
+            var command = args.join(" ");
+        }
         var conn = new Rcon(respServer.minecraft_servers[0].numeric_ip, respServer.minecraft_servers[0].rcon_port, 'BudasloungeMinecraft');
         message.reply({content: "Sending command to server!"})
         conn.on('auth', function() {
@@ -46,7 +51,7 @@ module.exports = {
         // otherwise those commands will fail.
         console.log("Authenticated");
         console.log("Sending command: help")
-        conn.send(args[2]);
+        conn.send(command);
         }).on('response', function(str) {
         console.log("Response: " + str);
         }).on('error', function(err) {
