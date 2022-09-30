@@ -50,7 +50,7 @@ module.exports = {
         // You must wait until this event is fired before sending any commands,
         // otherwise those commands will fail.
         console.log("Authenticated");
-        console.log("Sending command: help")
+        console.log("Sending command:" + command)
         conn.send(command);
         }).on('response', function(str) {
         console.log("Response: " + str);
