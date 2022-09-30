@@ -42,15 +42,15 @@ module.exports = {
         conn.on('auth', function() {
         // You must wait until this event is fired before sending any commands,
         // otherwise those commands will fail.
-        this.logger.info("Authenticated");
-        this.logger.info("Sending command: help")
+        console.log("Authenticated");
+        console.log("Sending command: help")
         conn.send("help");
         }).on('response', function(str) {
-        this.logger.info("Response: " + str);
+        console.log("Response: " + str);
         }).on('error', function(err) {
-        this.logger.info("Error: " + err);
+        console.log("Error: " + err);
         }).on('end', function() {
-        this.logger.info("Connection closed");
+        console.log("Connection closed");
         process.exit();
         });
 
