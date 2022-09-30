@@ -55,6 +55,7 @@ module.exports = {
         console.log("Connection closed");
         process.exit();
         });
-
+        conn.connect();
+        //conn.disconnect();
     }
 }
