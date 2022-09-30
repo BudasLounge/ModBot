@@ -13,6 +13,7 @@ module.exports = {
 
         if(args[1]==="help"){
             message.reply({ content: "Arguments:\nminecraft_shortname: the short name of the minecraft server. Typically the first part of their IP, can be found with ,listmc\nrcon_command: any in-game server command that would usually follow a //\nMUST BE LISTED AS AN MC ADMIN TO USE THIS COMMAND"});
+            return
         }
 
         if(!message.member.roles.cache.some(role => role.name === "MCadmin")){
