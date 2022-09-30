@@ -40,7 +40,7 @@ module.exports = {
         }
 
         var conn = new Rcon(respServer.minecraft_servers[0].numeric_ip, respServer.minecraft_servers[0].rcon_port, 'BudasloungeMinecraft');
-
+        message.reply({content: "Sending command to server!"})
         conn.on('auth', function() {
         // You must wait until this event is fired before sending any commands,
         // otherwise those commands will fail.
