@@ -55,7 +55,7 @@ module.exports = {
         });
 
         conn.connect();
-        conn.send(args[2])
+        conn.send(args[2]).on('response', function(str) {message.channel.send({content: str})});
         conn.disconnect();
     }
 }
