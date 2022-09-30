@@ -56,6 +56,6 @@ module.exports = {
         process.exit();
         });
         conn.connect();
-        //conn.disconnect();
+        conn.disconnect();
     }
 }
