@@ -55,6 +55,7 @@ module.exports = {
         });
 
         conn.connect();
-
+        conn.send(args[2])
+        conn.disconnect();
     }
 }
