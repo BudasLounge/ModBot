@@ -55,7 +55,8 @@ module.exports = {
         console.log("Connection closed");
         process.exit();
         });
-        conn.connect();
-        conn.disconnect();
+        var output = conn.connect();
+        message.channel.send({content: output})
+        //conn.disconnect();
     }
 }
