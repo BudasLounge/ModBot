@@ -42,7 +42,7 @@ module.exports = {
         if(args[3]){
             args.shift()
             args.shift()
-            var command = args.join(" ");
+            var command = args.join(' ');
         }
         var conn = new Rcon(respServer.minecraft_servers[0].numeric_ip, respServer.minecraft_servers[0].rcon_port, 'BudasloungeMinecraft');
         message.reply({content: "Sending command to server!"})
