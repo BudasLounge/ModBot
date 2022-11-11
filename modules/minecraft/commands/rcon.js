@@ -48,6 +48,7 @@ module.exports = {
         }else{
             command = args[2]
         }
+        this.logger.info("Password: " + password);
         var conn = new Rcon(respServer.minecraft_servers[0].numeric_ip, respServer.minecraft_servers[0].rcon_port, password);
         message.reply({content: "Sending command to server! There will not be a response on if the command was successful."})
         conn.on('auth', function() {
