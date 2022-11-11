@@ -8,7 +8,7 @@ module.exports = {
     has_state: false,
     async execute(message, args, extra) {
         var api = extra.api;
-        const { Events, Modal } = require('discord.js');
+        const { MessageActionRow, Modal, TextInputComponent } = require('discord.js');
 
 		const modal = new Modal()
 			.setCustomId('myModal')
