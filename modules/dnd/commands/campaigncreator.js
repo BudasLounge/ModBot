@@ -18,7 +18,7 @@ module.exports = {
                 .setDisabled("false"),
         );
 
-        message.channel.send({components: [ModalStarter]});
+        message.channel.send({components: [modalStarter]});
 
     }
 };
