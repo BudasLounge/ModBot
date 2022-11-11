@@ -31,7 +31,7 @@ module.exports = {
 		// Add inputs to the modal
 		modal.addComponents(firstActionRow, secondActionRow);
 		// Show the modal to the user
-		await interaction.showModal(modal);
+		await message.showModal(modal);
 
     }
 };
