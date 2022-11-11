@@ -10,6 +10,7 @@ module.exports = {
         var api = extra.api
         var fs = require('fs');
         var password = fs.readFileSync("../rcon_password.txt").toString();
+        password = password.replace(/\s+/g, '');
         var Rcon = require('rcon');
 
 
