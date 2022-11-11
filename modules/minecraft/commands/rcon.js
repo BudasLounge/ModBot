@@ -8,6 +8,7 @@ module.exports = {
     has_state: false,//if this command uses the state engine
     async execute(message, args, extra) {
         var api = extra.api
+        var fs = require('fs');
         var password = fs.readFileSync("../rcon_password.txt").toString();
         var Rcon = require('rcon');
 
