@@ -9,7 +9,7 @@ module.exports = {
     async execute(message, args, extra) {
         var api = extra.api;
         const { MessageActionRow, Modal, TextInputComponent } = require('discord.js');
-
+        
 		const modal = new Modal()
 			.setCustomId('myModal')
 			.setTitle('My Modal');
@@ -31,7 +31,7 @@ module.exports = {
 		// Add inputs to the modal
 		modal.addComponents(firstActionRow, secondActionRow);
 		// Show the modal to the user
-		await message.showModal(modal);
+		await interaction.showModal(modal);
 
     }
 };
