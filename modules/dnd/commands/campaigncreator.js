@@ -8,9 +8,9 @@ module.exports = {
     has_state: false,
     async execute(message, args, extra) {
         var api = extra.api;
-        const { Events, ModalBuilder } = require('discord.js');
+        const { Events, Modal } = require('discord.js');
 
-		const modal = new ModalBuilder()
+		const modal = new Modal()
 			.setCustomId('myModal')
 			.setTitle('My Modal');
 
