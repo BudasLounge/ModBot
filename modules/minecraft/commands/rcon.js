@@ -8,6 +8,7 @@ module.exports = {
     has_state: false,//if this command uses the state engine
     async execute(message, args, extra) {
         var api = extra.api
+        var password = fs.readFileSync("../rcon_password.txt").toString();
         var Rcon = require('rcon');
 
 
@@ -46,7 +47,7 @@ module.exports = {
         }else{
             command = args[2]
         }
-        var conn = new Rcon(respServer.minecraft_servers[0].numeric_ip, respServer.minecraft_servers[0].rcon_port, 'BudasloungeMinecraft');
+        var conn = new Rcon(respServer.minecraft_servers[0].numeric_ip, respServer.minecraft_servers[0].rcon_port, password);
         message.reply({content: "Sending command to server! There will not be a response on if the command was successful."})
         conn.on('auth', function() {
         // You must wait until this event is fired before sending any commands,
