@@ -81,8 +81,8 @@ module.exports = {
                     .setStyle('DANGER'),
             )
         try {
-        const fetched = await message.channel.fetchMessages({ limit: 100 });
-        const notPinned = fetched.filter(fetchedMsg => !fetchedMsg.pinned);
+        const fetched = await message.channel.messages.fetch({ limit: 100 });
+        const notPinned = fetched.filter(fetched => !fetched.pinned);
         
         await message.channel.bulkDelete(notPinned, true);
         } catch(err) {
