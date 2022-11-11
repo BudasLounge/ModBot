@@ -49,7 +49,7 @@ module.exports = {
         }
 
         if(!respFoundCampaign.dnd_campaigns[0]){
-            message.channel.send({content: "I can't find a campaign linked with that information, double check spellings and capitalization and try again. Ask an admin to help you get started!"});
+            message.channel.send({content: "I can't find a campaign linked with that information, double check spellings and try again. Ask an admin to help you get started!"});
             return;
         }
 
