@@ -80,7 +80,14 @@ module.exports = {
                     .setLabel('Deny')
                     .setStyle('DANGER'),
             )
-
+        try {
+        const fetched = await message.channel.fetchMessages({ limit: 100 });
+        const notPinned = fetched.filter(fetchedMsg => !fetchedMsg.pinned);
+        
+        await message.channel.bulkDelete(notPinned, true);
+        } catch(err) {
+        this.logger.error(err.message);
+        }
         const outputEmbed = new MessageEmbed()
         .setTitle(message.member.user.username + " has invited you to play in their campaign: " + respFoundCampaign.dnd_campaigns[0].module)
         .addField("You have been invited to play!", "Please choose to accept or deny this request from the buttons below.")
