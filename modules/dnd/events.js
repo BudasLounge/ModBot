@@ -42,7 +42,7 @@ async function onButtonClick(button){
                 await button.update({content:"The invite was denied. If this was an error, contact your potential DM again.", components: [], embeds: []})
                 logger.info("The invite was rejected.")
             }
-        }else if(button.customId.substring(0,5)=="CAMPAIGNCREATOR"){
+        }else if(button.customId=="CAMPAIGNCREATOR"){
             const { MessageActionRow, Modal, TextInputComponent } = require('discord.js');
             const modal = new Modal()
 			.setCustomId('myModal')
