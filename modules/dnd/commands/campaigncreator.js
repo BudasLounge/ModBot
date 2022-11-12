@@ -12,8 +12,8 @@ module.exports = {
         const modalStarter = new MessageActionRow()
         .addComponents(
             new MessageButton()
-                .setCustomId("MODAL")
-                .setLabel("Show Modal")
+                .setCustomId("CAMPAIGNCREATOR")
+                .setLabel("Click here to start the Campaign Creator tool")
                 .setStyle('PRIMARY')
                 .setDisabled("false"),
         );
