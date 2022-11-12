@@ -46,18 +46,18 @@ async function onButtonClick(button){
             const { MessageActionRow, Modal, TextInputComponent } = require('discord.js');
             const modal = new Modal()
 			.setCustomId('myModal')
-			.setTitle('My Modal');
+			.setTitle('Testing Template');
             // Add components to modal
             // Create the text input components
             const favoriteColorInput = new TextInputComponent()
                 .setCustomId('favoriteColorInput')
                 // The label is the prompt the user sees for this input
-                .setLabel("Are you a bitch?")
+                .setLabel("This is the first question.")
                 // Short means only a single line of text
                 .setStyle('SHORT');
             const hobbiesInput = new TextInputComponent()
                 .setCustomId('hobbiesInput')
-                .setLabel("Are you sure?")
+                .setLabel("This is a paragraph answer")
                 // Paragraph means multiple lines of text.
                 .setStyle('PARAGRAPH');
             // An action row only holds one text input,
