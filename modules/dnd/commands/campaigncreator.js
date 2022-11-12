@@ -19,7 +19,7 @@ module.exports = {
         );
         const outputEmbed = new MessageEmbed()
         .setTitle("Campaign Creator tool!")
-        .addField("Use the button below to start up the campaign creator tool! This will send a campaign request to the admins.\nUpon approval, a category and rooms will be create and a DM role assigned, you can then send invites in the Game-Invites channel.\n\nPlease an admin if you have any questions.")
+        .addField("Click the button below","Use the button below to start up the campaign creator tool! This will send a campaign request to the admins.\nUpon approval, a category and rooms will be create and a DM role assigned, you can then send invites in the Game-Invites channel.\n\nPlease an admin if you have any questions.")
         message.channel.send({embeds: [outputEmbed],components: [modalStarter]});
 
     }
