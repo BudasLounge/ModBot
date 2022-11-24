@@ -60,13 +60,13 @@ async function onButtonClick(button){
                 .setLabel("Player role name?")
                 .setStyle('SHORT');
             const textChannelInput = new TextInputComponent()
-                .setCustomId('channel')
+                .setCustomId('textchannel')
                 // The label is the prompt the user sees for this input
                 .setLabel("How many text channels do you need?")
                 // Short means only a single line of text
                 .setStyle('SHORT');
             const voiceChannelInput = new TextInputComponent()
-                .setCustomId('channel')
+                .setCustomId('voicechannel')
                 // The label is the prompt the user sees for this input
                 .setLabel("How many voice channels do you need?")
                 // Short means only a single line of text
