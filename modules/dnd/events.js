@@ -45,29 +45,47 @@ async function onButtonClick(button){
         }else if(button.customId=="CAMPAIGNCREATOR"){
             const { MessageActionRow, Modal, TextInputComponent } = require('discord.js');
             const modal = new Modal()
-			.setCustomId('myModal')
-			.setTitle('Testing Template');
+			.setCustomId('campaign-'+button.user.id.toString())
+			.setTitle('Campaign Creator');
             // Add components to modal
             // Create the text input components
-            const favoriteColorInput = new TextInputComponent()
-                .setCustomId('favoriteColorInput')
+            const moduleInput = new TextInputComponent()
+                .setCustomId('module')
                 // The label is the prompt the user sees for this input
-                .setLabel("This is the first question.")
+                .setLabel("What is the name of the modal?")
                 // Short means only a single line of text
                 .setStyle('SHORT');
-            const hobbiesInput = new TextInputComponent()
-                .setCustomId('hobbiesInput')
-                .setLabel("This is a paragraph answer")
-                // Paragraph means multiple lines of text.
-                .setStyle('PARAGRAPH');
+            const roleInput = new TextInputComponent()
+                .setCustomId('role_name')
+                .setLabel("What do you want the player role to be called?")
+                .setStyle('SHORT');
+            const textChannelInput = new TextInputComponent()
+                .setCustomId('channel')
+                // The label is the prompt the user sees for this input
+                .setLabel("How many text channels do you need?")
+                // Short means only a single line of text
+                .setStyle('SHORT');
+            const voiceChannelInput = new TextInputComponent()
+                .setCustomId('channel')
+                // The label is the prompt the user sees for this input
+                .setLabel("How many voice channels do you need?")
+                // Short means only a single line of text
+                .setStyle('SHORT');
             // An action row only holds one text input,
             // so you need one action row per text input.
-            const firstActionRow = new MessageActionRow().addComponents(favoriteColorInput);
-            const secondActionRow = new MessageActionRow().addComponents(hobbiesInput);
+            const firstActionRow = new MessageActionRow().addComponents(moduleInput);
+            const secondActionRow = new MessageActionRow().addComponents(roleInput);
+            const thirdActionRow = new MessageActionRow().addComponents(roleInput);
+            const fourthActionRow = new MessageActionRow().addComponents(roleInput);
             // Add inputs to the modal
-            modal.addComponents(firstActionRow, secondActionRow);
+            modal.addComponents(firstActionRow, secondActionRow, thirdActionRow, fourthActionRow);
             // Show the modal to the user
             await button.showModal(modal);
+        }
+    }
+    else if(button.isModalSubmit()){
+        if(button.customId){
+
         }
     }
 }
