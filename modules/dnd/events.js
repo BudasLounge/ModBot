@@ -75,8 +75,8 @@ async function onButtonClick(button){
             // so you need one action row per text input.
             const firstActionRow = new MessageActionRow().addComponents(moduleInput);
             const secondActionRow = new MessageActionRow().addComponents(roleInput);
-            const thirdActionRow = new MessageActionRow().addComponents(roleInput);
-            const fourthActionRow = new MessageActionRow().addComponents(roleInput);
+            const thirdActionRow = new MessageActionRow().addComponents(textChannelInput);
+            const fourthActionRow = new MessageActionRow().addComponents(voiceChannelInput);
             // Add inputs to the modal
             modal.addComponents(firstActionRow, secondActionRow, thirdActionRow, fourthActionRow);
             // Show the modal to the user
