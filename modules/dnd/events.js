@@ -57,7 +57,7 @@ async function onButtonClick(button){
                 .setStyle('SHORT');
             const roleInput = new TextInputComponent()
                 .setCustomId('role_name')
-                .setLabel("What do you want the player role to be called?")
+                .setLabel("Player role name?")
                 .setStyle('SHORT');
             const textChannelInput = new TextInputComponent()
                 .setCustomId('channel')
