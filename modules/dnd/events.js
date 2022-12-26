@@ -52,7 +52,7 @@ async function onButtonClick(button){
             const moduleInput = new TextInputComponent()
                 .setCustomId('module')
                 // The label is the prompt the user sees for this input
-                .setLabel("What is the name of the modal?")
+                .setLabel("What is the name of the module?")
                 // Short means only a single line of text
                 .setStyle('SHORT');
             const roleInput = new TextInputComponent()
