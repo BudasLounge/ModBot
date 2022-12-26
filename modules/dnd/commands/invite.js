@@ -38,7 +38,7 @@ module.exports = {
             return;
         }
 
-        //validate that a campaign exists for the DM inviting players (NEED TO ADD FUNCTIONALITY FOR IF THE DM HAS MULTIPLE CAMPAIGNS)
+        //validate that a campaign exists for the DM inviting players (NEED TO ADD FUNCTIONALITY FOR IF THE DM HAS MULTIPLE CAMPAIGNS) <---ADDED
         try{
             respFoundCampaign = await api.get("dnd_campaign",{
                 dm_id: message.member.id,
@@ -80,14 +80,14 @@ module.exports = {
                     .setLabel('Deny')
                     .setStyle('DANGER'),
             )
-        try {
-        const fetched = await message.channel.messages.fetch({ limit: 100 });
-        const notPinned = fetched.filter(fetched => !fetched.pinned);
+       // try {
+        //const fetched = await message.channel.messages.fetch({ limit: 100 });
+        //const notPinned = fetched.filter(fetched => !fetched.pinned);
         
-        await message.channel.bulkDelete(notPinned, true);
-        } catch(err) {
-        this.logger.error(err.message);
-        }
+        //await message.channel.bulkDelete(notPinned, true);
+        //} catch(err) {
+        //this.logger.error(err.message);
+        //}
         const outputEmbed = new MessageEmbed()
         .setTitle(message.member.user.username + " has invited you to play in their campaign: " + respFoundCampaign.dnd_campaigns[0].module)
         .addField("You have been invited to play!", "Please choose to accept or deny this request from the buttons below.")
