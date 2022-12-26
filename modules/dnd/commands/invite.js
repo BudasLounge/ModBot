@@ -92,6 +92,6 @@ module.exports = {
         .setTitle(message.member.user.username + " has invited you to play in their campaign: " + respFoundCampaign.dnd_campaigns[0].module)
         .addField("You have been invited to play!", "Please choose to accept or deny this request from the buttons below.")
         message.guild.channels.cache.get("1005137919662629004").send({embeds: [outputEmbed], content: "<@" + invitedPlayer + ">", components: [row]});
-        //message.delete()
+        message.delete()
     }
 };
