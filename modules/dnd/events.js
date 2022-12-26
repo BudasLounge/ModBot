@@ -19,7 +19,7 @@ async function onButtonClick(button){
                 }
                 logger.info("IDcheck: "+IDcheck + " customID: "+button.customId)
                 if(!respCampaign.dnd_campaigns[0]){
-                    button.channel.reply({content: "This invite seems to have an issue. Contact and Admin please.", ephemeral: true});
+                    button.channel.reply({content: "This invite seems to have an issue. Contact an Admin please.", ephemeral: true});
                     return;
                 }
 
