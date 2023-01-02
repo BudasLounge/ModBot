@@ -57,10 +57,10 @@ async function onButtonClick(button){
             });
         } catch(error){
             console.error(error);
-        }
-        const modal = new Modal()
-        .setCustomId('MCSERVERDELETORMODAL')
-        .setTitle('MC Server DELETOR');
+        };
+        //const modal = new Modal()
+        //.setCustomId('MCSERVERDELETORMODAL')
+        //.setTitle('MC Server DELETOR');
         const serverSelector = new MessageActionRow()
         .addComponents(
             new MessageActionRow()
@@ -68,8 +68,9 @@ async function onButtonClick(button){
                 .setPlaceholder('Select a server from the list')
                 .setDisabled("false"),
         );
+
         respServer.minecraft_servers.forEach(server => {
-            SelectMenu.components[0].addOptions([{
+            serverSelector.components[0].addOptions([{
                 label: `${server.display_name}`,
 				description: `${server.short_name}`,
 				value: `${server.short_name}`,
@@ -77,7 +78,7 @@ async function onButtonClick(button){
         });
         //modal.addComponents(SelectMenu)
         //await button.showModal(modal);
-        button.reply({components:[SelectMenu]})
+        button.reply({components:[serverSelector]})
     }
     else if((button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && button.customId==="MCSERVERDELETORMODAL"){
         button.reply({content: "An option was selected!"})
