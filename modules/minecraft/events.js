@@ -79,8 +79,8 @@ async function onButtonClick(button){
         //await button.showModal(modal);
         button.reply({components:[SelectMenu]})
     }
-    else if((button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && collect.customId==="MCSERVERDELETORMODAL"){
-        collect.reply({content: "An option was selected!"})
+    else if((button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && button.customId==="MCSERVERDELETORMODAL"){
+        button.reply({content: "An option was selected!"})
     }
     else if(button.isModalSubmit()){
         if((button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && button.customId==="MCSERVERCREATORMODAL"){
@@ -140,6 +140,5 @@ async function onCollect(collect){
 function register_handlers(event_registry) {
     logger = event_registry.logger;
     event_registry.register('interactionCreate', onButtonClick);
-    event_registry.register('collect', onCollect)
 }
 module.exports = register_handlers;
