@@ -6,6 +6,7 @@ if (button.isButton() || button.isSelectMenu()){
     if(button.customId.length<=13) return;
     if(button.customId.substring(0,3)==="ID-") return;
     if(button.customId==="CAMPAIGNCREATOR") return;
+    if(button.customId==="MCSERVERCREATOR") return;
 if(button.isButton()){
     const {MessageEmbed} = require('discord.js');
     const moment = require("moment");

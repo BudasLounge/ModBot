@@ -9,11 +9,11 @@ module.exports = {
     async execute(message, args, extra) {
         var api = extra.api;
 
-        console.log(">>add_server");
+        this.logger.info(">>add_server");
         if(message.member.roles.has("586313447965327365")){
             var respServer;
             try{
-                console.log("in try");
+                this.logger.info("in try");
                 respServer = await api.get("minecraft_server", {
                     server_ip: args[3]
                 });
@@ -44,7 +44,7 @@ module.exports = {
             else{
                 message.channel.send({ content: "I found a server with that server_ip already, try again"});
             }
-            console.log("<<add_server");
+            this.logger.info("<<add_server");
         }else{
             message.channel.send({ content: "You don't have permission to use that command!"});
         }
