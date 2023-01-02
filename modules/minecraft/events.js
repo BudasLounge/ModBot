@@ -67,8 +67,8 @@ async function onButtonClick(button){
                 logger.error(error.message);
             }
             if(respServer.minecraft_servers.length<1){
-                var date = (new Date()).toISOString().split('T')[0];
-                button.channel.send({content: date})
+                //var date = (new Date()).toISOString().split('T')[0];
+                //button.channel.send({content: date})
             try{
                 await api.post("minecraft_server", {
                     display_name: display_name,
@@ -79,8 +79,7 @@ async function onButtonClick(button){
                     numeric_ip: "71.38.104.228",
                     mc_version: mc_version,
                     pack_version: pack_version,
-                    rcon_port: (parseInt(port)+1).toString(),
-                    date_create: date
+                    rcon_port: (parseInt(port)+1).toString()
                 });
             }catch(err){
                 logger.error(err.message);
