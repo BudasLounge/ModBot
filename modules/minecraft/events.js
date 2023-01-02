@@ -67,9 +67,7 @@ async function onButtonClick(button){
                 logger.error(error.message);
             }
             if(respServer.minecraft_servers.length<1){
-                let yourDate = new Date()
-                const offset = yourDate.getTimezoneOffset()
-                yourDate = new Date(yourDate.getTime() - (offset*60*1000))
+                var date = (new Date()).toISOString().split('T')[0];
             try{
                 await api.post("minecraft_server", {
                     display_name: display_name,
@@ -81,7 +79,7 @@ async function onButtonClick(button){
                     mc_version: mc_version,
                     pack_version: pack_version,
                     rcon_port: (parseInt(port)+1).toString(),
-                    date_create: yourDate.toISOString().split('T')[0]
+                    date_create: date
                 });
             }catch(err){
                 logger.error(err.message);
