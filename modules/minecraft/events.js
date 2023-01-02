@@ -60,7 +60,7 @@ async function onButtonClick(button){
         }
         const modal = new Modal()
         .setCustomId('MCSERVERDELETORMODAL')
-        .setTitle('MC Server Adder');
+        .setTitle('MC Server DELETOR');
         var SelectMenu = new MessageActionRow()
         .addComponents(
             new MessageSelectMenu()
@@ -75,8 +75,9 @@ async function onButtonClick(button){
 				value: `${server.short_name}`,
             }])
         });
-        modal.addComponents(SelectMenu)
-        await button.showModal(modal);
+        //modal.addComponents(SelectMenu)
+        //await button.showModal(modal);
+        button.reply({components:[SelectMenu]})
     }
     else if(button.isModalSubmit()){
         if((button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && button.customId==="MCSERVERCREATORMODAL"){
@@ -116,9 +117,9 @@ async function onButtonClick(button){
                 button.channel.send({ content: "I found a server with that server_ip already, try again"});
             }
         }
-        else if((button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && button.customId==="MCSERVERDELETORMODAL"){
+        //else if((button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && button.customId==="MCSERVERDELETORMODAL"){
 
-        }
+        //}
         else{
             button.channel.send({ content: "You don't have permission to use that button!"});
         }
