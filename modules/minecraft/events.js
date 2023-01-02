@@ -6,7 +6,7 @@ async function onButtonClick(button){
     if(button.customId=="MCSERVERCREATOR"){
         const { MessageActionRow, Modal, TextInputComponent } = require('discord.js');
         const modal = new Modal()
-        .setCustomId('campaign-'+button.user.id.toString())
+        .setCustomId('MCSERVERCREATOR')
         .setTitle('MC Server Adder');
         // Add components to modal
         // Create the text input components
@@ -50,9 +50,35 @@ async function onButtonClick(button){
         // Show the modal to the user
         await button.showModal(modal);
     }
+    else if(button.customId=="MCSERVERDELETOR"){
+        var respServer;
+        try{
+            respServer = await api.get("minecraft_server", {
+                _limit: 20
+            });
+        } catch(error){
+            console.error(error);
+        }
+        const modal = new Modal()
+        .setCustomId('MCSERVERDELETOR')
+        .setTitle('MC Server Adder');
+        const SelectMenu = new MessageActionRow()
+        .addComponents(
+            new MessageSelectMenu()
+                .setCustomId('select')
+                .setPlaceholder('Select a bet amount')
+                .setDisabled("true"),
+        );
+        respServer.minecraft_servers.forEach(server => {
+            SelectMenu.components[0].addOptions([{
+                label: `${server.display_name}`,
+				description: `${server.short_name}`,
+				value: `${server.short_name}`,
+            }])
+        });
+    }
     else if(button.isModalSubmit()){
-        if(button.customId==="CAMPAIGNCREATOR") return;
-        if(!button.member.roles.cache.find(r => r.id === "586313447965327365") || !button.user.id === "185223223892377611"){
+        if(!button.member.roles.cache.find(r => r.id === "586313447965327365") || !button.user.id === "185223223892377611" && button.customId==="MCSERVERCREATOR"){
             var display_name = button.fields.getTextInputValue('display_name');
             var short_name = button.fields.getTextInputValue('short_name');
             var port = button.fields.getTextInputValue('port');
@@ -88,6 +114,9 @@ async function onButtonClick(button){
             }else{
                 button.channel.send({ content: "I found a server with that server_ip already, try again"});
             }
+        }
+        else if(!button.member.roles.cache.find(r => r.id === "586313447965327365") || !button.user.id === "185223223892377611" && button.customId==="MCSERVERDELETOR"){
+
         }
         else{
             button.channel.send({ content: "You don't have permission to use that button!"});
