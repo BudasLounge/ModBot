@@ -16,7 +16,7 @@ module.exports = {
             .addComponents(
                 new MessageButton()
                 .setCustomId("MCSERVERDELETOR")
-                .setLabel("Click here to start the Server Adding tool!")
+                .setLabel("Click here to start the Server Deleting tool!")
                 .setStyle('PRIMARY')
                 .setDisabled("false"),
             );
