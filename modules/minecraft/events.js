@@ -61,7 +61,7 @@ async function onButtonClick(button){
             try{
                 logger.info("in try");
                 var respServer = await api.get("minecraft_server", {
-                    server_ip: args[3]
+                    server_ip: short_name+".budaslounge.com"
                 });
             } catch(error){
                 logger.error(error.message);
