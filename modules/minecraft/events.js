@@ -62,6 +62,7 @@ async function onButtonClick(button){
         .setCustomId('MCSERVERDELETORMODAL')
         .setTitle('MC Server DELETOR');
         var SelectMenu = new MessageActionRow()
+        .setCustomId('MCSERVERDELETORMODAL')
         .addComponents(
             new MessageSelectMenu()
                 .setCustomId('select')
