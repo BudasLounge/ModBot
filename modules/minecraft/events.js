@@ -60,7 +60,7 @@ async function onButtonClick(button){
             var pack_version = button.fields.getTextInputValue('pack_version');
             try{
                 logger.info("in try");
-                respServer = await api.get("minecraft_server", {
+                var respServer = await api.get("minecraft_server", {
                     server_ip: args[3]
                 });
             } catch(error){
