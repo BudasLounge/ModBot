@@ -6,7 +6,7 @@ async function onButtonClick(button){
     if(button.customId=="MCSERVERCREATOR"){
         const { MessageActionRow, Modal, TextInputComponent } = require('discord.js');
         const modal = new Modal()
-        .setCustomId('MCSERVERCREATOR')
+        .setCustomId('MCSERVERCREATORMODAL')
         .setTitle('MC Server Adder');
         // Add components to modal
         // Create the text input components
@@ -60,7 +60,7 @@ async function onButtonClick(button){
             console.error(error);
         }
         const modal = new Modal()
-        .setCustomId('MCSERVERDELETOR')
+        .setCustomId('MCSERVERDELETORMODAL')
         .setTitle('MC Server Adder');
         const SelectMenu = new MessageActionRow()
         .addComponents(
@@ -76,9 +76,10 @@ async function onButtonClick(button){
 				value: `${server.short_name}`,
             }])
         });
+        await button.showModal(modal);
     }
     else if(button.isModalSubmit()){
-        if((button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && button.customId==="MCSERVERCREATOR"){
+        if((button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && button.customId==="MCSERVERCREATORMODAL"){
             var display_name = button.fields.getTextInputValue('display_name');
             var short_name = button.fields.getTextInputValue('short_name');
             var port = button.fields.getTextInputValue('port');
@@ -115,7 +116,7 @@ async function onButtonClick(button){
                 button.channel.send({ content: "I found a server with that server_ip already, try again"});
             }
         }
-        else if((button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && button.customId==="MCSERVERDELETOR"){
+        else if((button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && button.customId==="MCSERVERDELETORMODAL"){
 
         }
         else{
