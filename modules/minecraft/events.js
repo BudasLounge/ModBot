@@ -65,8 +65,8 @@ async function onButtonClick(button){
         .addComponents(
             new MessageSelectMenu()
                 .setCustomId('select')
-                .setPlaceholder('Select a bet amount')
-                .setDisabled("true"),
+                .setPlaceholder('Select a server from the list')
+                .setDisabled("false"),
         );
         respServer.minecraft_servers.forEach(server => {
             SelectMenu.components[0].addOptions([{
