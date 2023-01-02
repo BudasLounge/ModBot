@@ -64,6 +64,7 @@ async function onButtonClick(button){
         const serverSelector = new MessageActionRow()
         .addComponents(
             new MessageActionRow()
+                .setCustomId('MCSERVERDELETORMODAL')
                 .setPlaceholder('Select a server from the list')
                 .setDisabled("false"),
         );
