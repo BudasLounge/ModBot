@@ -3,7 +3,7 @@ var api = new ApiClient();
 const {MessageActionRow, MessageButton, MessageEmbed, MessageSelectMenu, Modal, TextInputComponent} = require('discord.js');
 
 async function onButtonClick(button){
-    if(button.customId=="MCSERVERCREATOR"){
+    if((button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && button.customId=="MCSERVERCREATOR"){
         const modal = new Modal()
         .setCustomId('MCSERVERCREATORMODAL')
         .setTitle('MC Server Adder');
@@ -49,7 +49,7 @@ async function onButtonClick(button){
         // Show the modal to the user
         await button.showModal(modal);
     }
-    else if(button.customId=="MCSERVERDELETOR"){
+    else if((button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && button.customId=="MCSERVERDELETOR"){
         var respServer;
         try{
             respServer = await api.get("minecraft_server", {
@@ -78,6 +78,9 @@ async function onButtonClick(button){
         //modal.addComponents(SelectMenu)
         //await button.showModal(modal);
         button.reply({components:[SelectMenu]})
+    }
+    else if((button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && button.customId==="MCSERVERDELETORMODAL"){
+        button.channel.send("An option was selected!")
     }
     else if(button.isModalSubmit()){
         if((button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && button.customId==="MCSERVERCREATORMODAL"){
