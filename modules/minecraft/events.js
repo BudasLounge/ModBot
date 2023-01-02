@@ -1,10 +1,9 @@
 var ApiClient = require("../../core/js/APIClient.js");
 var api = new ApiClient();
-const {MessageActionRow, MessageButton, MessageEmbed, MessageSelectMenu} = require('discord.js');
+const {MessageActionRow, MessageButton, MessageEmbed, MessageSelectMenu, Modal, TextInputComponent} = require('discord.js');
 
 async function onButtonClick(button){
     if(button.customId=="MCSERVERCREATOR"){
-        const { MessageActionRow, Modal, TextInputComponent } = require('discord.js');
         const modal = new Modal()
         .setCustomId('MCSERVERCREATORMODAL')
         .setTitle('MC Server Adder');
