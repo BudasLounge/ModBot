@@ -61,10 +61,10 @@ async function onButtonClick(button){
         const modal = new Modal()
         .setCustomId('MCSERVERDELETORMODAL')
         .setTitle('MC Server DELETOR');
-        var SelectMenu = new MessageActionRow()
-        .setCustomId('MCSERVERDELETORMODAL')
+        const serverSelector = new MessageActionRow()
         .addComponents(
-            new MessageSelectMenu()
+            new MessageActionRow()
+                .setCustomId('MCSERVERDELETORMODAL')
                 .setCustomId('select')
                 .setPlaceholder('Select a server from the list')
                 .setDisabled("false"),
