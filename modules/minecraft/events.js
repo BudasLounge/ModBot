@@ -78,7 +78,7 @@ async function onButtonClick(button){
         });
     }
     else if(button.isModalSubmit()){
-        if(!button.member.roles.cache.find(r => r.id === "586313447965327365") || !button.user.id === "185223223892377611" && button.customId==="MCSERVERCREATOR"){
+        if((button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && button.customId==="MCSERVERCREATOR"){
             var display_name = button.fields.getTextInputValue('display_name');
             var short_name = button.fields.getTextInputValue('short_name');
             var port = button.fields.getTextInputValue('port');
@@ -115,7 +115,7 @@ async function onButtonClick(button){
                 button.channel.send({ content: "I found a server with that server_ip already, try again"});
             }
         }
-        else if(!button.member.roles.cache.find(r => r.id === "586313447965327365") || !button.user.id === "185223223892377611" && button.customId==="MCSERVERDELETOR"){
+        else if((button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && button.customId==="MCSERVERDELETOR"){
 
         }
         else{
