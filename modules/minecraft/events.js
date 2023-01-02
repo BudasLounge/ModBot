@@ -61,7 +61,7 @@ async function onButtonClick(button){
         const modal = new Modal()
         .setCustomId('MCSERVERDELETORMODAL')
         .setTitle('MC Server Adder');
-        const SelectMenu = new MessageActionRow()
+        var SelectMenu = new MessageActionRow()
         .addComponents(
             new MessageSelectMenu()
                 .setCustomId('select')
