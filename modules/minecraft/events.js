@@ -52,10 +52,45 @@ async function onButtonClick(button){
     }
     else if(button.isModalSubmit()){
         if(button.customId==="CAMPAIGNCREATOR") return;
-        if(button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611"){
+        if(!button.member.roles.cache.find(r => r.id === "586313447965327365") || !button.user.id === "185223223892377611"){
             var display_name = button.fields.getTextInputValue('display_name');
+            var short_name = button.fields.getTextInputValue('short_name');
+            var port = button.fields.getTextInputValue('port');
+            var mc_version = button.fields.getTextInputValue('mc_version');
+            var pack_version = button.fields.getTextInputValue('pack_version');
+            try{
+                logger.info("in try");
+                respServer = await api.get("minecraft_server", {
+                    server_ip: args[3]
+                });
+            } catch(error){
+                logger.error(error.message);
+            }
+            if(!respServer.minecraft_servers[0]){
+            try{
+                await api.post("minecraft_server", {
+                    display_name: display_name,
+                    short_name: short_name,
+                    server_ip: short_name+".budaslounge.com",
+                    port: port.toString(),
+                    status_api_port: "none",
+                    numeric_ip: "71.38.104.228",
+                    mc_version: mc_version,
+                    pack_version: pack_version,
+                    rcon_port: (parseInt(port)+1).toString()
+                });
+            }catch(err){
+                logger.error(err.message);
+                message.channel.send({ content: "I hit a snag..."});
+            }
+            }else{
+                message.channel.send({ content: "I found a server with that server_ip already, try again"});
+            }
         }
-        button.reply({content:"Display Name: "+display_name});
+        else{
+            button.channel.send({ content: "You don't have permission to use that button!"});
+        }
+        button.reply({content:"Added a new server with Display Name: " +display_name});
     }
 }
 
