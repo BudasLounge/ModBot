@@ -53,7 +53,7 @@ async function onButtonClick(button){
     else if(button.isModalSubmit()){
         if(button.customId==="CAMPAIGNCREATOR") return;
         if(button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611"){
-            const display_name = button.fields.getTextInputValue('display_name');
+            var display_name = button.fields.getTextInputValue('display_name');
         }
         button.reply({content:"Display Name: "+display_name});
     }
