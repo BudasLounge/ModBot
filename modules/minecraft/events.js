@@ -75,6 +75,7 @@ async function onButtonClick(button){
 				value: `${server.short_name}`,
             }])
         });
+        modal.addComponents(SelectMenu)
         await button.showModal(modal);
     }
     else if(button.isModalSubmit()){
