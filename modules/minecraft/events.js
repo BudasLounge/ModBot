@@ -68,6 +68,7 @@ async function onButtonClick(button){
             }
             if(respServer.minecraft_servers.length<1){
                 var date = (new Date()).toISOString().split('T')[0];
+                button.channel.send({content: date})
             try{
                 await api.post("minecraft_server", {
                     display_name: display_name,
@@ -83,10 +84,10 @@ async function onButtonClick(button){
                 });
             }catch(err){
                 logger.error(err.message);
-                message.channel.send({ content: "I hit a snag..."});
+                button.channel.send({ content: "I hit a snag..."});
             }
             }else{
-                message.channel.send({ content: "I found a server with that server_ip already, try again"});
+                button.channel.send({ content: "I found a server with that server_ip already, try again"});
             }
         }
         else{
