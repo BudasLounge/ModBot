@@ -66,7 +66,7 @@ async function onButtonClick(button){
             } catch(error){
                 logger.error(error.message);
             }
-            if(!respServer.minecraft_servers[0]){
+            if(!respServer.minecraft_server[0]){
             try{
                 await api.post("minecraft_server", {
                     display_name: display_name,
