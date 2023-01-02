@@ -80,7 +80,7 @@ async function onButtonClick(button){
         button.reply({components:[SelectMenu]})
     }
     else if((button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && button.customId==="MCSERVERDELETORMODAL"){
-        button.channel.send("An option was selected!")
+        button.reply("An option was selected!")
     }
     else if(button.isModalSubmit()){
         if((button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && button.customId==="MCSERVERCREATORMODAL"){
