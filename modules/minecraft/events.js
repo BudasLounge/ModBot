@@ -79,6 +79,9 @@ async function onButtonClick(button){
         //await button.showModal(modal);
         button.reply({components:[SelectMenu]})
     }
+    else if((button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && collect.customId==="MCSERVERDELETORMODAL"){
+        collect.reply({content: "An option was selected!"})
+    }
     else if(button.isModalSubmit()){
         if((button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && button.customId==="MCSERVERCREATORMODAL"){
             var display_name = button.fields.getTextInputValue('display_name');
