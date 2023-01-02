@@ -63,7 +63,7 @@ async function onButtonClick(button){
         //.setTitle('MC Server DELETOR');
         const serverSelector = new MessageActionRow()
         .addComponents(
-            new MessageActionRow()
+            new MessageSelectMenu()
                 .setCustomId('MCSERVERDELETORMODAL')
                 .setPlaceholder('Select a server from the list')
                 .setDisabled("false"),
@@ -78,7 +78,7 @@ async function onButtonClick(button){
         });
         //modal.addComponents(SelectMenu)
         //await button.showModal(modal);
-        button.reply({components:[serverSelector]})
+        button.reply({components:[serverSelector]});
     }
     else if((button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && button.customId==="MCSERVERDELETORMODAL"){
         button.reply({content: "An option was selected!"})
