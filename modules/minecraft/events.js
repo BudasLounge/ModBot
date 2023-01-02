@@ -7,7 +7,7 @@ async function onButtonClick(button){
         const { MessageActionRow, Modal, TextInputComponent } = require('discord.js');
         const modal = new Modal()
         .setCustomId('campaign-'+button.user.id.toString())
-        .setTitle('Campaign Creator');
+        .setTitle('MC Server Adder');
         // Add components to modal
         // Create the text input components
         const displayNameInput = new TextInputComponent()
@@ -52,7 +52,7 @@ async function onButtonClick(button){
     }
     else if(button.isModalSubmit()){
         if(button.customId==="CAMPAIGNCREATOR") return;
-        if(button.member.roles.has("586313447965327365") || message.author.id === "185223223892377611"){
+        if(button.member.roles.cache.find(r => r.id === "586313447965327365") || message.author.id === "185223223892377611"){
 
         }
     }
