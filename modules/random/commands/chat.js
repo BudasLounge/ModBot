@@ -12,13 +12,12 @@ module.exports = {
         var token = await fs.readFileSync("../openai_token.txt").toString();
         const { Configuration, OpenAIApi } = require("openai");
         const configuration = new Configuration({
-            apikey: token
+            apikey: "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"
         })
         const openai = new OpenAIApi(configuration);
 
         args.shift()
         chatMessage = args.join(" ")
-        message.reply(token)
         try {
             const response = await openai.createChatCompletion({
                 model: "gpt-3.5-turbo",
