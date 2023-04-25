@@ -22,7 +22,6 @@ module.exports = {
         
             const content = response.data.choices[0].message;
             return message.reply(content);
-        
           } catch (err) {
             return message.reply(
               "Connection to OpenAI failed..."
