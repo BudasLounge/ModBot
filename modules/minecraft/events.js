@@ -127,16 +127,9 @@ async function onButtonClick(button){
         else{
             button.channel.send({ content: "You don't have permission to use that button!"});
         }
-        button.reply({content:"Added a new server with Display Name: " +display_name});
+        await button.reply({content:"Added a new server with Display Name: " +display_name});
     }
 }
-
-async function onCollect(collect){
-    if((button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && collect.customId==="MCSERVERDELETORMODAL"){
-        collect.reply({content: "An option was selected!"})
-    }
-}
-
 
 function register_handlers(event_registry) {
     logger = event_registry.logger;
