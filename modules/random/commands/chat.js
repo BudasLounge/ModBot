@@ -9,6 +9,9 @@ module.exports = {
     async execute(message, args, extra) {
         var fs = require('fs');
         var token = await fs.readFileSync("../openai_token.txt").toString();
+        const configuration = new configuration({
+            apikey: token
+        })
 
         if (message.author.bot) return;
         args.shift()
