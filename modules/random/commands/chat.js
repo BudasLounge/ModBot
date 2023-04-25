@@ -14,7 +14,6 @@ module.exports = {
         const configuration = new Configuration({
             apiKey: process.env.API_KEY
         })
-        message.reply(process.env.API_KEY)
         const openai = new OpenAIApi(configuration);
 
         args.shift()
