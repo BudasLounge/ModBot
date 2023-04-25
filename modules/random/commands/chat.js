@@ -19,6 +19,7 @@ module.exports = {
         args.shift()
         chatMessage = args.join(" ")
         try {
+          message.channel.send({content: "Generating response..."})
             const response = await openai.createChatCompletion({
                 model: "gpt-3.5-turbo",
                 messages: [
