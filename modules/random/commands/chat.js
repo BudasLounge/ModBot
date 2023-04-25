@@ -12,7 +12,7 @@ module.exports = {
         //var token = await fs.readFileSync("../openai_token.txt").toString();
         const { Configuration, OpenAIApi } = require("openai");
         const configuration = new Configuration({
-            apikey: process.env.API_KEY
+            apiKey: process.env.API_KEY
         })
         message.reply(process.env.API_KEY)
         const openai = new OpenAIApi(configuration);
