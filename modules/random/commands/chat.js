@@ -9,10 +9,11 @@ module.exports = {
     async execute(message, args, extra) {
         var fs = require('fs');
         var token = await fs.readFileSync("../openai_token.txt").toString();
-        
+
         if (message.author.bot) return;
         args.shift()
         chatMessage = args.join(" ")
+        
         try {
             const response = await openai.createChatCompletion({
                 model: "gpt-3.5-turbo",
