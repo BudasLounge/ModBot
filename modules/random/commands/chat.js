@@ -17,6 +17,7 @@ module.exports = {
         args.shift()
         chatMessage = args.join(" ")
         const openai = new OpenAIApi(configuration);
+        message.reply(token)
         try {
             const response = await openai.createChatCompletion({
                 model: "gpt-3.5-turbo",
