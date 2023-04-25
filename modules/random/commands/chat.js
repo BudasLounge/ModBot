@@ -9,7 +9,8 @@ module.exports = {
     async execute(message, args, extra) {
         var fs = require('fs');
         var token = await fs.readFileSync("../openai_token.txt").toString();
-        const configuration = new configuration({
+        const { Configuration, OpenAIApi } = require("openai");
+        const configuration = new Configuration({
             apikey: token
         })
 
