@@ -7,6 +7,7 @@ var fs = require('fs');
 var axios = require('axios');
 var request = require('request');
 var shell = require('shelljs');
+require('dotenv/config')
 
 const {Intents} = require('discord.js');
 const Discord = require('discord.js');
