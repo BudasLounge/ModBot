@@ -7,14 +7,13 @@ module.exports = {
     needs_api: false,//if this command needs access to the api
     has_state: false,//if this command uses the state engine
     async execute(message, args, extra) {
+        if (message.author.bot) return;
         var fs = require('fs');
         var token = await fs.readFileSync("../openai_token.txt").toString();
         const { Configuration, OpenAIApi } = require("openai");
         const configuration = new Configuration({
             apikey: token
         })
-
-        if (message.author.bot) return;
         args.shift()
         chatMessage = args.join(" ")
         const openai = new OpenAIApi(configuration);
