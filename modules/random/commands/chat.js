@@ -12,7 +12,7 @@ module.exports = {
         var token = await fs.readFileSync("../openai_token.txt").toString();
         const { Configuration, OpenAIApi } = require("openai");
         const configuration = new Configuration({
-            apikey: token
+            apikey: '"'+token+'"'
         })
         args.shift()
         chatMessage = args.join(" ")
