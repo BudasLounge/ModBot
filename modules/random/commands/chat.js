@@ -27,7 +27,6 @@ module.exports = {
                     {role: "user", content: chatMessage}
                 ],
               });
-        
             const content = response.data.choices[0].message;
             return message.reply(content);
           } catch (err) {
