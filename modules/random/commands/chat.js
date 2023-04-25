@@ -2,7 +2,7 @@ module.exports = {
     name: 'chat',
     description: 'Talk to modbot!',
     syntax: 'chat [your message to the bot]',
-    num_args: 0,//minimum amount of arguments to accept
+    num_args: 2,//minimum amount of arguments to accept
     args_to_lower: false,//if the arguments should be lower case
     needs_api: false,//if this command needs access to the api
     has_state: false,//if this command uses the state engine
@@ -12,11 +12,12 @@ module.exports = {
         var token = await fs.readFileSync("../openai_token.txt").toString();
         const { Configuration, OpenAIApi } = require("openai");
         const configuration = new Configuration({
-            apikey: `${token}`
+            apikey: token
         })
+        const openai = new OpenAIApi(configuration);
+
         args.shift()
         chatMessage = args.join(" ")
-        const openai = new OpenAIApi(configuration);
         message.reply(token)
         try {
             const response = await openai.createChatCompletion({
