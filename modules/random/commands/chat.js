@@ -26,7 +26,7 @@ module.exports = {
             return message.reply(content);
           } catch (err) {
             return message.reply(
-              "Connection to OpenAI failed..."
+              "Connection to OpenAI failed...\n"+err.error
             );
           }
         }
