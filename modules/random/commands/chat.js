@@ -9,12 +9,14 @@ module.exports = {
     async execute(message, args, extra) {
         var token = await fs.readFileSync("../openai_token.txt").toString();
         if (message.author.bot) return;
+        args.shift()
+        chatMessage = args.join(" ")
         try {
             const response = await openai.createChatCompletion({
                 model: "gpt-3.5-turbo",
                 messages: [
                     {role: "system", content: "You are a helpful assistant who responds succinctly"},
-                    {role: "user", content: message.content}
+                    {role: "user", content: chatMessage}
                 ],
               });
         
