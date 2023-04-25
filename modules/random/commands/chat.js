@@ -7,7 +7,9 @@ module.exports = {
     needs_api: false,//if this command needs access to the api
     has_state: false,//if this command uses the state engine
     async execute(message, args, extra) {
+        var fs = require('fs');
         var token = await fs.readFileSync("../openai_token.txt").toString();
+        
         if (message.author.bot) return;
         args.shift()
         chatMessage = args.join(" ")
