@@ -10,9 +10,11 @@ module.exports = {
         if (message.author.bot) return;
         var fs = require('fs');
         var token = await fs.readFileSync("../openai_token.txt").toString();
+        process.env.APIKEY = token
+
         const { Configuration, OpenAIApi } = require("openai");
         const configuration = new Configuration({
-            apikey: token
+            apikey: process.env.APIKEY
         })
         const openai = new OpenAIApi(configuration);
 
