@@ -16,11 +16,12 @@ module.exports = {
             apiKey: process.env.API_KEY
         })
         const openai = new OpenAIApi(configuration);
+        var numberToGen = 1
         if(!isNaN(args[1])){
             if(parseInt(args[1])>5){
                 return message.reply("I can only generate up to 5 images per minute!")
             }
-            var numberToGen = args[1]
+            numberToGen = args[1]
             args.shift()
             args.shift()
         }else{
