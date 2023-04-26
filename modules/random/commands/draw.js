@@ -17,6 +17,9 @@ module.exports = {
         })
         const openai = new OpenAIApi(configuration);
         if(!isNaN(args[1])){
+            if(parseInt(args[1])>5){
+                return message.reply("I can only generate up to 5 images per minute!")
+            }
             var numberToGen = args[1]
             args.shift()
             args.shift()
@@ -37,6 +40,9 @@ module.exports = {
             //this.logger.info(JSON.stringify(content, null, 4))
             return
           } catch (err) {
+            if(err.includes("429")){
+                return message.reply("Reached my rate limit! Please wait 60 seconds before trying again...")
+            }
             return message.reply(
               "Connection to OpenAI failed...\n"+err
             );
