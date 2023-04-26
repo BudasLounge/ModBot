@@ -23,8 +23,8 @@ module.exports = {
           message.channel.send({content: "Generating image..."})
             const response = await openai.createImage({
                 prompt: promptMessage,
-                n: 4,
-                size: "1920x1080"
+                n: 1,
+                size: "1024x1024"
               });
             var content = response.data.data[0].url;
             //this.logger.info(JSON.stringify(content, null, 4))
