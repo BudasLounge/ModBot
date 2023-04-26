@@ -16,20 +16,24 @@ module.exports = {
             apiKey: process.env.API_KEY
         })
         const openai = new OpenAIApi(configuration);
-
+        if(!isNaN(args[1])){
+            var numberToGen = args[1]
+            args.shift()
+            args.shift()
+        }else{
         args.shift()
+        }
         promptMessage = args.join(" ")
         try {
           message.channel.send({content: "Generating image..."})
             const response = await openai.createImage({
                 prompt: promptMessage,
-                n: 2,
+                n: parseInt(numberToGen),
                 size: "1024x1024"
               });
             response.data.data.forEach(data => {
                 message.reply(data.url)
             });
-            var content = response.data.data[0].url;
             //this.logger.info(JSON.stringify(content, null, 4))
             return message.reply(content);
           } catch (err) {
