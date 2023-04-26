@@ -28,7 +28,14 @@ module.exports = {
                 ],
               });
             const content = response.data.choices[0].message;
-            return message.reply(content);
+            const messageChunks = Util.splitMessage(content, {
+              maxLength: 2000,
+              char:'\n'
+          });
+            messageChunks.forEach(async chunk => {
+                await message.reply(chunk);
+            })
+            //return message.reply(content);
           } catch (err) {
             return message.reply(
               "Connection to OpenAI failed...\n"+err
