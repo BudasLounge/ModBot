@@ -29,7 +29,7 @@ module.exports = {
                 ],
               });
             var content = response.data.choices[0].message;
-            this.logger.info(util.inspect(content))
+            this.logger.info(JSON.stringify(content, null, 4))
             const messageChunks = Util.splitMessage(content, {
               maxLength: 2000,
               char:'\n'
