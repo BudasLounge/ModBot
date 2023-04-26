@@ -26,6 +26,9 @@ module.exports = {
                 n: 2,
                 size: "1024x1024"
               });
+            response.data.data.forEach(data => {
+                message.reply(data.url)
+            });
             var content = response.data.data[0].url;
             //this.logger.info(JSON.stringify(content, null, 4))
             return message.reply(content);
