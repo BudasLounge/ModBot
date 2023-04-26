@@ -34,7 +34,7 @@ module.exports = {
               char:'\n'
           });
             messageChunks.forEach(async chunk => {
-                await message.reply(chunk);
+                await message.reply(chunk.toString());
             })
             //return message.reply(content);
             return
