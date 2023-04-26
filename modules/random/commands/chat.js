@@ -28,8 +28,8 @@ module.exports = {
                     {role: "user", content: chatMessage}
                 ],
               });
-            var content = response.data.choices[0].message;
-            this.logger.info(JSON.stringify(content, null, 4))
+            var content = response.data.choices[0].message.content;
+            //this.logger.info(JSON.stringify(content, null, 4))
             const messageChunks = Util.splitMessage(content, {
               maxLength: 2000,
               char:'\n'
