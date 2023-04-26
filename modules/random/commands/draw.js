@@ -35,7 +35,7 @@ module.exports = {
                 message.reply(data.url)
             });
             //this.logger.info(JSON.stringify(content, null, 4))
-            return message.reply(content);
+            return
           } catch (err) {
             return message.reply(
               "Connection to OpenAI failed...\n"+err
