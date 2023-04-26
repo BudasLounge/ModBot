@@ -28,7 +28,7 @@ module.exports = {
                     {role: "user", content: chatMessage}
                 ],
               });
-            const content = response.data.choices[0].message;
+            var content = response.data.choices[0].message;
             const messageChunks = Util.splitMessage(content, {
               maxLength: 2000,
               char:'\n'
