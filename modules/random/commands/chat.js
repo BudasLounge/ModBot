@@ -9,6 +9,7 @@ module.exports = {
     async execute(message, args, extra) {
         if (message.author.bot) return;
         var fs = require('fs');
+        const {Util} = require('discord.js');
         //var token = await fs.readFileSync("../openai_token.txt").toString();
         const { Configuration, OpenAIApi } = require("openai");
         const configuration = new Configuration({
