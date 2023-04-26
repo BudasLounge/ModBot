@@ -37,6 +37,7 @@ module.exports = {
                 await message.reply(chunk);
             })
             //return message.reply(content);
+            return
           } catch (err) {
             return message.reply(
               "Connection to OpenAI failed...\n"+err
