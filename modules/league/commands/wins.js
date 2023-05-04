@@ -37,8 +37,8 @@ module.exports = {
                 let losses = 0;
 
                 // Iterate through the matches to count the wins and losses
-                for (let i = 0; i < matchHistory.matches.length; i++) {
-                const match = matchHistory.matches[i];
+                for (let i = 0; i < matchHistory.length; i++) {
+                const match = matchHistory[i];
                 const matchId = match.gameId;
                 const champion = match.champion;
                 const role = match.role;
