@@ -55,7 +55,7 @@ module.exports = {
                     } else {
                     // Parse the JSON response body into a JavaScript object
                     const matchDetails = JSON.parse(body);
-                        message.reply(matchDetails)
+                        message.reply("MATCH DETAILS: " + matchDetails)
                     // Determine whether the summoner won or lost the match
                     const participantId = matchDetails.participantIdentities.find(participant => participant.player.summonerName.toLowerCase() === summonerName.toLowerCase()).participantId;
                     const participant = matchDetails.participants.find(participant => participant.participantId === participantId);
