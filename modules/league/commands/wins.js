@@ -30,6 +30,7 @@ module.exports = {
             const championMastery = summoner.championMastery;
             const highest = await championMastery.highest();
             message.reply(`Summoner name: ${summoner.name} (level: ${summoner.level}).`);
+            message.reply(summoner)
             const soloQ = leagueEntry.get('RANKED_SOLO_5x5');
             if(soloQ){
                 message.reply(`SoloQ: ${soloQ.tier} ${soloQ.division} (${soloQ.lp} LP).`);
