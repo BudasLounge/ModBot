@@ -26,6 +26,10 @@ module.exports = {
             // - The highest champion mastery
 
             const summoner = await client.summoners.fetchBySummonerName(summonerName);
+            const matchList = await summoner.fetchMatchList()
+            const clientMatchList = await client.matches.fetchMatchListByPlayer(summoner)
+            this.logger.info(clientMatchList)
+            this.logger.info(matchList)
             const leagueEntry = await summoner.fetchLeagueEntries();
             const championMastery = summoner.championMastery;
             const highest = await championMastery.highest();
@@ -38,8 +42,7 @@ module.exports = {
             }
             message.reply(`Highest champion mastery: ${highest.champion.name} (M${highest.level} ${highest.points} points).`);
 
-            const matchList = await summoner.fetchMatchList()
-            message.reply(matchList)
+            
         });
 
     }
