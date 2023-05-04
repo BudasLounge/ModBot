@@ -56,7 +56,7 @@ module.exports = {
                     const participantId = matchDetails.info.participants.find(participant => participant.summonerName.toLowerCase() === summonerName.toLowerCase()).participantId;
                     message.reply("partID: "+participantId)
                     this.logger.info("partID: "+participantId)
-                    const participant = matchDetails.info.participants.find(participant => participant.puuid === participantId);
+                    const participant = matchDetails.info.participants.find(participant => participant.participantId === participantId);
                     this.logger.info("part:"+participant)
                     if (participant.win) {
                         wins++;
