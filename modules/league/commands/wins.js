@@ -32,9 +32,9 @@ module.exports = {
             const soloQ = leagueEntry.get('RANKED_SOLO_5x5');
             const highest = await championMastery.highest();
 
-            message.reply(`Summoner name: ${summoner.name} (level: ${summoner.level}).`);
-            message.reply(`SoloQ: ${soloQ.tier} ${soloQ.division} (${soloQ.lp} LP).`);
-            message.reply(`Highest champion mastery: ${highest.champion.name} (M${highest.level} ${highest.points} points).`);
+            //message.reply(`Summoner name: ${summoner.name} (level: ${summoner.level}).`);
+            //message.reply(`SoloQ: ${soloQ.tier} ${soloQ.division} (${soloQ.lp} LP).`);
+            //message.reply(`Highest champion mastery: ${highest.champion.name} (M${highest.level} ${highest.points} points).`);
         });
 
     }
