@@ -38,7 +38,7 @@ module.exports = {
             }
             message.reply(`Highest champion mastery: ${highest.champion.name} (M${highest.level} ${highest.points} points).`);
 
-            const matchList = await client.matches.fetchMatchListByPlayer(summoner.id)
+            const matchList = await client.matches.fetchMatchListByPlayer(summoner.playerId)
             message.reply(matchList)
         });
 
