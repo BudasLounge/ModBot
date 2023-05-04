@@ -40,10 +40,6 @@ module.exports = {
                 for (let i = 0; i < matchHistory.length; i++) {
                 const match = matchHistory[i];
                 message.reply(match)
-                const matchId = match.gameId;
-                const champion = match.champion;
-                const role = match.role;
-                const lane = match.lane;
 
                 // Construct the URL for the match details request
                 const matchDetailsUrl = `https://${region}.api.riotgames.com/lol/match/v5/matches/${match}?api_key=${apiKey}`;
@@ -57,7 +53,7 @@ module.exports = {
                     const matchDetails = JSON.parse(body);
                         message.reply("MATCH DETAILS: " + matchDetails)
                     // Determine whether the summoner won or lost the match
-                    const participantId = matchDetails.participantIdentities.find(participant => participant.player.summonerName.toLowerCase() === summonerName.toLowerCase()).participantId;
+                    const participantId = matchDetails.info.participants.find(participant => participant.player.summonerName.toLowerCase() === summonerName.toLowerCase()).participantId;
                     const participant = matchDetails.participants.find(participant => participant.participantId === participantId);
                     if (participant.stats.win) {
                         wins++;
