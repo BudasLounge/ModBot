@@ -37,6 +37,9 @@ module.exports = {
                 message.reply("No soloQ rank found, finish your provisionals!")
             }
             message.reply(`Highest champion mastery: ${highest.champion.name} (M${highest.level} ${highest.points} points).`);
+
+            const matchList = await client.fetchMatchListByPlayer(summoner.accountId)
+            message.reply(matchList)
         });
 
     }
