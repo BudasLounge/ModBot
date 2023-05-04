@@ -15,7 +15,7 @@ module.exports = {
         message.reply(apiKey)
 
         // Construct the URL for the match history request
-        const matchHistoryUrl = `https://${region}.api.riotgames.com/lol/match/v4/matchlists/by-account/${summonerName}?api_key=${apiKey}`;
+        const matchHistoryUrl = `https://${region}.api.riotgames.com/lol/match/v4/matchlists/by-name/${summonerName}?api_key=${apiKey}`;
 
         // Make the HTTP request to retrieve the match history
         request(matchHistoryUrl, (error, response, body) => {
