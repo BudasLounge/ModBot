@@ -57,7 +57,7 @@ module.exports = {
                     message.reply("partID: "+participantId)
                     this.logger.info("partID: "+participantId)
                     const participant = matchDetails.info.participants.find(participant => participant.puuid === participantId);
-                    message.reply("part:"+participant)
+                    this.logger.info("part:"+participant)
                     if (participant.win) {
                         wins++;
                     } else {
