@@ -31,7 +31,7 @@ module.exports = {
             } else {
                 // Parse the JSON response body into a JavaScript object
                 const matchHistory = JSON.parse(body);
-                this.logger.info(matchHistory)
+                message.reply("MATCH DATA HERE:" + matchHistory)
                 // Initialize the win and loss counts to 0
                 let wins = 0;
                 let losses = 0;
