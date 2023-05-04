@@ -28,7 +28,7 @@ module.exports = {
             const summoner = await client.summoners.fetchBySummonerName(summonerName);
             const leagueEntry = await summoner.fetchLeagueEntries();
             const championMastery = summoner.championMastery;
-            message.reply(leagueEntry)
+            this.logger.info(leagueEntry)
             const soloQ = leagueEntry.get('RANKED_SOLO_5x5');
             const highest = await championMastery.highest();
 
