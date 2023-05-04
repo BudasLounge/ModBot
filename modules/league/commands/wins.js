@@ -26,7 +26,7 @@ module.exports = {
             // - The highest champion mastery
 
             const summoner = await client.summoners.fetchBySummonerName(summonerName);
-            const matchList = await summoner.fetchMatchList()
+            const matchList = await summoner.fetchMatchList({count:100})
             const leagueEntry = await summoner.fetchLeagueEntries();
             const championMastery = summoner.championMastery;
             const highest = await championMastery.highest();
