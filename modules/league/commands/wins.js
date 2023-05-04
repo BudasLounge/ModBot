@@ -8,7 +8,7 @@ module.exports = {
     has_state: false,
     async execute(message, args, extra) {
         const request = require('request');
-
+        const axios = require('axios')
         const summonerName = args[1];
         const region = 'americas';
         const apiKey = process.env.RIOT_API_KEY;
