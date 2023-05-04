@@ -10,7 +10,7 @@ module.exports = {
         const request = require('request');
 
         const summonerName = args[1];
-        const region = 'na1';
+        const region = 'americas';
         const apiKey = process.env.RIOT_API_KEY;
 
         // Construct the URL for the match history request
@@ -39,7 +39,7 @@ module.exports = {
             const lane = match.lane;
 
             // Construct the URL for the match details request
-            const matchDetailsUrl = `https://${region}.api.riotgames.com/lol/match/v4/matches/${matchId}?api_key=${apiKey}`;
+            const matchDetailsUrl = `https://${region}.api.riotgames.com/lol/match/v5/matches/${matchId}?api_key=${apiKey}`;
 
             // Make the HTTP request to retrieve the match details
             request(matchDetailsUrl, (error, response, body) => {
