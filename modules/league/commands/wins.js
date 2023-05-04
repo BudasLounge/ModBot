@@ -53,9 +53,9 @@ module.exports = {
                     const matchDetails = JSON.parse(body);
                         message.reply("MATCH DETAILS: " + matchDetails)
                     // Determine whether the summoner won or lost the match
-                    const participantId = matchDetails.info.participants.find(participant => participant.player.summonerName.toLowerCase() === summonerName.toLowerCase()).participantId;
-                    const participant = matchDetails.participants.find(participant => participant.participantId === participantId);
-                    if (participant.stats.win) {
+                    const participantId = matchDetails.info.participants.find(participant => participant.summonerName.toLowerCase() === summonerName.toLowerCase()).participantId;
+                    const participant = matchDetails.info.participants.find(participant => participant.puuid === participantId);
+                    if (participant.win) {
                         wins++;
                     } else {
                         losses++;
