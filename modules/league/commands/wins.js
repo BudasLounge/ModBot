@@ -27,9 +27,6 @@ module.exports = {
 
             const summoner = await client.summoners.fetchBySummonerName(summonerName);
             const matchList = await summoner.fetchMatchList()
-            const clientMatchList = await client.matches.fetchMatchListByPlayer(summoner)
-            this.logger.info(clientMatchList)
-            this.logger.info(matchList)
             const leagueEntry = await summoner.fetchLeagueEntries();
             const championMastery = summoner.championMastery;
             const highest = await championMastery.highest();
@@ -41,7 +38,9 @@ module.exports = {
                 message.reply("No soloQ rank found, finish your provisionals!")
             }
             message.reply(`Highest champion mastery: ${highest.champion.name} (M${highest.level} ${highest.points} points).`);
-
+            matchList.forEach(match => {
+                message.reply(match)
+            });
             
         });
 
