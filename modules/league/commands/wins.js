@@ -8,7 +8,6 @@ module.exports = {
     has_state: false,
     async execute(message, args, extra) {
         const request = require('request');
-        const axios = require('axios')
         const summonerName = args[1];
         const region = 'americas';
         const apiKey = process.env.RIOT_API_KEY;
@@ -21,7 +20,7 @@ module.exports = {
                 return
             }
         const summoner = JSON.parse(body)
-        const matchHistoryUrl = `https://${region}.api.riotgames.com/lol/match/v5/matches/by-puuid/${summoner.puuid}/ids?start=0&count=20&api_key=${apiKey}`;
+        const matchHistoryUrl = `https://${region}.api.riotgames.com/lol/match/v5/matches/by-puuid/${summoner.puuid}/ids?start=0&count=8&api_key=${apiKey}`;
         message.reply(matchHistoryUrl)
 
             // Make the HTTP request to retrieve the match history
