@@ -46,7 +46,7 @@ module.exports = {
                 const lane = match.lane;
 
                 // Construct the URL for the match details request
-                const matchDetailsUrl = `https://${region}.api.riotgames.com/lol/match/v5/matches/${matchId}?api_key=${apiKey}`;
+                const matchDetailsUrl = `https://${region}.api.riotgames.com/lol/match/v5/matches/${match}?api_key=${apiKey}`;
 
                 // Make the HTTP request to retrieve the match details
                 request(matchDetailsUrl, (error, response, body) => {
