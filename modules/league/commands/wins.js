@@ -30,7 +30,6 @@ module.exports = {
             const championMastery = summoner.championMastery;
             const highest = await championMastery.highest();
             message.reply(`Summoner name: ${summoner.name} (level: ${summoner.level}).`);
-            message.reply("Summoner:" + JSON.stringify(summoner))
             const soloQ = leagueEntry.get('RANKED_SOLO_5x5');
             if(soloQ){
                 message.reply(`SoloQ: ${soloQ.tier} ${soloQ.division} (${soloQ.lp} LP).`);
@@ -39,7 +38,7 @@ module.exports = {
             }
             message.reply(`Highest champion mastery: ${highest.champion.name} (M${highest.level} ${highest.points} points).`);
 
-            const matchList = await client.matches.fetchMatchListByPlayer(summoner)
+            const matchList = await summoner.fetchMatchList()
             message.reply(matchList)
         });
 
