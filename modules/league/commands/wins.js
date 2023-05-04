@@ -33,6 +33,8 @@ module.exports = {
             const soloQ = leagueEntry.get('RANKED_SOLO_5x5');
             if(soloQ){
                 message.reply(`SoloQ: ${soloQ.tier} ${soloQ.division} (${soloQ.lp} LP).`);
+            }else{
+                message.reply("No soloQ rank found, finish your provisionals!")
             }
             message.reply(`Highest champion mastery: ${highest.champion.name} (M${highest.level} ${highest.points} points).`);
         });
