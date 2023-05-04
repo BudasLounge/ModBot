@@ -21,7 +21,7 @@ module.exports = {
                 return
             }
         const summoner = JSON.parse(body)
-        const matchHistoryUrl = `https://${region}.api.riotgames.com/lol/match/v5/matches/by-puuid/${summoner.puuid}/ids?start=0&count=2&api_key=${apiKey}`;
+        const matchHistoryUrl = `https://${region}.api.riotgames.com/lol/match/v5/matches/by-puuid/${summoner.puuid}/ids?start=0&count=5&api_key=${apiKey}`;
         message.reply(matchHistoryUrl)
 
             // Make the HTTP request to retrieve the match history
