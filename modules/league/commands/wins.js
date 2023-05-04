@@ -14,7 +14,9 @@ module.exports = {
         const apiKey = process.env.RIOT_API_KEY;
 
         // Construct the URL for the match history request
-        const matchHistoryUrl = `https://${region}.api.riotgames.com/lol/match/v4/matchlists/by-name/${summonerName}?api_key=${apiKey}`;
+        const summonerIDget = `https://${region}.api.riotgames.com/lol/summoner/v4/summoners/by-name/${summonerName}?api_key=${apiKey}`;
+        const matchHistoryUrl = `https://${region}.api.riotgames.com/lol/match/v4/matchlists/by-account/${summonerIDget.accountId}?api_key=${apiKey}`;
+
 
         // Make the HTTP request to retrieve the match history
         request(matchHistoryUrl, (error, response, body) => {
