@@ -15,57 +15,62 @@ module.exports = {
 
         // Construct the URL for the match history request
         const summonerIDget = `https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/${summonerName}?api_key=${apiKey}`;
-        var respSummID = await axios.get(summonerIDget)
-        message.reply("DATA:" + respSummID.puuid)
-        const matchHistoryUrl = `https://${region}.api.riotgames.com/lol/match/v5/matches/by-puuid/${summonerIDget.puuid}/ids?start=0&count20&api_key=${apiKey}`;
+        request(summonerIDget, (error, response, body) => {
+            if (error) {
+                console.error(error);
+                return
+            }
+        const summoner = JSON.parse(body)
+        const matchHistoryUrl = `https://${region}.api.riotgames.com/lol/match/v5/matches/by-puuid/${summoner.puuid}/ids?start=0&count20&api_key=${apiKey}`;
         message.reply(matchHistoryUrl)
 
-        // Make the HTTP request to retrieve the match history
-        request(matchHistoryUrl, (error, response, body) => {
-        if (error) {
-            console.error(error);
-        } else {
-            // Parse the JSON response body into a JavaScript object
-            const matchHistory = JSON.parse(body);
-            this.logger.info(matchHistory)
-            // Initialize the win and loss counts to 0
-            let wins = 0;
-            let losses = 0;
-
-            // Iterate through the matches to count the wins and losses
-            for (let i = 0; i < matchHistory.matches.length; i++) {
-            const match = matchHistory.matches[i];
-            const matchId = match.gameId;
-            const champion = match.champion;
-            const role = match.role;
-            const lane = match.lane;
-
-            // Construct the URL for the match details request
-            const matchDetailsUrl = `https://${region}.api.riotgames.com/lol/match/v5/matches/${matchId}?api_key=${apiKey}`;
-
-            // Make the HTTP request to retrieve the match details
-            request(matchDetailsUrl, (error, response, body) => {
-                if (error) {
+            // Make the HTTP request to retrieve the match history
+            request(matchHistoryUrl, (error, response, body) => {
+            if (error) {
                 console.error(error);
-                } else {
+            } else {
                 // Parse the JSON response body into a JavaScript object
-                const matchDetails = JSON.parse(body);
-                    message.reply(matchDetails)
-                // Determine whether the summoner won or lost the match
-                const participantId = matchDetails.participantIdentities.find(participant => participant.player.summonerName.toLowerCase() === summonerName.toLowerCase()).participantId;
-                const participant = matchDetails.participants.find(participant => participant.participantId === participantId);
-                if (participant.stats.win) {
-                    wins++;
-                } else {
-                    losses++;
-                }
+                const matchHistory = JSON.parse(body);
+                this.logger.info(matchHistory)
+                // Initialize the win and loss counts to 0
+                let wins = 0;
+                let losses = 0;
 
-                // Log the win/loss count after each match is processed
-                message.reply(`Wins: ${wins}, Losses: ${losses}`);
+                // Iterate through the matches to count the wins and losses
+                for (let i = 0; i < matchHistory.matches.length; i++) {
+                const match = matchHistory.matches[i];
+                const matchId = match.gameId;
+                const champion = match.champion;
+                const role = match.role;
+                const lane = match.lane;
+
+                // Construct the URL for the match details request
+                const matchDetailsUrl = `https://${region}.api.riotgames.com/lol/match/v5/matches/${matchId}?api_key=${apiKey}`;
+
+                // Make the HTTP request to retrieve the match details
+                request(matchDetailsUrl, (error, response, body) => {
+                    if (error) {
+                    console.error(error);
+                    } else {
+                    // Parse the JSON response body into a JavaScript object
+                    const matchDetails = JSON.parse(body);
+                        message.reply(matchDetails)
+                    // Determine whether the summoner won or lost the match
+                    const participantId = matchDetails.participantIdentities.find(participant => participant.player.summonerName.toLowerCase() === summonerName.toLowerCase()).participantId;
+                    const participant = matchDetails.participants.find(participant => participant.participantId === participantId);
+                    if (participant.stats.win) {
+                        wins++;
+                    } else {
+                        losses++;
+                    }
+
+                    // Log the win/loss count after each match is processed
+                    message.reply(`Wins: ${wins}, Losses: ${losses}`);
+                    }
+                });
                 }
-            });
             }
-        }
-        });
+            });
+        })
     }
 };
