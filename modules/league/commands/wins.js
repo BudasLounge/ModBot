@@ -63,8 +63,8 @@ module.exports = {
             var countLoss = 0
             for(const match of matchList){
                 const matchInfo = await client.matches.fetch(match)
-                const redTeam = await matchInfo.teams.get("red").participants
-                const blueTeam = await matchInfo.teams.get("blue").participants
+                const redTeam = await matchInfo.team.get("red").participants
+                const blueTeam = await matchInfo.team.get("blue").participants
                 for(const player in redTeam){
                     if(player.summoner.name == summoner.name){
                         ourPlayer = player
