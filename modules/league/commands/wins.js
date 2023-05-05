@@ -63,30 +63,25 @@ module.exports = {
             var countLoss = 0
             for(const match of matchList){
                 const matchInfo = await client.matches.fetch(match)
-                var red = true
-                const participantsBlue = matchInfo.teams.get("blue").participants
-                for(const person of participantsBlue){
-                    if(summoner.name === person.summoner.name){
-                        red = false
-                    }
-                }
-                if(red){
-                    if(matchInfo.teams.get("red").win){
-                        countWin++
+                var ourPlayer = matchInfo.participants.get(summoner.puuid)
+                const champWins = {};
+                if(ourPlayer.win){
+                    countWin++
+                    if(!champWins[ourPlayer.champion.name]){
+                        champWins[ourPlayer.champion.name] = 1
                     }else{
-                        countLoss++
+                        champWins[ourPlayer.champion.name]++
                     }
                 }else{
-                    if(matchInfo.teams.get("blue").win){
-                        countWin++
-                    }else{
-                        countLoss++
-                    }
+                    countLoss++
                 }
+            }
+            for(const champ in champWins){
+                output += champ + ": " + champWins[champ] + "\n"
             }
             output += "\nWin:Loss\n" + countWin.toString() + ":" + countLoss.toString()
             message.reply(output)
         });
-
     }
+    
 };
