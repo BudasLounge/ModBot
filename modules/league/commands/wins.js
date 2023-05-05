@@ -42,9 +42,9 @@ module.exports = {
             var count = 0
             matchList.forEach(match => {
                 this.logger.info(match)
-                if(match.data.participant.summoner === summoner){
-                    count++
-                }
+                //if(match.data.participant.summoner === summoner){
+                //   count++
+                //}
             });
             
         });
