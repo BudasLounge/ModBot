@@ -35,15 +35,15 @@ module.exports = {
             const leagueEntry = await summoner.fetchLeagueEntries();
             const championMastery = summoner.championMastery;
             const highest = await championMastery.highest();
-            message.reply(`Summoner name: ${summoner.name} (level: ${summoner.level}).`);
+            var output = ""
+            output +=`Summoner name: ${summoner.name} (level: ${summoner.level}).\n`;
             const soloQ = leagueEntry.get('RANKED_SOLO_5x5');
             if(soloQ){
-                message.reply(`SoloQ: ${soloQ.tier} ${soloQ.division} (${soloQ.lp} LP).`);
+                output +=`SoloQ: ${soloQ.tier} ${soloQ.division} (${soloQ.lp} LP).\n`;
             }else{
-                message.reply("No soloQ rank found, finish your provisionals!")
+                output +="No soloQ rank found, finish your provisionals!\n"
             }
-            message.reply(`Highest champion mastery: ${highest.champion.name} (M${highest.level} ${highest.points} points).`);
-            var output = ""
+            output +=`Highest champion mastery: ${highest.champion.name} (M${highest.level} ${highest.points} points).\n`;
             var countWin = 0
             var countLoss = 0
             for(const match of matchList){
@@ -70,7 +70,8 @@ module.exports = {
                     }
                 }
             }
-            message.reply("Win:Loss\n" + countWin.toString() + ":" + countLoss.toString())
+            output += "Win:Loss\n" + countWin.toString() + ":" + countLoss.toString()
+            message.reply(output)
         });
 
     }
