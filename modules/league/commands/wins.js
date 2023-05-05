@@ -1,7 +1,7 @@
 module.exports = {
     name: 'wins',
     description: 'For testing league API pulling',
-    syntax: 'wins [number of games(optional)] [summoner name (case sensitive)] ',
+    syntax: 'wins [number of games(optional)] [summoner name] ',
     num_args: 1,
     args_to_lower: true,
     needs_api: false,
