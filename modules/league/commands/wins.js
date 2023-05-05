@@ -41,7 +41,7 @@ module.exports = {
             var output = ""
             var count = 0
             matchList.forEach(match => {
-                this.logger.info(match)
+                this.logger.info("Match: " + match)
                 //if(match.data.participant.summoner === summoner){
                 //   count++
                 //}
