@@ -7,6 +7,7 @@ module.exports = {
     needs_api: false,
     has_state: false,
     async execute(message, args, extra) {
+        message.channel.send({content : "Getting stats, this may take a moment..."})
         const util = require('util')
         const summonerName = args[1];
         const apiKey = process.env.RIOT_API_KEY;
