@@ -63,7 +63,6 @@ module.exports = {
                 }
             }catch(err){
                 message.reply("No rank found, finish your provisionals!")
-                return
             }
             const championMastery = summoner.championMastery;
             const highest = await championMastery.highest();
