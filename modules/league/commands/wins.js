@@ -47,17 +47,29 @@ module.exports = {
 
             const summoner = await client.summoners.fetchBySummonerName(summonerName);
             const matchList = await summoner.fetchMatchList({count:gameCount})
-            const leagueEntry = await summoner.fetchLeagueEntries();
+            try{
+                const leagueEntry = await summoner.fetchLeagueEntries();
+                const soloQ = leagueEntry.get('RANKED_SOLO_5x5');
+                const flexQ = leagueEntry.get('RANKED_FLEX_SR');
+                if(soloQ){
+                    output +=`SoloQ: ${soloQ.tier} ${soloQ.division} (${soloQ.lp} LP).\n`;
+                }else{
+                    output +="No soloQ rank found, finish your provisionals!\n"
+                }
+                if(flexQ){
+                    output +=`FlexQ: ${flexQ.tier} ${flexQ.division} (${flexQ.lp} LP).\n`;
+                }else{
+                    output +="No flexQ rank found, finish your provisionals!\n"
+                }
+            }catch(err){
+                message.reply("No rank found, finish your provisionals!")
+                return
+            }
             const championMastery = summoner.championMastery;
             const highest = await championMastery.highest();
             var output = ""
             output +=`Summoner name: ${summoner.name} (level: ${summoner.level}).\n`;
-            const soloQ = leagueEntry.get('RANKED_SOLO_5x5');
-            if(soloQ){
-                output +=`SoloQ: ${soloQ.tier} ${soloQ.division} (${soloQ.lp} LP).\n`;
-            }else{
-                output +="No soloQ rank found, finish your provisionals!\n"
-            }
+            
             output +=`Highest champion mastery: ${highest.champion.name} (M${highest.level} ${highest.points} points).\n`;
             var countWin = 0
             var countLoss = 0
