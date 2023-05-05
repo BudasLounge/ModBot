@@ -44,8 +44,12 @@ module.exports = {
             // - Summoner name, summoner level
             // - SoloQ ranking and LP
             // - The highest champion mastery
-
-            const summoner = await client.summoners.fetchBySummonerName(summonerName);
+            try{
+                const summoner = await client.summoners.fetchBySummonerName(summonerName);
+            }catch(err){
+                message.reply("Summoner not found!")
+                return;
+            }
             const matchList = await summoner.fetchMatchList({count:gameCount})
             var output = ""
             output +=`Summoner name: ${summoner.name} (level: ${summoner.level}).\n`;
@@ -64,7 +68,7 @@ module.exports = {
                     output +="No flexQ rank found, finish your provisionals!\n"
                 }
             }catch(err){
-                output += "No rank found, finish your provisionals!"
+                output += "No rank found, finish your provisionals!\n"
             }
             const championMastery = summoner.championMastery;
             const highest = await championMastery.highest();
