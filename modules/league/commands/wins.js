@@ -32,7 +32,11 @@ module.exports = {
 
         client
         .initialize({
-            region: 'na', // defaults to 'na' anyways.
+            region: 'na',
+            ratelimiter: {
+                throw: false,
+                strategy: 'spread',
+            }, // defaults to 'na' anyways.
         })
         .then(async () => {
             // After initialization, you can use the client to make requests
