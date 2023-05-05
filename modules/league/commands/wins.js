@@ -40,12 +40,12 @@ module.exports = {
             }
             message.reply(`Highest champion mastery: ${highest.champion.name} (M${highest.level} ${highest.points} points).`);
             var output = ""
-            var count = 0
+            var countWin = 0
+            var countLoss = 0
             for(const match of matchList){
                 this.logger.info("Match: " + match)
                 const matchInfo = await client.matches.fetch(match)
                 var red = true
-                const participantsRed = matchInfo.teams.get("red").participants
                 const participantsBlue = matchInfo.teams.get("blue").participants
                 for(const person of participantsBlue){
                     if(summoner.name === person.summoner.name){
@@ -53,12 +53,20 @@ module.exports = {
                     }
                 }
                 if(red){
-                    message.reply(match + ": red team")
+                    if(matchInfo.teams.get("red").win){
+                        countWin++
+                    }else{
+                        countLoss++
+                    }
                 }else{
-                    message.reply(match + ": blue team")
+                    if(matchInfo.teams.get("blue").win){
+                        countWin++
+                    }else{
+                        countLoss++
+                    }
                 }
             }
-            
+            message.reply("Win:Loss\n" + countWin.toString() + ":" + countLoss.toString())
         });
 
     }
