@@ -40,11 +40,11 @@ module.exports = {
             message.reply(`Highest champion mastery: ${highest.champion.name} (M${highest.level} ${highest.points} points).`);
             var output = ""
             var count = 0
-            matchList.forEach(match => {
+            for(const match of matchList){
                 this.logger.info("Match: " + match)
-                const matchInfo = client.matches.fetch(match)
+                const matchInfo = await client.matches.fetch(match)
                 this.logger.info("Info: " + matchInfo)
-            });
+            }
             
         });
 
