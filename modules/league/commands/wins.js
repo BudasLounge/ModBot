@@ -66,7 +66,7 @@ module.exports = {
                 const redTeam = matchInfo.teams.get("red").participants
                 const blueTeam = matchInfo.teams.get("blue").participants
                 for(const player in redTeam){
-                    this.logger.info(redTeam)
+                    this.logger.info(player)
                     if(player.summoner.name == summoner.name){
                         ourPlayer = player
                     }
