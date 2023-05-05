@@ -79,9 +79,9 @@ module.exports = {
                 if(ourPlayer.win){
                     countWin++
                     if(!champWins[ourPlayer.champion.name]){
-                        champWins[ourPlayer.champion.name].push(1)
+                        champWins[ourPlayer.champion.name] = {wins : 1}
                     }else{
-                        champWins[ourPlayer.champion.name]++
+                        champWins[ourPlayer.champion.name][wins]++
                     }
                 }else{
                     countLoss++
