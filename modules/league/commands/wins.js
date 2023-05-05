@@ -77,7 +77,7 @@ module.exports = {
                     }
                 }
                 if(ourPlayer.win){
-                    this.logger.info(ourPlayer.champion.name)
+                    this.logger.info("ourplayer: " + utils.inspect(ourPlayer))
                     countWin++
                     if(!champWins['champName'] === ourPlayer.champion.name){
                         champWins['champName'] = {champName: ourPlayer.champion.name, wins : 1}
