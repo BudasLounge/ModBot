@@ -66,12 +66,12 @@ module.exports = {
                 const redTeam = matchInfo.teams.get('red')
                 const blueTeam = matchInfo.teams.get('blue')
                 for(const player in redTeam){
-                    if(player.summoner.name == summoner.name){
+                    if(player.participant.summoner.name == summoner.name){
                         ourPlayer = player
                     }
                 }
                 for(const player in blueTeam){
-                    if(player.summoner.name == summoner.name){
+                    if(player.participant.summoner.name == summoner.name){
                         ourPlayer = player
                     }
                 }
