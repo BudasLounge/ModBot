@@ -64,7 +64,7 @@ module.exports = {
             for(const match of matchList){
                 const matchInfo = await client.matches.fetch(match)
                 const redTeam = await matchInfo.teams.get("red").participants
-                this.logger.info("redTeam: " + redTeam)
+                this.logger.info("redTeam: " + util.inspect(redTeam))
                 const blueTeam = await matchInfo.teams.get("blue").participants
                 for(const player in redTeam){
                     this.logger.info("player: " + util.inspect(player))
