@@ -62,7 +62,6 @@ module.exports = {
             var countWin = 0
             var countLoss = 0
             for(const match of matchList){
-                this.logger.info("Match: " + match)
                 const matchInfo = await client.matches.fetch(match)
                 var red = true
                 const participantsBlue = matchInfo.teams.get("blue").participants
