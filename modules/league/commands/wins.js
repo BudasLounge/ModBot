@@ -9,12 +9,18 @@ module.exports = {
     async execute(message, args, extra) {
         message.channel.send({content : "Getting stats, this may take a moment..."})
         const util = require('util')
-        const summonerName = args[1];
+        var summonerName = "";
         const apiKey = process.env.RIOT_API_KEY;
         const {Client} = require('shieldbow')
         var gameCount = 20
-        if(!isNaN(args[2])){
-            gameCount = parseInt(args[2])
+        if(!isNaN(args[1])){
+            gameCount = parseInt(args[1])
+            args.shift()
+            args.shift()
+            summonerName = args.join(" ")
+        }else{
+            args.shift()
+            summonerName = args.join(" ")
         }
         // Construct the URL for the match history request
 
