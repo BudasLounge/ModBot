@@ -63,7 +63,7 @@ module.exports = {
             var countLoss = 0
             for(const match of matchList){
                 const matchInfo = await client.matches.fetch(match)
-                var ourPlayer = matchInfo.participants.get(summoner.puuid)
+                var ourPlayer = await matchInfo.teams.participants.get(summoner.puuid)
                 const champWins = {};
                 if(ourPlayer.win){
                     countWin++
