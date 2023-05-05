@@ -61,6 +61,7 @@ module.exports = {
             output +=`Highest champion mastery: ${highest.champion.name} (M${highest.level} ${highest.points} points).\n`;
             var countWin = 0
             var countLoss = 0
+            const champWins = {};
             for(const match of matchList){
                 const matchInfo = await client.matches.fetch(match)
                 const redTeam = await matchInfo.teams.get("red").participants
@@ -75,7 +76,6 @@ module.exports = {
                         ourPlayer = player
                     }
                 }
-                const champWins = {};
                 if(ourPlayer.win){
                     countWin++
                     if(!champWins[ourPlayer.champion.name]){
