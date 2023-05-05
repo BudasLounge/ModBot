@@ -47,6 +47,8 @@ module.exports = {
 
             const summoner = await client.summoners.fetchBySummonerName(summonerName);
             const matchList = await summoner.fetchMatchList({count:gameCount})
+            var output = ""
+            output +=`Summoner name: ${summoner.name} (level: ${summoner.level}).\n`;
             try{
                 const leagueEntry = await summoner.fetchLeagueEntries();
                 const soloQ = leagueEntry.get('RANKED_SOLO_5x5');
@@ -62,12 +64,10 @@ module.exports = {
                     output +="No flexQ rank found, finish your provisionals!\n"
                 }
             }catch(err){
-                message.reply("No rank found, finish your provisionals!")
+                output += "No rank found, finish your provisionals!"
             }
             const championMastery = summoner.championMastery;
             const highest = await championMastery.highest();
-            var output = ""
-            output +=`Summoner name: ${summoner.name} (level: ${summoner.level}).\n`;
             
             output +=`Highest champion mastery: ${highest.champion.name} (M${highest.level} ${highest.points} points).\n`;
             var countWin = 0
