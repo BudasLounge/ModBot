@@ -44,8 +44,9 @@ module.exports = {
             // - Summoner name, summoner level
             // - SoloQ ranking and LP
             // - The highest champion mastery
+            var summoner;
             try{
-                const summoner = await client.summoners.fetchBySummonerName(summonerName);
+                summoner = await client.summoners.fetchBySummonerName(summonerName);
             }catch(err){
                 message.reply("Summoner not found!")
                 return;
