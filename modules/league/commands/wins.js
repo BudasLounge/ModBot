@@ -45,7 +45,7 @@ module.exports = {
                 const matchInfo = await client.matches.fetch(match)
                 const participants =  matchInfo.teams.get("red").participants
                 for(const person of participants){
-                    this.logger.info(person.summonerName)
+                    this.logger.info("person: " + person)
                 }
             }
             
