@@ -88,6 +88,7 @@ module.exports = {
                 }
             }
             for(const champ in champWins){
+                this.logger.info(util.inspect(champ))
                 output += champ['champName'] + ": " + champ['wins'] + "\n"
             }
             output += "\nWin:Loss\n" + countWin.toString() + ":" + countLoss.toString()
