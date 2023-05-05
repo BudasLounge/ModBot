@@ -71,7 +71,7 @@ module.exports = {
                     }
                 }
             }
-            output += "Win:Loss\n" + countWin.toString() + ":" + countLoss.toString()
+            output += "\nWin:Loss\n" + countWin.toString() + ":" + countLoss.toString()
             message.reply(output)
         });
 
