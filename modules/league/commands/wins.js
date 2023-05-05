@@ -7,6 +7,7 @@ module.exports = {
     needs_api: false,
     has_state: false,
     async execute(message, args, extra) {
+        const util = require('util')
         const summonerName = args[1];
         const apiKey = process.env.RIOT_API_KEY;
         const {Client} = require('shieldbow')
@@ -45,7 +46,7 @@ module.exports = {
                 const matchInfo = await client.matches.fetch(match)
                 const participants =  matchInfo.teams.get("red").participants
                 for(const person of participants){
-                    this.logger.info("person: " + person)
+                    this.logger.info("person: " + util.inspect(person))
                 }
             }
             
