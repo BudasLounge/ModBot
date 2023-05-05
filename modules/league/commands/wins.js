@@ -1,7 +1,7 @@
 module.exports = {
     name: 'wins',
     description: 'For testing league API pulling',
-    syntax: 'wins [summoner name (case sensitive)',
+    syntax: 'wins [summoner name (case sensitive)] [number of games to look over]',
     num_args: 1,
     args_to_lower: true,
     needs_api: false,
@@ -11,6 +11,10 @@ module.exports = {
         const summonerName = args[1];
         const apiKey = process.env.RIOT_API_KEY;
         const {Client} = require('shieldbow')
+        var gameCount = 20
+        if(!isNaN(args[2])){
+            gameCount = parseInt(args[2])
+        }
         // Construct the URL for the match history request
 
         const client = new Client(apiKey);
@@ -27,7 +31,7 @@ module.exports = {
             // - The highest champion mastery
 
             const summoner = await client.summoners.fetchBySummonerName(summonerName);
-            const matchList = await summoner.fetchMatchList({count:20})
+            const matchList = await summoner.fetchMatchList({count:gameCount})
             const leagueEntry = await summoner.fetchLeagueEntries();
             const championMastery = summoner.championMastery;
             const highest = await championMastery.highest();
