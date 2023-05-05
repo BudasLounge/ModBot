@@ -64,16 +64,13 @@ module.exports = {
             for(const match of matchList){
                 const matchInfo = await client.matches.fetch(match)
                 const redTeam = await matchInfo.teams.get("red").participants
-                this.logger.info("redTeam: " + util.inspect(redTeam))
                 const blueTeam = await matchInfo.teams.get("blue").participants
-                for(const player in redTeam){
-                    this.logger.info("player: " + util.inspect(player))
-                    this.logger.info("player: " + player.summoner)
+                for(const player of redTeam){
                     if(player.summoner.name == summoner.name){
                         ourPlayer = player
                     }
                 }
-                for(const player in blueTeam){
+                for(const player of blueTeam){
                     if(player.summoner.name == summoner.name){
                         ourPlayer = player
                     }
