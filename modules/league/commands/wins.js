@@ -44,9 +44,18 @@ module.exports = {
             for(const match of matchList){
                 this.logger.info("Match: " + match)
                 const matchInfo = await client.matches.fetch(match)
-                const participants =  matchInfo.teams.get("red").participants
-                for(const person of participants){
-                    this.logger.info("person: " + person.summoner.name)
+                var red = true
+                const participantsRed = matchInfo.teams.get("red").participants
+                const participantsBlue = matchInfo.teams.get("blue").participants
+                for(const person of participantsBlue){
+                    if(summoner.name === person.summoner.name){
+                        red = false
+                    }
+                }
+                if(red){
+                    message.reply(match + ": red team")
+                }else{
+                    message.reply(match + ": blue team")
                 }
             }
             
