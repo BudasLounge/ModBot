@@ -14,6 +14,10 @@ module.exports = {
         const {Client} = require('shieldbow')
         var gameCount = 20
         if(!isNaN(args[1])){
+            if(args[1]>100){
+                args[1] = 100
+                message.channel.send("I can only go up to 100 games for now, setting it to 100...")
+            }
             gameCount = parseInt(args[1])
             args.shift()
             args.shift()
