@@ -42,9 +42,8 @@ module.exports = {
             var count = 0
             matchList.forEach(match => {
                 this.logger.info("Match: " + match)
-                //if(match.data.participant.summoner === summoner){
-                //   count++
-                //}
+                const matchInfo = client.matches.fetch(match)
+                this.logger.info("Info: " + matchInfo)
             });
             
         });
