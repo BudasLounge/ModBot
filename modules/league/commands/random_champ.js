@@ -100,7 +100,7 @@ module.exports = {
                     } catch(error3){
                         this.logger.error(error3.response);
                     }
-                    var respChamps = [].concat(respChampsPrim.league_champions, respChampsSec.league_champions, respChampsPrim.league_champions);
+                    var respChamps = [].concat(respChampsPrim.league_champions, respChampsSec.league_champions, respChampsPrim.league_champions, respChampsPrim.league_champions, respChampsPrim.league_champions);
                     //this.logger.info(respChamps);
                     var seed = (Math.floor(Math.random() * respChamps.length));
                     message.channel.send({ content: "<@" + message.member.id + "> "+"Your " + args[1] + " champ is: " + respChamps[seed].name});
