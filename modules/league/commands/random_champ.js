@@ -23,7 +23,7 @@ module.exports = {
                         user_id: customID
                     });
                 }catch(errorCustom){
-                    this.logger.error(errorCustomMessage, errorCustom.response);
+                    this.logger.error(errorCustom.message, errorCustom.response);
                 }
                 if(respChampsCustom.league_pref_champs[0]){
                     if(!args[2]){
@@ -66,7 +66,7 @@ module.exports = {
                         ad_ap: "ad"
                     });
                 }catch(errorAd){
-                    this.logger.error(errorAdMessage, errorAd.response);
+                    this.logger.error(errorAd.message, errorAd.response);
                 }
                 var seedAd = (Math.floor(Math.random() * respChampsAd.league_champions.length));
                 message.channel.send({ content: "<@" + message.member.id + "> "+"Your AD champ is: " + respChampsAd.league_champions[seedAd].name});
@@ -78,7 +78,7 @@ module.exports = {
                         ad_ap: "ap"
                     });
                 }catch(errorAp){
-                    this.logger.error(errorApMessage, errorAp.response);
+                    this.logger.error(errorAp.message, errorAp.response);
                 }
                 var seedAp = (Math.floor(Math.random() * respChampsAp.league_champions.length));
                 message.channel.send({ content: "<@" + message.member.id + "> "+"Your AP champ is: " + respChampsAp.league_champions[seedAp].name});
