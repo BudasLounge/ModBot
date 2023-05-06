@@ -7,6 +7,8 @@ module.exports = {
     needs_api: false,
     has_state: false,
     async execute(message, args, extra) {
+        const {performance} = require('perf_hooks');
+        var perfStart = performance.now();
         message.channel.send({content : "Getting stats, this may take a moment..."})
         const util = require('util')
         var summonerName = "";
@@ -106,7 +108,7 @@ module.exports = {
                 output += champ + ": " + champWins[champ].wins + "\n"
             }
             output += "\nWin:Loss\n" + countWin.toString() + ":" + countLoss.toString()
-            message.reply(output)
+            message.reply(output + `\nIt took ${((performance.now()-perfStart)/1000).toFixed(2)} seconds to get this list`)
         });
     }
     

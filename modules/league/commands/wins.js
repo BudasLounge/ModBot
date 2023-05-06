@@ -7,8 +7,9 @@ module.exports = {
     needs_api: false,
     has_state: false,
     async execute(message, args, extra) {
+        const {performance} = require('perf_hooks');
+        var perfStart = performance.now();
         message.channel.send({content : "Getting stats, this may take a moment..."})
-        const util = require('util')
         var summonerName = "";
         const apiKey = process.env.RIOT_API_KEY;
         const {Client} = require('shieldbow')
@@ -103,13 +104,12 @@ module.exports = {
                     countLoss++
                 }
             }
-            this.logger.info("champWins: " + util.inspect(champWins))
             for(const champ in champWins){
                 
                 output += champ + ": " + champWins[champ].wins + "\n"
             }
             output += "\nWin:Loss\n" + countWin.toString() + ":" + countLoss.toString()
-            message.reply(output)
+            message.reply(output + `\nIt took ${((performance.now()-perfStart)/1000).toFixed(2)} seconds to get this list`)
         });
     }
     
