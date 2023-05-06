@@ -26,6 +26,7 @@ module.exports = {
         const item = await getStatus(server.server_ip);
         const isOnline = item.players.online > 0;
         let nextItem = `${server.display_name} is currently ${isOnline ? `online with ${item.players.online} player${item.players.online === 1 ? '' : 's'} online\n` : 'online but no players are.\n\n'}`;
+        this.logger.info(nextItem)
         if (isOnline) {
             this.logger.info("isOnline: " + isOnline)
           const SensitiveCharacters = ['\\', '*', '_', '~', '`', '|', '>'];
