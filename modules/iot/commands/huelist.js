@@ -1,64 +1,34 @@
+const fs = require('fs');
+const axios = require('axios');
+
 module.exports = {
-    name: 'huelist',
-    description: 'Lists all Hue devices',
-    syntax: 'huelist',
-    num_args: 0,
-    args_to_lower: true,
-    needs_api: false,
-    has_state: false,
-    async execute(message, args, extra) {
+  name: 'huelist',
+  description: 'Lists all Hue devices',
+  syntax: 'huelist',
+  num_args: 0,
+  args_to_lower: true,
+  needs_api: false,
+  has_state: false,
+  async execute(message, args, extra) {
+    const token = fs.readFileSync('../hue_token.txt', 'utf-8').trim();
+    const lightResp = await axios.get(`http://192.168.1.58/api/${token}/lights`);
 
-        var fs = require('fs');
-        var axios = require('axios');
+    message.channel.send({ content: 'Compiling light list...' });
 
-        var token = await fs.readFileSync("../hue_token.txt").toString();
-        token = token.replace(/(\r\n|\n|\r)/gm, "");
-        var lightResp = await axios.get(`http://192.168.1.58/api/${token}/lights`, {
+    const lightArray = await Promise.all(Object.keys(lightResp.data).map(async (key) => {
+      const resp = await axios.get(`http://192.168.1.58/api/${token}/lights/${key}`);
+      return {
+        id: key,
+        name: resp.data.name,
+        on: resp.data.state.on,
+      };
+    }));
 
-        });
-        message.channel.send({ content: "Compiling light list..."});
-        var lightCount = [];
-        for(var key in lightResp.data){
-            this.logger.info("Pushing key: " + key);
-            key = key.replace(/(\r\n|\n|\r)/gm, "");
-            lightCount.push(key);
-        }
-        this.logger.info("Collected keys, moving to getting states.");
-        var lightArray = [];
-        for(var j = 0;j<lightCount.length;j++){
-            this.logger.info("Calling for light: " + lightCount[j]);
-            var resp = await axios.get(`http://192.168.1.58/api/${token}/lights/${lightCount[j]}`, {
+    const output = lightArray.map((light) => {
+      const status = light.on ? 'ON' : 'OFF';
+      return `${light.name} has lightID: ${light.id} and is ${status}\n`;
+    }).join('');
 
-            });
-            lightArray[j] = resp.data;
-        }
-
-
-       /* for(var k = 0;k<lightArray.length;k++){
-            lightArray["lightID"] = lightCount[k];
-        }*/
-        this.logger.info("Collected states and data, moving on to outputs.");
-        this.logger.info(lightArray);
-        /*lightArray.sort(function(a, b) {
-            return compareStrings(a.name, b.name);
-          })*/
-
-        var output = "";
-        for(var i = 0;i<lightArray.length;i++){
-            if(lightArray[i].state.on){
-                output += lightArray[i].name + " has lightID: " + lightCount[i] + " and is ON\n";
-            }else{
-                output += lightArray[i].name + " has lightID: " + lightCount[i] + " and is OFF\n";
-            }
-        }
-        message.channel.send({ content: output});
-    }
-}
-
-function compareStrings(a, b) {
-    // Assuming you want case-insensitive comparison
-    a = a.toLowerCase();
-    b = b.toLowerCase();
-  
-    return (a < b) ? -1 : (a > b) ? 1 : 0;
-  }
+    message.channel.send({ content: output });
+  },
+};
