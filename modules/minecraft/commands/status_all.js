@@ -22,6 +22,7 @@ module.exports = {
     let stat_server = '';
     for (const server of respServer.minecraft_servers) {
       try {
+        this.logger.info("server: " + server)
         const item = await getStatus(server.server_ip);
         const isOnline = item.players.online > 0;
         let nextItem = `${server.display_name} is currently ${isOnline ? `online with ${item.players.online} player${item.players.online === 1 ? '' : 's'} online\n` : 'online but no players are.\n\n'}`;
