@@ -28,7 +28,7 @@ module.exports = {
         message.channel.send({ embeds: [embed] });
         this.logger.info('<<display_all_servers');
       } catch (error) {
-        console.error(error);
+        this.logger.error(error);
       }
     }
   };
