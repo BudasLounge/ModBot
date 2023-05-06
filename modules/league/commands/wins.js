@@ -35,6 +35,10 @@ module.exports = {
         .initialize({
             region: 'na',
             ratelimiter: {
+                retry: {
+                    retries: 3,
+                    retryDelay: 4000,
+                },
                 throw: false,
                 strategy: 'spread',
             }, // defaults to 'na' anyways.
