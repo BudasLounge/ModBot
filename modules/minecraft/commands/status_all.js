@@ -1,63 +1,85 @@
-module.exports = {
-  name: 'statusall',
-  description: 'Shows all servers and their information',
-  syntax: 'statusall',
-  num_args: 0,
-  args_to_lower: false,
-  needs_api: true,
-  has_state: false,
-  async execute(message, args, { api }) {
-    const { performance } = require('perf_hooks');
-    const Discord = require('discord.js');
-    const axios = require('axios');
-    const { getStatus } = require('mc-server-status');
-    const perfStart = performance.now();
-    const respServer = await api.get('minecraft_server', { _limit: 20 }).catch((error) => {
-      this.logger.error(error.response);
-    });
-    if (!respServer.minecraft_servers[0]) return;
-    message.channel.send({ content: 'Let me get that for you... this might take a moment' });
-    const ListEmbed = new Discord.MessageEmbed().setColor('#f92f03').setTitle('List of all minecraft servers: ')
-      .addField('Notice:\n', 'If the server crashed, it should auto restart in 5 minutes or less\nContact a server admin if it does not.');
-    let stat_server = '';
-    for (const server of respServer.minecraft_servers) {
-      try {
-        this.logger.info("server: " + server.display_name)
-        const item = await getStatus(server.server_ip);
-        const isOnline = item.players.online > 0;
-        let nextItem = `${server.display_name} is currently ${isOnline ? `online with ${item.players.online} player${item.players.online === 1 ? '' : 's'} online\n` : 'online but no players are.\n\n'}`;
-        this.logger.info(nextItem)
-        if (isOnline) {
-            this.logger.info("isOnline: " + isOnline)
-          const SensitiveCharacters = ['\\', '*', '_', '~', '`', '|', '>'];
-          nextItem += 'Players online:\n';
-          for (const { name } of item.players.sample) {
-            for (const unsafe of SensitiveCharacters) {
-              name.replaceAll(unsafe, `\\${unsafe}`);
+module.exports ={
+    name: 'statusall',
+    description: 'Shows all servers and their information',
+    syntax: 'statusall',
+    num_args: 0,
+    args_to_lower: false,
+    needs_api: true,
+    has_state: false,
+    async execute(message, args, extra) {
+        const {performance} = require('perf_hooks');
+        var perfStart = performance.now();
+        var api = extra.api;
+        const Discord = require('discord.js');
+        const axios = require('axios');
+        const {getStatus} = require("mc-server-status");
+        this.logger.info(">>display_all_servers_status");
+        var respServer;
+        try{
+            respServer = await api.get("minecraft_server", {
+                _limit: 20
+            });
+        } catch(error){
+            this.logger.error(error.response);
+        }
+        if(!respServer.minecraft_servers[0]){
+            return;
+        }
+        message.channel.send({content: "Let me get that for you... this might take a moment"});
+        this.logger.info(respServer.minecraft_servers.length + " servers found...");
+        var stat_server = ""; 
+        const ListEmbed = new Discord.MessageEmbed()
+        .setColor("#f92f03")
+        .setTitle("List of all minecraft servers: ");
+        ListEmbed.addField("Notice:\n","If the server crashed, it should auto restart in 5 minutes or less\nContact a server admin if it does not.");
+        for(var i = 0;i<respServer.minecraft_servers.length;i++){
+            this.logger.info("Working on server: " + respServer.minecraft_servers[i].display_name);
+            var item;
+            var flag = false;
+            try{
+                item = await getStatus(respServer.minecraft_servers[i].server_ip);
+            }catch(status_error){
+                this.logger.error(status_error + ", setting flag to true");
+                item = respServer.minecraft_servers[i].display_name + " is currently offline!\n\n";
+                flag = true;
             }
-            nextItem += `- ${name}\n`;
-          }
+            if(flag == true){
+                this.logger.info("Adding listEmbed for offline server");
+                ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:", item);
+                stat_server += respServer.minecraft_servers[i].display_name + " server info: " + respServer.minecraft_servers[i].display_name + " is currently offline!\n\n";
+            }else{
+                var respTPS = "";
+                this.logger.info("Adding listEmbed for online server");
+                if(respServer.minecraft_servers[i].status_api_port.toString() != "none"){
+                    this.logger.info("Found a status API! " + respServer.minecraft_servers[i].display_name + " has a port number of: " + respServer.minecraft_servers[i].status_api_port.toString())
+                    respTPS = await axios.get(`http://${respServer.minecraft_servers[i].numeric_ip}:` + respServer.minecraft_servers[i].status_api_port.toString() + "/tps", {});
+                    var respUptime = await axios.get(`http://${respServer.minecraft_servers[i].numeric_ip}:` + respServer.minecraft_servers[i].status_api_port.toString() + "/uptime", {});
+                }
+                if(item.players.online>0){
+                    var isOne = item.players.online == 1;
+                    var nextItem = respServer.minecraft_servers[i].display_name + " is currently online with " + item.players.online + (isOne ? " player" : " players") + " online\n";
+                    //var nextItem = respServer.minecraft_servers[i].display_name + " is currently online with: " + item.players.online + " players online!\n";
+                    let SensitiveCharacters = [ "\\", "*", "_", "~", "`", "|", ">" ];
+                    nextItem += "Players online:\n";
+                    for(var j = 0;j<item.players.online;j++){
+                        SensitiveCharacters.forEach(unsafe => item.players.sample[j].name = item.players.sample[j].name.replaceAll(unsafe, `\\${unsafe}`));
+                        nextItem += `- ${item.players.sample[j].name}\n`;
+                    }
+                    nextItem += "\n";
+                }else{
+                    var nextItem = respServer.minecraft_servers[i].display_name + " is currently online but no players are.\n\n";
+                }
+                if(respTPS == ""){
+                    ListEmbed.addField(respServer.minecraft_servers[i].display_name + " server info:",nextItem);
+                }else{
+                    ListEmbed.addField(respServer.minecraft_servers[i].display_name  + " server info:",nextItem + "\nTPS: " + respTPS.data.overallTps + "\n" + "Uptime: " + respUptime.data.uptime+"\n" );
+                }
+                
+                stat_server += nextItem;
+            }
         }
-        if (server.status_api_port !== 'none') {
-          const [respTPS, respUptime] = await Promise.all([
-            axios.get(`http://${server.numeric_ip}:${server.status_api_port}/tps`, {}),
-            axios.get(`http://${server.numeric_ip}:${server.status_api_port}/uptime`, {}),
-          ]);
-          nextItem += `\nTPS: ${respTPS.data.overallTps}\nUptime: ${respUptime.data.uptime}\n`;
-        }
-        ListEmbed.addField(`${server.display_name} server info:`, nextItem);
-        stat_server += nextItem;
-      } catch (error) {
-        this.logger.error(`${error}, setting flag to true`);
-        const item = `${server.display_name} is currently offline!\n\n`;
-        ListEmbed.addField(`${server.display_name} server info:`, item);
-        stat_server += `${server.display_name} server info: ${item}`;
-      }
+        message.channel.send({ embeds: [ListEmbed], content:`It took ${((performance.now()-perfStart)/1000).toFixed(2)} seconds to get this list:`});
+        //message.channel.send({ content: stat_server);
+        this.logger.info("<<display_all_servers_status");
     }
-    message.channel.send({
-      embeds: [ListEmbed],
-      content: `It took ${((performance.now() - perfStart) / 1000).toFixed(2)} seconds to get this list:`,
-    });
-    this.logger.info('<<display_all_servers_status');
-  },
 };
