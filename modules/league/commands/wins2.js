@@ -1,3 +1,7 @@
+const {performance} = require('perf_hooks');
+const util = require('util')
+const {Client} = require('shieldbow')
+
 module.exports = {
     name: 'wins2',
     description: 'For testing league API pulling',
@@ -7,13 +11,10 @@ module.exports = {
     needs_api: false,
     has_state: false,
     async execute(message, args, extra) {
-        const {performance} = require('perf_hooks');
         var perfStart = performance.now();
         message.channel.send({content : "Getting stats, this may take a moment..."})
-        const util = require('util')
         var summonerName = "";
         const apiKey = process.env.RIOT_API_KEY;
-        const {Client} = require('shieldbow')
         var gameCount = 20
         if(!isNaN(args[1])){
             if(args[1]>70){
