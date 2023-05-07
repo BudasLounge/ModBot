@@ -8,6 +8,8 @@ module.exports = {
     has_state: false,//if this command uses the state engine
     async execute(message, args, extra) {
         const Client = require('ssh2').Client;
+        const scp = require('scp2');
+        const path = require('path');
         const fs = require('fs');
 
         const sourceHost = '192.168.1.226';
@@ -15,9 +17,9 @@ module.exports = {
         const sourcePassword = 'Torrenter';
         var sourceFolder = 'C:\\Users\\Torrenter\\Desktop\\New Torrents';
         if(args[1] === "tv"){
-            destFolder = 'C:\\Users\\Torrenter\\Desktop\\New Torrents\\TV';
+            sourceFolder = 'C:\\Users\\Torrenter\\Desktop\\New Torrents\\TV';
         }else if(args[1] === "movie"){
-            destFolder = 'C:\\Users\\Torrenter\\Desktop\\New Torrents\\Movies';
+            sourceFolder = 'C:\\Users\\Torrenter\\Desktop\\New Torrents\\Movies';
         }
 
         const destHost = '192.168.1.100';
@@ -30,63 +32,40 @@ module.exports = {
             destFolder = '/home/UbuntuServer/all_plex/local_plex/Movies';
         }
 
-        const sourceClient = new Client();
-        sourceClient.on('ready', () => {
-        message.channel.send('Connected to source server');
-        sourceClient.sftp((err, sftp) => {
+        const conn = new Client();
+        conn.on('ready', () => {
+        fs.readdir(sourceFolder, (err, files) => {
             if (err) throw err;
-            message.channel.send('SFTP session established on source server');
 
-            const destClient = new Client();
-            destClient.on('ready', () => {
-            message.channel.send('Connected to destination server');
-            destClient.sftp((err, sftpDest) => {
+            files.forEach((file) => {
+            const remoteWindowsFilePath = path.join(sourceFolder, file);
+            const remoteLinuxFilePath = path.join(destFolder, file);
+
+            scp.scp({
+                host: sourceHost,
+                username: sourceUsername,
+                password: sourcePassword,
+                path: remoteWindowsFilePath,
+            }, {
+                host: destHost,
+                username: destUsername,
+                password: destPassword,
+                path: remoteLinuxFilePath,
+            }, (err) => {
                 if (err) throw err;
-                message.channel.send('SFTP session established on destination server');
-
-                sftp.readdir(sourceFolder, (err, files) => {
-                if (err) throw err;
-
-                files.forEach((file) => {
-                    const sourcePath = `${sourceFolder}/${file.filename}`;
-                    const destPath = `${destFolder}/${file.filename}`;
-
-                    sftpDest.stat(destPath, (err, stats) => {
-                    if (err) {
-                        // file does not exist on destination server, so transfer it
-                        const readStream = sftp.createReadStream(sourcePath);
-                        const writeStream = sftpDest.createWriteStream(destPath);
-                        readStream.pipe(writeStream);
-
-                        message.channel.send(`Transferred ${file.filename} to destination server`);
-                    } else {
-                        message.channel.send(`${file.filename} already exists on destination server`);
-                    }
-                    });
-                });
-
-                sftp.end();
-                sftpDest.end();
-                destClient.end();
-                sourceClient.end();
-                });
+                console.log(`File transfer complete for ${file}`);
             });
             });
-
-            destClient.connect({
-            host: destHost,
-            username: destUsername,
-            password: destPassword,
-            readyTimeout: 20000,
-            });
+            conn.end();
         });
+        }).connect({
+            host: sourceHost,
+            username: sourceUsername,
+            password: sourcePassword,
         });
 
-        sourceClient.connect({
-        host: sourceHost,
-        username: sourceUsername,
-        password: sourcePassword,
-        readyTimeout: 20000,
-        });
     }
 }
+
+
+        
