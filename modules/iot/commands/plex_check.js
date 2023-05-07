@@ -2,7 +2,7 @@ module.exports = {
     name: 'plex_check',
     description: 'check for new plex files',
     syntax: 'plex_check [tv/movie]',
-    num_args: 0,//minimum amount of arguments to accept
+    num_args: 1,//minimum amount of arguments to accept
     args_to_lower: false,//if the arguments should be lower case
     needs_api: true,//if this command needs access to the api
     has_state: false,//if this command uses the state engine
@@ -15,24 +15,29 @@ module.exports = {
         const sourcePassword = 'Torrenter';
         const sourceFolder = 'C:\\Users\\Torrenter\\Desktop\\New Torrents';
 
-        const destHost = 'dest.host.com';
-        const destUsername = 'username';
-        const destPassword = 'password';
-        const destFolder = '/path/to/dest/folder';
+        const destHost = '192.168.1.100';
+        const destUsername = 'UbuntuServer';
+        const destPassword = 'UbuntuServer';
+        var destFolder = '';
+        if(args[1] === "tv"){
+            destFolder = '/home/UbuntuServer/all_plex/local_plex_2/TV Shows';
+        }else if(args[1] === "movie"){
+            destFolder = '/home/UbuntuServer/all_plex/local_plex/Movies';
+        }
 
         const sourceClient = new Client();
         sourceClient.on('ready', () => {
-        console.log('Connected to source server');
+        message.channel.send('Connected to source server');
         sourceClient.sftp((err, sftp) => {
             if (err) throw err;
-            console.log('SFTP session established on source server');
+            message.channel.send('SFTP session established on source server');
 
             const destClient = new Client();
             destClient.on('ready', () => {
-            console.log('Connected to destination server');
+            message.channel.send('Connected to destination server');
             destClient.sftp((err, sftpDest) => {
                 if (err) throw err;
-                console.log('SFTP session established on destination server');
+                message.channel.send('SFTP session established on destination server');
 
                 sftp.readdir(sourceFolder, (err, files) => {
                 if (err) throw err;
@@ -48,9 +53,9 @@ module.exports = {
                         const writeStream = sftpDest.createWriteStream(destPath);
                         readStream.pipe(writeStream);
 
-                        console.log(`Transferred ${file.filename} to destination server`);
+                        message.channel.send(`Transferred ${file.filename} to destination server`);
                     } else {
-                        console.log(`${file.filename} already exists on destination server`);
+                        message.channel.send(`${file.filename} already exists on destination server`);
                     }
                     });
                 });
