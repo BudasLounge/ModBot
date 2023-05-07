@@ -53,7 +53,7 @@ module.exports = {
                 path: remoteLinuxFilePath,
             }, (err) => {
                 if (err) throw err;
-                console.log(`File transfer complete for ${file}`);
+                message.channel.send(`File transfer complete for ${file}`);
             });
             });
             conn.end();
