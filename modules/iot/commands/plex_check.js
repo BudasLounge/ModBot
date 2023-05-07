@@ -77,6 +77,7 @@ module.exports = {
             host: destHost,
             username: destUsername,
             password: destPassword,
+            readyTimeout: 20000,
             });
         });
         });
@@ -85,6 +86,7 @@ module.exports = {
         host: sourceHost,
         username: sourceUsername,
         password: sourcePassword,
+        readyTimeout: 20000,
         });
     }
 }
