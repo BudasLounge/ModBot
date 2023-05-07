@@ -13,7 +13,12 @@ module.exports = {
         const sourceHost = '192.168.1.226';
         const sourceUsername = 'Torrenter';
         const sourcePassword = 'Torrenter';
-        const sourceFolder = 'C:\\Users\\Torrenter\\Desktop\\New Torrents';
+        var sourceFolder = 'C:\\Users\\Torrenter\\Desktop\\New Torrents';
+        if(args[1] === "tv"){
+            destFolder = 'C:\\Users\\Torrenter\\Desktop\\New Torrents\\TV';
+        }else if(args[1] === "movie"){
+            destFolder = 'C:\\Users\\Torrenter\\Desktop\\New Torrents\\Movies';
+        }
 
         const destHost = '192.168.1.100';
         const destUsername = 'UbuntuServer';
