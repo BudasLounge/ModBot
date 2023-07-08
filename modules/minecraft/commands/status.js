@@ -29,7 +29,7 @@ module.exports ={
             
             message.channel.send({content: respServer.minecraft_servers[0].numeric_ip + ":" + respServer.minecraft_servers[0].port})
             try{
-                item = await getStatus(respServer.minecraft_servers[0].numeric_ip + ":" + respServer.minecraft_servers[0].port);
+                item = await getStatus(respServer.minecraft_servers[0].numeric_ip, respServer.minecraft_servers[0].port);
             }catch(status_error){
                 this.logger.error(status_error);
                 item = respServer.minecraft_servers[0].display_name + " is currently offline!";
