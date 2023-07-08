@@ -29,8 +29,7 @@ module.exports ={
             
             message.channel.send({content: respServer.minecraft_servers[0].numeric_ip + ":" + respServer.minecraft_servers[0].port})
             try{
-                pinger.ping('192.168.1.4', 36010, (error, result) => {
-                    item = "THIS IS A TEST"
+                item = await pinger.ping('192.168.1.4', 36010, (error, result) => {
                     if (error) {
                 
                         this.logger.error("ERROR: " + error);
@@ -38,7 +37,7 @@ module.exports ={
                     } else {
                 
                         this.logger.info("RESULT: " + JSON.stringify(result));
-                        
+                        return "this is a test"
                     }
                 
                 });
