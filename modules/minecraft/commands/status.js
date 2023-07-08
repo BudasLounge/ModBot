@@ -18,8 +18,8 @@ module.exports ={
         
             } else {
         
-                this.logger.info("RESULT: " + result);
-        
+                this.logger.info("RESULT: " + JSON.stringify(result));
+                
             }
         
         });
