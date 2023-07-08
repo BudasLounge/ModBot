@@ -9,7 +9,7 @@ module.exports ={
     async execute(message, args, extra){
         var api = extra.api;
         const Discord = require('discord.js');
-        const {getStatus} = require("minecraft-ping-server");
+        const {getStatus} = require("minecraft-ping-js");
         var respServer;
         try{
             respServer = await api.get("minecraft_server", {
