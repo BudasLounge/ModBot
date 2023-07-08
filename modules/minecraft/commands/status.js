@@ -42,7 +42,7 @@ module.exports ={
                     }
                 
                 });
-                this.logger.info(item)
+                this.logger.info("ITEM: " + item)
             }catch(status_error){
                 this.logger.error(status_error.message);
                 item = respServer.minecraft_servers[0].display_name + " is currently offline!";
