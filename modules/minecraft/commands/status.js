@@ -10,7 +10,7 @@ module.exports ={
         var api = extra.api;
         const Discord = require('discord.js');
         const pinger = require("minecraft-ping-js");
-        pinger.ping('192.168.1.4', 25565, (error, result) => {
+        pinger.ping('192.168.1.4', 36010, (error, result) => {
 
             if (error) {
         
