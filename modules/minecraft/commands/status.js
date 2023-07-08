@@ -9,7 +9,7 @@ module.exports ={
     async execute(message, args, extra){
         var api = extra.api;
         const Discord = require('discord.js');
-        const {getStatus} = require("minecraft-ping-js");
+        const pinger = require("minecraft-ping-js");
         var respServer;
         try{
             respServer = await api.get("minecraft_server", {
@@ -29,7 +29,7 @@ module.exports ={
             
             message.channel.send({content: respServer.minecraft_servers[0].numeric_ip + ":" + respServer.minecraft_servers[0].port})
             try{
-                item = await getStatus.ping(respServer.minecraft_servers[0].numeric_ip, respServer.minecraft_servers[0].port);
+                item = pinger.ping(respServer.minecraft_servers[0].numeric_ip, respServer.minecraft_servers[0].port);
             }catch(status_error){
                 this.logger.error(status_error.message);
                 item = respServer.minecraft_servers[0].display_name + " is currently offline!";
