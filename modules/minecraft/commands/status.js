@@ -10,21 +10,7 @@ module.exports ={
         var api = extra.api;
         const Discord = require('discord.js');
         const pinger = require("minecraft-ping-js");
-        pinger.ping('192.168.1.4', 36010, (error, result) => {
-
-            if (error) {
-        
-                this.logger.error("ERROR: " + error);
-        
-            } else {
-        
-                this.logger.info("RESULT: " + JSON.stringify(result));
-                
-            }
-        
-        });
-        
-        /*var respServer;
+        var respServer;
         try{
             respServer = await api.get("minecraft_server", {
                 short_name: args[1]
@@ -43,7 +29,19 @@ module.exports ={
             
             message.channel.send({content: respServer.minecraft_servers[0].numeric_ip + ":" + respServer.minecraft_servers[0].port})
             try{
-                item = await pinger.ping(respServer.minecraft_servers[0].numeric_ip, respServer.minecraft_servers[0].port);
+                item = await pinger.ping('192.168.1.4', 36010, (error, result) => {
+
+                    if (error) {
+                
+                        this.logger.error("ERROR: " + error);
+                
+                    } else {
+                
+                        this.logger.info("RESULT: " + JSON.stringify(result));
+                        
+                    }
+                
+                });
             }catch(status_error){
                 this.logger.error(status_error.message);
                 item = respServer.minecraft_servers[0].display_name + " is currently offline!";
@@ -63,6 +61,6 @@ module.exports ={
             }
         }else{
             message.channel.send({ content: "Sorry, couldn't find a server with that shortname, try /listmc for a list of all servers."});
-        }*/
+        }
     }
 };
