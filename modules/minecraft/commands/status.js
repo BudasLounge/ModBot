@@ -10,7 +10,21 @@ module.exports ={
         var api = extra.api;
         const Discord = require('discord.js');
         const pinger = require("minecraft-ping-js");
-        var respServer;
+        pinger.ping('localhost', 25565, (error, result) => {
+
+            if (error) {
+        
+                this.logger.error("ERROR: " + error);
+        
+            } else {
+        
+                this.logger.info("RESULT: " + result);
+        
+            }
+        
+        });
+        
+        /*var respServer;
         try{
             respServer = await api.get("minecraft_server", {
                 short_name: args[1]
@@ -37,7 +51,7 @@ module.exports ={
                 message.channel.send({ embeds: [ListEmbed]});
                 flag = true;
             }
-            this.logger.info("ITEM:" + item.ping);
+            this.logger.info("ITEM:" + item);
             if(flag == false){
                 var output = respServer.minecraft_servers[0].display_name + " is currently online with: " + item.players.online + " players online!\n";
                 output += "Players online:\n";
@@ -49,6 +63,6 @@ module.exports ={
             }
         }else{
             message.channel.send({ content: "Sorry, couldn't find a server with that shortname, try /listmc for a list of all servers."});
-        }
+        }*/
     }
 };
