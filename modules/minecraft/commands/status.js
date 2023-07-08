@@ -37,7 +37,7 @@ module.exports ={
                 message.channel.send({ embeds: [ListEmbed]});
                 flag = true;
             }
-            this.logger.info("ITEM:" + item);
+            this.logger.info("ITEM:" + item.ping);
             if(flag == false){
                 var output = respServer.minecraft_servers[0].display_name + " is currently online with: " + item.players.online + " players online!\n";
                 output += "Players online:\n";
