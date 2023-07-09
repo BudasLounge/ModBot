@@ -83,7 +83,7 @@ async function onButtonClick(button){
     else if((button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && button.customId==="MCSERVERDELETORMODAL"){
         await button.reply({content: "An option was selected!"})
     }
-    else if(button.isModalSubmit()){
+    else if(button.isModalSubmit() && button.customId==="MCSERVERCREATORMODAL"){
         if((button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && button.customId==="MCSERVERCREATORMODAL"){
             var display_name = button.fields.getTextInputValue('display_name');
             var short_name = button.fields.getTextInputValue('short_name');

@@ -31,13 +31,11 @@ module.exports ={
             try{
                 item = await pinger.ping('192.168.1.4', 36010, (error, result) => {
                     if (error) {
-                
                         this.logger.error("ERROR: " + error);
-                
+                        return error
                     } else {
-                
                         this.logger.info("RESULT: " + JSON.stringify(result));
-                        return "this is a test"
+                        return result
                     }
                 
                 });
