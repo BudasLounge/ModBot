@@ -3,7 +3,6 @@ var api = new ApiClient();
 const {MessageActionRow, MessageButton, MessageEmbed, MessageSelectMenu} = require('discord.js');
 
 async function onButtonClick(button){
-    button.channel.send({content: "RANDOM CHECK " + button.customId})
     if (button.isButton()){
         if(button.customId.length>=13) return;
         switch(button.customId){
