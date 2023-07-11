@@ -2,7 +2,6 @@ var ApiClient = require("../../core/js/APIClient.js");
 var api = new ApiClient();
 
 async function onButtonClick(button){
-    button.channel.send({content: "POINTS CHECK " + button.customId})
 if (button.isButton() || button.isSelectMenu()){
     if(button.customId.length<=12) return;
     if(button.customId.substring(0,3)==="ID-") return;
@@ -14,7 +13,6 @@ if(button.isButton()){
     const moment = require("moment");
     var serial = button.customId.substring(0,10);
     var stance = await button.customId.substring(button.customId.indexOf('-')+1, button.customId.indexOf('-')+3);
-    button.channel.send({content: "STANCE: " + stance + ", SERIAL: " + serial})
     var bet_amount = 0;
     var respCheckMaster;
     try{
