@@ -5,7 +5,7 @@ const {MessageActionRow, MessageButton, MessageEmbed, MessageSelectMenu} = requi
 async function onButtonClick(button){
     button.channel.send({content: "RANDOM CHECK " + button.customId})
     if (button.isButton()){
-        if(button.customId.length>13) return;
+        if(button.customId.length>=13) return;
         switch(button.customId){
         case "bottom":
             logger.info("Gathering all voice timings");
