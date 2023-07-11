@@ -2,7 +2,7 @@ var ApiClient = require("../../core/js/APIClient.js");
 var api = new ApiClient();
 
 async function onButtonClick(button){
-    button.channel.send({content: "POINTS CHECK"})
+    button.channel.send({content: "POINTS CHECK " + button.customId})
 if (button.isButton() || button.isSelectMenu()){
     if(button.customId.length<=13) return;
     if(button.customId.substring(0,3)==="ID-") return;

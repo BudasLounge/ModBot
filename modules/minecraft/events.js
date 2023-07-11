@@ -3,7 +3,7 @@ var api = new ApiClient();
 const {MessageActionRow, MessageButton, MessageEmbed, MessageSelectMenu, Modal, TextInputComponent} = require('discord.js');
 
 async function onButtonClick(button){
-    button.channel.send({content: "MC CHECK"})
+    button.channel.send({content: "MC CHECK " + button.customId})
     if((button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && button.customId=="MCSERVERCREATOR"){
         const modal = new Modal()
         .setCustomId('MCSERVERCREATORMODAL')
