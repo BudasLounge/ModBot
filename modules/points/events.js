@@ -13,6 +13,7 @@ if(button.isButton()){
     const moment = require("moment");
     var serial = button.customId.substring(0,10);
     var stance = await button.customId.substring(button.customId.indexOf('-')+1, button.customId.indexOf('-')+3);
+    message.channel.send({content: "STANCE: " + stance + ", SERIAL: " + serial})
     var bet_amount = 0;
     var respCheckMaster;
     try{
