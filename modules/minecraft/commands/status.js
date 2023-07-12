@@ -43,11 +43,6 @@ module.exports ={
                 }
                 ListEmbed.addField("status: ", output);
                 message.channel.send({ embeds: [ListEmbed]});
-            }else{
-                item = respServer.minecraft_servers[0].display_name + " is currently offline!";
-                ListEmbed.addField("status: ", item);
-                message.channel.send({ embeds: [ListEmbed]});
-                flag = true;
             }
         }else{
             message.channel.send({ content: "Sorry, couldn't find a server with that shortname, try ,listmc for a list of all servers."});
