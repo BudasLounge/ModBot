@@ -29,7 +29,7 @@ module.exports ={
             
             message.channel.send({content: respServer.minecraft_servers[0].numeric_ip + ":" + respServer.minecraft_servers[0].port})
             try{
-                item = await pinger.pingWithPromise('192.168.1.4', 36010).then(console.log).catch(console.error)
+                await pinger.pingWithPromise('192.168.1.4', 36010).then(response => {item = response}).catch(console.error)
                 this.logger.info("ITEM IN TRY: " + item)
             }catch(status_error){
                 this.logger.error(status_error.message);
