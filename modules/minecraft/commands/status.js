@@ -27,6 +27,7 @@ module.exports ={
             ListEmbed.addField("Notice:\n","If the server crashed, it should auto restart in 5 minutes or less\nContact a server admin if it does not.")
             try{
                 await pinger.pingWithPromise(respServer.minecraft_servers[0].numeric_ip, respServer.minecraft_servers[0].port).then(response => {item = response}).catch(response => {item = response})
+                this.logger.info("Item: " + item)
             }catch(status_error){
                 this.logger.error(status_error.message);
                 item = respServer.minecraft_servers[0].display_name + " is currently offline!";
