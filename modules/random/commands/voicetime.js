@@ -48,11 +48,11 @@ module.exports = {
         console.table(totalTime);
         this.logger.info(totalTime);
         var output = "";
-
+        var startDate = new Date(respVoice.voice_trackings[i].connect_time)
         totalTime.sort(compareSecondColumn);
         const ListEmbed = new MessageEmbed()
         .setColor("#c586b6")
-        .setTitle("Voice Channel Leaderboard (Top 10)");
+        .setTitle("Voice Channel Leaderboard (Top 10) (Start Date: " + startDate.toString() + ")");
         var count = 10;
         if(totalTime.length<count) {count = totalTime.length;}
         for(var k = 0;k<count;k++){
@@ -61,7 +61,7 @@ module.exports = {
                 { d: 60, l: "minutes" },
                 { d: 24, l: "hours" },
                 //change 365 to a higher number if someone hits 365 days of cumulative voice timings
-                { d: 365, l: "days" }
+                { d: 1000, l: "days" }
             ];
         
             var s = '';
