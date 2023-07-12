@@ -49,10 +49,12 @@ module.exports = {
         this.logger.info(totalTime);
         var output = "";
         var startDate = new Date(respVoice.voice_trackings[0].connect_time * 1000)
+        const options = { month: 'short', day: '2-digit', year: 'numeric' };
+        const formattedDate = startDate.toLocaleDateString('en-US', options);
         totalTime.sort(compareSecondColumn);
         const ListEmbed = new MessageEmbed()
         .setColor("#c586b6")
-        .setTitle("Voice Channel Leaderboard (Top 10) (Start Date: " + startDate.getDate().toString() + " " + startDate.getMonth().toString() + " " + startDate.getFullYear().toString() + ")");
+        .setTitle("Voice Channel Leaderboard (Top 10) (Start Date: " + formattedDate + ")");
         var count = 10;
         if(totalTime.length<count) {count = totalTime.length;}
         for(var k = 0;k<count;k++){
