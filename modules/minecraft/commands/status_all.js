@@ -11,7 +11,7 @@ module.exports = {
     const perfStart = performance.now();
     const Discord = require('discord.js');
     const axios = require('axios');
-    const { getStatus } = require('mc-server-status');
+    const pinger = require('minecraft-ping-js');
     message.channel.send({ content: 'Let me get that for you... this might take a moment' });
     const respServer = await api.get('minecraft_server', { _limit: 20 }).catch((error) => {
       this.logger.error(error.response);
@@ -22,7 +22,8 @@ module.exports = {
     let stat_server = '';
     for (const server of respServer.minecraft_servers) {
       try {
-        const item = await getStatus(server.server_ip);
+        var item;
+        await pinger.pingWithPromise(respServer.minecraft_servers[0].numeric_ip, respServer.minecraft_servers[0].port).then(response => {item = response}).catch(item = "OFFLINE")
         const isOnline = item.players.online > 0;
         let nextItem = `${server.display_name} is currently ${isOnline ? `online with ${item.players.online} player${item.players.online === 1 ? '' : 's'} online\n` : 'online but no players are.\n\n'}`;
         if (isOnline) {
