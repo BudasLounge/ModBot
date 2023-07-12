@@ -8,6 +8,7 @@ module.exports ={
     has_state: false,
     async execute(message, args, extra){
         var api = extra.api;
+        var util = require('util')
         const Discord = require('discord.js');
         const pinger = require("minecraft-ping-js");
         var respServer;
@@ -39,6 +40,7 @@ module.exports ={
                 flag = true;
             }
             this.logger.info("ITEM:" + item);
+            console.log(util.inspect(objectName, false, null));
             /*if(flag == false){
                 var output = respServer.minecraft_servers[0].display_name + " is currently online with: " + item.players.online + " players online!\n";
                 output += "Players online:\n";
