@@ -8,7 +8,6 @@ module.exports ={
     has_state: false,
     async execute(message, args, extra){
         var api = extra.api;
-        var util = require('util')
         const Discord = require('discord.js');
         const pinger = require("minecraft-ping-js");
         var respServer;
@@ -19,7 +18,6 @@ module.exports ={
         } catch(error){
             this.logger.error(error);
         } 
-        this.logger.info(respServer);
         if(respServer.minecraft_servers[0]){
             var item;
             var flag = false;
@@ -27,11 +25,8 @@ module.exports ={
             .setColor("#f92f03")
             .setTitle(respServer.minecraft_servers[0].display_name + " status: ");
             ListEmbed.addField("Notice:\n","If the server crashed, it should auto restart in 5 minutes or less\nContact a server admin if it does not.")
-            
-            message.channel.send({content: respServer.minecraft_servers[0].numeric_ip + ":" + respServer.minecraft_servers[0].port})
             try{
-                await pinger.pingWithPromise('192.168.1.4', 36010).then(response => {item = response}).catch(response => {item = response})
-                this.logger.info("ITEM IN TRY: " + item)
+                await pinger.pingWithPromise(respServer.minecraft_servers[0].numeric_ip, respServer.minecraft_servers[0].port).then(response => {item = response}).catch(response => {item = response})
             }catch(status_error){
                 this.logger.error(status_error.message);
                 item = respServer.minecraft_servers[0].display_name + " is currently offline!";
@@ -39,8 +34,6 @@ module.exports ={
                 message.channel.send({ embeds: [ListEmbed]});
                 flag = true;
             }
-            this.logger.info("ITEM:" + item);
-            console.log(util.inspect(item, false, null));
             if(flag == false){
                 var output = respServer.minecraft_servers[0].display_name + " is currently online with: " + item.players.online + " players online!\n";
                 output += "Players online:\n";
