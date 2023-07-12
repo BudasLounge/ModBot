@@ -48,7 +48,7 @@ module.exports = {
         console.table(totalTime);
         this.logger.info(totalTime);
         var output = "";
-        var startDate = new Date(respVoice.voice_trackings[i].connect_time)
+        var startDate = new Date(respVoice.voice_trackings[i].connect_time * 1000)
         totalTime.sort(compareSecondColumn);
         const ListEmbed = new MessageEmbed()
         .setColor("#c586b6")
