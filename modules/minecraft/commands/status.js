@@ -30,7 +30,7 @@ module.exports ={
             
             message.channel.send({content: respServer.minecraft_servers[0].numeric_ip + ":" + respServer.minecraft_servers[0].port})
             try{
-                await pinger.pingWithPromise('192.168.1.4', 36010).then(response => {item = response}).catch(console.error)
+                await pinger.pingWithPromise('192.168.1.4', 36010).then(response => {item = response}).catch(response => {item = response})
                 this.logger.info("ITEM IN TRY: " + item)
             }catch(status_error){
                 this.logger.error(status_error.message);
@@ -41,7 +41,7 @@ module.exports ={
             }
             this.logger.info("ITEM:" + item);
             console.log(util.inspect(item, false, null));
-            /*if(flag == false){
+            if(flag == false){
                 var output = respServer.minecraft_servers[0].display_name + " is currently online with: " + item.players.online + " players online!\n";
                 output += "Players online:\n";
                 for(var i = 0;i<item.players.online;i++){
@@ -49,7 +49,7 @@ module.exports ={
                 }
                 ListEmbed.addField("status: ", output);
                 message.channel.send({ embeds: [ListEmbed]});
-            }*/
+            }
         }else{
             message.channel.send({ content: "Sorry, couldn't find a server with that shortname, try /listmc for a list of all servers."});
         }
