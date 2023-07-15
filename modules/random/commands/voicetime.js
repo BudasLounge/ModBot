@@ -129,7 +129,7 @@ module.exports = {
         const api = extra.api;
         this.logger.info("Gathering all voice timings");
         try {
-        const respVoice = await api.get("voice_tracking", {
+        var respVoice = await api.get("voice_tracking", {
             discord_server_id: message.guild.id,
         });
         } catch (error) {
