@@ -27,7 +27,7 @@ async function onButtonClick(button){
                 var flag = false;
                 for(var j = 0;j<totalTime.length;j++){
                     if(totalTime[j][0] == respVoice.voice_trackings[i].username){
-                        logger.info("Adding to existing row.")
+                        //logger\.info\("Adding to existing row\."\)
                         totalTime[j][1] += Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))
                         flag = true;
                         break;
@@ -136,7 +136,7 @@ async function onButtonClick(button){
             var flag = false;
             for(var j = 0;j<totalTime.length;j++){
                 if(totalTime[j][0] == respVoice.voice_trackings[i].username){
-                    logger.info("Adding to existing row.")
+                    //logger\.info\("Adding to existing row\."\)
                     totalTime[j][1] += Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))
                     flag = true;
                     break;
@@ -249,7 +249,7 @@ async function onButtonClick(button){
             var flag = false;
             for(var j = 0;j<totalTime.length;j++){
                 if(totalTime[j][0] == respVoice.voice_trackings[i].username){
-                    logger.info("Adding to existing row.")
+                    //logger\.info\("Adding to existing row\."\)
                     totalTime[j][1] += Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))
                     flag = true;
                     break;
@@ -358,7 +358,7 @@ async function onButtonClick(button){
             var flag = false;
             for(var j = 0;j<totalTime.length;j++){
                 if(totalTime[j][0] == respVoice.voice_trackings[i].username){
-                    logger.info("Adding to existing row.")
+                    //logger\.info\("Adding to existing row\."\)
                     totalTime[j][1] += Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))
                     flag = true;
                     break;
@@ -470,7 +470,7 @@ async function onButtonClick(button){
                 var flag = false;
                 for(var j = 0;j<totalTime.length;j++){
                     if(totalTime[j][0] == respVoice.voice_trackings[i].username + ", channel: " + channelName.name){
-                        logger.info("Adding to existing row.")
+                        //logger\.info\("Adding to existing row\."\)
                         totalTime[j][1] += Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))
                         flag = true;
                         break;
@@ -578,7 +578,7 @@ async function onButtonClick(button){
             var flag = false;
             for(var j = 0;j<totalTime.length;j++){
                 if(totalTime[j][0] == channelNameUse.name){
-                    logger.info("Adding to existing row.")
+                    //logger\.info\("Adding to existing row\."\)
                     totalTime[j][1] += Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))
                     flag = true;
                     break;
@@ -693,7 +693,7 @@ async function onButtonClick(button){
             var flag = false;
             for(var j = 0;j<totalTime.length;j++){
                 if(totalTime[j][0] == respVoice.voice_trackings[i].username){
-                    logger.info("Adding to existing row.")
+                    //logger\.info\("Adding to existing row\."\)
                     totalTime[j][1] += Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))
                     flag = true;
                     break;
@@ -809,7 +809,7 @@ async function onButtonClick(button){
             logger.info("Connect Time: " + parseInt(respVoice.voice_trackings[i].connect_time) + ", Disconnect Time: " + parseInt(respVoice.voice_trackings[i].disconnect_time));
             for(var j = 0;j<totalTime.length;j++){
                 if(totalTime[j][0] == respVoice.voice_trackings[i].username){
-                    logger.info("Adding to existing row.")
+                    //logger\.info\("Adding to existing row\."\)
                     totalTime[j][1] += Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))
                     flag = true;
                     break;
