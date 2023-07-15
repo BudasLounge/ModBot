@@ -661,7 +661,7 @@ async function onButtonClick(button){
        
         case "channelUse":
             logger.info("Gathering all voice timings");
-        try{
+        /*try{
             var respVoice = await api.get("voice_tracking",{
                 discord_server_id:button.guild.id,
                 selfmute:false
@@ -766,7 +766,115 @@ async function onButtonClick(button){
                 .setDisabled("true"),
         );
         await button.update({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
-        logger.info("Sent Voice Leaderboard!")
+        logger.info("Sent Voice Leaderboard!")*/
+        try {
+            const respVoice = await api.get("voice_tracking", {
+              discord_server_id: button.guild.id,
+              selfmute: false
+            });
+          
+            if (!respVoice.voice_trackings[0]) {
+              await button.channel.send({ content: "There is no data available yet..." });
+              return;
+            }
+          
+            const totalTime = new Map();
+            const currentTime = Math.floor(new Date().getTime() / 1000);
+          
+            for (const voiceTracking of respVoice.voice_trackings) {
+              let channelNameUse = button.guild.channels.cache.get(voiceTracking.channel_id);
+          
+              if (!channelNameUse) {
+                // Skip if the channel doesn't exist
+                continue;
+              }
+          
+              const disconnectTime = parseInt(voiceTracking.disconnect_time) || currentTime;
+              const connectionTime = Math.floor(disconnectTime - parseInt(voiceTracking.connect_time));
+          
+              const channelName = channelNameUse.name;
+              if (totalTime.has(channelName)) {
+                totalTime.set(channelName, totalTime.get(channelName) + connectionTime);
+              } else {
+                totalTime.set(channelName, connectionTime);
+              }
+            }
+          
+            console.table([...totalTime]);
+          
+            const sortedTotalTime = [...totalTime].sort((a, b) => b[1] - a[1]);
+          
+            const ListEmbed = new MessageEmbed()
+              .setColor("#c586b6")
+              .setTitle("Voice Channel Leaderboard (Top 10 Channels by use)");
+          
+            const count = Math.min(10, sortedTotalTime.length);
+          
+            for (let i = 0; i < count; i++) {
+              const [channelName, time] = sortedTotalTime[i];
+              let diff = time;
+              const units = [
+                { d: 60, l: "seconds" },
+                { d: 60, l: "minutes" },
+                { d: 24, l: "hours" },
+                { d: 1000, l: "days" }
+              ];
+          
+              let s = "";
+              for (let i = 0; i < units.length; ++i) {
+                s = `${diff % units[i].d} ${units[i].l} ${s}`;
+                diff = Math.floor(diff / units[i].d);
+              }
+          
+              ListEmbed.addField(`${i + 1}. ${channelName}`, s);
+            }
+          
+            const timingFilters = new MessageActionRow().addComponents(
+              new MessageButton()
+                .setCustomId("non-muted")
+                .setLabel("Non-muted times only")
+                .setStyle("PRIMARY")
+                .setDisabled(false),
+              new MessageButton()
+                .setCustomId("muted")
+                .setLabel("Muted times only")
+                .setStyle("PRIMARY")
+                .setDisabled(false),
+              new MessageButton()
+                .setCustomId("top")
+                .setLabel("Top Talkers")
+                .setStyle("PRIMARY")
+                .setDisabled(false)
+            );
+          
+            const timingFilters2 = new MessageActionRow().addComponents(
+              new MessageButton()
+                .setCustomId("30days")
+                .setLabel("Top - Last 30 Days")
+                .setStyle("PRIMARY")
+                .setDisabled(false),
+              new MessageButton()
+                .setCustomId("7days")
+                .setLabel("Top - Last 7 Days")
+                .setStyle("PRIMARY")
+                .setDisabled(false),
+              new MessageButton()
+                .setCustomId("channel")
+                .setLabel("Top Talkers - By Channel")
+                .setStyle("PRIMARY")
+                .setDisabled(false),
+              new MessageButton()
+                .setCustomId("channelUse")
+                .setLabel("Top Channels by use")
+                .setStyle("PRIMARY")
+                .setDisabled(true)
+            );
+          
+            await button.update({ components: [timingFilters, timingFilters2], embeds: [ListEmbed] });
+            console.info("Sent Voice Leaderboard!");
+          } catch (error) {
+            console.error(error);
+          }
         break;
         
         
