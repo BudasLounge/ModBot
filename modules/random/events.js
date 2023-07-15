@@ -565,6 +565,10 @@ async function onButtonClick(button){
           
             for (const voiceTracking of respVoice.voice_trackings) {
               const channelName = button.guild.channels.cache.get(voiceTracking.channel_id);
+              if (!channelName) {
+                // Skip if the channel doesn't exist
+                continue;
+              }
               const disconnectTime = parseInt(voiceTracking.disconnect_time) || currentTime;
           
               const usernameChannel = `${voiceTracking.username}, channel: ${channelName.name}`;
