@@ -28,15 +28,14 @@ module.exports = {
       data[fieldToUpdate] = newValue;
       const respUpdate = await api.put('minecraft_server', data);
       if (respUpdate.ok == true) {
-        const server = respUpdate.minecraft_server;
         const changedInfo = `
-            short_name: ${server.short_name}
-            display_name: ${server.display_name}
-            server_ip + port: ${server.server_ip}
-            numeric_ip: ${server.numeric_ip}:${server.port}
-            status_api_port: ${server.status_api_port}
-            mc_version: ${server.mc_version}
-            pack_version: ${server.pack_version}
+            short_name: ${respServer.minecraft_servers[0].short_name}
+            display_name: ${respServer.minecraft_servers[0].display_name}
+            server_ip + port: ${respServer.minecraft_servers[0].server_ip}
+            numeric_ip: ${respServer.minecraft_servers[0].numeric_ip}:${server.port}
+            status_api_port: ${respServer.minecraft_servers[0].status_api_port}
+            mc_version: ${respServer.minecraft_servers[0].mc_version}
+            pack_version: ${respServer.minecraft_servers[0].pack_version}
             vvvvv has been changed to vvvvv
             short_name: ${respUpdate.minecraft_server.short_name}
             display_name: ${respUpdate.minecraft_server.display_name}
