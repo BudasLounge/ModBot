@@ -47,7 +47,7 @@ module.exports = {
 
         const listEmbed = new Discord.MessageEmbed()
           .setColor('#f92f03')
-          .setTitle('Here\'s what changed: ')
+          .setTitle('Here\'s what changed: \n' + fieldToUpdate)
           .addField('A post function update: ', changedInfo);
         message.channel.send({ embeds: [listEmbed] });
       }
