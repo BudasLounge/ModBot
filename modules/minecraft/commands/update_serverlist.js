@@ -32,7 +32,7 @@ module.exports = {
             short_name: ${respServer.minecraft_servers[0].short_name}
             display_name: ${respServer.minecraft_servers[0].display_name}
             server_ip + port: ${respServer.minecraft_servers[0].server_ip}
-            numeric_ip: ${respServer.minecraft_servers[0].numeric_ip}:${server.port}
+            numeric_ip: ${respServer.minecraft_servers[0].numeric_ip}:${respServer.minecraft_servers[0].port}
             status_api_port: ${respServer.minecraft_servers[0].status_api_port}
             mc_version: ${respServer.minecraft_servers[0].mc_version}
             pack_version: ${respServer.minecraft_servers[0].pack_version}
