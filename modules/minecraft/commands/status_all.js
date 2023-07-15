@@ -58,6 +58,7 @@ module.exports = {
     });
     this.logger.info('<<display_all_servers_status');*/
     const { performance } = require('perf_hooks');
+    const perfStart = performance.now();
     const Discord = require('discord.js');
     const axios = require('axios');
     const pinger = require('minecraft-ping-js');
