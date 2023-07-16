@@ -1476,7 +1476,7 @@ async function onButtonClick(button){
                             .addComponents(
                                 new MessageButton()
                                     .setCustomId('GAMErandomize-'+hostId)
-                                    .setLabel('Join')
+                                    .setLabel('Randomize Teams')
                                     .setStyle('SECONDARY'),
                             );
                         var row2 = new MessageActionRow()
