@@ -1461,7 +1461,7 @@ async function onButtonClick(button){
                             team1.push(playersList[random]);
                             playersList.splice(random,1);
                         }
-                        team2 = playersList;
+                        team2 = [...playersList];
                         var guild = button.guild;
                         var host = await guild.members.fetch(hostId);
                         var ListEmbed = new MessageEmbed()
