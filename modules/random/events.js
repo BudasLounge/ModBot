@@ -1464,7 +1464,7 @@ async function onButtonClick(button){
                         team2 = playersList;
                         logger.info("Team 1: " + team1);
                         logger.info("Team 2: " + team2);
-                        logger.info("PlayerList: " + playerList)
+                        logger.info("PlayerList: " + playersList)
                         var guild = button.guild;
                         var host = await guild.members.fetch(hostId);
                         var ListEmbed = new MessageEmbed()
