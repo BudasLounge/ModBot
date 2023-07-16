@@ -1159,10 +1159,23 @@ async function onButtonClick(button){
                         button.channel.send({ content: "There is no game currently available..."}) 
                         return;
                     }
+                    var respGamePlayer;
+                    try{
+                        respGamePlayer = await api.get("game_joining_player", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id),
+                            player_id:button.member.id
+                        })
+                    }catch(error){
+                        logger.error(error);
+                    }
+                    if(!respGamePlayer.game_joining_players[0]){
+                        button.channel.send({ content: "You are not currently in this game..."})
+                        return;
+                    }
                     var respGameLeave;
                     try{
                         respGameLeave = await api.delete("game_joining_player", {
-                            game_player_id:parseInt(respGame.game_joining_masters[0].game_player_id)
+                            game_player_id:parseInt(respGamePlayer.game_joining_players[0].game_player_id)
                         })
                     }catch(error){
                         logger.error(error);
