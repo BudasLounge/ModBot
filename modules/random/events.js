@@ -1492,6 +1492,11 @@ async function onButtonClick(button){
                             );
                         button.update({ embeds: [ListEmbed], components: [row, row2] })
                     }
+                    break;
+                case "default":
+                    logger.info("Default case hit, this should never happen");
+                    break;
+                    //todo: add ability for host to select channels for the teams to get moved to
             }
         }
 }
