@@ -1143,7 +1143,46 @@ async function onButtonClick(button){
                         logger.error(error);
                         button.channel.send({ content: "There was an error adding you to the game..."})
                     }
-                    button.channel.send({ content: `<@${button.member.id}> has been added to the game!`})
+                    var respPlayersList;
+                    try{
+                        respPlayersList = await api.get("game_joining_player", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id)
+                        })
+                    }catch(error){
+                        logger.error(error);
+                    }
+                    var playersList = "";
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        playersList += "<@" + respPlayersList.game_joining_players[i].player_id + ">\n";
+                    }
+                    const ListEmbed = new MessageEmbed()
+                        .setColor("#c586b6")
+                        .setTitle(`${message.member.displayName}'s game menu.`);
+                        ListEmbed.addField("Info about the buttons:", "Host is not added to their own game by default, but can join if they want to.\n\nBlurple buttons = anyone can interact\nGray buttons = only host can interact");
+                        ListEmbed.addField("Current Players:", playersList);
+                        const row = new MessageActionRow()
+                        .addComponents(
+                            new MessageButton()
+                                .setCustomId('GAMEjoin-'+message.member.id)
+                                .setLabel('Join')
+                                .setStyle('PRIMARY'),
+                            new MessageButton()
+                                .setCustomId('GAMEleave-'+message.member.id)
+                                .setLabel('Leave')
+                                .setStyle('PRIMARY'),
+                        );
+                        const row2 = new MessageActionRow()
+                        .addComponents(
+                            new MessageButton()
+                                .setCustomId('GAMEstart-'+message.member.id)
+                                .setLabel('Start')
+                                .setStyle('SECONDARY'),
+                            new MessageButton()
+                                .setCustomId('GAMEend-'+message.member.id)
+                                .setLabel('End')
+                                .setStyle('SECONDARY'),
+                        );
+                    button.update({ content: embeds: [ListEmbed], components: [row, row2] })
                     break;
                 case "leave":
                     logger.info("Removing " + button.member.displayName + " from " + hostId + "'s game");
