@@ -1114,7 +1114,7 @@ async function onButtonClick(button){
             var operation = button.customId.substr(0,button.customId.indexOf('-'));
             var hostId = button.customId.substr(button.customId.indexOf('-')+1);
             button.channel.send("Operation: " + operation + ", Host ID: " + hostId);
-            switch(button.customId){
+            switch(operation){
                 case "join":
                     Logger.info("Adding " + button.member.displayName + "to " + hostId + "'s game");
             }
