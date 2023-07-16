@@ -1274,7 +1274,7 @@ async function onButtonClick(button){
                     var ListEmbed = new MessageEmbed()
                         .setColor("#c586b6")
                         .setTitle(`${host.displayName}'s game menu.`);
-                    ListEmbed.addField("Game is starting...", ",Only the host can interact with the menu now");
+                    ListEmbed.addField("Game is starting...", "Only the host can interact with the menu now");
                     ListEmbed.addField("Current Players:", playersList);
                     var row = new MessageActionRow()
                         .addComponents(
@@ -1444,6 +1444,10 @@ async function onButtonClick(button){
                             })
                         }catch(error){
                             logger.error(error);
+                        }
+                        if(respPlayersList.game_joining_players.length<2){
+                            button.channel.send({ content: "There are not enough players to randomize teams..."})
+                            return;
                         }
                         var playersList = [];
                         for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
