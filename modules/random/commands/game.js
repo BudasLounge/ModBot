@@ -8,7 +8,7 @@ module.exports = {
     has_state: false,
     async execute(message, args, extra) {
         var api = extra.api;
-        const Discord = require("discord.js");
+        const { MessageActionRow, MessageButton, MessageEmbed } = require('discord.js');
         var respGame;
                 try{
                     respGame = await api.get("game_joining_master",{
