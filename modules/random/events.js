@@ -1116,7 +1116,7 @@ async function onButtonClick(button){
             button.channel.send("Operation: " + operation + ", Host ID: " + hostId);
             switch(operation){
                 case "join":
-                    Logger.info("Adding " + button.member.displayName + "to " + hostId + "'s game");
+                    logger.info("Adding " + button.member.displayName + "to " + hostId + "'s game");
             }
         }
 }
