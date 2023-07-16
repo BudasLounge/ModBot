@@ -1155,14 +1155,14 @@ async function onButtonClick(button){
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
                         playersList += "<@" + respPlayersList.game_joining_players[i].player_id + ">\n";
                     }
-                    const guild = button.guild;
-                    const host = await guild.members.fetch(hostId);
-                    const ListEmbed = new MessageEmbed()
+                    var guild = button.guild;
+                    var host = await guild.members.fetch(hostId);
+                    var ListEmbed = new MessageEmbed()
                         .setColor("#c586b6")
                         .setTitle(`${host.displayName}'s game menu.`);
                         ListEmbed.addField("Info about the buttons:", "Host is not added to their own game by default, but can join if they want to.\n\nBlurple buttons = anyone can interact\nGray buttons = only host can interact");
                         ListEmbed.addField("Current Players:", playersList);
-                        const row = new MessageActionRow()
+                        var row = new MessageActionRow()
                         .addComponents(
                             new MessageButton()
                                 .setCustomId('GAMEjoin-'+hostId)
@@ -1173,7 +1173,7 @@ async function onButtonClick(button){
                                 .setLabel('Leave')
                                 .setStyle('PRIMARY'),
                         );
-                        const row2 = new MessageActionRow()
+                        var row2 = new MessageActionRow()
                         .addComponents(
                             new MessageButton()
                                 .setCustomId('GAMEstart-'+hostId)
@@ -1225,6 +1225,10 @@ async function onButtonClick(button){
                     button.channel.send({ content: `<@${button.member.id}> has left the game!`})
                     break;
                 case "start":
+                    if(button.member.id != hostId){
+                        button.channel.send({ content: "Only the host can start the game..."})
+                        return;
+                    }
                     logger.info("Starting " + hostId + "'s game");
                     var respGame;
                     try{
@@ -1253,8 +1257,38 @@ async function onButtonClick(button){
                         button.channel.send({ content: "There was an error starting the game..."})
                     }
                     button.channel.send({ content: `The game has been started, new people cannot join!`})
+                    var guild = button.guild;
+                    var host = await guild.members.fetch(hostId);
+                    var ListEmbed = new MessageEmbed()
+                        .setColor("#c586b6")
+                        .setTitle(`${host.displayName}'s game menu.`);
+                    ListEmbed.addField("Game is starting...", ",Only the host can interact with the menu now");
+                    ListEmbed.addField("Current Players:", playersList);
+                    var row = new MessageActionRow()
+                        .addComponents(
+                            new MessageButton()
+                                .setCustomId('GAMErandomize-'+hostId)
+                                .setLabel('Join')
+                                .setStyle('SECONDARY'),
+                        );
+                    var row2 = new MessageActionRow()
+                        .addComponents(
+                            new MessageButton()
+                                .setCustomId('GAMEend-'+hostId)
+                                .setLabel('End')
+                                .setStyle('SECONDARY'),
+                            new MessageButton()
+                                .setCustomId('GAMEreopen-'+hostId)
+                                .setLabel('Re-open game')
+                                .setStyle('SECONDARY'),
+                        );
+                    button.update({ embeds: [ListEmbed], components: [row, row2] })
                     break;
                 case "end":
+                    if(button.member.id != hostId){
+                        button.channel.send({ content: "Only the host can end the game..."})
+                        return;
+                    }
                     logger.info("Ending " + hostId + "'s game");
                     var respGame;
                     try{
@@ -1268,7 +1302,7 @@ async function onButtonClick(button){
                         button.channel.send({ content: "There is no game currently available..."}) 
                         return;
                     }
-                    if(respGame.game_joining_masters[0].status === "open"){
+                    if(respGame.game_joining_masters[0].status === "open" || respGame.game_joining_masters[0].status === "started"){
                         var respPlayersList;
                         try{
                             respPlayersList = await api.get("game_joining_player", {
@@ -1297,6 +1331,137 @@ async function onButtonClick(button){
                         }
                         button.channel.send({ content: `The game has been ended and everyone was removed from the party!`})
                     }
+                    break;
+                case "reopen":
+                    if(button.member.id != hostId){
+                        button.channel.send({ content: "Only the host can re-open the game..."})
+                        return;
+                    }
+                    logger.info("Re-opening " + hostId + "'s game");
+                    var respGame;
+                    try{
+                        respGame = await api.get("game_joining_master", {
+                            host_id:hostId
+                        })
+                    }catch(error){
+                        logger.error(error);
+                    }
+                    if(!respGame.game_joining_masters[0]){
+                        button.channel.send({ content: "There is no game currently available..."}) 
+                        return;
+                    }
+                    if(respGame.game_joining_masters[0].status === "started"){
+                        var respGameStart;
+                        try{
+                            respGameStart = await api.put("game_joining_master", {
+                                game_id:parseInt(respGame.game_joining_masters[0].game_id),
+                                status:"open"
+                            })
+                        }catch(error){
+                            logger.error(error);
+                            button.channel.send({ content: "There was an error re-opening the game..."})
+                        }
+                        button.channel.send({ content: `The game has been re-opened, new people can join!`})
+                        var guild = button.guild;
+                        var host = await guild.members.fetch(hostId);
+                        var ListEmbed = new MessageEmbed()
+                            .setColor("#c586b6")
+                            .setTitle(`${host.displayName}'s game menu.`);
+                        ListEmbed.addField("Info about the buttons:", "Host is not added to their own game by default, but can join if they want to.\n\nBlurple buttons = anyone can interact\nGray buttons = only host can interact");
+                        ListEmbed.addField("Current Players:", playersList);
+                        var row = new MessageActionRow()
+                            .addComponents(
+                                new MessageButton()
+                                    .setCustomId('GAMEjoin-'+hostId)
+                                    .setLabel('Join')
+                                    .setStyle('PRIMARY'),
+                                new MessageButton()
+                                    .setCustomId('GAMEleave-'+hostId)
+                                    .setLabel('Leave')
+                                    .setStyle('PRIMARY'),
+                            );
+                        var row2 = new MessageActionRow()
+                            .addComponents(
+                                new MessageButton()
+                                    .setCustomId('GAMEstart-'+hostId)
+                                    .setLabel('Start')
+                                    .setStyle('SECONDARY'),
+                                new MessageButton()
+                                    .setCustomId('GAMEend-'+hostId)
+                                    .setLabel('End')
+                                    .setStyle('SECONDARY'),
+                            );
+                        button.update({ embeds: [ListEmbed], components: [row, row2] })
+                    }
+                    break;
+                case "randomize":
+                    if(button.member.id != hostId){
+                        button.channel.send({ content: "Only the host can randomize the game..."})
+                        return;
+                    }
+                    logger.info("Randomizing " + hostId + "'s game");
+                    var respGame;
+                    try{
+                        respGame = await api.get("game_joining_master", {
+                            host_id:hostId
+                        })
+                    }catch(error){
+                        logger.error(error);
+                    }
+                    if(!respGame.game_joining_masters[0]){
+                        button.channel.send({ content: "There is no game currently available..."}) 
+                        return;
+                    }
+                    if(respGame.game_joining_masters[0].status === "started"){
+                        var respPlayersList;
+                        try{
+                            respPlayersList = await api.get("game_joining_player", {
+                                game_id:parseInt(respGame.game_joining_masters[0].game_id)
+                            })
+                        }catch(error){
+                            logger.error(error);
+                        }
+                        var playersList = [];
+                        for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                            playersList.push(respPlayersList.game_joining_players[i].player_id);
+                        }
+                        var team1 = [];
+                        var team2 = [];
+                        var maxTeamSize = Math.floor(playersList.length/2);
+                        for(var i = 0;i<maxTeamSize;i++){
+                            var random = Math.floor(Math.random() * playersList.length);
+                            team1.push(playersList[random]);
+                            playersList.splice(random,1);
+                        }
+                        team2 = playersList;
+                        var guild = button.guild;
+                        var host = await guild.members.fetch(hostId);
+                        var ListEmbed = new MessageEmbed()
+                            .setColor("#c586b6")
+                            .setTitle(`${host.displayName}'s game menu.`);
+                        ListEmbed.addField("Game is starting...", ",Only the host can interact with the menu now");
+                        ListEmbed.addField("Team 1:", team1);
+                        ListEmbed.addField("Team 2:", team2);
+                        var row = new MessageActionRow()
+                            .addComponents(
+                                new MessageButton()
+                                    .setCustomId('GAMErandomize-'+hostId)
+                                    .setLabel('Join')
+                                    .setStyle('SECONDARY'),
+                            );
+                        var row2 = new MessageActionRow()
+                            .addComponents(
+                                new MessageButton()
+                                    .setCustomId('GAMEend-'+hostId)
+                                    .setLabel('End')
+                                    .setStyle('SECONDARY'),
+                                new MessageButton()
+                                    .setCustomId('GAMEreopen-'+hostId)
+                                    .setLabel('Re-open game')
+                                    .setStyle('SECONDARY'),
+                            );
+                        button.update({ embeds: [ListEmbed], components: [row, row2] })
+
             }
         }
 }
