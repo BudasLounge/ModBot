@@ -1470,8 +1470,8 @@ async function onButtonClick(button){
                             .setColor("#c586b6")
                             .setTitle(`${host.displayName}'s game menu.`);
                         ListEmbed.addField("Game is starting...", ",Only the host can interact with the menu now");
-                        ListEmbed.addField("Team 1:", playersList);
-                        ListEmbed.addField("Team 2:", team2);
+                        ListEmbed.addField("Team 1:", playersList.join("\n"));
+                        ListEmbed.addField("Team 2:", team2.join("\n"));
                         var row = new MessageActionRow()
                             .addComponents(
                                 new MessageButton()
