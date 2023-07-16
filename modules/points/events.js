@@ -3,14 +3,11 @@ var api = new ApiClient();
 
 async function onButtonClick(button){
 if (button.isButton() || button.isSelectMenu()){
-    if(button.customId.length<=12) return;
-    if(button.customId.substring(0,3)==="ID-") return;
-    if(button.customId==="CAMPAIGNCREATOR") return;
-    if(button.customId==="MCSERVERCREATOR") return;
-    if(button.customId==="MCSERVERDELETOR") return;
+    if(!button.customId.substring(0,4)==="BETS") return;
 if(button.isButton()){
     const {MessageEmbed} = require('discord.js');
     const moment = require("moment");
+    button.CustomId = button.CustomId.slice(5)
     var serial = button.customId.substring(0,10);
     var stance = await button.customId.substring(button.customId.indexOf('-')+1, button.customId.indexOf('-')+3);
     var bet_amount = 0;

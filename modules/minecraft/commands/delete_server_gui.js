@@ -15,7 +15,7 @@ module.exports = {
             const modalStarter = new MessageActionRow()
             .addComponents(
                 new MessageButton()
-                .setCustomId("MCSERVERDELETOR")
+                .setCustomId("MINE-SERVERDELETOR")
                 .setLabel("Click here to start the Server Deleting tool!")
                 .setStyle('PRIMARY')
                 .setDisabled("false"),

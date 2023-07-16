@@ -78,22 +78,22 @@ module.exports = {
         const timingFilters = new MessageActionRow()
         .addComponents(
             new MessageButton()
-                .setCustomId("non-muted")
+                .setCustomId("VOICEnon-muted")
                 .setLabel("Non-muted times only")
                 .setStyle('PRIMARY')
                 .setDisabled("false"),
             new MessageButton()
-                .setCustomId("muted")
+                .setCustomId("VOICEmuted")
                 .setLabel("Muted times only")
                 .setStyle('PRIMARY')
                 .setDisabled("false"),
             new MessageButton()
-                .setCustomId("lonely")
+                .setCustomId("VOICElonely")
                 .setLabel("Alone times only")
                 .setStyle('PRIMARY')
                 .setDisabled("true"),
             new MessageButton()
-                .setCustomId("bottom")
+                .setCustomId("VOICEbottom")
                 .setLabel("Bottom Talkers")
                 .setStyle('PRIMARY')
                 .setDisabled("false"),
@@ -101,22 +101,22 @@ module.exports = {
         const timingFilters2 = new MessageActionRow()
         .addComponents(
             new MessageButton()
-                .setCustomId("30days")
+                .setCustomId("VOICE30days")
                 .setLabel("Top - Last 30 Days")
                 .setStyle('PRIMARY')
                 .setDisabled("false"),
             new MessageButton()
-                .setCustomId("7days")
+                .setCustomId("VOICE7days")
                 .setLabel("Top - Last 7 Days")
                 .setStyle('PRIMARY')
                 .setDisabled("false"),
                 new MessageButton()
-                .setCustomId("channel")
+                .setCustomId("VOICEchannel")
                 .setLabel("Top Talkers - By Channel")
                 .setStyle('PRIMARY')
                 .setDisabled("false"),
                 new MessageButton()
-                .setCustomId("channelUse")
+                .setCustomId("VOICEchannelUse")
                 .setLabel("Top Channels by use")
                 .setStyle('PRIMARY')
                 .setDisabled("false"),
@@ -197,22 +197,22 @@ module.exports = {
         const timingFilters = new MessageActionRow()
         .addComponents(
             new MessageButton()
-            .setCustomId("non-muted")
+            .setCustomId("VOICEnon-muted")
             .setLabel("Non-muted times only")
             .setStyle('PRIMARY')
             .setDisabled(false),
             new MessageButton()
-            .setCustomId("muted")
+            .setCustomId("VOICEmuted")
             .setLabel("Muted times only")
             .setStyle('PRIMARY')
             .setDisabled(false),
             new MessageButton()
-            .setCustomId("lonely")
+            .setCustomId("VOICElonely")
             .setLabel("Alone times only")
             .setStyle('PRIMARY')
             .setDisabled(true),
             new MessageButton()
-            .setCustomId("bottom")
+            .setCustomId("VOICEbottom")
             .setLabel("Bottom Talkers")
             .setStyle('PRIMARY')
             .setDisabled(false),
@@ -221,22 +221,22 @@ module.exports = {
         const timingFilters2 = new MessageActionRow()
         .addComponents(
             new MessageButton()
-            .setCustomId("30days")
+            .setCustomId("VOICE30days")
             .setLabel("Top - Last 30 Days")
             .setStyle('PRIMARY')
             .setDisabled(false),
             new MessageButton()
-            .setCustomId("7days")
+            .setCustomId("VOICE7days")
             .setLabel("Top - Last 7 Days")
             .setStyle('PRIMARY')
             .setDisabled(false),
             new MessageButton()
-            .setCustomId("channel")
+            .setCustomId("VOICEchannel")
             .setLabel("Top Talkers - By Channel")
             .setStyle('PRIMARY')
             .setDisabled(false),
             new MessageButton()
-            .setCustomId("channelUse")
+            .setCustomId("VOICEchannelUse")
             .setLabel("Top Channels by use")
             .setStyle('PRIMARY')
             .setDisabled(false),

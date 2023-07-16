@@ -4,7 +4,7 @@ const {MessageActionRow, MessageButton, MessageEmbed, MessageSelectMenu} = requi
 
 async function onButtonClick(button){
     if (button.isButton()){
-        if(button.customId.length>=13) return;
+        if(!button.customId.substr(0,6)==="VOICE") return;
         switch(button.customId){
         case "bottom":
             logger.info("Gathering all voice timings");

@@ -15,7 +15,7 @@ module.exports = {
             const modalStarter = new MessageActionRow()
             .addComponents(
                 new MessageButton()
-                .setCustomId("MCSERVERCREATOR")
+                .setCustomId("MINE-SERVERCREATOR")
                 .setLabel("Click here to start the Server Adding tool!")
                 .setStyle('PRIMARY')
                 .setDisabled("false"),

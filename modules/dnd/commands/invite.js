@@ -72,11 +72,11 @@ module.exports = {
         const row = new MessageActionRow()
             .addComponents(
                 new MessageButton()
-                    .setCustomId("ID-"+invitedPlayer+"_A"+respFoundCampaign.dnd_campaigns[0].campaign_id)
+                    .setCustomId("DNDID-"+invitedPlayer+"_A"+respFoundCampaign.dnd_campaigns[0].campaign_id)
                     .setLabel('Accept')
                     .setStyle('SUCCESS'),
                 new MessageButton()
-                    .setCustomId("ID-"+invitedPlayer+"_D"+respFoundCampaign.dnd_campaigns[0].campaign_id)
+                    .setCustomId("DNDID-"+invitedPlayer+"_D"+respFoundCampaign.dnd_campaigns[0].campaign_id)
                     .setLabel('Deny')
                     .setStyle('DANGER'),
             )
