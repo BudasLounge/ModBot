@@ -1341,6 +1341,8 @@ async function onButtonClick(button){
                             logger.error(error);
                             button.channel.send({ content: "There was an error ending the game..."})
                         }
+                        var guild = button.guild;
+                        var host = await guild.members.fetch(hostId);
                         var ListEmbed = new MessageEmbed()
                             .setColor("#c586b6")
                             .setTitle(`${host.displayName}'s game has ended.`);
