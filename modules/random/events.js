@@ -1469,7 +1469,7 @@ async function onButtonClick(button){
                         var ListEmbed = new MessageEmbed()
                             .setColor("#c586b6")
                             .setTitle(`${host.displayName}'s game menu.`);
-                        ListEmbed.addField("Game is starting...", ",Only the host can interact with the menu now");
+                        ListEmbed.addField("Game is randomized!", "Only the host can interact with the menu now");
                         ListEmbed.addField("Team 1:", playersList.join("\n"));
                         ListEmbed.addField("Team 2:", team2.join("\n"));
                         var row = new MessageActionRow()
