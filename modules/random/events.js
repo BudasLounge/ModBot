@@ -1113,7 +1113,7 @@ async function onButtonClick(button){
             button.customId = button.customId.substr(4);
             var operation = button.customId.substr(0,button.customId.indexOf('-'));
             var hostId = button.customId.substr(button.customId.indexOf('-')+1);
-            button.channel.send("Operation: " + operation + ", Host ID: " + hostId);
+            //button.channel.send("Operation: " + operation + ", Host ID: " + hostId);
             switch(operation){
                 case "join":
                     logger.info("Adding " + button.member.displayName + " to " + hostId + "'s game");
@@ -1162,8 +1162,7 @@ async function onButtonClick(button){
                     var respGameLeave;
                     try{
                         respGameLeave = await api.delete("game_joining_player", {
-                            game_id:parseInt(respGame.game_joining_masters[0].game_id),
-                            player_id:button.member.id
+                            game_player_id:parseInt(respGame.game_joining_masters[0].game_player_id)
                         })
                     }catch(error){
                         logger.error(error);
