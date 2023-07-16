@@ -1111,7 +1111,7 @@ async function onButtonClick(button){
     }
         }else if((button.customId.substr(0,4)==="GAME")){
             button.customId = button.customId.substr(4);
-            var operation = button.customId.substr(0,button.customId.indexOf('-')+1);
+            var operation = button.customId.substr(0,button.customId.indexOf('-'));
             var hostId = button.customId.substr(button.customId.indexOf('-')+1);
             button.channel.send("Operation: " + operation + ", Host ID: " + hostId);
             switch(button.customId){
