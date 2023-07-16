@@ -1130,7 +1130,7 @@ async function onButtonClick(button){
                         return;
                     }
                     if(!respGame.game_joining_masters[0].status === "open"){
-                        button.channel.send({ content: "That game is not currently open..."}) 
+                        button.channel.send({ content: "That game is not currently open...", ephemeral: true}) 
                         return;
                     }
                     var respGameJoin;
@@ -1226,7 +1226,7 @@ async function onButtonClick(button){
                     break;
                 case "start":
                     if(button.member.id != hostId){
-                        button.channel.send({ content: "Only the host can start the game..."})
+                        button.channel.send({ content: "Only the host can start the game...", ephemeral: true})
                         return;
                     }
                     logger.info("Starting " + hostId + "'s game");
@@ -1298,7 +1298,7 @@ async function onButtonClick(button){
                     break;
                 case "end":
                     if(button.member.id != hostId){
-                        button.channel.send({ content: "Only the host can end the game..."})
+                        button.channel.send({ content: "Only the host can end the game...", ephemeral: true})
                         return;
                     }
                     logger.info("Ending " + hostId + "'s game");
@@ -1346,7 +1346,7 @@ async function onButtonClick(button){
                     break;
                 case "reopen":
                     if(button.member.id != hostId){
-                        button.channel.send({ content: "Only the host can re-open the game..."})
+                        button.channel.send({ content: "Only the host can re-open the game...", ephemeral: true})
                         return;
                     }
                     logger.info("Re-opening " + hostId + "'s game");
@@ -1420,7 +1420,7 @@ async function onButtonClick(button){
                     break;
                 case "randomize":
                     if(button.member.id != hostId){
-                        button.channel.send({ content: "Only the host can randomize the game..."})
+                        button.channel.send({ content: "Only the host can randomize the game...", ephemeral: true})
                         return;
                     }
                     logger.info("Randomizing " + hostId + "'s game");
@@ -1497,7 +1497,12 @@ async function onButtonClick(button){
                     logger.info("Default case hit, this should never happen");
                     break;
                     //todo: add ability for host to select channels for the teams to get moved to
-            }
+                    //todo: if  players leave, update the playerlist
+                    //todo: when pressing leave, fix interaction failed
+                    //todo: when game ends, interaction failed fix, update playerslist
+                    //todo: if someone makes a game but already has one open, close the old one and make a new one if it has been more than a certain time since it has been used
+                    //todo: add ephemeral to error messages
+                }
         }
 }
 
