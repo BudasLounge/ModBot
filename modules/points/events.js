@@ -3,7 +3,7 @@ var api = new ApiClient();
 
 async function onButtonClick(button){
 if (button.isButton() || button.isSelectMenu()){
-    if(!button.customId.substring(0,4)==="BETS") return;
+    if(!(button.customId.substring(0,4)==="BETS")) return;
     button.channel.send(button.customId.substring(0,4))
 if(button.isButton()){
     const {MessageEmbed} = require('discord.js');
