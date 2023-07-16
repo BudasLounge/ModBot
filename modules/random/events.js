@@ -1453,19 +1453,17 @@ async function onButtonClick(button){
                         for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
                             playersList.push(respPlayersList.game_joining_players[i].player_id);
                         }
-                        var team1 = [];
                         var team2 = [];
                         
                         logger.info("PlayerList: " + playersList)
                         var maxTeamSize = Math.floor(playersList.length/2);
                         for(var i = 0;i<maxTeamSize;i++){
                             var random = Math.floor(Math.random() * playersList.length);
-                            team1.push(playersList[random]);
+                            team2.push(playersList[random]);
                             playersList.splice(random,1);
                         }
-                        team2 = playersList;
                         logger.info("Team 1: " + team1);
-                        logger.info("Team 2: " + team2);
+                        logger.info("Team 2: " + playersList);
                         var guild = button.guild;
                         var host = await guild.members.fetch(hostId);
                         var ListEmbed = new MessageEmbed()
@@ -1473,7 +1471,7 @@ async function onButtonClick(button){
                             .setTitle(`${host.displayName}'s game menu.`);
                         ListEmbed.addField("Game is starting...", ",Only the host can interact with the menu now");
                         ListEmbed.addField("Team 1:", team1);
-                        ListEmbed.addField("Team 2:", team2);
+                        ListEmbed.addField("Team 2:", playersList);
                         var row = new MessageActionRow()
                             .addComponents(
                                 new MessageButton()
