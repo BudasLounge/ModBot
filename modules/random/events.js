@@ -1110,10 +1110,15 @@ async function onButtonClick(button){
         break;
     }
         }else if((button.customId.substr(0,4)==="GAME")){
-            
+            button.customId = button.customId.substr(4);
+            var operation = button.customId.substr(0,button.customId.indexOf('-')+1);
+            var hostId = button.customId.substr(button.customId.indexOf('-')+1);
+            button.channel.send("Operation: " + operation + ", Host ID: " + hostId);
+            switch(button.customId){
+                case "join":
+                    Logger.info("Adding user to")
+            }
         }
-        //button.channel.send({content: "Coming from Random!"});
-        //button.deferUpdate()
 }
 
 async function userJoinsVoice(oldMember, newMember){

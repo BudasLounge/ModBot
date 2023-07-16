@@ -39,22 +39,22 @@ module.exports = {
                 const row = new MessageActionRow()
                 .addComponents(
                     new MessageButton()
-                        .setCustomId('GAMEjoin')
+                        .setCustomId('GAMEjoin-'+message.member.id)
                         .setLabel('Join')
                         .setStyle('PRIMARY'),
                     new MessageButton()
-                        .setCustomId('GAMEleave')
+                        .setCustomId('GAMEleave-'+message.member.id)
                         .setLabel('Leave')
                         .setStyle('PRIMARY'),
                 );
                 const row2 = new MessageActionRow()
                 .addComponents(
                     new MessageButton()
-                        .setCustomId('GAMEstart')
+                        .setCustomId('GAMEstart-'+message.member.id)
                         .setLabel('Start')
                         .setStyle('SECONDARY'),
                     new MessageButton()
-                        .setCustomId('GAMEend')
+                        .setCustomId('GAMEend-'+message.member.id)
                         .setLabel('End')
                         .setStyle('SECONDARY'),
                 );
