@@ -1461,7 +1461,7 @@ async function onButtonClick(button){
                                     .setStyle('SECONDARY'),
                             );
                         button.update({ embeds: [ListEmbed], components: [row, row2] })
-
+                    }
             }
         }
 }
