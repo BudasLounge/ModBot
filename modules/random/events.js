@@ -1155,9 +1155,11 @@ async function onButtonClick(button){
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
                         playersList += "<@" + respPlayersList.game_joining_players[i].player_id + ">\n";
                     }
+                    const guild = button.guild;
+                    const host = await guild.members.fetch(hostId);
                     const ListEmbed = new MessageEmbed()
                         .setColor("#c586b6")
-                        .setTitle(`${message.member.displayName}'s game menu.`);
+                        .setTitle(`${host.displayName}'s game menu.`);
                         ListEmbed.addField("Info about the buttons:", "Host is not added to their own game by default, but can join if they want to.\n\nBlurple buttons = anyone can interact\nGray buttons = only host can interact");
                         ListEmbed.addField("Current Players:", playersList);
                         const row = new MessageActionRow()
