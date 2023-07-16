@@ -1455,6 +1455,8 @@ async function onButtonClick(button){
                         }
                         var team1 = [];
                         var team2 = [];
+                        
+                        logger.info("PlayerList: " + playersList)
                         var maxTeamSize = Math.floor(playersList.length/2);
                         for(var i = 0;i<maxTeamSize;i++){
                             var random = Math.floor(Math.random() * playersList.length);
@@ -1464,7 +1466,6 @@ async function onButtonClick(button){
                         team2 = playersList;
                         logger.info("Team 1: " + team1);
                         logger.info("Team 2: " + team2);
-                        logger.info("PlayerList: " + playersList)
                         var guild = button.guild;
                         var host = await guild.members.fetch(hostId);
                         var ListEmbed = new MessageEmbed()
