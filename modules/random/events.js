@@ -1341,6 +1341,10 @@ async function onButtonClick(button){
                             logger.error(error);
                             button.channel.send({ content: "There was an error ending the game..."})
                         }
+                        var ListEmbed = new MessageEmbed()
+                            .setColor("#c586b6")
+                            .setTitle(`${host.displayName}'s game has ended.`);
+                        button.update({ embeds: [ListEmbed]})
                         button.channel.send({ content: `The game has been ended and everyone was removed from the party!`})
                     }
                     break;
