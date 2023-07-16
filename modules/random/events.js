@@ -1165,22 +1165,22 @@ async function onButtonClick(button){
                         const row = new MessageActionRow()
                         .addComponents(
                             new MessageButton()
-                                .setCustomId('GAMEjoin-'+message.member.id)
+                                .setCustomId('GAMEjoin-'+hostId)
                                 .setLabel('Join')
                                 .setStyle('PRIMARY'),
                             new MessageButton()
-                                .setCustomId('GAMEleave-'+message.member.id)
+                                .setCustomId('GAMEleave-'+hostId)
                                 .setLabel('Leave')
                                 .setStyle('PRIMARY'),
                         );
                         const row2 = new MessageActionRow()
                         .addComponents(
                             new MessageButton()
-                                .setCustomId('GAMEstart-'+message.member.id)
+                                .setCustomId('GAMEstart-'+hostId)
                                 .setLabel('Start')
                                 .setStyle('SECONDARY'),
                             new MessageButton()
-                                .setCustomId('GAMEend-'+message.member.id)
+                                .setCustomId('GAMEend-'+hostId)
                                 .setLabel('End')
                                 .setStyle('SECONDARY'),
                         );
