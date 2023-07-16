@@ -18,20 +18,22 @@ module.exports = {
                     this.logger.error(error.message);
                 }
                 if(respGame.game_joining_masters[0]){
-                    message.channel.send({ content: "You already have a live game! Close it out with /game end"});
-                }else{
-                    this.logger.info(respGame[0]);
-                    try{
-                        respGame = await api.post("game_joining_master",{
-                            host_id:message.member.id
-                        });
-                    } catch(error2){
-                        this.logger.error(error2.message);
-                    }
-                    if(respGame.ok){
-                        message.channel.send({ content: "Created a game! Others can now join with /game join @host"});
-                    }
+                    message.channel.send({ content: "You already have a live game! Close it out with ,game end"}); return
                 }
-        
+                this.logger.info(respGame[0]);
+                try{
+                    respGame = await api.post("game_joining_master",{
+                        host_id:message.member.id
+                    });
+                } catch(error2){
+                    this.logger.error(error2.message);
+                }
+                if(!respGame.ok){
+                    message.channel.send({ content: "Game creation failed..."});
+                }
+                message.channel.send({ content: "Created a game! Let me pull up the menu for you..."});
+                const ListEmbed = new MessageEmbed()
+                .setColor("#c586b6")
+                .setTitle(`<@${message.member.id}>'s Game Menu.\nOnly the game creator can interact with this menu`);
         }
 };
