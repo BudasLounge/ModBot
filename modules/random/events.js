@@ -1182,7 +1182,7 @@ async function onButtonClick(button){
                                 .setLabel('End')
                                 .setStyle('SECONDARY'),
                         );
-                    button.update({ content: embeds: [ListEmbed], components: [row, row2] })
+                    button.update({ embeds: [ListEmbed], components: [row, row2] })
                     break;
                 case "leave":
                     logger.info("Removing " + button.member.displayName + " from " + hostId + "'s game");
