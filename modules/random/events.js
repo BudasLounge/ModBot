@@ -1256,6 +1256,18 @@ async function onButtonClick(button){
                         logger.error(error);
                         button.channel.send({ content: "There was an error starting the game..."})
                     }
+                    var respPlayersList;
+                    try{
+                        respPlayersList = await api.get("game_joining_player", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id)
+                        })
+                    }catch(error){
+                        logger.error(error);
+                    }
+                    var playersList = "";
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        playersList += "<@" + respPlayersList.game_joining_players[i].player_id + ">\n";
+                    }
                     button.channel.send({ content: `The game has been started, new people cannot join!`})
                     var guild = button.guild;
                     var host = await guild.members.fetch(hostId);
@@ -1360,6 +1372,18 @@ async function onButtonClick(button){
                         }catch(error){
                             logger.error(error);
                             button.channel.send({ content: "There was an error re-opening the game..."})
+                        }
+                        var respPlayersList;
+                        try{
+                            respPlayersList = await api.get("game_joining_player", {
+                                game_id:parseInt(respGame.game_joining_masters[0].game_id)
+                            })
+                        }catch(error){
+                            logger.error(error);
+                        }
+                        var playersList = "";
+                        for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                            playersList += "<@" + respPlayersList.game_joining_players[i].player_id + ">\n";
                         }
                         button.channel.send({ content: `The game has been re-opened, new people can join!`})
                         var guild = button.guild;
