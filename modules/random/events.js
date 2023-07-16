@@ -1116,7 +1116,30 @@ async function onButtonClick(button){
             button.channel.send("Operation: " + operation + ", Host ID: " + hostId);
             switch(operation){
                 case "join":
-                    logger.info("Adding " + button.member.displayName + "to " + hostId + "'s game");
+                    logger.info("Adding " + button.member.displayName + " to " + hostId + "'s game");
+                    var respGame;
+                    try{
+                        respGame = await api.get("game_joining_master", {
+                            host_id:hostId
+                        })
+                    }catch(error){
+                        logger.error(error);
+                    }
+                    if(!respGame.game_joining_masters[0]){
+                        button.channel.send({ content: "There is no game currently available..."}) 
+                        return;
+                    }
+                    var respGameJoin;
+                    try{
+                        respGameJoin = await api.post("game_joining_player", {
+                            game_id:respGame.game_joining_masters[0].game_id,
+                            user_id:button.member.id
+                        })
+                    }catch(error){
+                        logger.error(error);
+                        button.channel.send({ content: "There was an error adding you to the game..."})
+                    }
+                    button.channel.send({ content: "You have been added to the game!"})
             }
         }
 }
