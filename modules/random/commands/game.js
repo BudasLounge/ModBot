@@ -34,7 +34,30 @@ module.exports = {
                 message.channel.send({ content: "Created a game! Let me pull up the menu for you..."});
                 const ListEmbed = new MessageEmbed()
                 .setColor("#c586b6")
-                .setTitle(`${message.member.displayName}'s Game Menu.\nOnly the game creator can interact with this menu`);
-                message.channel.send({embeds: [ListEmbed] });
+                .setTitle(`${message.member.displayName}'s game menu.`);
+                ListEmbed.addField("Info about the buttons:", "Blurple buttons = anyone can interact\nGray buttons = only host can interact");
+                const row = new MessageActionRow()
+                .addComponents(
+                    new MessageButton()
+                        .setCustomId('GAMEjoin')
+                        .setLabel('Join')
+                        .setStyle('PRIMARY'),
+                    new MessageButton()
+                        .setCustomId('GAMEleave')
+                        .setLabel('Leave')
+                        .setStyle('PRIMARY'),
+                );
+                const row2 = new MessageActionRow()
+                .addComponents(
+                    new MessageButton()
+                        .setCustomId('GAMEstart')
+                        .setLabel('Start')
+                        .setStyle('SECONDARY'),
+                    new MessageButton()
+                        .setCustomId('GAMEend')
+                        .setLabel('End')
+                        .setStyle('SECONDARY'),
+                );
+                message.channel.send({embeds: [ListEmbed], components: [row, row2] });
         }
 };
