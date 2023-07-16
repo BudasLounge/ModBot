@@ -1143,7 +1143,7 @@ async function onButtonClick(button){
                         logger.error(error);
                         button.channel.send({ content: "There was an error adding you to the game..."})
                     }
-                    button.channel.send({ content: "You have been added to the game!"})
+                    button.channel.send({ content: `<@${button.member.id}> has been added to the game!`})
                     break;
                 case "leave":
                     logger.info("Removing " + button.member.displayName + " from " + hostId + "'s game");
