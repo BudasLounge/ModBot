@@ -3,8 +3,8 @@ var api = new ApiClient();
 const {MessageActionRow, MessageButton, MessageEmbed, MessageSelectMenu} = require('discord.js');
 
 async function onButtonClick(button){
-    if (button.isButton()){
-        if(!(button.customId.substr(0,5)==="VOICE")) return;
+    if (!button.isButton()){return}
+        if((button.customId.substr(0,5)==="VOICE")){
         button.customId = button.customId.substr(5)
         switch(button.customId){
         case "bottom":
@@ -1108,10 +1108,12 @@ async function onButtonClick(button){
         await button.update({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
         logger.info("Sent Voice Leaderboard!")
         break;
-}
+    }
+        }else if((button.customId.substr(0,4)==="GAME")){
+            
+        }
         //button.channel.send({content: "Coming from Random!"});
         //button.deferUpdate()
-    }
 }
 
 async function userJoinsVoice(oldMember, newMember){
