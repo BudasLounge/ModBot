@@ -1451,7 +1451,7 @@ async function onButtonClick(button){
                         }
                         var playersList = [];
                         for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
-                            playersList.push(respPlayersList.game_joining_players[i].player_id);
+                            playersList.push("<@" + respPlayersList.game_joining_players[i].player_id + ">");
                         }
                         var team2 = [];
                         
@@ -1459,7 +1459,7 @@ async function onButtonClick(button){
                         var maxTeamSize = Math.floor(playersList.length/2);
                         for(var i = 0;i<maxTeamSize;i++){
                             var random = Math.floor(Math.random() * playersList.length);
-                            team2.push("<@" + playersList[random] + ">");
+                            team2.push(playersList[random]);
                             playersList.splice(random,1);
                         }
                         logger.info("Team 1: " + playersList);
