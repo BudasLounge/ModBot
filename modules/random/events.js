@@ -1346,7 +1346,7 @@ async function onButtonClick(button){
                         var ListEmbed = new MessageEmbed()
                             .setColor("#c586b6")
                             .setTitle(`${host.displayName}'s game has ended.`);
-                        button.update({ embeds: [ListEmbed]})
+                        button.update({ embeds: [ListEmbed], components: []})
                         button.channel.send({ content: `The game has been ended and everyone was removed from the party!`})
                     }
                     break;
