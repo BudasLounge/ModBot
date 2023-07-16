@@ -1462,16 +1462,16 @@ async function onButtonClick(button){
                             team2.push(playersList[random]);
                             playersList.splice(random,1);
                         }
-                        logger.info("Team 1: " + team1);
-                        logger.info("Team 2: " + playersList);
+                        logger.info("Team 1: " + playersList);
+                        logger.info("Team 2: " + team2);
                         var guild = button.guild;
                         var host = await guild.members.fetch(hostId);
                         var ListEmbed = new MessageEmbed()
                             .setColor("#c586b6")
                             .setTitle(`${host.displayName}'s game menu.`);
                         ListEmbed.addField("Game is starting...", ",Only the host can interact with the menu now");
-                        ListEmbed.addField("Team 1:", team1);
-                        ListEmbed.addField("Team 2:", playersList);
+                        ListEmbed.addField("Team 1:", playersList);
+                        ListEmbed.addField("Team 2:", team2);
                         var row = new MessageActionRow()
                             .addComponents(
                                 new MessageButton()
