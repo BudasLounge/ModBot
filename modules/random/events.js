@@ -1129,6 +1129,10 @@ async function onButtonClick(button){
                         button.channel.send({ content: "There is no game currently available..."}) 
                         return;
                     }
+                    if(!respGame.game_joining_masters[0].status === "open"){
+                        button.channel.send({ content: "That game is not currently open..."}) 
+                        return;
+                    }
                     var respGameJoin;
                     try{
                         respGameJoin = await api.post("game_joining_player", {
@@ -1140,6 +1144,34 @@ async function onButtonClick(button){
                         button.channel.send({ content: "There was an error adding you to the game..."})
                     }
                     button.channel.send({ content: "You have been added to the game!"})
+                    break;
+                case "leave":
+                    logger.info("Removing " + button.member.displayName + " from " + hostId + "'s game");
+                    var respGame;
+                    try{
+                        respGame = await api.get("game_joining_master", {
+                            host_id:hostId
+                        })
+                    }catch(error){
+                        logger.error(error);
+                    }
+                    if(!respGame.game_joining_masters[0]){
+                        button.channel.send({ content: "There is no game currently available..."}) 
+                        return;
+                    }
+                    var respGameLeave;
+                    try{
+                        respGameLeave = await api.delete("game_joining_player", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id),
+                            player_id:button.member.id
+                        })
+                    }catch(error){
+                        logger.error(error);
+                        button.channel.send({ content: "There was an error removing you from the game..."})
+                    }
+                    button.channel.send({ content: "You have been removed from the game!"})
+                    break;
+                case "start":
             }
         }
 }

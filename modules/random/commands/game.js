@@ -35,7 +35,7 @@ module.exports = {
                 const ListEmbed = new MessageEmbed()
                 .setColor("#c586b6")
                 .setTitle(`${message.member.displayName}'s game menu.`);
-                ListEmbed.addField("Info about the buttons:", "Blurple buttons = anyone can interact\nGray buttons = only host can interact");
+                ListEmbed.addField("Info about the buttons:", "Blurple buttons = anyone can interact\nGray buttons = only host can interact\nHost is not added to their own game by default, but can join if they want to.");
                 const row = new MessageActionRow()
                 .addComponents(
                     new MessageButton()
