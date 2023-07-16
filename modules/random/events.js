@@ -6,6 +6,7 @@ async function onButtonClick(button){
     if (button.isButton()){
         if(!(button.customId.substr(0,5)==="VOICE")) return;
         button.customId = button.customId.substr(5)
+        button.channel.send(button.customId)
         switch(button.customId){
         case "bottom":
             logger.info("Gathering all voice timings");
