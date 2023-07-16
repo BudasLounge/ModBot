@@ -4,8 +4,8 @@ const {MessageActionRow, MessageButton, MessageEmbed, MessageSelectMenu} = requi
 
 async function onButtonClick(button){
     if (button.isButton()){
-        button.channel.send(button.customId + " cut: " + button.customId.substr(0,6))
-        if(!(button.customId.substr(0,6)==="VOICE")) return;
+        if(!(button.customId.substr(0,5)==="VOICE")) return;
+        button.customId = button.customId.substr(5)
         switch(button.customId){
         case "bottom":
             logger.info("Gathering all voice timings");
