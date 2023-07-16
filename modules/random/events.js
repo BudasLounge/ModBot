@@ -1130,7 +1130,7 @@ async function onButtonClick(button){
                         return;
                     }
                     if(!respGame.game_joining_masters[0].status === "open"){
-                        button.channel.send({ content: "That game is not currently open...", ephemeral: true}) 
+                        button.reply({ content: "That game is not currently open...", ephemeral: true}) 
                         return;
                     }
                     var respGameJoin;
@@ -1141,7 +1141,7 @@ async function onButtonClick(button){
                         })
                     }catch(error){
                         logger.error(error);
-                        button.channel.send({ content: "There was an error adding you to the game..."})
+                        button.reply({ content: "There was an error adding you to the game...", ephemeral: true})
                     }
                     var respPlayersList;
                     try{
@@ -1197,7 +1197,7 @@ async function onButtonClick(button){
                         logger.error(error);
                     }
                     if(!respGame.game_joining_masters[0]){
-                        button.channel.send({ content: "There is no game currently available..."}) 
+                        button.reply({ content: "There is no game currently available...", ephemeral: true}) 
                         return;
                     }
                     var respGamePlayer;
@@ -1210,7 +1210,7 @@ async function onButtonClick(button){
                         logger.error(error);
                     }
                     if(!respGamePlayer.game_joining_players[0]){
-                        button.channel.send({ content: "You are not currently in this game..."})
+                        button.reply({ content: "You are not currently in this game...", ephemeral: true})
                         return;
                     }
                     var respGameLeave;
@@ -1226,7 +1226,7 @@ async function onButtonClick(button){
                     break;
                 case "start":
                     if(button.member.id != hostId){
-                        button.channel.send({ content: "Only the host can start the game...", ephemeral: true})
+                        button.reply({ content: "Only the host can start the game...", ephemeral: true})
                         return;
                     }
                     logger.info("Starting " + hostId + "'s game");
@@ -1239,11 +1239,11 @@ async function onButtonClick(button){
                         logger.error(error);
                     }
                     if(!respGame.game_joining_masters[0]){
-                        button.channel.send({ content: "There is no game currently available..."}) 
+                        button.reply({ content: "There is no game currently available...", ephemeral: true}) 
                         return;
                     }
                     if(!respGame.game_joining_masters[0].status === "open"){
-                        button.channel.send({ content: "This game has already started..."}) 
+                        button.reply({ content: "This game has already started...", ephemeral: true}) 
                         return;
                     }
                     var respGameStart;
@@ -1268,7 +1268,7 @@ async function onButtonClick(button){
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
                         playersList += "<@" + respPlayersList.game_joining_players[i].player_id + ">\n";
                     }
-                    button.channel.send({ content: `The game has been started, new people cannot join!`})
+                    button.reply({ content: `The game has been started, new people cannot join!`, ephemeral: true})
                     var guild = button.guild;
                     var host = await guild.members.fetch(hostId);
                     var ListEmbed = new MessageEmbed()
@@ -1298,7 +1298,7 @@ async function onButtonClick(button){
                     break;
                 case "end":
                     if(button.member.id != hostId){
-                        button.channel.send({ content: "Only the host can end the game...", ephemeral: true})
+                        button.reply({ content: "Only the host can end the game...", ephemeral: true})
                         return;
                     }
                     logger.info("Ending " + hostId + "'s game");
@@ -1311,7 +1311,7 @@ async function onButtonClick(button){
                         logger.error(error);
                     }   
                     if(!respGame.game_joining_masters[0]){
-                        button.channel.send({ content: "There is no game currently available..."}) 
+                        button.reply({ content: "There is no game currently available...", ephemeral: true}) 
                         return;
                     }
                     if(respGame.game_joining_masters[0].status === "open" || respGame.game_joining_masters[0].status === "started"){
@@ -1346,7 +1346,7 @@ async function onButtonClick(button){
                     break;
                 case "reopen":
                     if(button.member.id != hostId){
-                        button.channel.send({ content: "Only the host can re-open the game...", ephemeral: true})
+                        button.reply({ content: "Only the host can re-open the game...", ephemeral: true})
                         return;
                     }
                     logger.info("Re-opening " + hostId + "'s game");
@@ -1359,7 +1359,7 @@ async function onButtonClick(button){
                         logger.error(error);
                     }
                     if(!respGame.game_joining_masters[0]){
-                        button.channel.send({ content: "There is no game currently available..."}) 
+                        button.reply({ content: "There is no game currently available...", ephemeral: true}) 
                         return;
                     }
                     if(respGame.game_joining_masters[0].status === "started"){
@@ -1420,7 +1420,7 @@ async function onButtonClick(button){
                     break;
                 case "randomize":
                     if(button.member.id != hostId){
-                        button.channel.send({ content: "Only the host can randomize the game...", ephemeral: true})
+                        button.reply({ content: "Only the host can randomize the game...", ephemeral: true})
                         return;
                     }
                     logger.info("Randomizing " + hostId + "'s game");
@@ -1433,7 +1433,7 @@ async function onButtonClick(button){
                         logger.error(error);
                     }
                     if(!respGame.game_joining_masters[0]){
-                        button.channel.send({ content: "There is no game currently available..."}) 
+                        button.reply({ content: "There is no game currently available...", ephemeral: true}) 
                         return;
                     }
                     if(respGame.game_joining_masters[0].status === "started"){
