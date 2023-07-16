@@ -1169,9 +1169,81 @@ async function onButtonClick(button){
                         logger.error(error);
                         button.channel.send({ content: "There was an error removing you from the game..."})
                     }
-                    button.channel.send({ content: "You have been removed from the game!"})
+                    button.channel.send({ content: `<@${button.member.id}> has left the game!`})
                     break;
                 case "start":
+                    logger.info("Starting " + hostId + "'s game");
+                    var respGame;
+                    try{
+                        respGame = await api.get("game_joining_master", {
+                            host_id:hostId
+                        })
+                    }catch(error){
+                        logger.error(error);
+                    }
+                    if(!respGame.game_joining_masters[0]){
+                        button.channel.send({ content: "There is no game currently available..."}) 
+                        return;
+                    }
+                    if(!respGame.game_joining_masters[0].status === "open"){
+                        button.channel.send({ content: "This game has already started..."}) 
+                        return;
+                    }
+                    var respGameStart;
+                    try{
+                        respGameStart = await api.put("game_joining_master", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id),
+                            status:"started"
+                        })
+                    }catch(error){
+                        logger.error(error);
+                        button.channel.send({ content: "There was an error starting the game..."})
+                    }
+                    button.channel.send({ content: `The game has been started, new people cannot join!`})
+                    break;
+                case "end":
+                    logger.info("Ending " + hostId + "'s game");
+                    var respGame;
+                    try{
+                        respGame = await api.get("game_joining_master", {
+                            host_id:hostId
+                        })
+                    }catch(error){
+                        logger.error(error);
+                    }   
+                    if(!respGame.game_joining_masters[0]){
+                        button.channel.send({ content: "There is no game currently available..."}) 
+                        return;
+                    }
+                    if(respGame.game_joining_masters[0].status === "open"){
+                        var respPlayersList;
+                        try{
+                            respPlayersList = await api.get("game_joining_player", {
+                                game_id:parseInt(respGame.game_joining_masters[0].game_id)
+                            })
+                        }catch(error){
+                            logger.error(error);
+                        }
+                        for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                            var respTemp = await api.get("game_joining_player",{
+                                game_id:Number(respGame.game_joining_masters[0].game_id),
+                                player_id:respPlayersList.game_joining_players[i].player_id
+                            })
+                            respPlayers = await api.delete("game_joining_player",{
+                                game_player_id:Number(respTemp.game_joining_players[0].game_player_id)
+                            });
+                        }
+                        var respGameEnd;
+                        try{
+                            respGameEnd = await api.delete("game_joining_master", {
+                                game_id:parseInt(respGame.game_joining_masters[0].game_id)
+                            })
+                        }catch(error){
+                            logger.error(error);
+                            button.channel.send({ content: "There was an error ending the game..."})
+                        }
+                        button.channel.send({ content: `The game has been ended and everyone was removed from the party!`})
+                    }
             }
         }
 }
