@@ -34,7 +34,7 @@ module.exports = {
                 message.channel.send({ content: "Created a game! Let me pull up the menu for you..."});
                 const ListEmbed = new MessageEmbed()
                 .setColor("#c586b6")
-                .setTitle(`<@${message.member.id}> 's Game Menu.\nOnly the game creator can interact with this menu`);
+                .setTitle(`${message.member.displayName}'s Game Menu.\nOnly the game creator can interact with this menu`);
                 message.channel.send({embeds: [ListEmbed] });
         }
 };
