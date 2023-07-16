@@ -1133,7 +1133,7 @@ async function onButtonClick(button){
                     try{
                         respGameJoin = await api.post("game_joining_player", {
                             game_id:respGame.game_joining_masters[0].game_id,
-                            user_id:button.member.id
+                            player_id:button.member.id
                         })
                     }catch(error){
                         logger.error(error);
