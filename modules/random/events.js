@@ -1162,8 +1162,6 @@ async function onButtonClick(button){
                         kickableList.addOptions({
                             label: playersList[i],
                             value: playersList[i],
-                            description: "Kick " + playersList[i] + " from the game",
-                            emoji: '👢',
                         })
                     }
                             
