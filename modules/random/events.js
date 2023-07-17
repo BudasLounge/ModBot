@@ -1663,7 +1663,76 @@ async function onButtonClick(button){
 }
 
 async function userJoinsVoice(oldMember, newMember){
-    let newUserChannel = newMember.channelId;
+    const newUserChannel = newMember.channelId;
+    const oldUserChannel = oldMember.channelId;
+
+    logger.info("newMember: " + newMember);
+    logger.info("oldMember: " + oldMember);
+
+    const user = newMember.guild.members.cache.get(newMember.id);
+    const isUserInAfkChannel = newUserChannel === newMember.guild.afkChannelId;
+
+    if (isUserInAfkChannel) {
+    newUserChannel = undefined;
+    }
+
+    const currentTime = Math.floor(new Date().getTime() / 1000);
+    const voiceTrackingData = {
+    user_id: newMember.id,
+    username: user.user.username,
+    discord_server_id: newMember.guild.id,
+    disconnect_time: 0
+    };
+
+    try {
+    const respVoice = await api.get("voice_tracking", voiceTrackingData);
+
+    if (respVoice.voice_trackings[0]) {
+        logger.info("Updating an existing tracking");
+        const respVoiceUpdate = await api.put("voice_tracking", {
+        voice_state_id: parseInt(respVoice.voice_trackings[0].voice_state_id),
+        disconnect_time: currentTime
+        });
+    }
+
+    logger.info("Creating a brand new tracking");
+    const voiceTrackingNewData = {
+        connect_time: currentTime,
+        selfmute: newMember.selfMute,
+        channel_id: newUserChannel,
+        disconnect_time: 0
+    };
+    const respVoiceNew = await api.post("voice_tracking", {
+        ...voiceTrackingData,
+        ...voiceTrackingNewData
+    });
+
+    logger.info(user.user.username + " joined a channel with an ID of: " + newUserChannel);
+    } catch (error) {
+    logger.error(error);
+    }
+
+    if (!newUserChannel) {
+    try {
+        const respVoice = await api.get("voice_tracking", {
+        user_id: newMember.id,
+        username: user.user.username,
+        disconnect_time: 0
+        });
+
+        if (respVoice.voice_trackings[0]) {
+        const respVoiceUpdate = await api.put("voice_tracking", {
+            voice_state_id: parseInt(respVoice.voice_trackings[0].voice_state_id),
+            disconnect_time: currentTime
+        });
+        }
+    } catch (error) {
+        logger.error(error);
+    }
+
+    logger.info(user.user.username + " left a channel with an ID of: " + oldUserChannel);
+    }
+    /*let newUserChannel = newMember.channelId;
     let oldUserChannel = oldMember.channelId;
     logger.info("newMember: " + newMember);
     logger.info("oldMember: " + oldMember);
@@ -1746,7 +1815,7 @@ async function userJoinsVoice(oldMember, newMember){
             }
         }
         logger.info(user.user.username + " left a channel with an ID of: " + oldUserChannel);
-    }
+    }*/
 }
 
 /*async function parseRaw(packet) {
