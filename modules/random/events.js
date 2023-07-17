@@ -1540,12 +1540,11 @@ async function onButtonClick(button){
                             ]);
                         });
                         for(var i = 0;i<playersList.length;i++){
-                            logger.info(playersList[i].substr(2,playersList[i].length-3))
                             var respGamePlayer;
                             try{
                                 respGamePlayer = await api.get("game_joining_player", {
                                     game_id:parseInt(respGame.game_joining_masters[0].game_id),
-                                    player_id:playersList[i].substr(2,playersList[i].length-1)
+                                    player_id:playersList[i].substr(2,playersList[i].length-3)
                                 })
                             }catch(error){
                                 logger.error(error.message);
@@ -1565,7 +1564,7 @@ async function onButtonClick(button){
                             try{
                                 respGamePlayer = await api.get("game_joining_player", {
                                     game_id:parseInt(respGame.game_joining_masters[0].game_id),
-                                    player_id:team2[i].substr(2,team2[i].length-1)
+                                    player_id:team2[i].substr(2,team2[i].length-3)
                                 })
                             }catch(error){
                                 logger.error(error.message);
