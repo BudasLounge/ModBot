@@ -601,7 +601,7 @@ async function onButtonClick(button){
               try{
                 user = await button.guild.members.fetch(voiceTracking.user_id)
               }catch(error){
-                logger.error(error.message +  " " + voiceTracking.user_id, " " + voiceTracking.username);
+                logger.error(error.message +  " ID: " + voiceTracking.user_id, " Username: " + voiceTracking.username);
                 continue;
               }
               const usernameChannel = `${user.displayName}, channel: ${channelName.name}`;
