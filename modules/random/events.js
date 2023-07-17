@@ -1123,7 +1123,7 @@ async function onButtonClick(button){
                             host_id:hostId
                         })
                     }catch(error){
-                        logger.error(error);
+                        logger.error(error.message);
                     }
                     if(!respGame.game_joining_masters[0]){
                         button.reply({ content: "There is no game currently available...", ephemeral: true}) 
@@ -1140,7 +1140,7 @@ async function onButtonClick(button){
                             player_id:button.member.id
                         })
                     }catch(error){
-                        logger.error(error);
+                        logger.error(error.message);
                         button.reply({ content: "There was an error adding you to the game...", ephemeral: true})
                     }
                     var respPlayersList;
@@ -1149,7 +1149,7 @@ async function onButtonClick(button){
                             game_id:parseInt(respGame.game_joining_masters[0].game_id)
                         })
                     }catch(error){
-                        logger.error(error);
+                        logger.error(error.message);
                     }
                     var playersList = "";
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
@@ -1159,6 +1159,7 @@ async function onButtonClick(button){
                             .setCustomId('GAMEkick-'+hostId)
                             .setPlaceholder('Select someone to remove');
                     for(var i = 0;i<playersList.length;i++){
+                        logger.info("Adding " + playersList[i] + " to the list of kickable players")
                         kickableList.addOptions({
                             label: playersList[i],
                             value: playersList[i],
