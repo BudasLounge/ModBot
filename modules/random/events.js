@@ -1656,6 +1656,50 @@ async function onButtonClick(button){
                     }
                     button.reply({ content: "Moved team 1 to the channel!", ephemeral: true})
                     break;
+                case "channelTeam2":
+                    if(button.member.id != hostId){
+                        button.reply({ content: "Only the host can select the channel...", ephemeral: true})
+                        return;
+                    }
+                    logger.info("Setting channel for team 2");
+                    var respGame;
+                    try{
+                        respGame = await api.get("game_joining_master", {
+                            host_id:hostId
+                        })
+                        logger.info("respGame: " + respGame);
+                    }catch(error){
+                        logger.error(error.message);
+                    }
+                    if(!respGame.game_joining_masters[0]){
+                        button.reply({ content: "There is no game currently available...", ephemeral: true})
+                        return;
+                    }
+                    if(!(respGame.game_joining_masters[0].status === "started")){
+                        button.reply({ content: "The game has not started yet...", ephemeral: true})
+                        return;
+                    }
+                    var respPlayersList;
+                    try{
+                        respPlayersList = await api.get("game_joining_player", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id),
+                            team:"2"
+                        })
+                        logger.info("respPlayersList: " + respPlayersList);
+                    }catch(error){
+                        logger.error(error.message);
+                    }
+                    if(!respPlayersList.game_joining_players[0]){
+                        button.reply({ content: "There are no players on team 2...", ephemeral: true})
+                        return;
+                    }
+                    for(var i =0;i<respPlayersList.game_joining_players.length;i++){
+                        var user = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
+                        logger.info("user: " + user);
+                        user.voice.setChannel(button.values[0]);
+                    }
+                    button.reply({ content: "Moved team 2 to the channel!", ephemeral: true})
+                    break;
                 case "default":
                     logger.info("Default case hit, this should never happen");
                     break;
