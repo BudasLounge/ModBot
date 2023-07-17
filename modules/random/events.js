@@ -1156,16 +1156,17 @@ async function onButtonClick(button){
                         playersList += "<@" + respPlayersList.game_joining_players[i].player_id + ">\n";
                     }
                     const kickableList = new MessageSelectMenu()
-                            .setCustomId('GAMEchannelTeam1-'+hostId)
-                            .setPlaceholder('Select a voice channel to send Team 1 to');
-                        playersList.forEach((player) => {
-                            kickableList.addOptions([
-                                {
-                                label: player,
-                                value: player,
-                                },
-                            ]);
-                        });
+                            .setCustomId('GAMEkick-'+hostId)
+                            .setPlaceholder('Select someone to remove from the game');
+                    for(var i = 0;i<playersList.length;i++){
+                        kickableList.addOptions({
+                            label: playersList[i],
+                            value: playersList[i],
+                            description: "Kick " + playersList[i] + " from the game",
+                            emoji: '👢',
+                        })
+                    }
+                            
                     var guild = button.guild;
                     var host = await guild.members.fetch(hostId);
                     var ListEmbed = new MessageEmbed()
