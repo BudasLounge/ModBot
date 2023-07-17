@@ -1745,7 +1745,7 @@ async function onButtonClick(button){
                     }
                     for(var i =0;i<respPlayersList.game_joining_players.length;i++){
                         var user = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
-                        user.voice.setChannel(respPlayersList.game_joining_players[i].starting_channel_id);
+                        user.voice.setChannel(respGame.game_joining_masters[0].starting_channel_id);
                     }
                     button.reply({ content: "Moved all players to their starting channel!", ephemeral: true})
                     break;
