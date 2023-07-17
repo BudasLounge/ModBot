@@ -1234,6 +1234,9 @@ async function onButtonClick(button){
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
                         playersList += "<@" + respPlayersList.game_joining_players[i].player_id + ">\n";
                     }
+                    if(playersList === ""){
+                        playersList = "No players currently in the game...";
+                    }
                     var guild = button.guild;
                     var host = await guild.members.fetch(hostId);
                     var ListEmbed = new MessageEmbed()
