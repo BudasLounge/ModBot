@@ -145,17 +145,17 @@ module.exports = {
         this.logger.info("Starting the additive loop");
         const totalTime = new Map();
         for (const track of voiceTrackings) {
-        const { username, connect_time, disconnect_time } = track;
+        const { user_id, connect_time, disconnect_time } = track;
         const connectTime = parseInt(connect_time);
         const disconnectTime = parseInt(disconnect_time) || Math.floor(new Date().getTime() / 1000);
         const duration = Math.floor(disconnectTime - connectTime);
 
-        if (totalTime.has(username)) {
-            this.logger.info(`Adding to existing row: ${username}: ${duration}`);
-            totalTime.set(username, totalTime.get(username) + duration);
+        if (totalTime.has(user_id)) {
+            this.logger.info(`Adding to existing row: ${user_id}: ${duration}`);
+            totalTime.set(user_id, totalTime.get(user_id) + duration);
         } else {
             this.logger.info("Creating a new row.");
-            totalTime.set(username, duration);
+            totalTime.set(user_id, duration);
         }
         }
 
@@ -174,9 +174,16 @@ module.exports = {
         const ListEmbed = new MessageEmbed()
         .setColor("#c586b6")
         .setTitle(`Voice Channel Leaderboard (Top 10) (Start Date: ${formattedDate})`);
-
+        await message.deferUpdate();
         for (let i = 0; i < sortedTotalTime.length; i++) {
-        const [username, duration] = sortedTotalTime[i];
+        const [user_id, duration] = sortedTotalTime[i];
+        try{
+            const userId = user_id;
+            const user = await button.guild.members.fetch(userId);
+            var mention = user.displayName;
+        }catch(error){
+            logger.error(error.message);
+        }
         let diff = duration;
         const units = [
             { d: 60, l: "seconds" },
@@ -191,7 +198,7 @@ module.exports = {
             s = `${diff % units[j].d} ${units[j].l} ${s}`;
             diff = Math.floor(diff / units[j].d);
         }
-        ListEmbed.addField(`${i + 1}. ${username}`, s);
+        ListEmbed.addField(`${i + 1}. ${mention}`, s);
         }
 
         const timingFilters = new MessageActionRow()
@@ -242,7 +249,7 @@ module.exports = {
             .setDisabled(false),
         );
 
-        message.channel.send({ components: [timingFilters, timingFilters2], embeds: [ListEmbed] });
+        message.channel.editReply({ components: [timingFilters, timingFilters2], embeds: [ListEmbed] });
         this.logger.info("Sent Voice Leaderboard!");
     }
 }
