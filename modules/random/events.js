@@ -1519,7 +1519,7 @@ async function onButtonClick(button){
                         const voiceChannels = button.guild.channels.cache.filter((channel) => channel.type === 'GUILD_VOICE');
                         const channelListTeam1 = new MessageSelectMenu()
                             .setCustomId('GAMEchannelTeam1-'+hostId)
-                            .setPlaceholder('Select a voice channel ');
+                            .setPlaceholder('Select a voice channel to send Team 1 to');
                         voiceChannels.forEach((channel) => {
                             channelListTeam1.addOptions([
                                 {
@@ -1530,7 +1530,7 @@ async function onButtonClick(button){
                         });
                         const channelListTeam2 = new MessageSelectMenu()
                             .setCustomId('GAMEchannelTeam2-'+hostId)
-                            .setPlaceholder('Select a voice channel ');
+                            .setPlaceholder('Select a voice channel to send Team 2 to');
                         voiceChannels.forEach((channel) => {
                             channelListTeam2.addOptions([
                                 {
