@@ -11,7 +11,7 @@ module.exports = {
         const { MessageActionRow, MessageButton, MessageEmbed } = require('discord.js');
         const voiceChannel = message.member.voice.channel;
         if (voiceChannel) {
-            const voiceChannelId = voiceChannel.id;
+            var voiceChannelId = voiceChannel.id;
         } else {
             message.channel.send({ content: "You need to be in a voice channel to use this command."})
             return;
