@@ -1157,7 +1157,7 @@ async function onButtonClick(button){
                     var playersList = "";
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
                         playersList += "<@" + respPlayersList.game_joining_players[i].player_id + ">\n";
-                        var player = await guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
+                        var player = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
                         kickableList.addOptions({
                             label: player.displayName,
                             value: respPlayersList.game_joining_players[i].player_id,
