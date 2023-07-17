@@ -144,7 +144,7 @@ async function onButtonClick(button){
                 }
             }
             if(!flag){
-                //logger.info("Creating a new row.")
+                logger.info("Creating a new row.")
                 totalTime.push([respVoice.voice_trackings[i].user_id, Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))])
             }
         }
@@ -161,9 +161,6 @@ async function onButtonClick(button){
         var count = 10;
         if(totalTime.length<count) {count = totalTime.length;}
         for(var k = 0;k<count;k++){
-            const userId = totalTime[k][0];
-            const user = await button.guild.members.fetch(userId);
-            const mention = user.toString();
             var diff = Math.floor(totalTime[k][1]), units = [
                 { d: 60, l: "seconds" },
                 { d: 60, l: "minutes" },
@@ -176,7 +173,7 @@ async function onButtonClick(button){
             s = (diff % units[i].d) + " " + units[i].l + " " + s;
             diff = Math.floor(diff / units[i].d);
             }
-            ListEmbed.addField((k+1).toString() + ". " + mention, s.toString());
+            ListEmbed.addField((k+1).toString() + ". " + totalTime[k][0], s.toString());
         }
         
 
