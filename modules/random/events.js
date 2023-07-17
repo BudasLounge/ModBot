@@ -1540,7 +1540,7 @@ async function onButtonClick(button){
                             ]);
                         });
                         for(var i = 0;i<playersList.length;i++){
-                            logger.info(playersList[i].substr(2,playersList[i].length-1))
+                            logger.info(playersList[i].substr(2,playersList[i].length-3))
                             var respGamePlayer;
                             try{
                                 respGamePlayer = await api.get("game_joining_player", {
