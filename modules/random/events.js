@@ -1155,6 +1155,17 @@ async function onButtonClick(button){
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
                         playersList += "<@" + respPlayersList.game_joining_players[i].player_id + ">\n";
                     }
+                    const kickableList = new MessageSelectMenu()
+                            .setCustomId('GAMEchannelTeam1-'+hostId)
+                            .setPlaceholder('Select a voice channel to send Team 1 to');
+                        playersList.forEach((player) => {
+                            kickableList.addOptions([
+                                {
+                                label: player,
+                                value: player,
+                                },
+                            ]);
+                        });
                     var guild = button.guild;
                     var host = await guild.members.fetch(hostId);
                     var ListEmbed = new MessageEmbed()
@@ -1184,7 +1195,10 @@ async function onButtonClick(button){
                                 .setLabel('End')
                                 .setStyle('SECONDARY'),
                         );
-                    button.update({ embeds: [ListEmbed], components: [row, row2] })
+                        var row3 = new MessageActionRow()
+                            .addComponents(kickableList);
+
+                    button.update({ embeds: [ListEmbed], components: [row, row2, row3] })
                     break;
                 case "leave":
                     logger.info("Removing " + button.member.displayName + " from " + hostId + "'s game");
@@ -1752,8 +1766,8 @@ async function onButtonClick(button){
                 case "default":
                     logger.info("Default case hit, this should never happen");
                     break;
-                    //todo: add ability for host to select channels for the teams to get moved to
                     //todo: if someone makes a game but already has one open, close the old one and make a new one if it has been more than a certain time since it has been used
+                    //todo: add ability to remove someone from a game
                 }
         }
 }
