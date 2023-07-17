@@ -1151,18 +1151,15 @@ async function onButtonClick(button){
                     }catch(error){
                         logger.error(error.message);
                     }
+                    const kickableList = new MessageSelectMenu()
+                        .setCustomId('GAMEkick-'+hostId)
+                        .setPlaceholder('Select someone to remove');
                     var playersList = "";
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
                         playersList += "<@" + respPlayersList.game_joining_players[i].player_id + ">\n";
-                    }
-                    const kickableList = new MessageSelectMenu()
-                            .setCustomId('GAMEkick-'+hostId)
-                            .setPlaceholder('Select someone to remove');
-                    for(var i = 0;i<playersList.length;i++){
-                        logger.info("Adding " + playersList[i] + " to the list of kickable players")
                         kickableList.addOptions({
-                            label: playersList[i],
-                            value: playersList[i],
+                            label: respPlayersList.game_joining_players[i].player_id,
+                            value: respPlayersList.game_joining_players[i].player_id,
                         })
                     }
                             
