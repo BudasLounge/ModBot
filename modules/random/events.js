@@ -1553,7 +1553,7 @@ async function onButtonClick(button){
                             try{
                                 respGamePlayerUpdate = await api.put("game_joining_player", {
                                     game_player_id:parseInt(respGamePlayer.game_joining_players[0].game_player_id),
-                                    team:1
+                                    team:"1"
                                 })
                             }catch(error){
                                 logger.error(error.message);
@@ -1573,7 +1573,7 @@ async function onButtonClick(button){
                             try{
                                 respGamePlayerUpdate = await api.put("game_joining_player", {
                                     game_player_id:parseInt(respGamePlayer.game_joining_players[0].game_player_id),
-                                    team:2
+                                    team:"2"
                                 })
                             }catch(error){
                                 logger.error(error.message);
