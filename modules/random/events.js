@@ -227,7 +227,7 @@ async function onButtonClick(button){
                 .setDisabled("false"),
         );
     await button.update("Processing...");
-    await button.deferUpdate;
+    await button.deferUpdate();
     await button.editReply({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
     logger.info("Sent Voice Leaderboard!")
     break;
