@@ -160,10 +160,10 @@ async function onButtonClick(button){
         .setTitle("Voice Channel Leaderboard (Top 10)");
         var count = 10;
         if(totalTime.length<count) {count = totalTime.length;}
+        await button.update("Processing...");
+        await button.deferUpdate();
         for(var k = 0;k<count;k++){
             try{
-                await button.update("Processing...");
-                await button.deferUpdate();
                 const userId = totalTime[k][0];
                 const user = await button.guild.members.fetch(userId);
                 var mention = user.displayName;
