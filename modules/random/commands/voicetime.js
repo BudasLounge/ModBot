@@ -178,7 +178,7 @@ module.exports = {
         const [user_id, duration] = sortedTotalTime[i];
         try{
             const userId = user_id;
-            const user = await button.guild.members.fetch(userId);
+            const user = await message.guild.members.fetch(userId);
             var mention = user.displayName;
         }catch(error){
             logger.error(error.message);
