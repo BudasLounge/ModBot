@@ -597,8 +597,9 @@ async function onButtonClick(button){
                 continue;
               }
               const disconnectTime = parseInt(voiceTracking.disconnect_time) || currentTime;
+              let user;
               try{
-                var user = await button.guild.members.fetch(voiceTracking.user_id)
+                user = await button.guild.members.fetch(voiceTracking.user_id)
               }catch(error){
                 logger.error(error.message);
                 continue;
