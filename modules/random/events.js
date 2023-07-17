@@ -1312,7 +1312,8 @@ async function onButtonClick(button){
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
                         playersList += "<@" + respPlayersList.game_joining_players[i].player_id + ">\n";
                     }
-                    button.reply({ content: `The game has been started, new people cannot join!`, ephemeral: true})
+                    //button.reply({ content: `The game has been started, new people cannot join!`, ephemeral: true})
+                    
                     var guild = button.guild;
                     var host = await guild.members.fetch(hostId);
                     var ListEmbed = new MessageEmbed()
@@ -1338,6 +1339,7 @@ async function onButtonClick(button){
                                 .setLabel('Re-open game')
                                 .setStyle('SECONDARY'),
                         );
+                    
                     button.update({ embeds: [ListEmbed], components: [row, row2] })
                     break;
                 case "end":
@@ -1514,6 +1516,69 @@ async function onButtonClick(button){
                         }
                         logger.info("Team 1: " + playersList);
                         logger.info("Team 2: " + team2);
+                        const voiceChannels = message.guild.channels.cache.filter((channel) => channel.type === 'GUILD_VOICE');
+                        const channelListTeam1 = new MessageSelectMenu()
+                            .setCustomId('GAMEchannelTeam1-'+hostId)
+                            .setPlaceholder('Select a voice channel ');
+                        voiceChannels.forEach((channel) => {
+                            channelList.addOptions([
+                                {
+                                label: channel.name,
+                                value: channel.id,
+                                },
+                            ]);
+                        });
+                        const channelListTeam2 = new MessageSelectMenu()
+                            .setCustomId('GAMEchannelTeam2-'+hostId)
+                            .setPlaceholder('Select a voice channel ');
+                        voiceChannels.forEach((channel) => {
+                            channelList.addOptions([
+                                {
+                                label: channel.name,
+                                value: channel.id,
+                                },
+                            ]);
+                        });
+                        for(var i = 0;i<playersList.length;i++){
+                            var respGamePlayer;
+                            try{
+                                respGamePlayer = await api.get("game_joining_player", {
+                                    game_id:parseInt(respGame.game_joining_masters[0].game_id),
+                                    player_id:playersList[i].substr(2,playersList[i].length-1)
+                                })
+                            }catch(error){
+                                logger.error(error);
+                            }
+                            var respGamePlayerUpdate;
+                            try{
+                                respGamePlayerUpdate = await api.put("game_joining_player", {
+                                    game_player_id:parseInt(respGamePlayer.game_joining_players[0].game_player_id),
+                                    team:1
+                                })
+                            }catch(error){
+                                logger.error(error);
+                            }
+                        }
+                        for(var i = 0;i<team2.length;i++){
+                            var respGamePlayer;
+                            try{
+                                respGamePlayer = await api.get("game_joining_player", {
+                                    game_id:parseInt(respGame.game_joining_masters[0].game_id),
+                                    player_id:team2[i].substr(2,team2[i].length-1)
+                                })
+                            }catch(error){
+                                logger.error(error);
+                            }
+                            var respGamePlayerUpdate;
+                            try{
+                                respGamePlayerUpdate = await api.put("game_joining_player", {
+                                    game_player_id:parseInt(respGamePlayer.game_joining_players[0].game_player_id),
+                                    team:2
+                                })
+                            }catch(error){
+                                logger.error(error);
+                            }
+                        }
                         var guild = button.guild;
                         var host = await guild.members.fetch(hostId);
                         var ListEmbed = new MessageEmbed()
@@ -1540,16 +1605,58 @@ async function onButtonClick(button){
                                     .setLabel('Re-open game')
                                     .setStyle('SECONDARY'),
                             );
-                        button.update({ embeds: [ListEmbed], components: [row, row2] })
+                        var row3 = new MessageActionRow()
+                            .addComponents(channelListTeam1);
+                        var row4 = new MessageActionRow()
+                            .addComponents(channelListTeam2);
+                        button.update({ embeds: [ListEmbed], components: [row, row2, row3, row4] })
                     }
+                    break;
+                case "channelTeam1":
+                    if(button.member.id != hostId){
+                        button.reply({ content: "Only the host can select the channel...", ephemeral: true})
+                        return;
+                    }
+                    logger.info("Setting channel for team 1");
+                    var respGame;
+                    try{
+                        respGame = await api.get("game_joining_master", {
+                            host_id:hostId
+                        })
+                    }catch(error){
+                        logger.error(error);
+                    }
+                    if(!respGame.game_joining_masters[0]){
+                        button.reply({ content: "There is no game currently available...", ephemeral: true})
+                        return;
+                    }
+                    if(!(respGame.game_joining_masters[0].status === "started")){
+                        button.reply({ content: "The game has not started yet...", ephemeral: true})
+                        return;
+                    }
+                    var respPlayersList;
+                    try{
+                        respPlayersList = await api.get("game_joining_player", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id),
+                            team:1
+                        })
+                    }catch(error){
+                        logger.error(error);
+                    }
+                    if(!respPlayersList.game_joining_players[0]){
+                        button.reply({ content: "There are no players on team 1...", ephemeral: true})
+                        return;
+                    }
+                    for(var i =0;i<respPlayersList.game_joining_players.length;i++){
+                        var user = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
+                        user.voice.setChannel(button.values[0]);
+                    }
+                    button.reply({ content: "Moved team 1 to the channel!", ephemeral: true})
                     break;
                 case "default":
                     logger.info("Default case hit, this should never happen");
                     break;
                     //todo: add ability for host to select channels for the teams to get moved to
-                    //todo: if  players leave, update the playerlist
-                    //todo: when pressing leave, fix interaction failed
-                    //todo: when game ends, interaction failed fix, update playerslist
                     //todo: if someone makes a game but already has one open, close the old one and make a new one if it has been more than a certain time since it has been used
                 }
         }
