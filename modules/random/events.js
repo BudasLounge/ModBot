@@ -598,7 +598,7 @@ async function onButtonClick(button){
               }
               const disconnectTime = parseInt(voiceTracking.disconnect_time) || currentTime;
           
-              const usernameChannel = `${voiceTracking.username}, channel: ${channelName.name}`;
+              const usernameChannel = `${voiceTracking.user_id}, channel: ${channelName.name}`;
               const connectionTime = Math.floor(disconnectTime - parseInt(voiceTracking.connect_time));
           
               if (totalTime.has(usernameChannel)) {
