@@ -1158,7 +1158,7 @@ async function onButtonClick(button){
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
                         playersList += "<@" + respPlayersList.game_joining_players[i].player_id + ">\n";
                         kickableList.addOptions({
-                            label: "<@" + respPlayersList.game_joining_players[i].player_id + ">",
+                            label: "<@" + respPlayersList.game_joining_players[i].player_id.toString() + ">",
                             value: respPlayersList.game_joining_players[i].player_id,
                             description: "Kick " + respPlayersList.game_joining_players[i].player_id + " from the game",
                             emoji: '👢',
