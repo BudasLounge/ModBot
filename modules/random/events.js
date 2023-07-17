@@ -1665,7 +1665,7 @@ async function onButtonClick(button){
 async function userJoinsVoice(oldMember, newMember){
     var newUserChannel = newMember.channelId;
     var oldUserChannel = oldMember.channelId;
-
+    const currentTime = Math.floor(new Date().getTime() / 1000);
     logger.info("newMember: " + newMember);
     logger.info("oldMember: " + oldMember);
 
@@ -1676,7 +1676,6 @@ async function userJoinsVoice(oldMember, newMember){
         newUserChannel = undefined;
     }
     if(newUserChannel != undefined){
-        const currentTime = Math.floor(new Date().getTime() / 1000);
         const voiceTrackingData = {
             user_id: newMember.id,
             username: user.user.username,
