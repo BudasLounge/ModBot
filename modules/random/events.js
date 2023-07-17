@@ -1878,9 +1878,9 @@ async function userJoinsVoice(oldMember, newMember){
             selfMute: newMember.selfMute,
             disconnect_time: 0
         };
-        for ( const item in voiceTrackingData ) {
-            logger.info("voiceTrackingData." + item + ": " + voiceTrackingData[item]);
-        }
+        //for ( const item in voiceTrackingData ) {
+        //    logger.info("voiceTrackingData." + item + ": " + voiceTrackingData[item]);
+        //}
         try {
             const respVoice = await api.get("voice_tracking", voiceTrackingData);
 
