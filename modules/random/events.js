@@ -1547,7 +1547,7 @@ async function onButtonClick(button){
                                     player_id:playersList[i].substr(2,playersList[i].length-1)
                                 })
                             }catch(error){
-                                logger.error(error);
+                                logger.error(error.message);
                             }
                             var respGamePlayerUpdate;
                             try{
@@ -1556,7 +1556,7 @@ async function onButtonClick(button){
                                     team:1
                                 })
                             }catch(error){
-                                logger.error(error);
+                                logger.error(error.message);
                             }
                         }
                         for(var i = 0;i<team2.length;i++){
@@ -1567,7 +1567,7 @@ async function onButtonClick(button){
                                     player_id:team2[i].substr(2,team2[i].length-1)
                                 })
                             }catch(error){
-                                logger.error(error);
+                                logger.error(error.message);
                             }
                             var respGamePlayerUpdate;
                             try{
@@ -1576,7 +1576,7 @@ async function onButtonClick(button){
                                     team:2
                                 })
                             }catch(error){
-                                logger.error(error);
+                                logger.error(error.message);
                             }
                         }
                         var guild = button.guild;
