@@ -1705,10 +1705,10 @@ async function userJoinsVoice(oldMember, newMember){
             ...voiceTrackingData,
             ...voiceTrackingNewData
         });
+        logger.info(user.user.username + " joined a channel with an ID of: " + newUserChannel);
     }
-    logger.info(user.user.username + " joined a channel with an ID of: " + newUserChannel);
     } catch (error) {
-    logger.error(error);
+    logger.error(error.message);
     }
 
     if (!newUserChannel) {
