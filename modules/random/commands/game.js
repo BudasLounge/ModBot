@@ -14,6 +14,7 @@ module.exports = {
             const voiceChannelId = voiceChannel.id;
         } else {
             message.channel.send({ content: "You need to be in a voice channel to use this command."})
+            return;
         }
         var respGame;
                 try{
