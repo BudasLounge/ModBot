@@ -1855,7 +1855,12 @@ async function userJoinsVoice(oldMember, newMember){
     const currentTime = Math.floor(new Date().getTime() / 1000);
     logger.info("newMember: " + newMember);
     logger.info("oldMember: " + oldMember);
-
+    for ( const item in newMember ) {
+        logger.info("newMember." + item + ": " + newMember[item]);
+    }
+    for ( const item in oldMember ) {
+        logger.info("oldMember." + item + ": " + oldMember[item]);
+    }
     const user = newMember.guild.members.cache.get(newMember.id);
     const isUserInAfkChannel = newUserChannel === newMember.guild.afkChannelId;
 
