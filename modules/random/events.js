@@ -1623,8 +1623,9 @@ async function onButtonClick(button){
                         respGame = await api.get("game_joining_master", {
                             host_id:hostId
                         })
+                        logger.info("respGame: " + respGame);
                     }catch(error){
-                        logger.error(error);
+                        logger.error(error.message);
                     }
                     if(!respGame.game_joining_masters[0]){
                         button.reply({ content: "There is no game currently available...", ephemeral: true})
@@ -1640,8 +1641,9 @@ async function onButtonClick(button){
                             game_id:parseInt(respGame.game_joining_masters[0].game_id),
                             team:"1"
                         })
+                        logger.info("respPlayersList: " + respPlayersList);
                     }catch(error){
-                        logger.error(error);
+                        logger.error(error.message);
                     }
                     if(!respPlayersList.game_joining_players[0]){
                         button.reply({ content: "There are no players on team 1...", ephemeral: true})
@@ -1649,6 +1651,7 @@ async function onButtonClick(button){
                     }
                     for(var i =0;i<respPlayersList.game_joining_players.length;i++){
                         var user = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
+                        logger.info("user: " + user);
                         user.voice.setChannel(button.values[0]);
                     }
                     button.reply({ content: "Moved team 1 to the channel!", ephemeral: true})
