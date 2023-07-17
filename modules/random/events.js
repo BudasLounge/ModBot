@@ -163,7 +163,7 @@ async function onButtonClick(button){
         for(var k = 0;k<count;k++){
             const userId = totalTime[k][0];
             const user = await button.guild.members.fetch(userId);
-            const mention = user.toString();
+            const mention = user.displayName;
             logger.info(mention);
             var diff = Math.floor(totalTime[k][1]), units = [
                 { d: 60, l: "seconds" },
