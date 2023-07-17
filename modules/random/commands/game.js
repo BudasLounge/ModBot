@@ -9,6 +9,12 @@ module.exports = {
     async execute(message, args, extra) {
         var api = extra.api;
         const { MessageActionRow, MessageButton, MessageEmbed } = require('discord.js');
+        const voiceChannel = message.member.voice.channel;
+        if (voiceChannel) {
+            const voiceChannelId = voiceChannel.id;
+        } else {
+            message.channel.send({ content: "You need to be in a voice channel to use this command."})
+        }
         var respGame;
                 try{
                     respGame = await api.get("game_joining_master",{
@@ -23,7 +29,8 @@ module.exports = {
                 this.logger.info(respGame[0]);
                 try{
                     respGame = await api.post("game_joining_master",{
-                        host_id:message.member.id
+                        host_id:message.member.id,
+                        starting_channel_id:voiceChannelId
                     });
                 } catch(error2){
                     this.logger.error(error2.message);
