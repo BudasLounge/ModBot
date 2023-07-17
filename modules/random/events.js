@@ -349,7 +349,7 @@ async function onButtonClick(button){
                 .setStyle('PRIMARY')
                 .setDisabled("false"),
         );
-        await button.update({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
+        await button.editReply({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
         logger.info("Sent Voice Leaderboard!")
         break;
     case "non-muted":
