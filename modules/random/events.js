@@ -597,10 +597,10 @@ async function onButtonClick(button){
                 continue;
               }
               const disconnectTime = parseInt(voiceTracking.disconnect_time) || currentTime;
-              if (!button.guild.members.cache.has(voiceTracking.user_id)) {
-                logger.error("User not found in the guild. ID: " + voiceTracking.user_id + " Username: " + voiceTracking.username);
-                continue;
-              }
+              //if (!button.guild.members.cache.has(voiceTracking.user_id)) {
+              //  logger.error("User not found in the guild. ID: " + voiceTracking.user_id + " Username: " + voiceTracking.username);
+              //  continue;
+              //}
               let user;
               try{
                 //logger.info("Fetching user  " + voiceTracking.user_id + " with username " + voiceTracking.username)
