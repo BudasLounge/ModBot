@@ -161,14 +161,6 @@ async function onButtonClick(button){
         var count = 10;
         if(totalTime.length<count) {count = totalTime.length;}
         for(var k = 0;k<count;k++){
-            try{
-                const userId = totalTime[k][0];
-                const user = await button.guild.members.fetch(userId);
-                var mention = user.displayName;
-            }catch(error){
-                logger.error(error.message);
-            }
-            logger.info(mention);
             var diff = Math.floor(totalTime[k][1]), units = [
                 { d: 60, l: "seconds" },
                 { d: 60, l: "minutes" },
@@ -181,7 +173,7 @@ async function onButtonClick(button){
             s = (diff % units[i].d) + " " + units[i].l + " " + s;
             diff = Math.floor(diff / units[i].d);
             }
-            ListEmbed.addField((k+1).toString() + ". " + mention, s.toString());
+            ListEmbed.addField((k+1).toString() + ". " + totalTime[k][0], s.toString());
         }
         
 
@@ -227,7 +219,7 @@ async function onButtonClick(button){
                 .setDisabled("false"),
         );
 
-    await button.update({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
+    await button.deferUpdate({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
     logger.info("Sent Voice Leaderboard!")
     break;
    
