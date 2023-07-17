@@ -1597,6 +1597,10 @@ async function onButtonClick(button){
                                     .setCustomId('GAMErandomize-'+hostId)
                                     .setLabel('Randomize Teams')
                                     .setStyle('SECONDARY'),
+                                new MessageButton()
+                                    .setCustomId('GAMEreturn-'+hostId)
+                                    .setLabel('Return players to starting channel')
+                                    .setStyle('SECONDARY'),
                             );
                         var row2 = new MessageActionRow()
                             .addComponents(
