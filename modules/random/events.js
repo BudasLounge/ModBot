@@ -1726,7 +1726,7 @@ async function userJoinsVoice(oldMember, newMember){
             });
             }
         } catch (error) {
-            logger.error(error);
+            logger.error(error.message);
         }
 
         logger.info(user.user.username + " left a channel with an ID of: " + oldUserChannel);
