@@ -1157,7 +1157,7 @@ async function onButtonClick(button){
                     }
                     const kickableList = new MessageSelectMenu()
                             .setCustomId('GAMEkick-'+hostId)
-                            .setPlaceholder('Select someone to remove from the game');
+                            .setPlaceholder('Select someone to remove');
                     for(var i = 0;i<playersList.length;i++){
                         kickableList.addOptions({
                             label: playersList[i],
