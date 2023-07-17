@@ -597,8 +597,8 @@ async function onButtonClick(button){
                 continue;
               }
               const disconnectTime = parseInt(voiceTracking.disconnect_time) || currentTime;
-          
-              const usernameChannel = `${voiceTracking.user_id}, channel: ${channelName.name}`;
+              var user = await button.guild.members.fetch(voiceTracking.user_id)
+              const usernameChannel = `${user.displayName}, channel: ${channelName.name}`;
               const connectionTime = Math.floor(disconnectTime - parseInt(voiceTracking.connect_time));
           
               if (totalTime.has(usernameChannel)) {
@@ -617,7 +617,7 @@ async function onButtonClick(button){
               .setTitle("Voice Channel Leaderboard (Top 10 channel times)");
           
             const count = Math.min(10, sortedTotalTime.length);
-          
+            await button.deferUpdate();
             for (let i = 0; i < count; i++) {
               const [usernameChannel, time] = sortedTotalTime[i];
               let diff = time;
@@ -678,7 +678,7 @@ async function onButtonClick(button){
                 .setDisabled(false)
             );
           
-            await button.update({ components: [timingFilters, timingFilters2], embeds: [ListEmbed] });
+            await button.editReply({ components: [timingFilters, timingFilters2], embeds: [ListEmbed] });
             console.info("Sent Voice Leaderboard!");
           } catch (error) {
             console.error(error);
