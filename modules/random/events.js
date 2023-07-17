@@ -1,7 +1,7 @@
 var ApiClient = require("../../core/js/APIClient.js");
 var api = new ApiClient();
 const {MessageActionRow, MessageButton, MessageEmbed, MessageSelectMenu} = require('discord.js');
-
+//todo: add a way to track how many times a user streams and for how long
 async function onButtonClick(button){
     //if (!button.isButton()){return}
         if((button.customId.substr(0,5)==="VOICE")){
