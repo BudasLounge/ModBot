@@ -1690,23 +1690,22 @@ async function userJoinsVoice(oldMember, newMember){
     if (respVoice.voice_trackings[0]) {
         logger.info("Updating an existing tracking");
         const respVoiceUpdate = await api.put("voice_tracking", {
-        voice_state_id: parseInt(respVoice.voice_trackings[0].voice_state_id),
-        disconnect_time: currentTime
+            voice_state_id: parseInt(respVoice.voice_trackings[0].voice_state_id),
+            disconnect_time: currentTime
+        });
+    }else{
+        logger.info("Creating a brand new tracking");
+        const voiceTrackingNewData = {
+            connect_time: currentTime,
+            selfmute: newMember.selfMute,
+            channel_id: newUserChannel,
+            disconnect_time: 0
+        };
+        const respVoiceNew = await api.post("voice_tracking", {
+            ...voiceTrackingData,
+            ...voiceTrackingNewData
         });
     }
-
-    logger.info("Creating a brand new tracking");
-    const voiceTrackingNewData = {
-        connect_time: currentTime,
-        selfmute: newMember.selfMute,
-        channel_id: newUserChannel,
-        disconnect_time: 0
-    };
-    const respVoiceNew = await api.post("voice_tracking", {
-        ...voiceTrackingData,
-        ...voiceTrackingNewData
-    });
-
     logger.info(user.user.username + " joined a channel with an ID of: " + newUserChannel);
     } catch (error) {
     logger.error(error);
