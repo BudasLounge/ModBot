@@ -144,7 +144,7 @@ async function onButtonClick(button){
                 }
             }
             if(!flag){
-                logger.info("Creating a new row.")
+                //logger.info("Creating a new row.")
                 totalTime.push([respVoice.voice_trackings[i].user_id, Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))])
             }
         }
