@@ -589,7 +589,7 @@ async function onButtonClick(button){
           
             const totalTime = new Map();
             const currentTime = Math.floor(new Date().getTime() / 1000);
-          
+            await button.deferUpdate();
             for (const voiceTracking of respVoice.voice_trackings) {
               const channelName = button.guild.channels.cache.get(voiceTracking.channel_id);
               if (!channelName) {
@@ -623,7 +623,6 @@ async function onButtonClick(button){
               .setTitle("Voice Channel Leaderboard (Top 10 channel times)");
           
             const count = Math.min(10, sortedTotalTime.length);
-            await button.deferUpdate();
             for (let i = 0; i < count; i++) {
               const [usernameChannel, time] = sortedTotalTime[i];
               let diff = time;
