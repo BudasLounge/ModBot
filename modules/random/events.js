@@ -597,7 +597,12 @@ async function onButtonClick(button){
                 continue;
               }
               const disconnectTime = parseInt(voiceTracking.disconnect_time) || currentTime;
-              var user = await button.guild.members.fetch(voiceTracking.user_id)
+              try{
+                var user = await button.guild.members.fetch(voiceTracking.user_id)
+              }catch(error){
+                logger.error(error.message);
+                continue;
+              }
               const usernameChannel = `${user.displayName}, channel: ${channelName.name}`;
               const connectionTime = Math.floor(disconnectTime - parseInt(voiceTracking.connect_time));
           
