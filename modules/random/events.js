@@ -27,7 +27,7 @@ async function onButtonClick(button){
                 }
                 var flag = false;
                 for(var j = 0;j<totalTime.length;j++){
-                    if(totalTime[j][0] == respVoice.voice_trackings[i].username){
+                    if(totalTime[j][0] == respVoice.voice_trackings[i].user_id){
                         //logger\.info\("Adding to existing row\."\)
                         totalTime[j][1] += Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))
                         flag = true;
@@ -36,7 +36,7 @@ async function onButtonClick(button){
                 }
                 if(!flag){
                     logger.info("Creating a new row.")
-                    totalTime.push([respVoice.voice_trackings[i].username, Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))])
+                    totalTime.push([respVoice.voice_trackings[i].user_id, Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))])
                 }
             }
             logger.info("Printing array to a table, will only show up in live console, not logs...")
@@ -51,8 +51,16 @@ async function onButtonClick(button){
             .setColor("#c586b6")
             .setTitle("Voice Channel Leaderboard (Bottom 10)");
             var count = 10;
-            if(totalTime.length<count) {count = totalTime.length;}
+            if(totalTime.length<count) {count = totalTime.length;} 
+            await button.deferUpdate();
             for(var k = 0;k<count;k++){
+                try{
+                    const userId = totalTime[k][0];
+                    const user = await button.guild.members.fetch(userId);
+                    var mention = user.displayName;
+                }catch(error){
+                    logger.error(error.message);
+                }
                 var diff = Math.floor(totalTime[k][1]), units = [
                     { d: 60, l: "seconds" },
                     { d: 60, l: "minutes" },
@@ -65,7 +73,7 @@ async function onButtonClick(button){
                 s = (diff % units[i].d) + " " + units[i].l + " " + s;
                 diff = Math.floor(diff / units[i].d);
                 }
-                ListEmbed.addField((k+1).toString() + ". " + totalTime[k][0], s.toString());
+                ListEmbed.addField((k+1).toString() + ". " + mention, s.toString());
             }
             
 
@@ -111,11 +119,9 @@ async function onButtonClick(button){
                 .setDisabled("false"),
             );
 
-        await button.update({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
+        await button.editReply({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
         logger.info("Sent Voice Leaderboard!")
     break;
-
-
         case "top":
         logger.info("Gathering all voice timings");
         try{
@@ -160,7 +166,6 @@ async function onButtonClick(button){
         .setTitle("Voice Channel Leaderboard (Top 10)");
         var count = 10;
         if(totalTime.length<count) {count = totalTime.length;}
-        //await button.update("Processing...");
         await button.deferUpdate();
         for(var k = 0;k<count;k++){
             try{
@@ -231,9 +236,7 @@ async function onButtonClick(button){
     await button.editReply({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
     logger.info("Sent Voice Leaderboard!")
     break;
-   
-   
-    case "muted":
+        case "muted":
         logger.info("Gathering all voice timings");
         try{
             var respVoice = await api.get("voice_tracking",{
@@ -280,7 +283,15 @@ async function onButtonClick(button){
         .setTitle("Voice Channel Leaderboard (Top 10 muters)");
         var count = 10;
         if(totalTime.length<count) {count = totalTime.length;}
+        await button.deferUpdate();
         for(var k = 0;k<count;k++){
+            try{
+                const userId = totalTime[k][0];
+                const user = await button.guild.members.fetch(userId);
+                var mention = user.displayName;
+            }catch(error){
+                logger.error(error.message);
+            }
             var diff = Math.floor(totalTime[k][1]), units = [
                 { d: 60, l: "seconds" },
                 { d: 60, l: "minutes" },
@@ -293,7 +304,7 @@ async function onButtonClick(button){
             s = (diff % units[i].d) + " " + units[i].l + " " + s;
             diff = Math.floor(diff / units[i].d);
             }
-            ListEmbed.addField((k+1).toString() + ". " + totalTime[k][0], s.toString());
+            ListEmbed.addField((k+1).toString() + ". " + mention, s.toString());
         }
         
 
@@ -341,8 +352,6 @@ async function onButtonClick(button){
         await button.update({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
         logger.info("Sent Voice Leaderboard!")
         break;
-
-
     case "non-muted":
         logger.info("Gathering all voice timings");
         try{
@@ -367,7 +376,7 @@ async function onButtonClick(button){
             }
             var flag = false;
             for(var j = 0;j<totalTime.length;j++){
-                if(totalTime[j][0] == respVoice.voice_trackings[i].username){
+                if(totalTime[j][0] == respVoice.voice_trackings[i].user_id){
                     //logger\.info\("Adding to existing row\."\)
                     totalTime[j][1] += Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))
                     flag = true;
@@ -376,7 +385,7 @@ async function onButtonClick(button){
             }
             if(!flag){
                 logger.info("Creating a new row.")
-                totalTime.push([respVoice.voice_trackings[i].username, Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))])
+                totalTime.push([respVoice.voice_trackings[i].user_id, Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))])
             }
         }
         logger.info("Printing array to a table, will only show up in live console, not logs...")
@@ -389,7 +398,15 @@ async function onButtonClick(button){
         .setTitle("Voice Channel Leaderboard (Top 10 non-muters)");
         var count = 10;
         if(totalTime.length<count) {count = totalTime.length;}
+        await button.deferUpdate();
         for(var k = 0;k<count;k++){
+            try{
+                const userId = totalTime[k][0];
+                const user = await button.guild.members.fetch(userId);
+                var mention = user.displayName;
+            }catch(error){
+                logger.error(error.message);
+            }
             var diff = Math.floor(totalTime[k][1]), units = [
                 { d: 60, l: "seconds" },
                 { d: 60, l: "minutes" },
@@ -402,7 +419,7 @@ async function onButtonClick(button){
             s = (diff % units[i].d) + " " + units[i].l + " " + s;
             diff = Math.floor(diff / units[i].d);
             }
-            ListEmbed.addField((k+1).toString() + ". " + totalTime[k][0], s.toString());
+            ListEmbed.addField((k+1).toString() + ". " + mention, s.toString());
         }
         
 
@@ -447,7 +464,7 @@ async function onButtonClick(button){
                 .setStyle('PRIMARY')
                 .setDisabled("false"),
         );
-        await button.update({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
+        await button.editReply({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
         logger.info("Sent Voice Leaderboard!")
         break;
 
@@ -917,7 +934,7 @@ async function onButtonClick(button){
             if(parseInt(respVoice.voice_trackings[i].connect_time)<parseInt(startDate))respVoice.voice_trackings[i].connect_time=startDate;
             var flag = false;
             for(var j = 0;j<totalTime.length;j++){
-                if(totalTime[j][0] == respVoice.voice_trackings[i].username){
+                if(totalTime[j][0] == respVoice.voice_trackings[i].user_id){
                     //logger\.info\("Adding to existing row\."\)
                     totalTime[j][1] += Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))
                     flag = true;
@@ -926,7 +943,7 @@ async function onButtonClick(button){
             }
             if(!flag){
                 logger.info("Creating a new row.")
-                totalTime.push([respVoice.voice_trackings[i].username, Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))])
+                totalTime.push([respVoice.voice_trackings[i].user_id, Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))])
             }
         }
         logger.info("Printing array to a table, will only show up in live console, not logs...")
@@ -939,7 +956,15 @@ async function onButtonClick(button){
         .setTitle("Voice Channel Leaderboard (Top talkers - Last 30 days)");
         var count = 10;
         if(totalTime.length<count) {count = totalTime.length;}
+        await button.deferUpdate();
         for(var k = 0;k<count;k++){
+            try{
+                const userId = totalTime[k][0];
+                const user = await button.guild.members.fetch(userId);
+                var mention = user.displayName;
+            }catch(error){
+                logger.error(error.message);
+            }
             var diff = Math.floor(totalTime[k][1]), units = [
                 { d: 60, l: "seconds" },
                 { d: 60, l: "minutes" },
@@ -952,7 +977,7 @@ async function onButtonClick(button){
             s = (diff % units[i].d) + " " + units[i].l + " " + s;
             diff = Math.floor(diff / units[i].d);
             }
-            ListEmbed.addField((k+1).toString() + ". " + totalTime[k][0], s.toString());
+            ListEmbed.addField((k+1).toString() + ". " + mention, s.toString());
         }
         
 
@@ -997,7 +1022,7 @@ async function onButtonClick(button){
                 .setStyle('PRIMARY')
                 .setDisabled("false"),
         );
-        await button.update({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
+        await button.editReply({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
         logger.info("Sent Voice Leaderboard!")
         break;
 
@@ -1033,7 +1058,7 @@ async function onButtonClick(button){
             var flag = false;
             logger.info("Connect Time: " + parseInt(respVoice.voice_trackings[i].connect_time) + ", Disconnect Time: " + parseInt(respVoice.voice_trackings[i].disconnect_time));
             for(var j = 0;j<totalTime.length;j++){
-                if(totalTime[j][0] == respVoice.voice_trackings[i].username){
+                if(totalTime[j][0] == respVoice.voice_trackings[i].user_id){
                     //logger\.info\("Adding to existing row\."\)
                     totalTime[j][1] += Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))
                     flag = true;
@@ -1042,7 +1067,7 @@ async function onButtonClick(button){
             }
             if(!flag){
                 logger.info("Creating a new row.")
-                totalTime.push([respVoice.voice_trackings[i].username, Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))])
+                totalTime.push([respVoice.voice_trackings[i].user_id, Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))])
             }
             logger.info("Added to user '" + respVoice.voice_trackings[i].username + "' time: " + Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time)))
         }
@@ -1056,7 +1081,15 @@ async function onButtonClick(button){
         .setTitle("Voice Channel Leaderboard (Top talkers - Last 7 days)");
         var count = 10;
         if(totalTime.length<count) {count = totalTime.length;}
+        await button.deferUpdate();
         for(var k = 0;k<count;k++){
+            try{
+                const userId = totalTime[k][0];
+                const user = await button.guild.members.fetch(userId);
+                var mention = user.displayName;
+            }catch(error){
+                logger.error(error.message);
+            }
             var diff = Math.floor(totalTime[k][1]), units = [
                 { d: 60, l: "seconds" },
                 { d: 60, l: "minutes" },
@@ -1069,7 +1102,7 @@ async function onButtonClick(button){
             s = (diff % units[i].d) + " " + units[i].l + " " + s;
             diff = Math.floor(diff / units[i].d);
             }
-            ListEmbed.addField((k+1).toString() + ". " + totalTime[k][0], s.toString());
+            ListEmbed.addField((k+1).toString() + ". " + mention, s.toString());
         }
         
 
@@ -1114,7 +1147,7 @@ async function onButtonClick(button){
                 .setStyle('PRIMARY')
                 .setDisabled("false"),
         );
-        await button.update({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
+        await button.editReply({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
         logger.info("Sent Voice Leaderboard!")
         break;
     }
