@@ -1872,6 +1872,7 @@ async function userJoinsVoice(oldMember, newMember){
             user_id: newMember.id,
             username: user.user.username,
             discord_server_id: newMember.guild.id,
+            selfMute: newMember.selfMute,
             disconnect_time: 0
         };
         for ( const item in voiceTrackingData ) {
