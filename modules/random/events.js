@@ -1862,8 +1862,11 @@ async function userJoinsVoice(oldMember, newMember){
         logger.info("oldMember." + item + ": " + oldMember[item]);
     }
     const user = newMember.guild.members.cache.get(newMember.id);
-    const isUserInAfkChannel = newUserChannel === newMember.guild.afkChannelId;
-
+    const isUserInAfkChannel = (newUserChannel === newMember.guild.afkChannelId);
+    var muted = "true";
+    if(newMember.selfMute === false){
+        muted = "false";
+    }
     if (isUserInAfkChannel) {
         newUserChannel = undefined;
     }
@@ -1894,7 +1897,7 @@ async function userJoinsVoice(oldMember, newMember){
                     username:user.user.username,
                     discord_server_id:newMember.guild.id,
                     connect_time:Math.floor(new Date().getTime() / 1000),
-                    selfmute:newMember.selfMute,
+                    selfmute:muted,
                     channel_id:newUserChannel,
                     disconnect_time:0
                 })
@@ -1905,7 +1908,7 @@ async function userJoinsVoice(oldMember, newMember){
                 logger.info("Creating a brand new tracking");
                 const voiceTrackingNewData = {
                     connect_time: currentTime,
-                    selfmute: newMember.selfMute,
+                    selfmute: muted,
                     channel_id: newUserChannel,
                     disconnect_time: 0
                 };
