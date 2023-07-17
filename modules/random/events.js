@@ -1874,7 +1874,7 @@ async function userJoinsVoice(oldMember, newMember){
             discord_server_id: newMember.guild.id,
             disconnect_time: 0
         };
-
+        logger.info("voiceTrackingData: " + voiceTrackingData);
         try {
             const respVoice = await api.get("voice_tracking", voiceTrackingData);
 
