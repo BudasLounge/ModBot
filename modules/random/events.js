@@ -1516,7 +1516,7 @@ async function onButtonClick(button){
                         }
                         logger.info("Team 1: " + playersList);
                         logger.info("Team 2: " + team2);
-                        const voiceChannels = message.guild.channels.cache.filter((channel) => channel.type === 'GUILD_VOICE');
+                        const voiceChannels = button.guild.channels.cache.filter((channel) => channel.type === 'GUILD_VOICE');
                         const channelListTeam1 = new MessageSelectMenu()
                             .setCustomId('GAMEchannelTeam1-'+hostId)
                             .setPlaceholder('Select a voice channel ');
