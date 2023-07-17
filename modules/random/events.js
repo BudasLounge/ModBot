@@ -1521,7 +1521,7 @@ async function onButtonClick(button){
                             .setCustomId('GAMEchannelTeam1-'+hostId)
                             .setPlaceholder('Select a voice channel ');
                         voiceChannels.forEach((channel) => {
-                            channelList.addOptions([
+                            channelListTeam1.addOptions([
                                 {
                                 label: channel.name,
                                 value: channel.id,
@@ -1532,7 +1532,7 @@ async function onButtonClick(button){
                             .setCustomId('GAMEchannelTeam2-'+hostId)
                             .setPlaceholder('Select a voice channel ');
                         voiceChannels.forEach((channel) => {
-                            channelList.addOptions([
+                            channelListTeam2.addOptions([
                                 {
                                 label: channel.name,
                                 value: channel.id,
