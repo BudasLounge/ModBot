@@ -249,7 +249,7 @@ async function onButtonClick(button){
             }
             var flag = false;
             for(var j = 0;j<totalTime.length;j++){
-                if(totalTime[j][0] == respVoice.voice_trackings[i].username){
+                if(totalTime[j][0] == respVoice.voice_trackings[i].user_id){
                     //logger\.info\("Adding to existing row\."\)
                     totalTime[j][1] += Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))
                     flag = true;
@@ -258,7 +258,7 @@ async function onButtonClick(button){
             }
             if(!flag){
                 logger.info("Creating a new row.")
-                totalTime.push([respVoice.voice_trackings[i].username, Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))])
+                totalTime.push([respVoice.voice_trackings[i].user_id, Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))])
             }
         }
         logger.info("Printing array to a table, will only show up in live console, not logs...")
@@ -1451,6 +1451,20 @@ async function onButtonClick(button){
                         }catch(error){
                             logger.error(error);
                         }
+                        const kickableList = new MessageSelectMenu()
+                            .setCustomId('GAMEkick-'+hostId)
+                            .setPlaceholder('Select someone to remove');
+                        var playersList = "";
+                        for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                            playersList += "<@" + respPlayersList.game_joining_players[i].player_id + ">\n";
+                            var player = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
+                            kickableList.addOptions({
+                                label: player.displayName,
+                                value: respPlayersList.game_joining_players[i].player_id,
+                                description: "Kick from the game",
+                                emoji: '👢',
+                            })
+                        }
                         var playersList = "";
                         for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
                             playersList += "<@" + respPlayersList.game_joining_players[i].player_id + ">\n";
@@ -1485,7 +1499,9 @@ async function onButtonClick(button){
                                     .setLabel('End')
                                     .setStyle('SECONDARY'),
                             );
-                        button.update({ embeds: [ListEmbed], components: [row, row2] })
+                        var row3 = new MessageActionRow()
+                            .addComponents(kickableList);
+                        button.update({ embeds: [ListEmbed], components: [row, row2, row3] })
                     }
                     break;
                 case "randomize":
@@ -1763,6 +1779,25 @@ async function onButtonClick(button){
                     }
                     button.reply({ content: "Moved all players to their starting channel!", ephemeral: true})
                     break;
+                case "kick":
+                    if(button.member.id != hostId){
+                        button.reply({ content: "Only the host can kick players...", ephemeral: true})
+                        return;
+                    }
+                    logger.info("Kicking " + button.values[0] + " from " + hostId + "'s game");
+                    var respGame;
+                    try{
+                        respGame = await api.get("game_joining_master", {
+                            host_id:hostId
+                        })
+                    }catch(error){
+                        logger.error(error.message);
+                    }
+                    if(!respGame.game_joining_masters[0]){
+                        button.reply({ content: "There is no game currently available...", ephemeral: true})
+                        return;
+                    }
+                    
                 case "default":
                     logger.info("Default case hit, this should never happen");
                     break;

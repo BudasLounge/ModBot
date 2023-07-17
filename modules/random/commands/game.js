@@ -1,7 +1,7 @@
 module.exports = {
     name: 'game',
     description: 'Various ways to interact with games',
-    syntax: 'game [help/open/join/start/end] Also various option flags.',
+    syntax: 'game',
     num_args: 0,
     args_to_lower: true,
     needs_api: true,
