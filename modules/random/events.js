@@ -162,6 +162,8 @@ async function onButtonClick(button){
         if(totalTime.length<count) {count = totalTime.length;}
         for(var k = 0;k<count;k++){
             try{
+                await button.update("Processing...");
+                await button.deferUpdate();
                 const userId = totalTime[k][0];
                 const user = await button.guild.members.fetch(userId);
                 var mention = user.displayName;
@@ -226,8 +228,6 @@ async function onButtonClick(button){
                 .setStyle('PRIMARY')
                 .setDisabled("false"),
         );
-    await button.reply("Processing...");
-    await button.deferUpdate();
     await button.editReply({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
     logger.info("Sent Voice Leaderboard!")
     break;
