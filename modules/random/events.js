@@ -161,9 +161,13 @@ async function onButtonClick(button){
         var count = 10;
         if(totalTime.length<count) {count = totalTime.length;}
         for(var k = 0;k<count;k++){
-            const userId = totalTime[k][0];
-            const user = await button.guild.members.fetch(userId);
-            const mention = user.displayName;
+            try{
+                const userId = totalTime[k][0];
+                const user = await button.guild.members.fetch(userId);
+                var mention = user.displayName;
+            }catch(error){
+                logger.error(error.message);
+            }
             logger.info(mention);
             var diff = Math.floor(totalTime[k][1]), units = [
                 { d: 60, l: "seconds" },
