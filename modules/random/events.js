@@ -160,7 +160,7 @@ async function onButtonClick(button){
         .setTitle("Voice Channel Leaderboard (Top 10)");
         var count = 10;
         if(totalTime.length<count) {count = totalTime.length;}
-        await button.update("Processing...");
+        //await button.update("Processing...");
         await button.deferUpdate();
         for(var k = 0;k<count;k++){
             try{
