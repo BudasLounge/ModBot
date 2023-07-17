@@ -218,8 +218,8 @@ async function onButtonClick(button){
                 .setStyle('PRIMARY')
                 .setDisabled("false"),
         );
-
-    await button.deferUpdate({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
+    await button.deferUpdate;
+    await button.editReply({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
     logger.info("Sent Voice Leaderboard!")
     break;
    
