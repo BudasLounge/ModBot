@@ -599,10 +599,10 @@ async function onButtonClick(button){
               const disconnectTime = parseInt(voiceTracking.disconnect_time) || currentTime;
               let user;
               try{
-                logger.info("Fetching user  " + voiceTracking.user_id + " with username " + voiceTracking.username)
+                //logger.info("Fetching user  " + voiceTracking.user_id + " with username " + voiceTracking.username)
                 user = await button.guild.members.fetch(voiceTracking.user_id)
               }catch(error){
-                logger.error(error.message +  " ID: " + voiceTracking.user_id, " Username: " + voiceTracking.username);
+                logger.error(error.message +  " ID: " + voiceTracking.user_id+ " Username: " + voiceTracking.username);
                 continue;
               }
               const usernameChannel = `${user.displayName}, channel: ${channelName.name}`;
