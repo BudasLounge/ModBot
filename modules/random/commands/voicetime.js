@@ -174,7 +174,6 @@ module.exports = {
         const ListEmbed = new MessageEmbed()
         .setColor("#c586b6")
         .setTitle(`Voice Channel Leaderboard (Top 10) (Start Date: ${formattedDate})`);
-        await message.deferUpdate();
         for (let i = 0; i < sortedTotalTime.length; i++) {
         const [user_id, duration] = sortedTotalTime[i];
         try{
@@ -249,7 +248,7 @@ module.exports = {
             .setDisabled(false),
         );
 
-        message.channel.editReply({ components: [timingFilters, timingFilters2], embeds: [ListEmbed] });
+        message.channel.send({ components: [timingFilters, timingFilters2], embeds: [ListEmbed] });
         this.logger.info("Sent Voice Leaderboard!");
     }
 }
