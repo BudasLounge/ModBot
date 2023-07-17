@@ -3,7 +3,7 @@ var api = new ApiClient();
 const {MessageActionRow, MessageButton, MessageEmbed, MessageSelectMenu} = require('discord.js');
 
 async function onButtonClick(button){
-    if (!button.isButton()){return}
+    //if (!button.isButton()){return}
         if((button.customId.substr(0,5)==="VOICE")){
         button.customId = button.customId.substr(5)
         switch(button.customId){
