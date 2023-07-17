@@ -1126,7 +1126,7 @@ async function onButtonClick(button){
                         logger.error(error);
                     }
                     if(!respGame.game_joining_masters[0]){
-                        button.channel.send({ content: "There is no game currently available..."}) 
+                        button.reply({ content: "There is no game currently available...", ephemeral: true}) 
                         return;
                     }
                     if(!respGame.game_joining_masters[0].status === "open"){
@@ -1220,7 +1220,7 @@ async function onButtonClick(button){
                         })
                     }catch(error){
                         logger.error(error);
-                        button.channel.send({ content: "There was an error removing you from the game..."})
+                        button.reply({ content: "There was an error removing you from the game...", ephemeral: true})
                     }
                     button.channel.send({ content: `<@${button.member.id}> has left the game!`})
                     break;
@@ -1254,7 +1254,7 @@ async function onButtonClick(button){
                         })
                     }catch(error){
                         logger.error(error);
-                        button.channel.send({ content: "There was an error starting the game..."})
+                        button.reply({ content: "There was an error starting the game...", ephemeral: true})
                     }
                     var respPlayersList;
                     try{
@@ -1339,7 +1339,7 @@ async function onButtonClick(button){
                             })
                         }catch(error){
                             logger.error(error);
-                            button.channel.send({ content: "There was an error ending the game..."})
+                            button.reply({ content: "There was an error ending the game...", ephemeral: true})
                         }
                         var guild = button.guild;
                         var host = await guild.members.fetch(hostId);
@@ -1377,7 +1377,7 @@ async function onButtonClick(button){
                             })
                         }catch(error){
                             logger.error(error);
-                            button.channel.send({ content: "There was an error re-opening the game..."})
+                            button.reply({ content: "There was an error re-opening the game...", ephemeral: true})
                         }
                         var respPlayersList;
                         try{
@@ -1507,7 +1507,6 @@ async function onButtonClick(button){
                     //todo: when pressing leave, fix interaction failed
                     //todo: when game ends, interaction failed fix, update playerslist
                     //todo: if someone makes a game but already has one open, close the old one and make a new one if it has been more than a certain time since it has been used
-                    //todo: add ephemeral to error messages
                 }
         }
 }
