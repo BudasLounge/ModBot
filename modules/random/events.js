@@ -1222,7 +1222,48 @@ async function onButtonClick(button){
                         logger.error(error);
                         button.reply({ content: "There was an error removing you from the game...", ephemeral: true})
                     }
-                    button.channel.send({ content: `<@${button.member.id}> has left the game!`})
+                    var respPlayersList;
+                    try{
+                        respPlayersList = await api.get("game_joining_player", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id)
+                        })
+                    }catch(error){
+                        logger.error(error);
+                    }
+                    var playersList = "";
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        playersList += "<@" + respPlayersList.game_joining_players[i].player_id + ">\n";
+                    }
+                    var guild = button.guild;
+                    var host = await guild.members.fetch(hostId);
+                    var ListEmbed = new MessageEmbed()
+                        .setColor("#c586b6")
+                        .setTitle(`${host.displayName}'s game menu.`);
+                        ListEmbed.addField("Info about the buttons:", "Host is not added to their own game by default, but can join if they want to.\n\nBlurple buttons = anyone can interact\nGray buttons = only host can interact");
+                        ListEmbed.addField("Current Players:", playersList);
+                        var row = new MessageActionRow()
+                        .addComponents(
+                            new MessageButton()
+                                .setCustomId('GAMEjoin-'+hostId)
+                                .setLabel('Join')
+                                .setStyle('PRIMARY'),
+                            new MessageButton()
+                                .setCustomId('GAMEleave-'+hostId)
+                                .setLabel('Leave')
+                                .setStyle('PRIMARY'),
+                        );
+                        var row2 = new MessageActionRow()
+                        .addComponents(
+                            new MessageButton()
+                                .setCustomId('GAMEstart-'+hostId)
+                                .setLabel('Start')
+                                .setStyle('SECONDARY'),
+                            new MessageButton()
+                                .setCustomId('GAMEend-'+hostId)
+                                .setLabel('End')
+                                .setStyle('SECONDARY'),
+                        );
+                    button.update({ embeds: [ListEmbed], components: [row, row2] })
                     break;
                 case "start":
                     if(button.member.id != hostId){
