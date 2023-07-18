@@ -237,18 +237,18 @@ async function onButtonClick(button){
     logger.info("Sent Voice Leaderboard!")
     break;
         case "muted":
+            button.deferUpdate();
         logger.info("Gathering all voice timings");
         try{
             var respVoice = await api.get("voice_tracking",{
                 discord_server_id:button.guild.id,
-                selfmute:true
+                selfmute:"true"
             })
         }catch(error){
             logger.error(error);
         }
         if(!respVoice.voice_trackings[0]){
             button.channel.send({ content: "There is no data available yet..."}) 
-            button.deferUpdate();
             return;
         }
         logger.info("Starting the additive loop");
