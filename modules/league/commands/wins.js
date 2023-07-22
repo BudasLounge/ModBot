@@ -56,7 +56,11 @@ module.exports = {
                 message.reply("Summoner not found!")
                 return;
             }
-            const matchList = await summoner.fetchMatchList({count:gameCount})
+            try{
+                const matchList = await summoner.fetchMatchList({count:gameCount})
+            }catch(err){
+                message.reply("An error occured, this is probably related to Arena mode!")
+            }
             var output = ""
             output +=`Summoner name: ${summoner.name} (level: ${summoner.level}).\n`;
             try{
