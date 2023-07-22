@@ -57,7 +57,7 @@ module.exports = {
                 return;
             }
             try{
-                const matchList = await summoner.fetchMatchList({count:gameCount})
+                var matchList = await summoner.fetchMatchList({count:gameCount})
             }catch(err){
                 message.reply("An error occured, this is probably related to Arena mode!")
             }
