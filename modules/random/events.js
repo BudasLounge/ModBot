@@ -1167,6 +1167,11 @@ async function onButtonClick(button){
             //button.channel.send("Operation: " + operation + ", Host ID: " + hostId);
             switch(operation){
                 case "join":
+                    const voiceChannel = button.member.voice.channel;
+                    if (!voiceChannel) {
+                        message.channel.send({ content: "You need to be in a voice channel to use this command."})
+                        return;
+                    }
                     logger.info("Adding " + button.member.displayName + " to " + hostId + "'s game");
                     var respGame;
                     try{
