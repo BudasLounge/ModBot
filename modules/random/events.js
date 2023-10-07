@@ -1424,8 +1424,8 @@ async function onButtonClick(button){
                     var row = new MessageActionRow()
                         .addComponents(
                             new MessageButton()
-                                .setCustomId('GAMErandomize-'+hostId)
-                                .setLabel('Randomize Teams')
+                                .setCustomId('GAMEgamemodes-'+hostId)
+                                .setLabel('See gamemodes')
                                 .setStyle('SECONDARY'),
                             new MessageButton()
                                 .setCustomId('GAMEreturn-'+hostId)
@@ -1446,6 +1446,38 @@ async function onButtonClick(button){
                     
                     button.update({ embeds: [ListEmbed], components: [row, row2] })
                     break;
+                case "gamemodes":
+                    var guild = button.guild;
+                    var host = await guild.members.fetch(hostId);
+                    var ListEmbed = new MessageEmbed()
+                        .setColor("#c586b6")
+                        .setTitle(`${host.displayName}'s game menu.`);
+                    ListEmbed.addField("Host is choosing gamemode...", "Only the host can interact with the menu now");
+                    ListEmbed.addField("Current Players:", playersList);
+                    var row = new MessageActionRow()
+                        .addComponents(
+                            new MessageButton()
+                                .setCustomId('GAMErandomize-'+hostId)
+                                .setLabel('Random Teams')
+                                .setStyle('SECONDARY'),
+                            new MessageButton()
+                                .setCustomId('GAMEcaptains-'+hostId)
+                                .setLabel('Captains pick')
+                                .setStyle('SECONDARY'),
+                        );
+                    var row2 = new MessageActionRow()
+                        .addComponents(
+                            new MessageButton()
+                                .setCustomId('GAMEend-'+hostId)
+                                .setLabel('Ends the game')
+                                .setStyle('SECONDARY'),
+                            new MessageButton()
+                                .setCustomId('GAMEstart-'+hostId)
+                                .setLabel('Go back')
+                                .setStyle('SECONDARY'),
+                        );
+                    
+                    button.update({ embeds: [ListEmbed], components: [row, row2] })
                 case "end":
                     if(button.member.id != hostId){
                         button.reply({ content: "Only the host can end the game...", ephemeral: true})
