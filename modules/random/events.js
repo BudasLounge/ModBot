@@ -1202,7 +1202,7 @@ async function onButtonClick(button){
                     }catch(error){
                         logger.error(error.message);
                     }
-                    const kickableList = new MessageSelectMenu()
+                    var kickableList = new MessageSelectMenu()
                         .setCustomId('GAMEkick-'+hostId)
                         .setPlaceholder('Select someone to remove');
                     var playersList = "";
@@ -1302,6 +1302,21 @@ async function onButtonClick(button){
                     if(playersList === ""){
                         playersList = "No players currently in the game...";
                     }
+                    var kickableList = new MessageSelectMenu()
+                    .setCustomId('GAMEkick-'+hostId)
+                    .setPlaceholder('Select someone to remove');
+                    var playersList = "";
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        playersList += "<@" + respPlayersList.game_joining_players[i].player_id + ">\n";
+                        var player = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
+                        kickableList.addOptions({
+                            label: player.displayName,
+                            value: respPlayersList.game_joining_players[i].player_id,
+                            description: "Kick from the game",
+                            emoji: '👢',
+                        })
+                    }
+
                     var guild = button.guild;
                     var host = await guild.members.fetch(hostId);
                     var ListEmbed = new MessageEmbed()
@@ -1331,7 +1346,9 @@ async function onButtonClick(button){
                                 .setLabel('End')
                                 .setStyle('SECONDARY'),
                         );
-                    button.update({ embeds: [ListEmbed], components: [row, row2] })
+                        var row3 = new MessageActionRow()
+                            .addComponents(kickableList);
+                    button.update({ embeds: [ListEmbed], components: [row, row2, row3] })
                     break;
                 case "start":
                     if(button.member.id != hostId){
@@ -1842,13 +1859,97 @@ async function onButtonClick(button){
                             host_id:hostId
                         })
                     }catch(error){
-                        logger.error(error.message);
+                        logger.error(error);
                     }
                     if(!respGame.game_joining_masters[0]){
-                        button.reply({ content: "There is no game currently available...", ephemeral: true})
+                        button.reply({ content: "There is no game currently available...", ephemeral: true}) 
                         return;
                     }
-                    
+                    var respGamePlayer;
+                    try{
+                        respGamePlayer = await api.get("game_joining_player", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id),
+                            player_id:button.values[0]
+                        })
+                    }catch(error){
+                        logger.error(error);
+                    }
+                    if(!respGamePlayer.game_joining_players[0]){
+                        button.reply({ content: "You are not currently in this game...", ephemeral: true})
+                        return;
+                    }
+                    var respGameLeave;
+                    try{
+                        respGameLeave = await api.delete("game_joining_player", {
+                            game_player_id:parseInt(respGamePlayer.game_joining_players[0].game_player_id)
+                        })
+                    }catch(error){
+                        logger.error(error);
+                        button.reply({ content: "There was an error removing you from the game...", ephemeral: true})
+                    }
+                    var respPlayersList;
+                    try{
+                        respPlayersList = await api.get("game_joining_player", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id)
+                        })
+                    }catch(error){
+                        logger.error(error);
+                    }
+                    var playersList = "";
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        playersList += "<@" + respPlayersList.game_joining_players[i].player_id + ">\n";
+                    }
+                    if(playersList === ""){
+                        playersList = "No players currently in the game...";
+                    }
+                    var kickableList = new MessageSelectMenu()
+                    .setCustomId('GAMEkick-'+hostId)
+                    .setPlaceholder('Select someone to remove');
+                    var playersList = "";
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        playersList += "<@" + respPlayersList.game_joining_players[i].player_id + ">\n";
+                        var player = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
+                        kickableList.addOptions({
+                            label: player.displayName,
+                            value: respPlayersList.game_joining_players[i].player_id,
+                            description: "Kick from the game",
+                            emoji: '👢',
+                        })
+                    }
+
+                    var guild = button.guild;
+                    var host = await guild.members.fetch(hostId);
+                    var ListEmbed = new MessageEmbed()
+                        .setColor("#c586b6")
+                        .setTitle(`${host.displayName}'s game menu.`);
+                        ListEmbed.addField("Info about the buttons:", "Host is not added to their own game by default, but can join if they want to.\n\nBlurple buttons = anyone can interact\nGray buttons = only host can interact");
+                        ListEmbed.addField("Current Players:", playersList);
+                        var row = new MessageActionRow()
+                        .addComponents(
+                            new MessageButton()
+                                .setCustomId('GAMEjoin-'+hostId)
+                                .setLabel('Join')
+                                .setStyle('PRIMARY'),
+                            new MessageButton()
+                                .setCustomId('GAMEleave-'+hostId)
+                                .setLabel('Leave')
+                                .setStyle('PRIMARY'),
+                        );
+                        var row2 = new MessageActionRow()
+                        .addComponents(
+                            new MessageButton()
+                                .setCustomId('GAMEstart-'+hostId)
+                                .setLabel('Start')
+                                .setStyle('SECONDARY'),
+                            new MessageButton()
+                                .setCustomId('GAMEend-'+hostId)
+                                .setLabel('End')
+                                .setStyle('SECONDARY'),
+                        );
+                        var row3 = new MessageActionRow()
+                            .addComponents(kickableList);
+                    button.update({ embeds: [ListEmbed], components: [row, row2, row3] })
+                    break;
                 case "default":
                     logger.info("Default case hit, this should never happen");
                     break;
