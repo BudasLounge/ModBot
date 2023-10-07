@@ -1447,6 +1447,19 @@ async function onButtonClick(button){
                     button.update({ embeds: [ListEmbed], components: [row, row2] })
                     break;
                 case "gamemodes":
+                    var respPlayersList;
+                    try{
+                        respPlayersList = await api.get("game_joining_player", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id)
+                        })
+                    }catch(error){
+                        logger.error(error);
+                    }
+                    var playersList = "";
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        playersList += "<@" + respPlayersList.game_joining_players[i].player_id + ">\n";
+                    }
+                    
                     var guild = button.guild;
                     var host = await guild.members.fetch(hostId);
                     var ListEmbed = new MessageEmbed()
