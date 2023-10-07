@@ -1451,6 +1451,18 @@ async function onButtonClick(button){
                         button.reply({ content: "Only the host can start the game...", ephemeral: true})
                         return;
                     }
+                    var respGame;
+                    try{
+                        respGame = await api.get("game_joining_master", {
+                            host_id:hostId
+                        })
+                    }catch(error){
+                        logger.error(error);
+                    }
+                    if(!respGame.game_joining_masters[0]){
+                        button.reply({ content: "There is no game currently available...", ephemeral: true}) 
+                        return;
+                    }
                     var respPlayersList;
                     try{
                         respPlayersList = await api.get("game_joining_player", {
