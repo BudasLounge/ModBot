@@ -1184,6 +1184,19 @@ async function onButtonClick(button){
                         button.reply({ content: "That game is not currently open...", ephemeral: true}) 
                         return;
                     }
+                    var respGamePlayer;
+                    try{
+                        respGamePlayer = await api.get("game_joining_player", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id),
+                            player_id:button.member.id
+                        })
+                    }catch(error){
+                        logger.error(error.message);
+                    }
+                    if(respGamePlayer.game_joining_players[0]){
+                        button.reply({ content: "You are already in this game...", ephemeral: true})
+                        return;
+                    }
                     var respGameJoin;
                     try{
                         respGameJoin = await api.post("game_joining_player", {
