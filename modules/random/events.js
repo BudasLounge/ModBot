@@ -1798,6 +1798,45 @@ async function onButtonClick(button){
                         button.update({ embeds: [ListEmbed], components: [row, row2, row3, row4] })
                     }
                     break;
+                case "captains":
+                    if(button.member.id != hostId){
+                        button.reply({ content: "Only the host can captains pick the game...", ephemeral: true})
+                        return;
+                    }
+                    logger.info(hostId + " chose captain pick");
+                    var respGame;
+                    try{
+                        respGame = await api.get("game_joining_master", {
+                            host_id:hostId
+                        })
+                    }catch(error){
+                        logger.error(error);
+                    }
+                    if(!respGame.game_joining_masters[0]){
+                        button.reply({ content: "There is no game currently available...", ephemeral: true})
+                        return;
+                    }
+                    if(!respGame.game_joining_masters[0].status === "started"){
+                        button.reply({ content: "The game has not started yet...this is definitely an error. Report it to the creator.", ephemeral: true})
+                        return;
+                    }
+                    var respPlayersList;
+                    try{
+                        respPlayersList = await api.get("game_joining_player", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id)
+                        })
+                    }catch(error){
+                        logger.error(error);
+                    }
+                    if(respPlayersList.game_joining_players.length<2){
+                        button.channel.send({ content: "There are not enough players to do a captain pick..."})
+                        return;
+                    }
+                    var playersList = [];
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        playersList.push("<@" + respPlayersList.game_joining_players[i].player_id + ">");
+                    }
+                    break;
                 case "channelTeam1":
                     if(button.member.id != hostId){
                         button.reply({ content: "Only the host can select the channel...", ephemeral: true})
@@ -1930,6 +1969,10 @@ async function onButtonClick(button){
                 case "kick":
                     if(button.member.id != hostId){
                         button.reply({ content: "Only the host can kick players...", ephemeral: true})
+                        return;
+                    }
+                    if(button.values[0] === hostId){
+                        button.reply({ content: "You cannot kick yourself from your own game...", ephemeral: true})
                         return;
                     }
                     logger.info("Kicking " + button.values[0] + " from " + hostId + "'s game");
