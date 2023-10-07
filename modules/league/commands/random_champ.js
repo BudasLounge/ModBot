@@ -88,7 +88,7 @@ module.exports = {
             } catch (error) {
             this.logger.error(error.response);
             }
-            var respChamps = [...respChampsPrim.league_champions, ...respChampsSec.league_champions];
+            const respChamps = [...respChampsPrim.league_champions, ...respChampsSec.league_champions, ...respChampsPrim.league_champions, ...respChampsPrim.league_champions];
             var seed = Math.floor(Math.random() * respChamps.length);
             message.channel.send({
             content: "<@" + message.member.id + "> " + "Your " + args[1] + " champ is: " + respChamps[seed].name,
