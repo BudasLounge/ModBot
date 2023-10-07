@@ -1436,7 +1436,7 @@ async function onButtonClick(button){
                         .addComponents(
                             new MessageButton()
                                 .setCustomId('GAMEend-'+hostId)
-                                .setLabel('End')
+                                .setLabel('End game')
                                 .setStyle('SECONDARY'),
                             new MessageButton()
                                 .setCustomId('GAMEreopen-'+hostId)
@@ -1498,7 +1498,7 @@ async function onButtonClick(button){
                         .addComponents(
                             new MessageButton()
                                 .setCustomId('GAMEend-'+hostId)
-                                .setLabel('Ends the game')
+                                .setLabel('End game')
                                 .setStyle('SECONDARY'),
                             new MessageButton()
                                 .setCustomId('GAMEstart-'+hostId)
