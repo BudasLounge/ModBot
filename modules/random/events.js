@@ -1478,6 +1478,7 @@ async function onButtonClick(button){
                         );
                     
                     button.update({ embeds: [ListEmbed], components: [row, row2] })
+                    break;
                 case "end":
                     if(button.member.id != hostId){
                         button.reply({ content: "Only the host can end the game...", ephemeral: true})
