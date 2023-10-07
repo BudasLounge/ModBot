@@ -1169,7 +1169,7 @@ async function onButtonClick(button){
                 case "join":
                     const voiceChannel = button.member.voice.channel;
                     if (!voiceChannel) {
-                        button.reply({ content: "You need to be in a voice channel to use this command.", ephemeral: true})
+                        button.reply({ content: "You need to be in a voice channel to join a game.", ephemeral: true})
                         return;
                     }
                     logger.info("Adding " + button.member.displayName + " to " + hostId + "'s game");
