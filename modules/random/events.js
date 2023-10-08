@@ -1840,7 +1840,7 @@ async function onButtonClick(button){
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
                         playersList.push("<@" + respPlayersList.game_joining_players[i].player_id + ">");
                     }
-                    const chooseCaptain1 = new MessageSelectMenu()
+                    var chooseCaptain1 = new MessageSelectMenu()
                         .setCustomId('GAMEcaptain1-'+hostId)
                         .setPlaceholder('Select a player to make into the captain for Team 1');
                     playersList.forEach((player) => {
