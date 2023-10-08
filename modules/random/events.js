@@ -1838,7 +1838,7 @@ async function onButtonClick(button){
                     }
                     var playersList = "";
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
-                        playersList += ("<@" + respPlayersList.game_joining_players[i].player_id + ">");
+                        playersList += ("<@" + respPlayersList.game_joining_players[i].player_id + ">\n");
                     }
                     logger.info("PlayerList: " + playersList)
                     var chooseCaptain1 = new MessageSelectMenu()
@@ -1932,14 +1932,16 @@ async function onButtonClick(button){
                         logger.error(error.message);
                     }
 
-                    var playersList = [];
+                    var playersList = "";
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
-                        playersList.push("<@" + respPlayersList.game_joining_players[i].player_id + ">");
+                        playersList += ("<@" + respPlayersList.game_joining_players[i].player_id + ">\n");
                     }
-                    const chooseCaptain2 = new MessageSelectMenu()
-                        .setCustomId('GAMEcaptain2-'+hostId)
-                        .setPlaceholder('Select a player to make into the captain for Team 2');
-                    playersList.forEach((player) => {
+                    logger.info("PlayerList: " + playersList)
+                    var chooseCaptain2 = new MessageSelectMenu()
+                        .setCustomId('GAMEcaptain1-'+hostId)
+                        .setPlaceholder('Select a player to make into the captain for Team 1');
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        var player = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
                         chooseCaptain2.addOptions([
                             {
                                 label: player.displayName,
@@ -1947,7 +1949,7 @@ async function onButtonClick(button){
                                 description: "Make Team 2 captain",
                             },
                         ]);
-                    });
+                    };
                     
                     var guild = button.guild;
                     var host = await guild.members.fetch(hostId);
