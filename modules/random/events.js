@@ -1921,11 +1921,12 @@ async function onButtonClick(button){
                         return;
                     }
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
-                        const player = respPlayersList.game_joining_players[0];
+                        const player = respPlayersList.game_joining_players[i];
                         for (let key in player) {
                             logger.info(`${key}: ${player[key]}`);
                         }
                     }
+                    logger.info("captain1 " + captain1)
                     var respGamePlayer;
                     try{
                         respGamePlayer = await api.put("game_joining_player", {
