@@ -1836,9 +1836,9 @@ async function onButtonClick(button){
                         button.channel.send({ content: "There are not enough players to do a captain pick..."})
                         return;
                     }
-                    var playersList = [];
+                    var playersList = "";
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
-                        playersList.push("<@" + respPlayersList.game_joining_players[i].player_id + ">");
+                        playersList += ("<@" + respPlayersList.game_joining_players[i].player_id + ">");
                     }
                     logger.info("PlayerList: " + playersList)
                     var chooseCaptain1 = new MessageSelectMenu()
