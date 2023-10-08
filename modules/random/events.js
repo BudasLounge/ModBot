@@ -1843,16 +1843,16 @@ async function onButtonClick(button){
                     var chooseCaptain1 = new MessageSelectMenu()
                         .setCustomId('GAMEcaptain1-'+hostId)
                         .setPlaceholder('Select a player to make into the captain for Team 1');
-                    playersList.forEach((player) => {
-                        logger.info("Player: " + player);
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        var player = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
                         chooseCaptain1.addOptions([
                             {
-                                label: player.displayName,
-                                value: player.player_id,
+                                label: player,
+                                value: respPlayersList.game_joining_players[i].player_id,
                                 description: "Make Team 1 captain",
                             },
                         ]);
-                    });
+                    };
                     
                     var guild = button.guild;
                     var host = await guild.members.fetch(hostId);
