@@ -1920,10 +1920,11 @@ async function onButtonClick(button){
                         button.reply({ content: "There are no players in the game...", ephemeral: true})
                         return;
                     }
+                    var newCaptain1 = "";
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
-                        const player = respPlayersList.game_joining_players[i];
-                        for (let key in player) {
-                            logger.info(`${key}: ${player[key]}`);
+                        if(respPlayersList.game_joining_players[i].player_id === captain1){
+                            newCaptain1 = respPlayersList.game_joining_players[i].game_player_id;
+                            break;
                         }
                     }
                     logger.info("captain1 " + captain1)
@@ -1932,7 +1933,8 @@ async function onButtonClick(button){
                         respGamePlayer = await api.put("game_joining_player", {
                             game_id:parseInt(respGame.game_joining_masters[0].game_id),
                             player_id:captain1,
-                            captain:"yes"
+                            captain:"yes",
+                            game_player_id:newCaptain1
                         })
                     }catch(error){
                         logger.error(error.message);
