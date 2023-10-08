@@ -1847,7 +1847,7 @@ async function onButtonClick(button){
                         var player = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
                         chooseCaptain1.addOptions([
                             {
-                                label: player,
+                                label: player.displayName,
                                 value: respPlayersList.game_joining_players[i].player_id,
                                 description: "Make Team 1 captain",
                             },
