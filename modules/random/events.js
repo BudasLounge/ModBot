@@ -1930,7 +1930,7 @@ async function onButtonClick(button){
                     }catch(error){
                         logger.error(error.message);
                     }
-
+                    logger.info("respGamePlayer: " + respGamePlayer);
                     var playersList = "";
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
                         playersList += ("<@" + respPlayersList.game_joining_players[i].player_id + ">\n");
