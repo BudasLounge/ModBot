@@ -1844,7 +1844,7 @@ async function onButtonClick(button){
                         .setCustomId('GAMEcaptain1-'+hostId)
                         .setPlaceholder('Select a player to make into the captain for Team 1');
                     playersList.forEach((player) => {
-                        captainList1.addOptions([
+                        chooseCaptain1.addOptions([
                             {
                                 label: player.displayName,
                                 value: respPlayersList.game_joining_players[i].player_id,
@@ -1938,7 +1938,7 @@ async function onButtonClick(button){
                         .setCustomId('GAMEcaptain2-'+hostId)
                         .setPlaceholder('Select a player to make into the captain for Team 2');
                     playersList.forEach((player) => {
-                        captainList1.addOptions([
+                        chooseCaptain2.addOptions([
                             {
                                 label: player.displayName,
                                 value: respPlayersList.game_joining_players[i].player_id,
