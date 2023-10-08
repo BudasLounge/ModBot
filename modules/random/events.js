@@ -1937,7 +1937,7 @@ async function onButtonClick(button){
                     }
                     var chooseCaptain2 = new MessageSelectMenu()
                         .setCustomId('GAMEcaptain1-'+hostId)
-                        .setPlaceholder('Select a player to make into the captain for Team 1');
+                        .setPlaceholder('Select a player to make into the captain for Team 2');
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
                         var player = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
                         chooseCaptain2.addOptions([
