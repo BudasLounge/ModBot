@@ -1907,6 +1907,7 @@ async function onButtonClick(button){
                         return;
                     }
                     const captain1 = button.values[0];
+                    logger.info("captain1: " + captain1);
                     var respPlayersList;
                     try{
                         respPlayersList = await api.get("game_joining_player", {
