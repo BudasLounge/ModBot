@@ -1844,6 +1844,7 @@ async function onButtonClick(button){
                         .setCustomId('GAMEcaptain1-'+hostId)
                         .setPlaceholder('Select a player to make into the captain for Team 1');
                     playersList.forEach((player) => {
+                        logger.info("Player: " + player);
                         chooseCaptain1.addOptions([
                             {
                                 label: player.displayName,
