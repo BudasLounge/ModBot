@@ -1934,7 +1934,8 @@ async function onButtonClick(button){
                             game_id:parseInt(respGame.game_joining_masters[0].game_id),
                             player_id:captain1,
                             captain:"yes",
-                            game_player_id:parseInt(newCaptain1)
+                            game_player_id:parseInt(newCaptain1),
+                            team:"1"
                         })
                     }catch(error){
                         logger.error(error.message);
