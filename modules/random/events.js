@@ -1885,6 +1885,7 @@ async function onButtonClick(button){
                     button.update({ embeds: [ListEmbed], components: [row, row2, row3] })
                     break;
                 case "captain1":
+                    logger.info("Setting captain 1");
                     if(button.member.id != hostId){
                         button.reply({ content: "Only the host can choose the captain...", ephemeral: true})
                         return;
