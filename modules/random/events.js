@@ -1920,6 +1920,12 @@ async function onButtonClick(button){
                         button.reply({ content: "There are no players in the game...", ephemeral: true})
                         return;
                     }
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        const player = respPlayersList.game_joining_players[0];
+                        for (let key in player) {
+                            console.log(`${key}: ${player[key]}`);
+                        }
+                    }
                     var respGamePlayer;
                     try{
                         respGamePlayer = await api.put("game_joining_player", {
@@ -1936,7 +1942,7 @@ async function onButtonClick(button){
                         playersList += ("<@" + respPlayersList.game_joining_players[i].player_id + ">\n");
                     }
                     var chooseCaptain2 = new MessageSelectMenu()
-                        .setCustomId('GAMEcaptain1-'+hostId)
+                        .setCustomId('GAMEcaptain2-'+hostId)
                         .setPlaceholder('Select a player to make into the captain for Team 2');
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
                         var player = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
