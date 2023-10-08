@@ -1848,7 +1848,7 @@ async function onButtonClick(button){
                         chooseCaptain1.addOptions([
                             {
                                 label: player.displayName,
-                                value: respPlayersList.game_joining_players[i].player_id,
+                                value: player.player_id,
                                 description: "Make Team 1 captain",
                             },
                         ]);
