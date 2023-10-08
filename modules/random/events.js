@@ -1408,6 +1408,10 @@ async function onButtonClick(button){
                     }catch(error){
                         logger.error(error);
                     }
+                    if(respPlayersList.game_joining_players.length<2){
+                        button.reply({ content: "You need at least 2 players to start the game...", ephemeral: true})
+                        return;
+                    }
                     var playersList = "";
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
                         playersList += "<@" + respPlayersList.game_joining_players[i].player_id + ">\n";
@@ -1654,7 +1658,7 @@ async function onButtonClick(button){
                     break;
                 case "randomize":
                     if(button.member.id != hostId){
-                        button.reply({ content: "Only the host can randomize the game...", ephemeral: true})
+                        button.reply({ content: "Only the host can choose the gamemode...", ephemeral: true})
                         return;
                     }
                     logger.info("Randomizing " + hostId + "'s game");
@@ -1800,7 +1804,7 @@ async function onButtonClick(button){
                     break;
                 case "captains":
                     if(button.member.id != hostId){
-                        button.reply({ content: "Only the host can captains pick the game...", ephemeral: true})
+                        button.reply({ content: "Only the host can choose the game mode...", ephemeral: true})
                         return;
                     }
                     logger.info(hostId + " chose captain pick");
@@ -1836,6 +1840,191 @@ async function onButtonClick(button){
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
                         playersList.push("<@" + respPlayersList.game_joining_players[i].player_id + ">");
                     }
+                    const chooseCaptain1 = new MessageSelectMenu()
+                        .setCustomId('GAMEcaptain1-'+hostId)
+                        .setPlaceholder('Select a player to make into the captain for Team 1');
+                    playersList.forEach((player) => {
+                        captainList1.addOptions([
+                            {
+                                label: player.displayName,
+                                value: respPlayersList.game_joining_players[i].player_id,
+                                description: "Make Team 1 captain",
+                            },
+                        ]);
+                    });
+                    
+                    var guild = button.guild;
+                    var host = await guild.members.fetch(hostId);
+                    var ListEmbed = new MessageEmbed()
+                        .setColor("#c586b6")
+                        .setTitle(`${host.displayName}'s game menu.`);
+                    ListEmbed.addField("Choosing Captains!", "Only the host can interact with the menu now");
+                    ListEmbed.addField("Current Players:", playersList);
+                    var row = new MessageActionRow()
+                        .addComponents(
+                            new MessageButton()
+                                .setCustomId('GAMEreturn-'+hostId)
+                                .setLabel('Return players to starting channel')
+                                .setStyle('SECONDARY'),
+                        );
+                    var row2 = new MessageActionRow()
+                        .addComponents(
+                            new MessageButton()
+                                .setCustomId('GAMEend-'+hostId)
+                                .setLabel('End')
+                                .setStyle('SECONDARY'),
+                            new MessageButton()
+                                .setCustomId('GAMEreopen-'+hostId)
+                                .setLabel('Re-open game')
+                                .setStyle('SECONDARY'),
+                        );
+                    var row3 = new MessageActionRow()
+                        .addComponents(chooseCaptain1);
+                    button.update({ embeds: [ListEmbed], components: [row, row2, row3] })
+                    break;
+                case "captain1":
+                    if(button.member.id != hostId){
+                        button.reply({ content: "Only the host can choose the captain...", ephemeral: true})
+                        return;
+                    }
+                    logger.info("Setting captain 1");
+                    var respGame;
+                    try{
+                        respGame = await api.get("game_joining_master", {
+                            host_id:hostId
+                        })
+                        logger.info("respGame: " + respGame);
+                    }catch(error){
+                        logger.error(error.message);
+                    }
+                    if(!respGame.game_joining_masters[0]){
+                        button.reply({ content: "There is no game currently available...", ephemeral: true})
+                        return;
+                    }
+                    if(!(respGame.game_joining_masters[0].status === "started")){
+                        button.reply({ content: "The game has not started yet...", ephemeral: true})
+                        return;
+                    }
+                    const captain1 = button.values[0];
+                    var respPlayersList;
+                    try{
+                        respPlayersList = await api.get("game_joining_player", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id)
+                        })
+                        logger.info("respPlayersList: " + respPlayersList);
+                    }catch(error){
+                        logger.error(error.message);
+                    }
+                    if(!respPlayersList.game_joining_players[0]){
+                        button.reply({ content: "There are no players in the game...", ephemeral: true})
+                        return;
+                    }
+                    var respGamePlayer;
+                    try{
+                        respGamePlayer = await api.put("game_joining_player", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id),
+                            player_id:captain1,
+                            captain:"yes"
+                        })
+                    }catch(error){
+                        logger.error(error.message);
+                    }
+
+                    var playersList = [];
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        playersList.push("<@" + respPlayersList.game_joining_players[i].player_id + ">");
+                    }
+                    const chooseCaptain2 = new MessageSelectMenu()
+                        .setCustomId('GAMEcaptain2-'+hostId)
+                        .setPlaceholder('Select a player to make into the captain for Team 2');
+                    playersList.forEach((player) => {
+                        captainList1.addOptions([
+                            {
+                                label: player.displayName,
+                                value: respPlayersList.game_joining_players[i].player_id,
+                                description: "Make Team 2 captain",
+                            },
+                        ]);
+                    });
+                    
+                    var guild = button.guild;
+                    var host = await guild.members.fetch(hostId);
+                    var ListEmbed = new MessageEmbed()
+                        .setColor("#c586b6")
+                        .setTitle(`${host.displayName}'s game menu.`);
+                    ListEmbed.addField("Choosing Captains!", "Only the host can interact with the menu now");
+                    ListEmbed.addField("Current Players:", playersList);
+                    var row = new MessageActionRow()
+                        .addComponents(
+                            new MessageButton()
+                                .setCustomId('GAMEreturn-'+hostId)
+                                .setLabel('Return players to starting channel')
+                                .setStyle('SECONDARY'),
+                        );
+                    var row2 = new MessageActionRow()
+                        .addComponents(
+                            new MessageButton()
+                                .setCustomId('GAMEend-'+hostId)
+                                .setLabel('End')
+                                .setStyle('SECONDARY'),
+                            new MessageButton()
+                                .setCustomId('GAMEreopen-'+hostId)
+                                .setLabel('Re-open game')
+                                .setStyle('SECONDARY'),
+                        );
+                    var row3 = new MessageActionRow()
+                        .addComponents(chooseCaptain2);
+                    button.update({ embeds: [ListEmbed], components: [row, row2, row3] })
+                    break;
+                case "captain2":
+                    if(button.member.id != hostId){
+                        button.reply({ content: "Only the host can choose the captain...", ephemeral: true})
+                        return;
+                    }
+                    logger.info("Setting captain 2");
+                    var respGame;
+                    try{
+                        respGame = await api.get("game_joining_master", {
+                            host_id:hostId
+                        })
+                        logger.info("respGame: " + respGame);
+                    }catch(error){
+                        logger.error(error.message);
+                    }
+                    if(!respGame.game_joining_masters[0]){
+                        button.reply({ content: "There is no game currently available...", ephemeral: true})
+                        return;
+                    }
+                    if(!(respGame.game_joining_masters[0].status === "started")){
+                        button.reply({ content: "The game has not started yet...", ephemeral: true})
+                        return;
+                    }
+                    const captain2 = button.values[0];
+                    var respPlayersList;
+                    try{
+                        respPlayersList = await api.get("game_joining_player", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id)
+                        })
+                        logger.info("respPlayersList: " + respPlayersList);
+                    }
+                    catch(error){
+                        logger.error(error.message);
+                    }
+                    if(!respPlayersList.game_joining_players[0]){
+                        button.reply({ content: "There are no players in the game...", ephemeral: true})
+                        return;
+                    }
+                    var respGamePlayer;
+                    try{
+                        respGamePlayer = await api.put("game_joining_player", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id),
+                            player_id:captain2,
+                            captain:"yes"
+                        })
+                    }catch(error){
+                        logger.error(error.message);
+                    }
+
                     break;
                 case "channelTeam1":
                     if(button.member.id != hostId){
