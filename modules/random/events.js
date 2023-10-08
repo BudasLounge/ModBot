@@ -1923,7 +1923,7 @@ async function onButtonClick(button){
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
                         const player = respPlayersList.game_joining_players[0];
                         for (let key in player) {
-                            console.log(`${key}: ${player[key]}`);
+                            logger.info(`${key}: ${player[key]}`);
                         }
                     }
                     var respGamePlayer;
