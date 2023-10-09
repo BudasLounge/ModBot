@@ -2029,6 +2029,7 @@ async function onButtonClick(button){
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
                         if(respPlayersList.game_joining_players[i].player_id === captain2){
                             newCaptain2 = respPlayersList.game_joining_players[i].game_player_id;
+                            respPlayersList.game_joining_players[i].team = "2";
                             break;
                         }
                     }
@@ -2049,6 +2050,11 @@ async function onButtonClick(button){
                     var captain1pick = new MessageSelectMenu()
                         .setCustomId('GAMEcaptain1pick-'+hostId)
                         .setPlaceholder('Select someone to add to team 1');
+                        captain1pick.addOptions({
+                            label: "Blank Placeholder",
+                            value: "none",
+                            description: "Prevents the dropdown from disappearing",
+                        })
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
                         var player = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
                         captain1pick.addOptions({
@@ -2061,6 +2067,11 @@ async function onButtonClick(button){
                     var captain2pick = new MessageSelectMenu()
                         .setCustomId('GAMEcaptain2pick-'+hostId)
                         .setPlaceholder('Select someone to add to team 2');
+                        captain2pick.addOptions({
+                            label: "Blank Placeholder",
+                            value: "none",
+                            description: "Prevents the dropdown from disappearing",
+                        })
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
                         var player = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
                         captain2pick.addOptions({
@@ -2073,6 +2084,9 @@ async function onButtonClick(button){
 
                     var playersList = "";
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        if(!respPlayersList.game_joining_players[i].team === "none"){
+                            continue;
+                        }
                         playersList += ("<@" + respPlayersList.game_joining_players[i].player_id + ">\n");
                     }
                     var guild = button.guild;
@@ -2104,19 +2118,330 @@ async function onButtonClick(button){
                     button.update({ embeds: [ListEmbed], components: [row, row2, row3] })
 
                     break;
-                case "captain1pick":
-                    //todo: add pick to team 1
-                    //todo: remove from no team
-                    //todo: remove from captain 2 pick
-                    //todo: remove from captain 1 pick
-                    //todo: update embed to show who is on what team and take them off of no team
+                case "captain1pick":                    
+                    var respGame;
+                    try{
+                        respGame = await api.get("game_joining_master", {
+                            host_id:hostId
+                        })
+                    }catch(error){
+                        logger.error(error.message);
+                    }
+                    if(!respGame.game_joining_masters[0]){
+                        button.reply({ content: "There is no game currently available...", ephemeral: true})
+                        return;
+                    }
+                    var respCaptain1;
+                    try{
+                        respCaptain1 = await api.get("game_joining_player", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id),
+                            team:"1",
+                            captain:"yes"
+                        })
+                    }catch(error){
+                        logger.error(error.message);
+                    }
+                    if(!respCaptain1.game_joining_players[0]){
+                        button.reply({ content: "Found no captain for team 1. Something broke..."})
+                        return;
+                    }
+
+                    if(button.member.id !=respCaptain1.game_joining_players[0].player_id){
+                        button.reply({ content: "Only the captain for team 1 can choose the player...", ephemeral: true})
+                        return;
+                    }
+                    logger.info("Setting captain 1 pick");
+
+                    var respPlayersList;
+                    try{
+                        respPlayersList = await api.get("game_joining_player", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id)
+                        })
+                    }catch(error){
+                        logger.error(error.message);
+                    }
+                    if(!respPlayersList.game_joining_players[0]){
+                        button.reply({ content: "There are no players in the game...", ephemeral: true})
+                        return;
+                    }
+                    const player1 = button.values[0];
+                    if(player1 === "none"){
+                        button.reply({ content: "You must select a player...", ephemeral: true})
+                        return;
+                    }else{
+                        var captain1player = "";
+                        for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                            if(respPlayersList.game_joining_players[i].player_id === player1){
+                                captain1player = respPlayersList.game_joining_players[i].game_player_id;
+                                respPlayersList.game_joining_players[i].team = "1";
+                                break;
+                            }
+                        }
+                        var respCaptain1pick;
+                        try{
+                            respCaptain1pick = await api.put("game_joining_player", {
+                                game_id:parseInt(respGame.game_joining_masters[0].game_id),
+                                game_player_id:parseInt(captain1player),
+                                team:"1"
+                            })
+                        }catch(error){
+                            logger.error(error.message);
+                        }
+                    }
+                    var captain1pick = new MessageSelectMenu()
+                        .setCustomId('GAMEcaptain1pick-'+hostId)
+                        .setPlaceholder('Select someone to add to team 1');
+                        captain1pick.addOptions({
+                            label: "Blank Placeholder",
+                            value: "none",
+                            description: "Prevents the dropdown from disappearing",
+                        })
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        if(!respPlayersList.game_joining_players[i].team === "none" || !respPlayersList.game_joining_players[i].team === "2"){
+                            continue;
+                        }
+                        var player = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
+                        captain1pick.addOptions({
+                            label: player.displayName,
+                            value: respPlayersList.game_joining_players[i].player_id,
+                            description: "Add to team 1",
+                            emoji: '1️⃣',
+                        })
+                    }
+                    var captain2pick = new MessageSelectMenu()
+                        .setCustomId('GAMEcaptain2pick-'+hostId)
+                        .setPlaceholder('Select someone to add to team 2');
+                        captain2pick.addOptions({
+                            label: "Blank Placeholder",
+                            value: "none",
+                            description: "Prevents the dropdown from disappearing",
+                        })
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        if(!respPlayersList.game_joining_players[i].team === "none" || !respPlayersList.game_joining_players[i].team === "1"){
+                            continue;
+                        }
+                        var player = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
+                        captain2pick.addOptions({
+                            label: player.displayName,
+                            value: respPlayersList.game_joining_players[i].player_id,
+                            description: "Add to team 2",
+                            emoji: '2️⃣',
+                        })
+                    }
+
+                    var playersListNoTeam = "";
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        if(!respPlayersList.game_joining_players[i].team === "none"){
+                            continue;
+                        }
+                        playersListNoTeam += ("<@" + respPlayersList.game_joining_players[i].player_id + ">\n");
+                    }
+                    var playersListTeam1 = "";
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        if(!respPlayersList.game_joining_players[i].team === "1"){
+                            continue;
+                        }
+                        playersListTeam1 += ("<@" + respPlayersList.game_joining_players[i].player_id + ">\n");
+                    }
+                    var playersListTeam2 = "";
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        if(!respPlayersList.game_joining_players[i].team === "2"){
+                            continue;
+                        }
+                        playersListTeam2 += ("<@" + respPlayersList.game_joining_players[i].player_id + ">\n");
+                    }
+                    var guild = button.guild;
+                    var host = await guild.members.fetch(hostId);
+                    var ListEmbed = new MessageEmbed()
+                        .setColor("#c586b6")
+                        .setTitle(`${host.displayName}'s game menu.`);
+                    ListEmbed.addField("Captains are choosing!", "Choose a player from the corresponding drop down to add them to your team!\nGrey buttons are for the host");
+                    ListEmbed.addField("No team:", playersListNoTeam);
+                    ListEmbed.addField("Team 1:", playersListTeam1);
+                    ListEmbed.addField("Team 2:", playersListTeam2);
+                    var row = new MessageActionRow()
+                        .addComponents(
+                            captain1pick
+                        );
+                    var row2 = new MessageActionRow()
+                        .addComponents(
+                            captain2pick
+                        );
+                    var row3 = new MessageActionRow()
+                        .addComponents(
+                            new MessageButton()
+                                .setCustomId('GAMEend-'+hostId)
+                                .setLabel('End')
+                                .setStyle('SECONDARY'),
+                            new MessageButton()
+                                .setCustomId('GAMEreopen-'+hostId)
+                                .setLabel('Re-open game')
+                                .setStyle('SECONDARY'),
+                        );
+                    button.update({ embeds: [ListEmbed], components: [row, row2, row3] })
                     break;
                 case "captain2pick":
-                    //todo: add pick to team 2
-                    //todo: remove from no team
-                    //todo: remove from captain 2 pick
-                    //todo: remove from captain 1 pick
-                    //todo: update embed to show who is on what team and take them off of no team
+                    var respGame;
+                    try{
+                        respGame = await api.get("game_joining_master", {
+                            host_id:hostId
+                        })
+                    }catch(error){
+                        logger.error(error.message);
+                    }
+                    if(!respGame.game_joining_masters[0]){
+                        button.reply({ content: "There is no game currently available...", ephemeral: true})
+                        return;
+                    }
+                    var respCaptain2;
+                    try{
+                        respCaptain1 = await api.get("game_joining_player", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id),
+                            team:"2",
+                            captain:"yes"
+                        })
+                    }catch(error){
+                        logger.error(error.message);
+                    }
+                    if(!respCaptain2.game_joining_players[0]){
+                        button.reply({ content: "Found no captain for team 1. Something broke..."})
+                        return;
+                    }
+
+                    if(button.member.id !=respCaptain2.game_joining_players[0].player_id){
+                        button.reply({ content: "Only the captain for team 2 can choose the player...", ephemeral: true})
+                        return;
+                    }
+                    logger.info("Setting captain 2 pick");
+
+                    var respPlayersList;
+                    try{
+                        respPlayersList = await api.get("game_joining_player", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id)
+                        })
+                    }catch(error){
+                        logger.error(error.message);
+                    }
+                    if(!respPlayersList.game_joining_players[0]){
+                        button.reply({ content: "There are no players in the game...", ephemeral: true})
+                        return;
+                    }
+                    const player2 = button.values[0];
+                    if(player2 === "none"){
+                        button.reply({ content: "You must select a player...", ephemeral: true})
+                        return;
+                    }else{
+                        var captain2player = "";
+                        for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                            if(respPlayersList.game_joining_players[i].player_id === player1){
+                                captain2player = respPlayersList.game_joining_players[i].game_player_id;
+                                respPlayersList.game_joining_players[i].team = "2";
+                                break;
+                            }
+                        }
+                        var respCaptain1pick;
+                        try{
+                            respCaptain1pick = await api.put("game_joining_player", {
+                                game_id:parseInt(respGame.game_joining_masters[0].game_id),
+                                game_player_id:parseInt(captain1player),
+                                team:"2"
+                            })
+                        }catch(error){
+                            logger.error(error.message);
+                        }
+                    }
+                    var captain1pick = new MessageSelectMenu()
+                        .setCustomId('GAMEcaptain1pick-'+hostId)
+                        .setPlaceholder('Select someone to add to team 1');
+                        captain1pick.addOptions({
+                            label: "Blank Placeholder",
+                            value: "none",
+                            description: "Prevents the dropdown from disappearing",
+                        })
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        if(!respPlayersList.game_joining_players[i].team === "none" || !respPlayersList.game_joining_players[i].team === "2"){
+                            continue;
+                        }
+                        var player = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
+                        captain1pick.addOptions({
+                            label: player.displayName,
+                            value: respPlayersList.game_joining_players[i].player_id,
+                            description: "Add to team 1",
+                            emoji: '1️⃣',
+                        })
+                    }
+                    var captain2pick = new MessageSelectMenu()
+                        .setCustomId('GAMEcaptain2pick-'+hostId)
+                        .setPlaceholder('Select someone to add to team 2');
+                        captain2pick.addOptions({
+                            label: "Blank Placeholder",
+                            value: "none",
+                            description: "Prevents the dropdown from disappearing",
+                        })
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        if(!respPlayersList.game_joining_players[i].team === "none" || !respPlayersList.game_joining_players[i].team === "1"){
+                            continue;
+                        }
+                        var player = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
+                        captain2pick.addOptions({
+                            label: player.displayName,
+                            value: respPlayersList.game_joining_players[i].player_id,
+                            description: "Add to team 2",
+                            emoji: '2️⃣',
+                        })
+                    }
+
+                    var playersListNoTeam = "";
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        if(!respPlayersList.game_joining_players[i].team === "none"){
+                            continue;
+                        }
+                        playersListNoTeam += ("<@" + respPlayersList.game_joining_players[i].player_id + ">\n");
+                    }
+                    var playersListTeam1 = "";
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        if(!respPlayersList.game_joining_players[i].team === "1"){
+                            continue;
+                        }
+                        playersListTeam1 += ("<@" + respPlayersList.game_joining_players[i].player_id + ">\n");
+                    }
+                    var playersListTeam2 = "";
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        if(!respPlayersList.game_joining_players[i].team === "2"){
+                            continue;
+                        }
+                        playersListTeam2 += ("<@" + respPlayersList.game_joining_players[i].player_id + ">\n");
+                    }
+                    var guild = button.guild;
+                    var host = await guild.members.fetch(hostId);
+                    var ListEmbed = new MessageEmbed()
+                        .setColor("#c586b6")
+                        .setTitle(`${host.displayName}'s game menu.`);
+                    ListEmbed.addField("Captains are choosing!", "Choose a player from the corresponding drop down to add them to your team!\nGrey buttons are for the host");
+                    ListEmbed.addField("No team:", playersListNoTeam);
+                    ListEmbed.addField("Team 1:", playersListTeam1);
+                    ListEmbed.addField("Team 2:", playersListTeam2);
+                    var row = new MessageActionRow()
+                        .addComponents(
+                            captain1pick
+                        );
+                    var row2 = new MessageActionRow()
+                        .addComponents(
+                            captain2pick
+                        );
+                    var row3 = new MessageActionRow()
+                        .addComponents(
+                            new MessageButton()
+                                .setCustomId('GAMEend-'+hostId)
+                                .setLabel('End')
+                                .setStyle('SECONDARY'),
+                            new MessageButton()
+                                .setCustomId('GAMEreopen-'+hostId)
+                                .setLabel('Re-open game')
+                                .setStyle('SECONDARY'),
+                        );
+                    button.update({ embeds: [ListEmbed], components: [row, row2, row3] })
+                    break;
                     break;
                 case "channelTeam1":
                     if(button.member.id != hostId){
