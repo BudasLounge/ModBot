@@ -2536,10 +2536,10 @@ async function onButtonClick(button){
                     }
 
                     //const voiceChannelspick2 = button.guild.channels.cache.filter((channel) => channel.type === 'GUILD_VOICE');
-                    const roleNames = ['League of Legends', 'programmer']; // Replace with the name of your role
+                    var roleNames = ['League of Legends', 'programmer']; // Replace with the name of your role
 
                         // Fetch the role by name
-                    const roles = roleNames.map(roleName => button.guild.roles.cache.find(r => r.name === roleName));
+                    var roles = roleNames.map(roleName => button.guild.roles.cache.find(r => r.name === roleName));
                     const voiceChannelspick2 = button.guild.channels.cache.filter(channel => {
                         // Check if the channel is a voice channel
                         if (channel.type !== 'GUILD_VOICE') return false;
