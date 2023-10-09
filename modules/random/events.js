@@ -1717,7 +1717,7 @@ async function onButtonClick(button){
                         logger.info("Team 1: " + playersList);
                         logger.info("Team 2: " + team2);
                         //const voiceChannels = button.guild.channels.cache.filter((channel) => channel.type === 'GUILD_VOICE');
-                        const roleName = ['League of Legends', 'programmer']; // Replace with the name of your role
+                        const roleNames = ['League of Legends', 'programmer']; // Replace with the name of your role
 
                         // Fetch the role by name
                         const roles = roleNames.map(roleName => button.guild.roles.cache.find(r => r.name === roleName));
