@@ -2084,7 +2084,7 @@ async function onButtonClick(button){
 
                     var playersListNoTeam = "";
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
-                        if(!respPlayersList.game_joining_players[i].team === "none"){
+                        if(!(respPlayersList.game_joining_players[i].team === "none")){
                             continue;
                         }
                         logger.info("Player: " + respPlayersList.game_joining_players[i].player_id + " " + respPlayersList.game_joining_players[i].team)
@@ -2092,7 +2092,7 @@ async function onButtonClick(button){
                     }
                     var playersListTeam1 = "";
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
-                        if(!respPlayersList.game_joining_players[i].team === "1"){
+                        if(!(respPlayersList.game_joining_players[i].team === "1")){
                             continue;
                         }
                         logger.info("Player: " + respPlayersList.game_joining_players[i].player_id + " " + respPlayersList.game_joining_players[i].team)
@@ -2100,7 +2100,7 @@ async function onButtonClick(button){
                     }
                     var playersListTeam2 = "";
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
-                        if(!respPlayersList.game_joining_players[i].team === "2"){
+                        if(!(respPlayersList.game_joining_players[i].team === "2")){
                             continue;
                         }
                         logger.info("Player: " + respPlayersList.game_joining_players[i].player_id + " " + respPlayersList.game_joining_players[i].team)
