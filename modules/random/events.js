@@ -2067,7 +2067,7 @@ async function onButtonClick(button){
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
                         playersList += "<@" + respPlayersList.game_joining_players[i].player_id + ">\n";
                         var player = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
-                        captain1pick.addOptions({
+                        captain2pick.addOptions({
                             label: player.displayName,
                             value: respPlayersList.game_joining_players[i].player_id,
                             description: "Add to team 2",
@@ -2089,10 +2089,8 @@ async function onButtonClick(button){
                     ListEmbed.addField("No team:", playersList);
                     var row = new MessageActionRow()
                         .addComponents(
-                            new MessageButton()
-                                .setCustomId('GAMEreturn-'+hostId)
-                                .setLabel('Return players to starting channel')
-                                .setStyle('SECONDARY'),
+                            chooseCaptain1,
+                            chooseCaptain2
                         );
                     var row2 = new MessageActionRow()
                         .addComponents(
