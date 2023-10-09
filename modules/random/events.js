@@ -2341,6 +2341,10 @@ async function onButtonClick(button){
                                 .setCustomId('GAMEreopen-'+hostId)
                                 .setLabel('Re-open game')
                                 .setStyle('SECONDARY'),
+                            new MessageButton()
+                                .setCustomId('GAMEreturn-'+hostId)
+                                .setLabel('Return players to starting channel')
+                                .setStyle('SECONDARY'),
                         );
                     button.update({ embeds: [ListEmbed], components: [row, row2, row3, row4, row5] })
                     break;
@@ -2538,6 +2542,10 @@ async function onButtonClick(button){
                             new MessageButton()
                                 .setCustomId('GAMEreopen-'+hostId)
                                 .setLabel('Re-open game')
+                                .setStyle('SECONDARY'),
+                            new MessageButton()
+                                .setCustomId('GAMEreturn-'+hostId)
+                                .setLabel('Return players to starting channel')
                                 .setStyle('SECONDARY'),
                         );
                     button.update({ embeds: [ListEmbed], components: [row, row2, row3, row4, row5] })
