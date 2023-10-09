@@ -1717,20 +1717,17 @@ async function onButtonClick(button){
                         logger.info("Team 1: " + playersList);
                         logger.info("Team 2: " + team2);
                         //const voiceChannels = button.guild.channels.cache.filter((channel) => channel.type === 'GUILD_VOICE');
-                        const roleName = 'League of Legends'; // Replace with the name of your role
+                        const roleName = ['League of Legends', 'programmer']; // Replace with the name of your role
 
                         // Fetch the role by name
-                        const role = button.guild.roles.cache.find(r => r.name === roleName);
-
-                        const voiceChannels = button.guild.channels.cache.filter((channel) => {
+                        const roles = roleNames.map(roleName => button.guild.roles.cache.find(r => r.name === roleName));
+                        const voiceChannels = button.guild.channels.cache.filter(channel => {
                             // Check if the channel is a voice channel
                             if (channel.type !== 'GUILD_VOICE') return false;
+                        
+                            // Check if any of the roles has VIEW_CHANNEL permission in the channel
+                            return roles.some(role => channel.permissionsFor(role).has(Permissions.FLAGS.VIEW_CHANNEL));
 
-                            // Fetch the permissions for the role in the channel
-                            const permissions = channel.permissionsFor(role);
-
-                            // Check if the role has VIEW_CHANNEL permission in the channel
-                            return permissions.has(Permissions.FLAGS.VIEW_CHANNEL);
                         });
                         const channelListTeam1 = new MessageSelectMenu()
                             .setCustomId('GAMEchannelTeam1-'+hostId)
