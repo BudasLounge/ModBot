@@ -2362,6 +2362,7 @@ async function onButtonClick(button){
                         return;
                     }
                     const player2 = button.values[0];
+                    logger.info("player2: " + player2);
                     if(player2 === "none"){
                         button.reply({ content: "You must select a player...", ephemeral: true})
                         return;
