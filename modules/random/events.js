@@ -2049,9 +2049,7 @@ async function onButtonClick(button){
                     var captain1pick = new MessageSelectMenu()
                         .setCustomId('GAMEcaptain1pick-'+hostId)
                         .setPlaceholder('Select someone to add to team 1');
-                    var playersList = "";
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
-                        playersList += "<@" + respPlayersList.game_joining_players[i].player_id + ">\n";
                         var player = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
                         captain1pick.addOptions({
                             label: player.displayName,
@@ -2063,9 +2061,7 @@ async function onButtonClick(button){
                     var captain2pick = new MessageSelectMenu()
                         .setCustomId('GAMEcaptain2pick-'+hostId)
                         .setPlaceholder('Select someone to add to team 2');
-                    var playersList = "";
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
-                        playersList += "<@" + respPlayersList.game_joining_players[i].player_id + ">\n";
                         var player = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
                         captain2pick.addOptions({
                             label: player.displayName,
