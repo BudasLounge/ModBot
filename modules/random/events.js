@@ -2082,20 +2082,36 @@ async function onButtonClick(button){
                         })
                     }
 
-                    var playersList = "";
+                    var playersListNoTeam = "";
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
                         if(!respPlayersList.game_joining_players[i].team === "none"){
                             continue;
                         }
-                        playersList += ("<@" + respPlayersList.game_joining_players[i].player_id + ">\n");
+                        playersListNoTeam += ("<@" + respPlayersList.game_joining_players[i].player_id + ">\n");
+                    }
+                    var playersListTeam1 = "";
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        if(!respPlayersList.game_joining_players[i].team === "1"){
+                            continue;
+                        }
+                        playersListTeam1 += ("<@" + respPlayersList.game_joining_players[i].player_id + ">\n");
+                    }
+                    var playersListTeam2 = "";
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        if(!respPlayersList.game_joining_players[i].team === "2"){
+                            continue;
+                        }
+                        playersListTeam2 += ("<@" + respPlayersList.game_joining_players[i].player_id + ">\n");
                     }
                     var guild = button.guild;
                     var host = await guild.members.fetch(hostId);
                     var ListEmbed = new MessageEmbed()
                         .setColor("#c586b6")
                         .setTitle(`${host.displayName}'s game menu.`);
-                    ListEmbed.addField("Captains are choosing!", "Choose a player from the corresponding drop down to add them to your team!\nGrey buttons are for the host");
-                    ListEmbed.addField("No team:", playersList);
+                        ListEmbed.addField("Captains are choosing!", "Choose a player from the corresponding drop down to add them to your team!\nGrey buttons are for the host");
+                        ListEmbed.addField("No team:", playersListNoTeam);
+                        ListEmbed.addField("Team 1:", playersListTeam1);
+                        ListEmbed.addField("Team 2:", playersListTeam2);
                     var row = new MessageActionRow()
                         .addComponents(
                             captain1pick
