@@ -1717,7 +1717,7 @@ async function onButtonClick(button){
                         logger.info("Team 1: " + playersList);
                         logger.info("Team 2: " + team2);
                         //const voiceChannels = button.guild.channels.cache.filter((channel) => channel.type === 'GUILD_VOICE');
-                        const roleNames = ['League of Legends', 'programmer']; // Replace with the name of your role
+                        const roleNames = ['League of Legends', 'programmer', 'Gamer']; // Replace with the name of your role
 
                         // Fetch the role by name
                         const roles = roleNames.map(roleName => button.guild.roles.cache.find(r => r.name === roleName));
@@ -2319,7 +2319,7 @@ async function onButtonClick(button){
                     }
 
                     //const voiceChannelspick1 = button.guild.channels.cache.filter((channel) => channel.type === 'GUILD_VOICE');
-                    var roleNames = ['League of Legends', 'programmer']; // Replace with the name of your role
+                    var roleNames = ['League of Legends', 'programmer', 'Gamer']; // Replace with the name of your role
 
                         // Fetch the role by name
                     var roles = roleNames.map(roleName => button.guild.roles.cache.find(r => r.name === roleName));
@@ -2536,7 +2536,7 @@ async function onButtonClick(button){
                     }
 
                     //const voiceChannelspick2 = button.guild.channels.cache.filter((channel) => channel.type === 'GUILD_VOICE');
-                    var roleNames = ['League of Legends', 'programmer']; // Replace with the name of your role
+                    var roleNames = ['League of Legends', 'programmer', 'Gamer']; // Replace with the name of your role
 
                         // Fetch the role by name
                     var roles = roleNames.map(roleName => button.guild.roles.cache.find(r => r.name === roleName));
