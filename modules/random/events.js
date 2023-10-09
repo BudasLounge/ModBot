@@ -2056,6 +2056,9 @@ async function onButtonClick(button){
                             description: "Prevents the dropdown from disappearing",
                         })
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        if(!(respPlayersList.game_joining_players[i].team === "none")){
+                            continue;
+                        }
                         var player = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
                         captain1pick.addOptions({
                             label: player.displayName,
@@ -2073,6 +2076,9 @@ async function onButtonClick(button){
                             description: "Prevents the dropdown from disappearing",
                         })
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        if(!(respPlayersList.game_joining_players[i].team === "none")){
+                            continue;
+                        }
                         var player = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
                         captain2pick.addOptions({
                             label: player.displayName,
@@ -2219,7 +2225,7 @@ async function onButtonClick(button){
                             description: "Prevents the dropdown from disappearing",
                         })
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
-                        if(!respPlayersList.game_joining_players[i].team === "none" || !respPlayersList.game_joining_players[i].team === "2"){
+                        if(!(respPlayersList.game_joining_players[i].team === "none")){
                             continue;
                         }
                         var player = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
@@ -2239,7 +2245,7 @@ async function onButtonClick(button){
                             description: "Prevents the dropdown from disappearing",
                         })
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
-                        if(!respPlayersList.game_joining_players[i].team === "none" || !respPlayersList.game_joining_players[i].team === "1"){
+                        if(!(respPlayersList.game_joining_players[i].team === "none")){
                             continue;
                         }
                         var player = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
@@ -2387,7 +2393,7 @@ async function onButtonClick(button){
                             description: "Prevents the dropdown from disappearing",
                         })
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
-                        if(!respPlayersList.game_joining_players[i].team === "none" || !respPlayersList.game_joining_players[i].team === "2"){
+                        if(!(respPlayersList.game_joining_players[i].team === "none")){
                             continue;
                         }
                         var player = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
@@ -2407,7 +2413,7 @@ async function onButtonClick(button){
                             description: "Prevents the dropdown from disappearing",
                         })
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
-                        if(!respPlayersList.game_joining_players[i].team === "none" || !respPlayersList.game_joining_players[i].team === "1"){
+                        if(!(respPlayersList.game_joining_players[i].team === "none")){
                             continue;
                         }
                         var player = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
