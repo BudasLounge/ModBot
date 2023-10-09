@@ -2330,7 +2330,7 @@ async function onButtonClick(button){
                     }
                     var respCaptain2;
                     try{
-                        respCaptain1 = await api.get("game_joining_player", {
+                        respCaptain2 = await api.get("game_joining_player", {
                             game_id:parseInt(respGame.game_joining_masters[0].game_id),
                             team:"2",
                             captain:"yes"
