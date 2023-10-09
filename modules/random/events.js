@@ -1,6 +1,6 @@
 var ApiClient = require("../../core/js/APIClient.js");
 var api = new ApiClient();
-const {MessageActionRow, MessageButton, MessageEmbed, MessageSelectMenu} = require('discord.js');
+const {MessageActionRow, MessageButton, MessageEmbed, MessageSelectMenu, Permissions} = require('discord.js');
 //todo: add a way to track how many times a user streams and for how long
 async function onButtonClick(button){
     //if (!button.isButton()){return}
@@ -1709,7 +1709,22 @@ async function onButtonClick(button){
                         }
                         logger.info("Team 1: " + playersList);
                         logger.info("Team 2: " + team2);
-                        const voiceChannels = button.guild.channels.cache.filter((channel) => channel.type === 'GUILD_VOICE');
+                        //const voiceChannels = button.guild.channels.cache.filter((channel) => channel.type === 'GUILD_VOICE');
+                        const roleName = 'League of Legends'; // Replace with the name of your role
+
+                        // Fetch the role by name
+                        const role = button.guild.roles.cache.find(r => r.name === roleName);
+
+                        const voiceChannels = button.guild.channels.cache.filter((channel) => {
+                            // Check if the channel is a voice channel
+                            if (channel.type !== 'GUILD_VOICE') return false;
+
+                            // Fetch the permissions for the role in the channel
+                            const permissions = channel.permissionsFor(role);
+
+                            // Check if the role has VIEW_CHANNEL permission in the channel
+                            return permissions.has(Permissions.FLAGS.VIEW_CHANNEL);
+                        });
                         const channelListTeam1 = new MessageSelectMenu()
                             .setCustomId('GAMEchannelTeam1-'+hostId)
                             .setPlaceholder('Select a voice channel to send Team 1 to');
