@@ -1949,6 +1949,9 @@ async function onButtonClick(button){
                         .setCustomId('GAMEcaptain2-'+hostId)
                         .setPlaceholder('Select a player to make into the captain for Team 2');
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        if(respPlayersList.game_joining_players[i].player_id === captain1){
+                            continue;
+                        }
                         var player = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
                         chooseCaptain2.addOptions([
                             {
@@ -2015,9 +2018,7 @@ async function onButtonClick(button){
                     var respPlayersList;
                     try{
                         respPlayersList = await api.get("game_joining_player", {
-                            game_id:parseInt(respGame.game_joining_masters[0].game_id),
-                            captain:"no",
-                            team:"none"
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id)
                         })
                         logger.info("respPlayersList: " + respPlayersList);
                     }
