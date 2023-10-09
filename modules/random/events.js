@@ -2015,7 +2015,9 @@ async function onButtonClick(button){
                     var respPlayersList;
                     try{
                         respPlayersList = await api.get("game_joining_player", {
-                            game_id:parseInt(respGame.game_joining_masters[0].game_id)
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id),
+                            captain:"no",
+                            team:"none"
                         })
                         logger.info("respPlayersList: " + respPlayersList);
                     }
