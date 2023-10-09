@@ -2103,7 +2103,7 @@ async function onButtonClick(button){
                                 .setLabel('Re-open game')
                                 .setStyle('SECONDARY'),
                         );
-                    button.update({ embeds: [ListEmbed], components: [row, row2, row3] })
+                    button.update({ embeds: [ListEmbed], components: [row, row2] })
 
                     break;
                 case "channelTeam1":
