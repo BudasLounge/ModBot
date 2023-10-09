@@ -2071,7 +2071,6 @@ async function onButtonClick(button){
                         })
                     }
 
-
                     var playersList = "";
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
                         playersList += ("<@" + respPlayersList.game_joining_players[i].player_id + ">\n");
@@ -2104,6 +2103,20 @@ async function onButtonClick(button){
                         );
                     button.update({ embeds: [ListEmbed], components: [row, row2, row3] })
 
+                    break;
+                case "captain1pick":
+                    //todo: add pick to team 1
+                    //todo: remove from no team
+                    //todo: remove from captain 2 pick
+                    //todo: remove from captain 1 pick
+                    //todo: update embed to show who is on what team and take them off of no team
+                    break;
+                case "captain2pick":
+                    //todo: add pick to team 2
+                    //todo: remove from no team
+                    //todo: remove from captain 2 pick
+                    //todo: remove from captain 1 pick
+                    //todo: update embed to show who is on what team and take them off of no team
                     break;
                 case "channelTeam1":
                     if(button.member.id != hostId){
