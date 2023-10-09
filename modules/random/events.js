@@ -1884,7 +1884,6 @@ async function onButtonClick(button){
                     button.update({ embeds: [ListEmbed], components: [row, row2, row3] })
                     break;
                 case "captain1":
-                    logger.info("Setting captain 1");
                     if(button.member.id != hostId){
                         button.reply({ content: "Only the host can choose the captain...", ephemeral: true})
                         return;
@@ -2002,7 +2001,6 @@ async function onButtonClick(button){
                         respGame = await api.get("game_joining_master", {
                             host_id:hostId
                         })
-                        logger.info("respGame: " + respGame);
                     }catch(error){
                         logger.error(error.message);
                     }
@@ -2020,25 +2018,94 @@ async function onButtonClick(button){
                         respPlayersList = await api.get("game_joining_player", {
                             game_id:parseInt(respGame.game_joining_masters[0].game_id)
                         })
-                        logger.info("respPlayersList: " + respPlayersList);
-                    }
-                    catch(error){
+                    }catch(error){
                         logger.error(error.message);
                     }
                     if(!respPlayersList.game_joining_players[0]){
                         button.reply({ content: "There are no players in the game...", ephemeral: true})
                         return;
                     }
+                    var newCaptain2 = "";
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        if(respPlayersList.game_joining_players[i].player_id === captain2){
+                            newCaptain2 = respPlayersList.game_joining_players[i].game_player_id;
+                            break;
+                        }
+                    }
+                    logger.info("captain2 " + captain2)
                     var respGamePlayer;
                     try{
                         respGamePlayer = await api.put("game_joining_player", {
                             game_id:parseInt(respGame.game_joining_masters[0].game_id),
                             player_id:captain2,
-                            captain:"yes"
+                            captain:"yes",
+                            game_player_id:parseInt(newCaptain2),
+                            team:"2"
                         })
                     }catch(error){
                         logger.error(error.message);
                     }
+
+                    var captain1pick = new MessageSelectMenu()
+                        .setCustomId('GAMEcaptain1pick-'+hostId)
+                        .setPlaceholder('Select someone to add to team 1');
+                    var playersList = "";
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        playersList += "<@" + respPlayersList.game_joining_players[i].player_id + ">\n";
+                        var player = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
+                        captain1pick.addOptions({
+                            label: player.displayName,
+                            value: respPlayersList.game_joining_players[i].player_id,
+                            description: "Add to team 1",
+                            emoji: '1️⃣',
+                        })
+                    }
+                    var captain2pick = new MessageSelectMenu()
+                        .setCustomId('GAMEcaptain2pick-'+hostId)
+                        .setPlaceholder('Select someone to add to team 2');
+                    var playersList = "";
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        playersList += "<@" + respPlayersList.game_joining_players[i].player_id + ">\n";
+                        var player = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
+                        captain1pick.addOptions({
+                            label: player.displayName,
+                            value: respPlayersList.game_joining_players[i].player_id,
+                            description: "Add to team 2",
+                            emoji: '2️⃣',
+                        })
+                    }
+
+
+                    var playersList = "";
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        playersList += ("<@" + respPlayersList.game_joining_players[i].player_id + ">\n");
+                    }
+                    var guild = button.guild;
+                    var host = await guild.members.fetch(hostId);
+                    var ListEmbed = new MessageEmbed()
+                        .setColor("#c586b6")
+                        .setTitle(`${host.displayName}'s game menu.`);
+                    ListEmbed.addField("Captains are choosing!", "Choose a player from the corresponding drop down to add them to your team!\nGrey buttons are for the host");
+                    ListEmbed.addField("No team:", playersList);
+                    var row = new MessageActionRow()
+                        .addComponents(
+                            new MessageButton()
+                                .setCustomId('GAMEreturn-'+hostId)
+                                .setLabel('Return players to starting channel')
+                                .setStyle('SECONDARY'),
+                        );
+                    var row2 = new MessageActionRow()
+                        .addComponents(
+                            new MessageButton()
+                                .setCustomId('GAMEend-'+hostId)
+                                .setLabel('End')
+                                .setStyle('SECONDARY'),
+                            new MessageButton()
+                                .setCustomId('GAMEreopen-'+hostId)
+                                .setLabel('Re-open game')
+                                .setStyle('SECONDARY'),
+                        );
+                    button.update({ embeds: [ListEmbed], components: [row, row2, row3] })
 
                     break;
                 case "channelTeam1":
