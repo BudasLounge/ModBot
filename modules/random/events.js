@@ -2318,7 +2318,22 @@ async function onButtonClick(button){
                         playersListTeam2 += ("<@" + respPlayersList.game_joining_players[i].player_id + ">\n");
                     }
 
-                    const voiceChannelspick1 = button.guild.channels.cache.filter((channel) => channel.type === 'GUILD_VOICE');
+                    //const voiceChannelspick1 = button.guild.channels.cache.filter((channel) => channel.type === 'GUILD_VOICE');
+                    var roleNames = ['League of Legends', 'programmer']; // Replace with the name of your role
+
+                        // Fetch the role by name
+                    var roles = roleNames.map(roleName => button.guild.roles.cache.find(r => r.name === roleName));
+                    const voiceChannelspick1 = button.guild.channels.cache.filter(channel => {
+                        // Check if the channel is a voice channel
+                        if (channel.type !== 'GUILD_VOICE') return false;
+                    
+                        // Check if any of the roles has VIEW_CHANNEL permission in the channel
+                        return roles.some(role => {
+                            if(!role) return false; // Skip if the role is undefined or null
+                            return channel.permissionsFor(role).has(Permissions.FLAGS.VIEW_CHANNEL);
+                        });
+
+                    });
                     const channelListTeam1pick1 = new MessageSelectMenu()
                         .setCustomId('GAMEchannelTeam1-'+hostId)
                         .setPlaceholder('Select a voice channel to send Team 1 to');
@@ -2520,7 +2535,22 @@ async function onButtonClick(button){
                         playersListTeam2 += ("<@" + respPlayersList.game_joining_players[i].player_id + ">\n");
                     }
 
-                    const voiceChannelspick2 = button.guild.channels.cache.filter((channel) => channel.type === 'GUILD_VOICE');
+                    //const voiceChannelspick2 = button.guild.channels.cache.filter((channel) => channel.type === 'GUILD_VOICE');
+                    const roleNames = ['League of Legends', 'programmer']; // Replace with the name of your role
+
+                        // Fetch the role by name
+                    const roles = roleNames.map(roleName => button.guild.roles.cache.find(r => r.name === roleName));
+                    const voiceChannelspick2 = button.guild.channels.cache.filter(channel => {
+                        // Check if the channel is a voice channel
+                        if (channel.type !== 'GUILD_VOICE') return false;
+                    
+                        // Check if any of the roles has VIEW_CHANNEL permission in the channel
+                        return roles.some(role => {
+                            if(!role) return false; // Skip if the role is undefined or null
+                            return channel.permissionsFor(role).has(Permissions.FLAGS.VIEW_CHANNEL);
+                        });
+
+                    });
                     const channelListTeam1pick2 = new MessageSelectMenu()
                         .setCustomId('GAMEchannelTeam1-'+hostId)
                         .setPlaceholder('Select a voice channel to send Team 1 to');
