@@ -1603,6 +1603,13 @@ async function onButtonClick(button){
                         }catch(error){
                             logger.error(error);
                         }
+                        for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                            var respTemp = await api.put("game_joining_player",{
+                                game_player_id:Number(respPlayersList.game_joining_players[i].game_player_id),
+                                team:"none",
+                                captain:"no"
+                            })
+                        }
                         const kickableList = new MessageSelectMenu()
                             .setCustomId('GAMEkick-'+hostId)
                             .setPlaceholder('Select someone to remove');
