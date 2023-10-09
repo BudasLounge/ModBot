@@ -2087,6 +2087,7 @@ async function onButtonClick(button){
                         if(!respPlayersList.game_joining_players[i].team === "none"){
                             continue;
                         }
+                        logger.info("Player: " + respPlayersList.game_joining_players[i].player_id + " " + respPlayersList.game_joining_players[i].team)
                         playersListNoTeam += ("<@" + respPlayersList.game_joining_players[i].player_id + ">\n");
                     }
                     var playersListTeam1 = "";
@@ -2094,6 +2095,7 @@ async function onButtonClick(button){
                         if(!respPlayersList.game_joining_players[i].team === "1"){
                             continue;
                         }
+                        logger.info("Player: " + respPlayersList.game_joining_players[i].player_id + " " + respPlayersList.game_joining_players[i].team)
                         playersListTeam1 += ("<@" + respPlayersList.game_joining_players[i].player_id + ">\n");
                     }
                     var playersListTeam2 = "";
@@ -2101,6 +2103,7 @@ async function onButtonClick(button){
                         if(!respPlayersList.game_joining_players[i].team === "2"){
                             continue;
                         }
+                        logger.info("Player: " + respPlayersList.game_joining_players[i].player_id + " " + respPlayersList.game_joining_players[i].team)
                         playersListTeam2 += ("<@" + respPlayersList.game_joining_players[i].player_id + ">\n");
                     }
                     var guild = button.guild;
