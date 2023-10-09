@@ -1726,7 +1726,10 @@ async function onButtonClick(button){
                             if (channel.type !== 'GUILD_VOICE') return false;
                         
                             // Check if any of the roles has VIEW_CHANNEL permission in the channel
-                            return roles.some(role => channel.permissionsFor(role).has(Permissions.FLAGS.VIEW_CHANNEL));
+                            return roles.some(role => {
+                                if(!role) return false; // Skip if the role is undefined or null
+                                return channel.permissionsFor(role).has(Permissions.FLAGS.VIEW_CHANNEL);
+                            });
 
                         });
                         const channelListTeam1 = new MessageSelectMenu()
