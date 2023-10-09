@@ -2285,6 +2285,31 @@ async function onButtonClick(button){
                         logger.info("Player: " + respPlayersList.game_joining_players[i].player_id + " " + respPlayersList.game_joining_players[i].team)
                         playersListTeam2 += ("<@" + respPlayersList.game_joining_players[i].player_id + ">\n");
                     }
+
+                    const voiceChannelspick1 = button.guild.channels.cache.filter((channel) => channel.type === 'GUILD_VOICE');
+                    const channelListTeam1pick1 = new MessageSelectMenu()
+                        .setCustomId('GAMEchannelTeam1-'+hostId)
+                        .setPlaceholder('Select a voice channel to send Team 1 to');
+                    voiceChannels.forEach((channel) => {
+                        channelListTeam1pick1.addOptions([
+                            {
+                            label: channel.name,
+                            value: channel.id,
+                            },
+                        ]);
+                    });
+                    const channelListTeam2pick1 = new MessageSelectMenu()
+                        .setCustomId('GAMEchannelTeam2-'+hostId)
+                        .setPlaceholder('Select a voice channel to send Team 2 to');
+                    voiceChannels.forEach((channel) => {
+                        channelListTeam2pick1.addOptions([
+                            {
+                            label: channel.name,
+                            value: channel.id,
+                            },
+                        ]);
+                    });
+
                     var guild = button.guild;
                     var host = await guild.members.fetch(hostId);
                     var ListEmbed = new MessageEmbed()
@@ -2303,6 +2328,10 @@ async function onButtonClick(button){
                             captain2pick
                         );
                     var row3 = new MessageActionRow()
+                        .addComponents(channelListTeam1pick1);
+                    var row4 = new MessageActionRow()
+                        .addComponents(channelListTeam2pick1);
+                    var row5 = new MessageActionRow()
                         .addComponents(
                             new MessageButton()
                                 .setCustomId('GAMEend-'+hostId)
@@ -2313,7 +2342,7 @@ async function onButtonClick(button){
                                 .setLabel('Re-open game')
                                 .setStyle('SECONDARY'),
                         );
-                    button.update({ embeds: [ListEmbed], components: [row, row2, row3] })
+                    button.update({ embeds: [ListEmbed], components: [row, row2, row3, row4, row5] })
                     break;
                 case "captain2pick":
                     var respGame;
@@ -2454,6 +2483,31 @@ async function onButtonClick(button){
                         logger.info("Player: " + respPlayersList.game_joining_players[i].player_id + " " + respPlayersList.game_joining_players[i].team)
                         playersListTeam2 += ("<@" + respPlayersList.game_joining_players[i].player_id + ">\n");
                     }
+
+                    const voiceChannelspick2 = button.guild.channels.cache.filter((channel) => channel.type === 'GUILD_VOICE');
+                    const channelListTeam1pick2 = new MessageSelectMenu()
+                        .setCustomId('GAMEchannelTeam1-'+hostId)
+                        .setPlaceholder('Select a voice channel to send Team 1 to');
+                    voiceChannelspick2.forEach((channel) => {
+                        channelListTeam1.addOptions([
+                            {
+                            label: channel.name,
+                            value: channel.id,
+                            },
+                        ]);
+                    });
+                    const channelListTeam2pick2 = new MessageSelectMenu()
+                        .setCustomId('GAMEchannelTeam2-'+hostId)
+                        .setPlaceholder('Select a voice channel to send Team 2 to');
+                    voiceChannelspick2.forEach((channel) => {
+                        channelListTeam2pick2.addOptions([
+                            {
+                            label: channel.name,
+                            value: channel.id,
+                            },
+                        ]);
+                    });
+
                     var guild = button.guild;
                     var host = await guild.members.fetch(hostId);
                     var ListEmbed = new MessageEmbed()
@@ -2472,6 +2526,10 @@ async function onButtonClick(button){
                             captain2pick
                         );
                     var row3 = new MessageActionRow()
+                        .addComponents(channelListTeam1pick2);
+                    var row4 = new MessageActionRow()
+                        .addComponents(channelListTeam2pick2);
+                    var row5 = new MessageActionRow()
                         .addComponents(
                             new MessageButton()
                                 .setCustomId('GAMEend-'+hostId)
@@ -2482,8 +2540,7 @@ async function onButtonClick(button){
                                 .setLabel('Re-open game')
                                 .setStyle('SECONDARY'),
                         );
-                    button.update({ embeds: [ListEmbed], components: [row, row2, row3] })
-                    break;
+                    button.update({ embeds: [ListEmbed], components: [row, row2, row3, row4, row5] })
                     break;
                 case "channelTeam1":
                     if(button.member.id != hostId){
