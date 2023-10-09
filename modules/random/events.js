@@ -2089,10 +2089,13 @@ async function onButtonClick(button){
                     ListEmbed.addField("No team:", playersList);
                     var row = new MessageActionRow()
                         .addComponents(
-                            chooseCaptain1,
-                            chooseCaptain2
+                            chooseCaptain1
                         );
                     var row2 = new MessageActionRow()
+                        .addComponents(
+                            chooseCaptain2
+                        );
+                    var row3 = new MessageActionRow()
                         .addComponents(
                             new MessageButton()
                                 .setCustomId('GAMEend-'+hostId)
@@ -2103,7 +2106,7 @@ async function onButtonClick(button){
                                 .setLabel('Re-open game')
                                 .setStyle('SECONDARY'),
                         );
-                    button.update({ embeds: [ListEmbed], components: [row, row2] })
+                    button.update({ embeds: [ListEmbed], components: [row, row2, row3] })
 
                     break;
                 case "channelTeam1":
