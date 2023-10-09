@@ -2290,7 +2290,7 @@ async function onButtonClick(button){
                     const channelListTeam1pick1 = new MessageSelectMenu()
                         .setCustomId('GAMEchannelTeam1-'+hostId)
                         .setPlaceholder('Select a voice channel to send Team 1 to');
-                    voiceChannels.forEach((channel) => {
+                    voiceChannelspick1.forEach((channel) => {
                         channelListTeam1pick1.addOptions([
                             {
                             label: channel.name,
@@ -2301,7 +2301,7 @@ async function onButtonClick(button){
                     const channelListTeam2pick1 = new MessageSelectMenu()
                         .setCustomId('GAMEchannelTeam2-'+hostId)
                         .setPlaceholder('Select a voice channel to send Team 2 to');
-                    voiceChannels.forEach((channel) => {
+                    voiceChannelspick1.forEach((channel) => {
                         channelListTeam2pick1.addOptions([
                             {
                             label: channel.name,
@@ -2489,7 +2489,7 @@ async function onButtonClick(button){
                         .setCustomId('GAMEchannelTeam1-'+hostId)
                         .setPlaceholder('Select a voice channel to send Team 1 to');
                     voiceChannelspick2.forEach((channel) => {
-                        channelListTeam1.addOptions([
+                        channelListTeam1pick1.addOptions([
                             {
                             label: channel.name,
                             value: channel.id,
