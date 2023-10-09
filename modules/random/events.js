@@ -1167,6 +1167,7 @@ async function onButtonClick(button){
             //button.channel.send("Operation: " + operation + ", Host ID: " + hostId);
             switch(operation){
                 case "join":
+                    await button.deferUpdate();
                     const voiceChannel = button.member.voice.channel;
                     if (!voiceChannel) {
                         button.reply({ content: "You need to be in a voice channel to join a game.", ephemeral: true})
@@ -1267,9 +1268,10 @@ async function onButtonClick(button){
                         var row3 = new MessageActionRow()
                             .addComponents(kickableList);
 
-                    button.update({ embeds: [ListEmbed], components: [row, row2, row3] })
+                    button.editReply({ embeds: [ListEmbed], components: [row, row2, row3] })
                     break;
                 case "leave":
+                    await button.deferUpdate();
                     logger.info("Removing " + button.member.displayName + " from " + hostId + "'s game");
                     var respGame;
                     try{
@@ -1366,13 +1368,14 @@ async function onButtonClick(button){
                         );
                         var row3 = new MessageActionRow()
                             .addComponents(kickableList);
-                    button.update({ embeds: [ListEmbed], components: [row, row2, row3] })
+                    button.editReply({ embeds: [ListEmbed], components: [row, row2, row3] })
                     break;
                 case "start":
                     if(button.member.id != hostId){
                         button.reply({ content: "Only the host can start the game...", ephemeral: true})
                         return;
                     }
+                    await button.deferUpdate();
                     logger.info("Starting " + hostId + "'s game");
                     var respGame;
                     try{
@@ -1448,13 +1451,14 @@ async function onButtonClick(button){
                                 .setStyle('SECONDARY'),
                         );
                     
-                    button.update({ embeds: [ListEmbed], components: [row, row2] })
+                    button.editReply({ embeds: [ListEmbed], components: [row, row2] })
                     break;
                 case "gamemodes":
                     if(button.member.id != hostId){
                         button.reply({ content: "Only the host can start the game...", ephemeral: true})
                         return;
                     }
+                    await button.deferUpdate();
                     var respGame;
                     try{
                         respGame = await api.get("game_joining_master", {
@@ -1510,13 +1514,14 @@ async function onButtonClick(button){
                                 .setStyle('SECONDARY'),
                         );
                     
-                    button.update({ embeds: [ListEmbed], components: [row, row2] })
+                    button.editReply({ embeds: [ListEmbed], components: [row, row2] })
                     break;
                 case "end":
                     if(button.member.id != hostId){
                         button.reply({ content: "Only the host can end the game...", ephemeral: true})
                         return;
                     }
+                    await button.deferUpdate();
                     logger.info("Ending " + hostId + "'s game");
                     var respGame;
                     try{
@@ -1562,7 +1567,7 @@ async function onButtonClick(button){
                         var ListEmbed = new MessageEmbed()
                             .setColor("#c586b6")
                             .setTitle(`${host.displayName}'s game has ended.`);
-                        button.update({ embeds: [ListEmbed], components: []})
+                        button.editReply({ embeds: [ListEmbed], components: []})
                         button.channel.send({ content: `The game has been ended and everyone was removed from the party!`})
                     }
                     break;
@@ -1571,6 +1576,7 @@ async function onButtonClick(button){
                         button.reply({ content: "Only the host can re-open the game...", ephemeral: true})
                         return;
                     }
+                    await button.deferUpdate();
                     logger.info("Re-opening " + hostId + "'s game");
                     var respGame;
                     try{
@@ -1660,7 +1666,7 @@ async function onButtonClick(button){
                             );
                         var row3 = new MessageActionRow()
                             .addComponents(kickableList);
-                        button.update({ embeds: [ListEmbed], components: [row, row2, row3] })
+                        button.editReply({ embeds: [ListEmbed], components: [row, row2, row3] })
                     }
                     break;
                 case "randomize":
@@ -1668,6 +1674,7 @@ async function onButtonClick(button){
                         button.reply({ content: "Only the host can choose the gamemode...", ephemeral: true})
                         return;
                     }
+                    await button.deferUpdate();
                     logger.info("Randomizing " + hostId + "'s game");
                     var respGame;
                     try{
@@ -1821,7 +1828,7 @@ async function onButtonClick(button){
                             .addComponents(channelListTeam1);
                         var row4 = new MessageActionRow()
                             .addComponents(channelListTeam2);
-                        button.update({ embeds: [ListEmbed], components: [row, row2, row3, row4] })
+                        button.editReply({ embeds: [ListEmbed], components: [row, row2, row3, row4] })
                     }
                     break;
                 case "captains":
@@ -1829,6 +1836,7 @@ async function onButtonClick(button){
                         button.reply({ content: "Only the host can choose the game mode...", ephemeral: true})
                         return;
                     }
+                    await button.deferUpdate();
                     logger.info(hostId + " chose captain pick");
                     var respGame;
                     try{
@@ -1903,13 +1911,14 @@ async function onButtonClick(button){
                         );
                     var row3 = new MessageActionRow()
                         .addComponents(chooseCaptain1);
-                    button.update({ embeds: [ListEmbed], components: [row, row2, row3] })
+                    button.editReply({ embeds: [ListEmbed], components: [row, row2, row3] })
                     break;
                 case "captain1":
                     if(button.member.id != hostId){
                         button.reply({ content: "Only the host can choose the captain...", ephemeral: true})
                         return;
                     }
+                    await button.deferUpdate();
                     logger.info("Setting captain 1");
                     var respGame;
                     try{
@@ -2010,13 +2019,14 @@ async function onButtonClick(button){
                         );
                     var row3 = new MessageActionRow()
                         .addComponents(chooseCaptain2);
-                    button.update({ embeds: [ListEmbed], components: [row, row2, row3] })
+                    button.editReply({ embeds: [ListEmbed], components: [row, row2, row3] })
                     break;
                 case "captain2":
                     if(button.member.id != hostId){
                         button.reply({ content: "Only the host can choose the captain...", ephemeral: true})
                         return;
                     }
+                    await button.deferUpdate();
                     logger.info("Setting captain 2");
                     var respGame;
                     try{
@@ -2165,7 +2175,7 @@ async function onButtonClick(button){
                                 .setLabel('Re-open game')
                                 .setStyle('SECONDARY'),
                         );
-                    button.update({ embeds: [ListEmbed], components: [row, row2, row3] })
+                    button.editReply({ embeds: [ListEmbed], components: [row, row2, row3] })
 
                     break;
                 case "captain1pick":                    
@@ -2195,7 +2205,7 @@ async function onButtonClick(button){
                         button.reply({ content: "Found no captain for team 1. Something broke..."})
                         return;
                     }
-
+                    await button.deferUpdate();
                     if(button.member.id !=respCaptain1.game_joining_players[0].player_id){
                         button.reply({ content: "Only the captain for team 1 can choose the player...", ephemeral: true})
                         return;
@@ -2368,7 +2378,7 @@ async function onButtonClick(button){
                                 .setLabel('Return players to starting channel')
                                 .setStyle('SECONDARY'),
                         );
-                    button.update({ embeds: [ListEmbed], components: [row, row2, row3, row4, row5] })
+                    button.editReply({ embeds: [ListEmbed], components: [row, row2, row3, row4, row5] })
                     break;
                 case "captain2pick":
                     var respGame;
@@ -2394,10 +2404,10 @@ async function onButtonClick(button){
                         logger.error(error.message);
                     }
                     if(!respCaptain2.game_joining_players[0]){
-                        button.reply({ content: "Found no captain for team 1. Something broke..."})
+                        button.reply({ content: "Found no captain for team 2. Something broke..."})
                         return;
                     }
-
+                    await button.deferUpdate();
                     if(button.member.id !=respCaptain2.game_joining_players[0].player_id){
                         button.reply({ content: "Only the captain for team 2 can choose the player...", ephemeral: true})
                         return;
@@ -2570,13 +2580,14 @@ async function onButtonClick(button){
                                 .setLabel('Return players to starting channel')
                                 .setStyle('SECONDARY'),
                         );
-                    button.update({ embeds: [ListEmbed], components: [row, row2, row3, row4, row5] })
+                    button.editReply({ embeds: [ListEmbed], components: [row, row2, row3, row4, row5] })
                     break;
                 case "channelTeam1":
                     if(button.member.id != hostId){
                         button.reply({ content: "Only the host can select the channel...", ephemeral: true})
                         return;
                     }
+                    await button.deferUpdate();
                     logger.info("Setting channel for team 1");
                     var respGame;
                     try{
@@ -2614,13 +2625,14 @@ async function onButtonClick(button){
                         logger.info("user: " + user);
                         user.voice.setChannel(button.values[0]);
                     }
-                    button.reply({ content: "Moved team 1 to the channel!", ephemeral: true})
+                    button.editReply({ content: "Moved team 1 to the channel!", ephemeral: true})
                     break;
                 case "channelTeam2":
                     if(button.member.id != hostId){
                         button.reply({ content: "Only the host can select the channel...", ephemeral: true})
                         return;
                     }
+                    await button.deferUpdate();
                     logger.info("Setting channel for team 2");
                     var respGame;
                     try{
@@ -2658,13 +2670,14 @@ async function onButtonClick(button){
                         logger.info("user: " + user);
                         user.voice.setChannel(button.values[0]);
                     }
-                    button.reply({ content: "Moved team 2 to the channel!", ephemeral: true})
+                    button.editReply({ content: "Moved team 2 to the channel!", ephemeral: true})
                     break;
                 case "return":
                     if(button.member.id != hostId){
                         button.reply({ content: "Only the host can return players...", ephemeral: true})
                         return;
                     }
+                    await button.deferUpdate();
                     logger.info("Returning players to starting channel");
                     var respGame;
                     try{
@@ -2699,13 +2712,14 @@ async function onButtonClick(button){
                         var user = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
                         user.voice.setChannel(respGame.game_joining_masters[0].starting_channel_id);
                     }
-                    button.reply({ content: "Moved all players to their starting channel!", ephemeral: true})
+                    button.editReply({ content: "Moved all players to their starting channel!", ephemeral: true})
                     break;
                 case "kick":
                     if(button.member.id != hostId){
                         button.reply({ content: "Only the host can kick players...", ephemeral: true})
                         return;
                     }
+                    await button.deferUpdate();
                     if(button.values[0] === hostId){
                         button.reply({ content: "You cannot kick yourself from your own game...", ephemeral: true})
                         return;
@@ -2806,7 +2820,7 @@ async function onButtonClick(button){
                         );
                         var row3 = new MessageActionRow()
                             .addComponents(kickableList);
-                    button.update({ embeds: [ListEmbed], components: [row, row2, row3] })
+                    button.editReply({ embeds: [ListEmbed], components: [row, row2, row3] })
                     break;
                 case "default":
                     logger.info("Default case hit, this should never happen");
