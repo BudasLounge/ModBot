@@ -2085,11 +2085,11 @@ async function onButtonClick(button){
                     ListEmbed.addField("No team:", playersList);
                     var row = new MessageActionRow()
                         .addComponents(
-                            chooseCaptain1
+                            captain1pick
                         );
                     var row2 = new MessageActionRow()
                         .addComponents(
-                            chooseCaptain2
+                            captain2pick
                         );
                     var row3 = new MessageActionRow()
                         .addComponents(
