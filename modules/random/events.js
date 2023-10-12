@@ -2449,7 +2449,7 @@ async function onButtonClick(button){
                     }else{
                         var captain2player = "";
                         for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
-                            if(respPlayersList.game_joining_players[i].player_id === player1){
+                            if(respPlayersList.game_joining_players[i].player_id === player2){
                                 captain2player = respPlayersList.game_joining_players[i].game_player_id;
                                 respPlayersList.game_joining_players[i].team = "2";
                                 break;
