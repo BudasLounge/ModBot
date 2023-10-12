@@ -10,7 +10,7 @@ module.exports = {
         var api = extra.api;
 
         this.logger.info(">>add_server_gui");
-        if(message.member.roles.cache.find(r => r.id === "586313447965327365") || message.author.id === "185223223892377611"){
+        if(message.member.roles.cache.find(r => r.id === "586313447965327365") || message.author.id === "185223223892377611" || message.author.id === "195677170432081920"){
             const {MessageActionRow, MessageButton, MessageEmbed, MessageSelectMenu} = require('discord.js');
             const modalStarter = new MessageActionRow()
             .addComponents(
