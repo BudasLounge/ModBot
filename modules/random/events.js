@@ -2555,7 +2555,7 @@ async function onButtonClick(button){
                         .setCustomId('GAMEchannelTeam1-'+hostId)
                         .setPlaceholder('Select a voice channel to send Team 1 to');
                     voiceChannelspick2.forEach((channel) => {
-                        channelListTeam1pick1.addOptions([
+                        channelListTeam1pick2.addOptions([
                             {
                             label: channel.name,
                             value: channel.id,
