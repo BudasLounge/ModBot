@@ -3,7 +3,7 @@ var api = new ApiClient();
 const {MessageActionRow, MessageButton, MessageEmbed, MessageSelectMenu, Modal, TextInputComponent} = require('discord.js');
 
 async function onButtonClick(button){
-    if((button.member.roles.cache.find(r => r.id === "586313447965327365" || button.user.id === "185223223892377611" || button.author.id === "195677170432081920") && button.customId=="MINE-SERVERCREATOR")){
+    if((button.member.roles.cache.find(r => r.id === "586313447965327365" || button.user.id === "185223223892377611" || button.user.id === "195677170432081920") && button.customId=="MINE-SERVERCREATOR")){
         const modal = new Modal()
         .setCustomId('MCSERVERCREATORMODAL')
         .setTitle('MC Server Adder');
