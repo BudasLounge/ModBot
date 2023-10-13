@@ -2207,7 +2207,7 @@ async function onButtonClick(button){
                     }
                     await button.deferUpdate();
                     if(button.member.id !=respCaptain1.game_joining_players[0].player_id){
-                        button.reply({ content: "Only the captain for team 1 can choose the player...", ephemeral: true})
+                        button.followup({ content: "Only the captain for team 1 can choose the player...", ephemeral: true})
                         return;
                     }
                     logger.info("Setting captain 1 pick");
@@ -2221,13 +2221,13 @@ async function onButtonClick(button){
                         logger.error(error.message);
                     }
                     if(!respPlayersList.game_joining_players[0]){
-                        button.reply({ content: "There are no players in the game...", ephemeral: true})
+                        button.followup({ content: "There are no players in the game...", ephemeral: true})
                         return;
                     }
                     const player1 = button.values[0];
                     logger.info("player1: " + player1);
                     if(player1 === "none"){
-                        button.reply({ content: "You must select a player...", ephemeral: true})
+                        button.followup({ content: "You must select a player...", ephemeral: true})
                         return;
                     }else{
                         var captain1player = "";
@@ -2424,7 +2424,7 @@ async function onButtonClick(button){
                     }
                     await button.deferUpdate();
                     if(button.member.id !=respCaptain2.game_joining_players[0].player_id){
-                        button.reply({ content: "Only the captain for team 2 can choose the player...", ephemeral: true})
+                        button.followup({ content: "Only the captain for team 2 can choose the player...", ephemeral: true})
                         return;
                     }
                     logger.info("Setting captain 2 pick");
@@ -2438,13 +2438,13 @@ async function onButtonClick(button){
                         logger.error(error.message);
                     }
                     if(!respPlayersList.game_joining_players[0]){
-                        button.reply({ content: "There are no players in the game...", ephemeral: true})
+                        button.followup({ content: "There are no players in the game...", ephemeral: true})
                         return;
                     }
                     const player2 = button.values[0];
                     logger.info("player2: " + player2);
                     if(player2 === "none"){
-                        button.reply({ content: "You must select a player...", ephemeral: true})
+                        button.followup({ content: "You must select a player...", ephemeral: true})
                         return;
                     }else{
                         var captain2player = "";
@@ -2455,11 +2455,11 @@ async function onButtonClick(button){
                                 break;
                             }
                         }
-                        var respCaptain1pick;
+                        var respCaptain2pick;
                         try{
-                            respCaptain1pick = await api.put("game_joining_player", {
+                            respCaptain2pick = await api.put("game_joining_player", {
                                 game_id:parseInt(respGame.game_joining_masters[0].game_id),
-                                game_player_id:parseInt(captain1player),
+                                game_player_id:parseInt(captain2player),
                                 team:"2"
                             })
                         }catch(error){
