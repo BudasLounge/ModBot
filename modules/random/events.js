@@ -1836,6 +1836,18 @@ async function onButtonClick(button){
                         button.reply({ content: "Only the host can choose the game mode...", ephemeral: true})
                         return;
                     }
+                    var respPlayersList;
+                    try{
+                        respPlayersList = await api.get("game_joining_player", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id)
+                        })
+                    }catch(error){
+                        logger.error(error);
+                    }
+                    if(respPlayersList.game_joining_players.length<2){
+                        button.channel.send({ content: "There are not enough players to do a captain pick..."})
+                        return;
+                    }
                     await button.deferUpdate();
                     logger.info(hostId + " chose captain pick");
                     var respGame;
@@ -1847,23 +1859,11 @@ async function onButtonClick(button){
                         logger.error(error);
                     }
                     if(!respGame.game_joining_masters[0]){
-                        button.reply({ content: "There is no game currently available...", ephemeral: true})
+                        button.followup({ content: "There is no game currently available...", ephemeral: true})
                         return;
                     }
                     if(!respGame.game_joining_masters[0].status === "started"){
-                        button.reply({ content: "The game has not started yet...this is definitely an error. Report it to the creator.", ephemeral: true})
-                        return;
-                    }
-                    var respPlayersList;
-                    try{
-                        respPlayersList = await api.get("game_joining_player", {
-                            game_id:parseInt(respGame.game_joining_masters[0].game_id)
-                        })
-                    }catch(error){
-                        logger.error(error);
-                    }
-                    if(respPlayersList.game_joining_players.length<2){
-                        button.channel.send({ content: "There are not enough players to do a captain pick..."})
+                        button.followup({ content: "The game has not started yet...this is definitely an error. Report it to the creator.", ephemeral: true})
                         return;
                     }
                     var playersList = "";
@@ -1929,11 +1929,11 @@ async function onButtonClick(button){
                         logger.error(error.message);
                     }
                     if(!respGame.game_joining_masters[0]){
-                        button.reply({ content: "There is no game currently available...", ephemeral: true})
+                        button.followup({ content: "There is no game currently available...", ephemeral: true})
                         return;
                     }
                     if(!(respGame.game_joining_masters[0].status === "started")){
-                        button.reply({ content: "The game has not started yet...", ephemeral: true})
+                        button.followup({ content: "The game has not started yet...", ephemeral: true})
                         return;
                     }
                     const captain1 = button.values[0];
@@ -1947,7 +1947,7 @@ async function onButtonClick(button){
                         logger.error(error.message);
                     }
                     if(!respPlayersList.game_joining_players[0]){
-                        button.reply({ content: "There are no players in the game...", ephemeral: true})
+                        button.followup({ content: "There are no players in the game...", ephemeral: true})
                         return;
                     }
                     var newCaptain1 = "";
@@ -2037,11 +2037,11 @@ async function onButtonClick(button){
                         logger.error(error.message);
                     }
                     if(!respGame.game_joining_masters[0]){
-                        button.reply({ content: "There is no game currently available...", ephemeral: true})
+                        button.followup({ content: "There is no game currently available...", ephemeral: true})
                         return;
                     }
                     if(!(respGame.game_joining_masters[0].status === "started")){
-                        button.reply({ content: "The game has not started yet...", ephemeral: true})
+                        button.followup({ content: "The game has not started yet...", ephemeral: true})
                         return;
                     }
                     const captain2 = button.values[0];
@@ -2054,7 +2054,7 @@ async function onButtonClick(button){
                         logger.error(error.message);
                     }
                     if(!respPlayersList.game_joining_players[0]){
-                        button.reply({ content: "There are no players in the game...", ephemeral: true})
+                        button.followup({ content: "There are no players in the game...", ephemeral: true})
                         return;
                     }
                     var newCaptain2 = "";
