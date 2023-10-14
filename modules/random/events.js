@@ -1842,7 +1842,7 @@ async function onButtonClick(button){
                             game_id:parseInt(respGame.game_joining_masters[0].game_id)
                         })
                     }catch(error){
-                        logger.error(error);
+                        logger.error(error.message);
                     }
                     logger.info("respPlayers exist?: + " + respPlayersList)
                     if(respPlayersList.game_joining_players.length<2){
