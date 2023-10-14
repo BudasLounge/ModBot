@@ -1844,6 +1844,7 @@ async function onButtonClick(button){
                     }catch(error){
                         logger.error(error);
                     }
+                    logger.info(respPlayersList)
                     if(respPlayersList.game_joining_players.length<2){
                         button.channel.send({ content: "There are not enough players to do a captain pick..."})
                         return;
