@@ -1836,6 +1836,14 @@ async function onButtonClick(button){
                         button.reply({ content: "Only the host can choose the game mode...", ephemeral: true})
                         return;
                     }
+                    var respGame;
+                    try{
+                        respGame = await api.get("game_joining_master", {
+                            host_id:hostId
+                        })
+                    }catch(error){
+                        logger.error(error);
+                    }
                     var respPlayersList;
                     try{
                         respPlayersList = await api.get("game_joining_player", {
@@ -1851,14 +1859,6 @@ async function onButtonClick(button){
                     }
                     await button.deferUpdate();
                     logger.info(hostId + " chose captain pick");
-                    var respGame;
-                    try{
-                        respGame = await api.get("game_joining_master", {
-                            host_id:hostId
-                        })
-                    }catch(error){
-                        logger.error(error);
-                    }
                     if(!respGame.game_joining_masters[0]){
                         await button.followUp({ content: "There is no game currently available...", ephemeral: true})
                         return;
