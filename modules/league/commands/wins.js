@@ -179,9 +179,19 @@ module.exports = {
     needs_api: false,
     has_state: false,
 async execute(message, args) {
-  var gameCount = parseInt(args[2]) || 20;
-    if (gameCount > 1000) {
-        message.channel.send('You can only request up to 1000 games at a time.');
+    args.shift();
+
+    // The last argument is the number of games, if provided
+    var gameCount = parseInt(args[args.length - 1]);
+    if (!isNaN(gameCount)) {
+      // Remove the game count from the args array
+      args.pop();
+    } else {
+      // If the last argument is not a number, default to 20 games
+      gameCount = 20;
+    }
+    if (gameCount > 300) {
+        message.channel.send('You can only request up to 300 games at a time.');
         return;
     }
     if (gameCount < 1) {
@@ -194,11 +204,11 @@ async execute(message, args) {
       const estimatedTimeMs = longTermDelays + shortTermDelays;
       const estimatedTimeMinutes = Math.floor(estimatedTimeMs / 60000);
       const estimatedTimeSeconds = ((estimatedTimeMs % 60000) / 1000).toFixed(0);
-
+      var summonerName = args.join(' ');
       // Send the estimated time to the user
-      message.channel.send(`Getting stats for ${args[1]}, please wait. Estimated time: ${estimatedTimeMinutes} minutes and ${parseInt(estimatedTimeSeconds)+parseInt(10)} seconds.`);
-
-      const results = await getLastMatches(args[1], gameCount, this.logger);
+      message.channel.send(`Getting stats for ${summonerName}, please wait. Estimated time: ${estimatedTimeMinutes} minutes and ${parseInt(estimatedTimeSeconds)+parseInt(10)} seconds.`);
+      
+      const results = await getLastMatches(summonerName, gameCount, this.logger);
       const queueStats = results.reduce((stats, { champion, win, queueType }) => {
         if (!stats[queueType]) {
           stats[queueType] = { games: 0, champions: {} };
