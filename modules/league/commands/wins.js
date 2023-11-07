@@ -120,7 +120,14 @@ module.exports = {
                 const winLoss = result.win ? 'Win' : 'Loss';
                 response += `Game ID: ${result.matchId}, Champion: ${result.champion}, Result: ${winLoss}\n`;
             });
-            message.channel.send(response);
+            const messageChunks = Util.splitMessage(response, {
+                maxLength: 2000,
+                char:'\n'
+            });
+            messageChunks.forEach(async chunk => {
+                await message.channel.send(chunk);
+            })
+            //message.channel.send(response);
         }).catch(error => {
             this.logger.error(error.message);
             message.channel.send('An error occurred while retrieving match history.');
