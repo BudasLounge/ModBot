@@ -196,7 +196,7 @@ async execute(message, args) {
       const estimatedTimeSeconds = ((estimatedTimeMs % 60000) / 1000).toFixed(0);
 
       // Send the estimated time to the user
-      message.channel.send(`Getting stats for ${args[1]}, please wait. Estimated time: ${estimatedTimeMinutes} minutes and ${estimatedTimeSeconds+10} seconds.`);
+      message.channel.send(`Getting stats for ${args[1]}, please wait. Estimated time: ${estimatedTimeMinutes} minutes and ${estimatedTimeSeconds+parseInt(10)} seconds.`);
 
       const results = await getLastMatches(args[1], gameCount, this.logger);
       const queueStats = results.reduce((stats, { champion, win, queueType }) => {
@@ -214,9 +214,10 @@ async execute(message, args) {
       for (const [queueType, champions] of Object.entries(queueStats)) {
         const totalWins = Object.values(champions).reduce((acc, { wins }) => acc + wins, 0);
         const totalLosses = Object.values(champions).reduce((acc, { losses }) => acc + losses, 0);
+        const championCount = Object.keys(champions).length; // Count of champions for the queue type
 
         const embed = new MessageEmbed()
-          .setTitle(`Last ${results.length} matches for ${args[1]} in ${queueType}`)
+          .setTitle(`Last ${results.length} matches for ${args[1]} in ${queueType} (${championCount} champions)`)
           .setColor('#0099ff')
           .addField('Total', `Wins: ${totalWins} | Losses: ${totalLosses}`, false)
           .setTimestamp();
