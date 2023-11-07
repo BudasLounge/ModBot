@@ -1,4 +1,5 @@
 const axios = require('axios');
+const fs = require('fs').promises;
 const { MessageEmbed } = require('discord.js');
 require('dotenv').config();
 
@@ -20,7 +21,17 @@ const LONG_TERM_DURATION = 120 * 1000; // 2 minutes
 setInterval(() => {
   longTermRequests = 0;
 }, LONG_TERM_DURATION);
-
+async function saveMatchDataToFile(matchDetails, filePath) {
+    try {
+      // Convert match details to a JSON string
+      const dataString = JSON.stringify(matchDetails, null, 2);
+      // Write the JSON string to a file
+      await fs.writeFile(filePath, dataString, 'utf-8');
+      console.log(`Match data saved to ${filePath}`);
+    } catch (error) {
+      console.error('Error writing match data to file:', error);
+    }
+  }
 async function getLastMatches(username, numberOfGames, logger) {
   const summonerResponse = await http.get(`${RIOT_ACCOUNT_BASE_URL}${encodeURIComponent(username)}`, {
     headers: { "X-Riot-Token": RIOT_API_KEY }
@@ -47,11 +58,14 @@ async function getLastMatches(username, numberOfGames, logger) {
       });
       const data = response.data;
       const participant = data.info.participants.find(p => p.puuid === puuid);
-      matchDetails.push({
+      const matchDetail = {
         matchId: data.metadata.matchId,
         champion: participant.championName,
         win: participant.win
-      });
+      };
+      matchDetails.push(matchDetail);
+      const filePath = `/home/bots/${matchDetail.matchId}.json`;
+      await saveMatchDataToFile(matchDetail, filePath);
     } catch (error) {
       if (error.response && error.response.status === 429) {
         // If rate limit is exceeded, use the Retry-After header to wait
