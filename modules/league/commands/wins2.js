@@ -1,5 +1,6 @@
 const axios = require('axios');
 const fs = require('fs').promises;
+const path = require('path');
 const { MessageEmbed } = require('discord.js');
 require('dotenv').config();
 
@@ -21,10 +22,17 @@ const LONG_TERM_DURATION = 120 * 1000; // 2 minutes
 setInterval(() => {
   longTermRequests = 0;
 }, LONG_TERM_DURATION);
-async function saveMatchDataToFile(matchDetails, filePath) {
+async function saveMatchDataToFile(matchDetails, puuid) {
+    const dirPath = path.join(__dirname, 'match_data', puuid); // Directory path for the puuid
+    const filePath = path.join(dirPath, `${matchDetails.matchId}.json`); // File path for the match data
+  
     try {
+      // Ensure the directory exists
+      await fs.mkdir(dirPath, { recursive: true });
+  
       // Convert match details to a JSON string
       const dataString = JSON.stringify(matchDetails, null, 2);
+  
       // Write the JSON string to a file
       await fs.writeFile(filePath, dataString, 'utf-8');
       console.log(`Match data saved to ${filePath}`);
@@ -64,8 +72,7 @@ async function getLastMatches(username, numberOfGames, logger) {
         win: participant.win
       };
       matchDetails.push(matchDetail);
-      const filePath = `/home/bots/${matchDetail.matchId}.json`;
-      //await saveMatchDataToFile(data, filePath);
+      await saveMatchDataToFile(matchDetail, puuid);
     } catch (error) {
       if (error.response && error.response.status === 429) {
         // If rate limit is exceeded, use the Retry-After header to wait
