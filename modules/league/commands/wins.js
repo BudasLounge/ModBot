@@ -221,25 +221,38 @@ async execute(message, args) {
         return stats;
       }, {});
 
-      // Send an embed for each queue type
       for (const [queueType, data] of Object.entries(queueStats)) {
         const totalGames = data.games;
         const champions = data.champions;
         const totalWins = Object.values(champions).reduce((acc, { wins }) => acc + wins, 0);
         const totalLosses = Object.values(champions).reduce((acc, { losses }) => acc + losses, 0);
         const championCount = Object.keys(champions).length;
-
-        const embed = new MessageEmbed()
+  
+        let embed = new MessageEmbed()
           .setTitle(`${totalGames} games in ${queueType} (${championCount} champions)`)
           .setColor('#0099ff')
           .addField('Total', `Wins: ${totalWins} | Losses: ${totalLosses}\n---------------------`, false)
           .setTimestamp();
-
+  
+        let fieldCount = 0;
+  
         for (const [champion, { wins, losses }] of Object.entries(champions)) {
+          if (fieldCount === 25) {
+            // Send the current embed and create a new one
+            await message.channel.send({ embeds: [embed] });
+            embed = new MessageEmbed()
+              .setTitle(`Continued: ${queueType}`)
+              .setColor('#0099ff')
+              .setTimestamp();
+            fieldCount = 0;
+          }
+  
           embed.addField(champion, `Wins: ${wins} | Losses: ${losses}`, true);
+          fieldCount++;
         }
-
-        await message.channel.send({ embeds: [embed] }); // Send the embed for the current queue type
+  
+        // Send the last or only embed for the current queue type
+        await message.channel.send({ embeds: [embed] });
       }
     } catch (error) {
       this.logger.error('Error fetching data from Riot API:', error);
