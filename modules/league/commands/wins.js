@@ -173,7 +173,7 @@ async function saveMatchDataToFile(fullMatchData, puuid) {
 module.exports = {
     name: 'wins',
     description: 'Shows last games in your match history',
-    syntax: 'wins [summoner name] [number of games up to 95](optional)',
+    syntax: 'wins [summoner name] [number of games up to 1000](optional)',
     num_args: 1,
     args_to_lower: true,
     needs_api: false,
@@ -190,8 +190,8 @@ async execute(message, args) {
       // If the last argument is not a number, default to 20 games
       gameCount = 20;
     }
-    if (gameCount > 600) {
-        message.channel.send('You can only request up to 300 games at a time.');
+    if (gameCount > 1000) {
+        message.channel.send('You can only request up to 1000 games at a time.');
         return;
     }
     if (gameCount < 1) {
@@ -207,7 +207,7 @@ async execute(message, args) {
       var summonerName = args.join(' ');
       // Send the estimated time to the user
       message.channel.send(`Getting stats for ${summonerName}, please wait. Estimated time: ${estimatedTimeMinutes} minutes and ${parseInt(estimatedTimeSeconds)+parseInt(10)} seconds.`);
-      
+      message.channel.send(`If multiple requests are made in a short period of time, the bot will take longer to respond.\nPlease only request up to 50 games at one time unless pulling mass data for website viewing.`);
       const results = await getLastMatches(summonerName, gameCount, this.logger);
       const queueStats = results.reduce((stats, { champion, win, queueType }) => {
         if (!stats[queueType]) {
