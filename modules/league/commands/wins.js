@@ -53,6 +53,7 @@ module.exports = {
         
                 const { accountId } = summonerResponse.data;
                 this.logger.info("accountId: " + accountId);
+                this.logger.info(`${RIOT_API_BASE_URL}/summoner/v4/summoners/by-name/${encodeURIComponent(username)}?api_key=${RIOT_API_KEY}`);
                 // Step 2: Get the matchlist for the summoner
                 const matchlistResponse = await http.get(`${RIOT_API_BASE_URL}/match/v4/matchlists/by-account/${accountId}?endIndex=20?api_key=${RIOT_API_KEY}`, {
                     headers: {
