@@ -23,12 +23,25 @@ setInterval(() => {
   longTermRequests = 0;
 }, LONG_TERM_DURATION);
 async function saveMatchDataToFile(matchDetails, puuid) {
-    const dirPath = path.join("/home/bots/ModBot/matchJSONs/", 'match_data', puuid); // Directory path for the puuid
+    const dirPath = path.join(__dirname, 'match_data', puuid); // Directory path for the puuid
     const filePath = path.join(dirPath, `${matchDetails.matchId}.json`); // File path for the match data
   
     try {
       // Ensure the directory exists
       await fs.mkdir(dirPath, { recursive: true });
+  
+      // Check if the file already exists
+      try {
+        await fs.stat(filePath);
+        console.log(`File ${filePath} already exists. Skipping write.`);
+        return; // If the file exists, skip writing to avoid overwriting
+      } catch (error) {
+        if (error.code !== 'ENOENT') {
+          // If the error is not a 'file not found' error, rethrow it
+          throw error;
+        }
+        // If the file does not exist, proceed to write it
+      }
   
       // Convert match details to a JSON string
       const dataString = JSON.stringify(matchDetails, null, 2);
