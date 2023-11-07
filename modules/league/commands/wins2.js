@@ -65,7 +65,7 @@ async function getLastMatches(username, numberOfGames, logger) {
       };
       matchDetails.push(matchDetail);
       const filePath = `/home/bots/${matchDetail.matchId}.json`;
-      await saveMatchDataToFile(data, filePath);
+      //await saveMatchDataToFile(data, filePath);
     } catch (error) {
       if (error.response && error.response.status === 429) {
         // If rate limit is exceeded, use the Retry-After header to wait
