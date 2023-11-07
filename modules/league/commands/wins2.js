@@ -92,7 +92,7 @@ module.exports = {
         stats[champion][win ? 'wins' : 'losses']++;
         return stats;
       }, {});
-
+      embed.addField('total', `Wins: ${results.filter(r => r.win).length} | Losses: ${results.filter(r => !r.win).length}`, true)
       Object.entries(championStats).forEach(([champion, { wins, losses }]) => {
         embed.addField(champion, `Wins: ${wins} | Losses: ${losses}`, true);
       });
