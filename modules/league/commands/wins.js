@@ -1,149 +1,162 @@
+const axios = require('axios');
+const fs = require('fs').promises;
+const path = require('path');
+const { MessageEmbed } = require('discord.js');
+require('dotenv').config();
+
+const RIOT_API_KEY = process.env.RIOT_API_KEY;
+const RIOT_ACCOUNT_BASE_URL = 'https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/';
+const RIOT_API_BASE_URL = 'https://americas.api.riotgames.com/lol/match/v5/matches/';
+
+// Function to sleep for a given number of milliseconds
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Create a rate-limited instance of axios
+const http = axios.create();
+
+let longTermRequests = 0;
+const LONG_TERM_LIMIT = 100;
+const LONG_TERM_DURATION = 120 * 1000; // 2 minutes
+
+// Reset long-term request count every LONG_TERM_DURATION
+setInterval(() => {
+  longTermRequests = 0;
+}, LONG_TERM_DURATION);
+async function saveMatchDataToFile(matchDetails, puuid) {
+    const dirPath = path.join(__dirname, 'match_data', puuid); // Directory path for the puuid
+    const filePath = path.join(dirPath, `${matchDetails.matchId}.json`); // File path for the match data
+  
+    try {
+      // Ensure the directory exists
+      await fs.mkdir(dirPath, { recursive: true });
+  
+      // Check if the file already exists
+      try {
+        await fs.stat(filePath);
+        console.log(`File ${filePath} already exists. Skipping write.`);
+        return; // If the file exists, skip writing to avoid overwriting
+      } catch (error) {
+        if (error.code !== 'ENOENT') {
+          // If the error is not a 'file not found' error, rethrow it
+          throw error;
+        }
+        // If the file does not exist, proceed to write it
+      }
+  
+      // Convert match details to a JSON string
+      const dataString = JSON.stringify(matchDetails, null, 2);
+  
+      // Write the JSON string to a file
+      await fs.writeFile(filePath, dataString, 'utf-8');
+      console.log(`Match data saved to ${filePath}`);
+    } catch (error) {
+      console.error('Error writing match data to file:', error);
+    }
+  }
+  async function getLastMatches(username, numberOfGames, logger) {
+    const summonerResponse = await http.get(`${RIOT_ACCOUNT_BASE_URL}${encodeURIComponent(username)}`, {
+      headers: { "X-Riot-Token": RIOT_API_KEY }
+    });
+    const { puuid } = summonerResponse.data;
+    logger.info(`Found summoner ${username} with puuid ${puuid}`);
+    const matchIdsResponse = await http.get(`${RIOT_API_BASE_URL}by-puuid/${puuid}/ids?start=0&count=${numberOfGames}`, {
+      headers: { "X-Riot-Token": RIOT_API_KEY }
+    });
+    const matchIds = matchIdsResponse.data;
+  
+    const matchDetails = [];
+  
+    for (const matchId of matchIds) {
+      const dirPath = path.join(__dirname, 'match_data', puuid);
+      const filePath = path.join(dirPath, `${matchId}.json`);
+  
+      try {
+        // Check if the match data file exists locally
+        const fileData = await fs.readFile(filePath, 'utf-8');
+        logger.info(`Match data for match ${matchId} found locally.`);
+        matchDetails.push(JSON.parse(fileData));
+      } catch (error) {
+        if (error.code === 'ENOENT') {
+          // If the file does not exist, fetch the data from the Riot API
+          logger.info(`Fetching match details for match ${matchId} from Riot API.`);
+          if (longTermRequests >= LONG_TERM_LIMIT) {
+            // Wait until the 2-minute window resets
+            await sleep(LONG_TERM_DURATION);
+            longTermRequests = 0;
+          }
+  
+          try {
+            const response = await http.get(`${RIOT_API_BASE_URL}${matchId}`, {
+              headers: { "X-Riot-Token": RIOT_API_KEY }
+            });
+            const data = response.data;
+            const participant = data.info.participants.find(p => p.puuid === puuid);
+            const matchDetail = {
+              matchId: data.metadata.matchId,
+              champion: participant.championName,
+              win: participant.win
+            };
+            matchDetails.push(matchDetail);
+            await saveMatchDataToFile(matchDetail, puuid);
+          } catch (error) {
+            if (error.response && error.response.status === 429) {
+              // If rate limit is exceeded, use the Retry-After header to wait
+              const retryAfter = parseInt(error.response.headers['retry-after'] || '1', 10) * 1000;
+              await sleep(retryAfter);
+            } else {
+              throw error;
+            }
+          }
+  
+          longTermRequests++;
+          // Respect the short-term rate limit of 20 requests per second
+          await sleep(50); // 1000 ms / 20 requests = 50 ms per request
+        } else {
+          // If the error is not due to the file not existing, log it
+          logger.error(`Error reading match data from local file for match ${matchId}:`, error);
+        }
+      }
+    }
+  
+    return matchDetails;
+  }
 module.exports = {
     name: 'wins',
-    description: 'Shows last 20 games in your match history',
-    syntax: 'wins [summoner name] [number of games up to 95]',
-    num_args: 2,
+    description: 'Shows last games in your match history',
+    syntax: 'wins [summoner name] [number of games up to 95](optional)',
+    num_args: 1,
     args_to_lower: true,
     needs_api: false,
     has_state: false,
-    
-    async execute(message, args, extra) {
-        message.channel.send(`Getting stats for ${args[1]}, this may take a moment...`);
-        require('dotenv').config();
-        const {Util} = require('discord.js');
-        const Discord = require('discord.js');
-        const axios = require('axios');
-        const rateLimit = require('axios-rate-limit');
-
-        const RIOT_API_KEY = process.env.RIOT_API_KEY;
-        const RIOT_ACCOUNT_BASE_URL = 'https://na1.api.riotgames.com/lol';
-        const RIOT_API_BASE_URL = 'https://americas.api.riotgames.com/lol';
-        let hasSentLongTermLimitMessage = false;
-        const http = rateLimit(axios.create(), {
-            maxRequests: 20,
-            perMilliseconds: 1000
-        });
-
-        let longTermRequests = 0;
-        const LONG_TERM_LIMIT = 100;
-        const LONG_TERM_DURATION = 120 * 1000;
-
-        setInterval(() => {
-            longTermRequests = 0;
-        }, LONG_TERM_DURATION);
-
-        http.interceptors.request.use(config => {
-            if (longTermRequests >= LONG_TERM_LIMIT && !hasSentLongTermLimitMessage) {
-                message.channel.send(`The rate limit of ${LONG_TERM_LIMIT} requests per ${LONG_TERM_DURATION / 1000 / 60} minutes has been exceeded. Please wait 2 minutes before trying again.`);
-                hasSentLongTermLimitMessage = true; // Set the flag so the message won't be sent again
-            }
-            longTermRequests++;
-            return config;
-        }, error => {
-            return Promise.reject(error);
-        });
-
-        http.interceptors.response.use(response => {
-            return response;
-        }, async (error) => {
-            if (error.response && error.response.status === 429) {
-                if(hasSentLongTermLimitMessage) return;
-                const retryAfter = error.response.headers['retry-after'] ? parseInt(error.response.headers['retry-after']) : 1;
-                if (retryAfter > 10) {
-                    message.channel.send(`The rate limit of ${LONG_TERM_LIMIT} requests per ${LONG_TERM_DURATION / 1000 / 60} minutes has been exceeded. Try again in ${retryAfter} seconds.`);
-                    hasSentLongTermLimitMessage = true; // Set the flag so the message won't be sent again
-                    return;
-                }
-                this.logger.info(`Rate limit exceeded. Retrying after ${retryAfter} seconds.`);
-                await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
-                return http.request(error.config);
-            }
-            return Promise.reject(error);
-        });
-
-        async function getLast20Matches(username) {
-            try {
-                const summonerResponse = await http.get(`${RIOT_ACCOUNT_BASE_URL}/summoner/v4/summoners/by-name/${encodeURIComponent(username)}`, {
-                    headers: {
-                        "X-Riot-Token": RIOT_API_KEY
-                    }
-                });
-                const { puuid } = summonerResponse.data;
-
-                const matchIdsResponse = await http.get(`${RIOT_API_BASE_URL}/match/v5/matches/by-puuid/${puuid}/ids?start=0&count=${args[2]}`, {
-                    headers: {
-                        "X-Riot-Token": RIOT_API_KEY
-                    }
-                });
-                const matchIds = matchIdsResponse.data;
-                const results = await Promise.all(matchIds.map(async (matchId) => {
-                    const matchDetailResponse = await http.get(`${RIOT_API_BASE_URL}/match/v5/matches/${matchId}`, {
-                        headers: {
-                            "X-Riot-Token": RIOT_API_KEY
-                        }
-                    });
-
-                    const matchDetail = matchDetailResponse.data;
-                    const participant = matchDetail.info.participants.find(p => p.puuid === puuid);
-
-                    return {
-                        matchId: matchId,
-                        champion: participant.championName,
-                        win: participant.win
-                    };
-                }));
-
-                return results;
-            } catch (error) {
-                    this.logger.error('Error fetching data from Riot API:', error);
-                    if (error.response) {
-                        this.logger.error('Response data:', error.response.data);
-                        this.logger.error('Response status:', error.response.status);
-                        this.logger.error('Response headers:', error.response.headers);
-                    } else if (error.request) {
-                        this.logger.error('Request:', error.request);
-                    } else {
-                        this.logger.error('Error message:', error);
-                    }
-                    // Send a generic error message if the rate limit message hasn't been sent
-                    if (!hasSentLongTermLimitMessage) {
-                        message.channel.send('An error occurred while retrieving match history.');
-                    }
-                    throw error;
-            }
-        }
-
-        getLast20Matches(args[1]).then(results => {
-            const embed = new Discord.MessageEmbed()
-                .setTitle(`Last ${args[2]} matches for ${args[1]}`)
-                .setColor('#0099ff')
-                .setTimestamp();
-        
-            const championWins = {};
-            results.forEach(result => {
-                const champion = result.champion;
-                if (!championWins[champion]) {
-                    championWins[champion] = {
-                        wins: 0,
-                        losses: 0
-                    };
-                }
-                if (result.win) {
-                    championWins[champion].wins++;
-                } else {
-                    championWins[champion].losses++;
-                }
-            });
-            embed.addField('Total', `Wins: ${results.filter(r => r.win).length} | Losses: ${results.filter(r => !r.win).length}`, true)
-            for (const [champion, { wins, losses }] of Object.entries(championWins)) {
-                embed.addField(champion, `Wins: ${wins} | Losses: ${losses}`, true);
-            }
-        
-            message.channel.send({ embeds: [embed] });
-            //message.channel.send(response);
-        }).catch(error => {
-            this.logger.error(error.message);
-            message.channel.send('An error occurred while retrieving match history.');
-        });
+async execute(message, args) {
+    var gameCount = 20;
+    if(args[2] != null){
+        gameCount = args[2];
     }
+    try {
+      message.channel.send(`Getting stats for ${args[1]}, this may take a moment...`);
+      const results = await getLastMatches(args[1], gameCount, this.logger);
+      const embed = new MessageEmbed()
+        .setTitle(`Last ${results.length} matches for ${args[1]}`)
+        .setColor('#0099ff')
+        .setTimestamp();
+
+      const championStats = results.reduce((stats, { champion, win }) => {
+        if (!stats[champion]) {
+          stats[champion] = { wins: 0, losses: 0 };
+        }
+        stats[champion][win ? 'wins' : 'losses']++;
+        return stats;
+      }, {});
+      embed.addField('total', `Wins: ${results.filter(r => r.win).length} | Losses: ${results.filter(r => !r.win).length}`, true)
+      Object.entries(championStats).forEach(([champion, { wins, losses }]) => {
+        embed.addField(champion, `Wins: ${wins} | Losses: ${losses}`, true);
+      });
+
+      message.channel.send({ embeds: [embed] });
+    } catch (error) {
+      this.logger.error('Error fetching data from Riot API:', error);
+      message.channel.send('An error occurred while retrieving match history.');
+    }
+  }
 };
