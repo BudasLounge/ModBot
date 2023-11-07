@@ -68,9 +68,9 @@ async function getLast20Matches(username, numberOfGames) {
 }
 
 module.exports = {
-  name: 'wins',
+  name: 'wins2',
   description: 'Shows last 20 games in your match history',
-  syntax: 'wins [summoner name] [number of games up to 95]',
+  syntax: 'wins2 [summoner name] [number of games up to 95]',
   num_args: 2,
   args_to_lower: true,
   needs_api: false,
