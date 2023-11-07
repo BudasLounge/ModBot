@@ -217,9 +217,10 @@ async execute(message, args) {
         const champions = data.champions;
         const totalWins = Object.values(champions).reduce((acc, { wins }) => acc + wins, 0);
         const totalLosses = Object.values(champions).reduce((acc, { losses }) => acc + losses, 0);
+        const championCount = Object.keys(champions).length;
 
         const embed = new MessageEmbed()
-          .setTitle(`${totalGames} games in ${queueType}`)
+          .setTitle(`${totalGames} games in ${queueType} (${championCount} champions)`)
           .setColor('#0099ff')
           .addField('Total', `Wins: ${totalWins} | Losses: ${totalLosses}`, false)
           .setTimestamp();
