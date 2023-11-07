@@ -23,7 +23,7 @@ setInterval(() => {
   longTermRequests = 0;
 }, LONG_TERM_DURATION);
 async function saveMatchDataToFile(matchDetails, puuid) {
-    const dirPath = path.join(__dirname, 'match_data', puuid); // Directory path for the puuid
+    const dirPath = path.join("/home/bots/ModBot/matchJSONs/", 'match_data', puuid); // Directory path for the puuid
     const filePath = path.join(dirPath, `${matchDetails.matchId}.json`); // File path for the match data
   
     try {
