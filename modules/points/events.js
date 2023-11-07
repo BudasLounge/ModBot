@@ -323,7 +323,7 @@ if(button.isButton()){
             return;
         }
     }else{
-        button.channel.send({content: "<@" + button.user.id+">"+"You need to run /point_start in order to get in the system!"});
+        button.channel.send({content: "<@" + button.user.id+">"+"You need to run ,point_start in order to get in the system!"});
         return;
     }
     //button.channel.send({content: bet_amount.toString() + " " + stance});
