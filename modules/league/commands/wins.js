@@ -196,55 +196,37 @@ async execute(message, args) {
       const estimatedTimeSeconds = ((estimatedTimeMs % 60000) / 1000).toFixed(0);
 
       // Send the estimated time to the user
-      message.channel.send(`Getting stats for ${args[1]}, please wait. Estimated time: ${estimatedTimeMinutes} minutes and ${estimatedTimeSeconds} seconds.`);
+      message.channel.send(`Getting stats for ${args[1]}, please wait. Estimated time: ${estimatedTimeMinutes} minutes and ${estimatedTimeSeconds+10} seconds.`);
 
       const results = await getLastMatches(args[1], gameCount, this.logger);
-      /*const embed = new MessageEmbed()
-        .setTitle(`Last ${results.length} matches for ${args[1]}`)
-        .setColor('#0099ff')
-        .setTimestamp();
-
-      const championStats = results.reduce((stats, { champion, win }) => {
-        if (!stats[champion]) {
-          stats[champion] = { wins: 0, losses: 0 };
-        }
-        stats[champion][win ? 'wins' : 'losses']++;
-        return stats;
-      }, {});
-      embed.addField('total', `Wins: ${results.filter(r => r.win).length} | Losses: ${results.filter(r => !r.win).length}`, true)
-      Object.entries(championStats).forEach(([champion, { wins, losses }]) => {
-        embed.addField(champion, `Wins: ${wins} | Losses: ${losses}`, true);
-      });
-
-      message.channel.send({ embeds: [embed] });*/
       const queueStats = results.reduce((stats, { champion, win, queueType }) => {
-        const queueName = `Queue ${queueType}`; // Replace with actual queue name lookup if available
-        if (!stats[queueName]) {
-          stats[queueName] = {};
+        if (!stats[queueType]) {
+          stats[queueType] = {};
         }
-        if (!stats[queueName][champion]) {
-          stats[queueName][champion] = { wins: 0, losses: 0 };
+        if (!stats[queueType][champion]) {
+          stats[queueType][champion] = { wins: 0, losses: 0 };
         }
-        stats[queueName][champion][win ? 'wins' : 'losses']++;
+        stats[queueType][champion][win ? 'wins' : 'losses']++;
         return stats;
       }, {});
-  
-      const embed = new MessageEmbed()
-        .setTitle(`Last ${results.length} matches for ${args[1]}`)
-        .setColor('#0099ff')
-        .setTimestamp();
-  
-      Object.entries(queueStats).forEach(([queueName, champions]) => {
+
+      // Send an embed for each queue type
+      for (const [queueType, champions] of Object.entries(queueStats)) {
         const totalWins = Object.values(champions).reduce((acc, { wins }) => acc + wins, 0);
         const totalLosses = Object.values(champions).reduce((acc, { losses }) => acc + losses, 0);
-        embed.addField(queueName, `Wins: ${totalWins} | Losses: ${totalLosses}`, false);
-  
-        Object.entries(champions).forEach(([champion, { wins, losses }]) => {
+
+        const embed = new MessageEmbed()
+          .setTitle(`Last ${results.length} matches for ${args[1]} in ${queueType}`)
+          .setColor('#0099ff')
+          .addField('Total', `Wins: ${totalWins} | Losses: ${totalLosses}`, false)
+          .setTimestamp();
+
+        for (const [champion, { wins, losses }] of Object.entries(champions)) {
           embed.addField(champion, `Wins: ${wins} | Losses: ${losses}`, true);
-        });
-      });
-  
-      message.channel.send({ embeds: [embed] });
+        }
+
+        await message.channel.send({ embeds: [embed] }); // Send the embed for the current queue type
+      }
     } catch (error) {
       this.logger.error('Error fetching data from Riot API:', error);
       message.channel.send('An error occurred while retrieving match history.');
