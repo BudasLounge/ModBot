@@ -190,7 +190,7 @@ async execute(message, args) {
       // If the last argument is not a number, default to 20 games
       gameCount = 20;
     }
-    if (gameCount > 300) {
+    if (gameCount > 600) {
         message.channel.send('You can only request up to 300 games at a time.');
         return;
     }
