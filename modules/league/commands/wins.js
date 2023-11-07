@@ -10,6 +10,7 @@ module.exports = {
     async execute(message, args, extra) {
         message.channel.send(`Getting stats for ${args[1]}, this may take a moment...`);
         require('dotenv').config();
+        const {Util} = require('discord.js');
         const axios = require('axios');
         const rateLimit = require('axios-rate-limit');
 
