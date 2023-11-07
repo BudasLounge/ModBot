@@ -141,12 +141,26 @@ module.exports = {
     needs_api: false,
     has_state: false,
 async execute(message, args) {
-    var gameCount = 20;
-    if(args[2] != null){
-        gameCount = args[2];
+  var gameCount = parseInt(args[2]) || 20;
+    if (gameCount > 1000) {
+        message.channel.send('You can only request up to 1000 games at a time.');
+        return;
+    }
+    if (gameCount < 1) {
+        message.channel.send('You must request at least 1 game.');
+        return;
     }
     try {
       message.channel.send(`Getting stats for ${args[1]}, this may take a moment...`);
+      const longTermDelays = Math.floor(gameCount / 100) * (120 * 1000); // 2 minutes for every 100 requests
+      const shortTermDelays = Math.floor((gameCount % 100) / 20) * 2000; // 2 seconds for every 20 requests in the last batch
+      const estimatedTimeMs = longTermDelays + shortTermDelays;
+      const estimatedTimeMinutes = Math.floor(estimatedTimeMs / 60000);
+      const estimatedTimeSeconds = ((estimatedTimeMs % 60000) / 1000).toFixed(0);
+
+      // Send the estimated time to the user
+      message.channel.send(`Getting stats for ${args[1]}, please wait. Estimated time: ${estimatedTimeMinutes} minutes and ${estimatedTimeSeconds} seconds.`);
+
       const results = await getLastMatches(args[1], gameCount, this.logger);
       const embed = new MessageEmbed()
         .setTitle(`Last ${results.length} matches for ${args[1]}`)
