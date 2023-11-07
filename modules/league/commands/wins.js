@@ -59,62 +59,74 @@ async function saveMatchDataToFile(matchDetails, puuid) {
     });
     const { puuid } = summonerResponse.data;
     logger.info(`Found summoner ${username} with puuid ${puuid}`);
-    const matchIdsResponse = await http.get(`${RIOT_API_BASE_URL}by-puuid/${puuid}/ids?start=0&count=${numberOfGames}`, {
-      headers: { "X-Riot-Token": RIOT_API_KEY }
-    });
-    const matchIds = matchIdsResponse.data;
   
-    const matchDetails = [];
+    let matchDetails = [];
+    let startIndex = 0;
+    const MAX_MATCHES_PER_REQUEST = 100;
   
-    for (const matchId of matchIds) {
-      const dirPath = path.join(__dirname, 'match_data', puuid);
-      const filePath = path.join(dirPath, `${matchId}.json`);
+    while (numberOfGames > 0) {
+      const count = Math.min(numberOfGames, MAX_MATCHES_PER_REQUEST);
+      const matchIdsResponse = await http.get(`${RIOT_API_BASE_URL}by-puuid/${puuid}/ids?start=${startIndex}&count=${count}`, {
+        headers: { "X-Riot-Token": RIOT_API_KEY }
+      });
+      const matchIds = matchIdsResponse.data;
+      startIndex += count;
+      numberOfGames -= count;
   
-      try {
-        // Check if the match data file exists locally
-        const fileData = await fs.readFile(filePath, 'utf-8');
-        logger.info(`Match data for match ${matchId} found locally.`);
-        matchDetails.push(JSON.parse(fileData));
-      } catch (error) {
-        if (error.code === 'ENOENT') {
-          // If the file does not exist, fetch the data from the Riot API
-          logger.info(`Fetching match details for match ${matchId} from Riot API.`);
-          if (longTermRequests >= LONG_TERM_LIMIT) {
-            // Wait until the 2-minute window resets
-            await sleep(LONG_TERM_DURATION);
-            longTermRequests = 0;
-          }
+      for (const matchId of matchIds) {
+        const dirPath = path.join(__dirname, 'match_data', puuid);
+        const filePath = path.join(dirPath, `${matchId}.json`);
   
-          try {
-            const response = await http.get(`${RIOT_API_BASE_URL}${matchId}`, {
-              headers: { "X-Riot-Token": RIOT_API_KEY }
-            });
-            const data = response.data;
-            const participant = data.info.participants.find(p => p.puuid === puuid);
-            const matchDetail = {
-              matchId: data.metadata.matchId,
-              champion: participant.championName,
-              win: participant.win
-            };
-            matchDetails.push(matchDetail);
-            await saveMatchDataToFile(matchDetail, puuid);
-          } catch (error) {
-            if (error.response && error.response.status === 429) {
-              // If rate limit is exceeded, use the Retry-After header to wait
-              const retryAfter = parseInt(error.response.headers['retry-after'] || '1', 10) * 1000;
-              await sleep(retryAfter);
-            } else {
-              throw error;
+        try {
+          // Check if the match data file exists locally
+          const fileData = await fs.readFile(filePath, 'utf-8');
+          logger.info(`Match data for match ${matchId} found locally.`);
+          matchDetails.push(JSON.parse(fileData));
+        } catch (error) {
+          if (error.code === 'ENOENT') {
+            // If the file does not exist, fetch the data from the Riot API
+            logger.info(`Fetching match details for match ${matchId} from Riot API.`);
+            if (longTermRequests >= LONG_TERM_LIMIT) {
+              // Wait until the 2-minute window resets
+              await sleep(LONG_TERM_DURATION);
+              longTermRequests = 0;
             }
-          }
   
-          longTermRequests++;
-          // Respect the short-term rate limit of 20 requests per second
-          await sleep(50); // 1000 ms / 20 requests = 50 ms per request
-        } else {
-          // If the error is not due to the file not existing, log it
-          logger.error(`Error reading match data from local file for match ${matchId}:`, error);
+            try {
+              const response = await http.get(`${RIOT_API_BASE_URL}${matchId}`, {
+                headers: { "X-Riot-Token": RIOT_API_KEY }
+              });
+              const data = response.data;
+              const participant = data.info.participants.find(p => p.puuid === puuid);
+              const matchDetail = {
+                matchId: data.metadata.matchId,
+                champion: participant.championName,
+                win: participant.win
+              };
+              matchDetails.push(matchDetail);
+              await saveMatchDataToFile(matchDetail, puuid);
+            } catch (error) {
+              if (error.response && error.response.status === 429) {
+                // If rate limit is exceeded, use the Retry-After header to wait
+                const retryAfter = parseInt(error.response.headers['retry-after'] || '1', 10) * 1000;
+                await sleep(retryAfter);
+              } else {
+                throw error;
+              }
+            }
+  
+            longTermRequests++;
+            // Respect the short-term rate limit of 20 requests per second
+            await sleep(50); // 1000 ms / 20 requests = 50 ms per request
+          } else {
+            // If the error is not due to the file not existing, log it
+            logger.error(`Error reading match data from local file for match ${matchId}:`, error);
+          }
         }
+      }
+      // If there are no more games to fetch, break out of the loop
+      if (numberOfGames <= 0) {
+        break;
       }
     }
   
