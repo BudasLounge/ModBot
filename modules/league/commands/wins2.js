@@ -81,7 +81,7 @@ async execute(message, args) {
       message.channel.send(`Getting stats for ${args[1]}, this may take a moment...`);
       const results = await getLast20Matches(args[1], args[2]);
       const embed = new MessageEmbed()
-        .setTitle(`Last ${args[2]} matches for ${args[1]}`)
+        .setTitle(`Last ${results.length} matches for ${args[1]}`)
         .setColor('#0099ff')
         .setTimestamp();
 
