@@ -13,7 +13,7 @@ module.exports = {
         const rateLimit = require('axios-rate-limit');
 
         const RIOT_API_KEY = process.env.RIOT_API_KEY; // Your Riot API Key should be in a .env file
-        const RIOT_API_BASE_URL = 'https://na1.api.riotgames.com/lol'; // Replace REGION with the appropriate region code
+        const RIOT_API_BASE_URL = 'https://americas.api.riotgames.com/lol'; // Replace REGION with the appropriate region code
 
         // Set up rate limiting according to the provided limits
         const http = rateLimit(axios.create(), {
