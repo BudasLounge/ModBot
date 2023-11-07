@@ -95,9 +95,6 @@ module.exports = {
 
                 return results;
             } catch (error) {
-                /*if (longTermRequests >= LONG_TERM_LIMIT) {
-                    message.channel.send(`The rate limit of ${LONG_TERM_LIMIT} requests per ${LONG_TERM_DURATION / 1000 / 60} minutes has been exceeded. Please wait 2 minutes before trying again.`);
-                } else {*/
                     this.logger.error('Error fetching data from Riot API:', error);
                     if (error.response) {
                         this.logger.error('Response data:', error.response.data);
@@ -113,7 +110,6 @@ module.exports = {
                         message.channel.send('An error occurred while retrieving match history.');
                     }
                     throw error;
-                //}
             }
         }
 
@@ -138,7 +134,7 @@ module.exports = {
                     championWins[champion].losses++;
                 }
             });
-        
+            embed.addField('Total', `Wins: ${results.filter(r => r.win).length} | Losses: ${results.filter(r => !r.win).length}`, true)
             for (const [champion, { wins, losses }] of Object.entries(championWins)) {
                 embed.addField(champion, `Wins: ${wins} | Losses: ${losses}`, true);
             }
