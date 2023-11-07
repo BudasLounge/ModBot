@@ -201,23 +201,25 @@ async execute(message, args) {
       const results = await getLastMatches(args[1], gameCount, this.logger);
       const queueStats = results.reduce((stats, { champion, win, queueType }) => {
         if (!stats[queueType]) {
-          stats[queueType] = {};
+          stats[queueType] = { games: 0, champions: {} };
         }
-        if (!stats[queueType][champion]) {
-          stats[queueType][champion] = { wins: 0, losses: 0 };
+        stats[queueType].games++;
+        if (!stats[queueType].champions[champion]) {
+          stats[queueType].champions[champion] = { wins: 0, losses: 0 };
         }
-        stats[queueType][champion][win ? 'wins' : 'losses']++;
+        stats[queueType].champions[champion][win ? 'wins' : 'losses']++;
         return stats;
       }, {});
 
       // Send an embed for each queue type
-      for (const [queueType, champions] of Object.entries(queueStats)) {
+      for (const [queueType, data] of Object.entries(queueStats)) {
+        const totalGames = data.games;
+        const champions = data.champions;
         const totalWins = Object.values(champions).reduce((acc, { wins }) => acc + wins, 0);
         const totalLosses = Object.values(champions).reduce((acc, { losses }) => acc + losses, 0);
-        const championCount = Object.keys(champions).length; // Count of champions for the queue type
 
         const embed = new MessageEmbed()
-          .setTitle(`Last ${results.length} matches for ${args[1]} in ${queueType} (${championCount} champions)`)
+          .setTitle(`${totalGames} games in ${queueType}`)
           .setColor('#0099ff')
           .addField('Total', `Wins: ${totalWins} | Losses: ${totalLosses}`, false)
           .setTimestamp();
