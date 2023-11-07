@@ -59,7 +59,7 @@ module.exports = {
                         "X-Riot-Token": RIOT_API_KEY
                     }
                 });
-        
+                await new Promise(resolve => setTimeout(resolve, 1000));
                 const matchIds = matchIdsResponse.data;
                 this.logger.info('matchIds: ' + matchIds)
                 // Step 3: Get match details and determine wins/losses for each match ID
