@@ -226,12 +226,13 @@ async execute(message, args) {
         const champions = data.champions;
         const totalWins = Object.values(champions).reduce((acc, { wins }) => acc + wins, 0);
         const totalLosses = Object.values(champions).reduce((acc, { losses }) => acc + losses, 0);
+        const winPercentage = (totalWins / totalGames * 100).toFixed(2);
         const championCount = Object.keys(champions).length;
   
         let embed = new MessageEmbed()
           .setTitle(`${totalGames} games in ${queueType} (${championCount} champions)`)
           .setColor('#0099ff')
-          .addField('Total', `Wins: ${totalWins} | Losses: ${totalLosses}\n---------------------`, false)
+          .addField('Total', `Wins: ${totalWins} | Losses: ${totalLosses} (${winPercentage}%)\n---------------------`, false)
           .setTimestamp();
   
         let fieldCount = 0;
@@ -255,8 +256,8 @@ async execute(message, args) {
         await message.channel.send({ embeds: [embed] });
       }
     } catch (error) {
-      this.logger.error('Error fetching data from Riot API:', error);
-      message.channel.send('An error occurred while retrieving match history.');
+      this.logger.error('Error fetching data from Riot API:', error.message);
+      message.channel.send('An error occurred while retrieving match history.\nPlease try again in 2 minutes.');
     }
   }
 };
