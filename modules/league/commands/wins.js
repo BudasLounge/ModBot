@@ -44,7 +44,7 @@ module.exports = {
         async function getLast20Matches(username) {
             try {
                 // Step 1: Get the summoner ID
-                const summonerResponse = await http.get(`${RIOT_API_BASE_URL}/summoner/v4/summoners/by-name/${encodeURIComponent(username)}`, {
+                const summonerResponse = await http.get(`${RIOT_API_BASE_URL}/summoner/v4/summoners/by-name/${encodeURIComponent(username)}?api_key=${RIOT_API_KEY}`, {
                     headers: {
                         "X-Riot-Token": RIOT_API_KEY
                     }
@@ -53,7 +53,7 @@ module.exports = {
                 const { accountId } = summonerResponse.data;
         
                 // Step 2: Get the matchlist for the summoner
-                const matchlistResponse = await http.get(`${RIOT_API_BASE_URL}/match/v4/matchlists/by-account/${accountId}?endIndex=20`, {
+                const matchlistResponse = await http.get(`${RIOT_API_BASE_URL}/match/v4/matchlists/by-account/${accountId}?endIndex=20?api_key=${RIOT_API_KEY}`, {
                     headers: {
                         "X-Riot-Token": RIOT_API_KEY
                     }
@@ -63,7 +63,7 @@ module.exports = {
         
                 // Step 3: Get match details and determine wins/losses
                 const results = await Promise.all(matches.map(async (match) => {
-                    const matchDetailResponse = await http.get(`${RIOT_API_BASE_URL}/match/v4/matches/${match.gameId}`, {
+                    const matchDetailResponse = await http.get(`${RIOT_API_BASE_URL}/match/v4/matches/${match.gameId}?api_key=${RIOT_API_KEY}`, {
                         headers: {
                             "X-Riot-Token": RIOT_API_KEY
                         }
