@@ -117,10 +117,25 @@ module.exports = {
 
         getLast20Matches(args[1]).then(results => {
             let response = 'Last 20 matches:\n';
+            const championWins = {};
             results.forEach(result => {
+                const champion = result.champion;
                 const winLoss = result.win ? 'Win' : 'Loss';
-                response += `Game ID: ${result.matchId}, Champion: ${result.champion}, Result: ${winLoss}\n`;
+                if (!championWins[champion]) {
+                    championWins[champion] = {
+                        wins: 0,
+                        losses: 0
+                    };
+                }
+                if (result.win) {
+                    championWins[champion].wins++;
+                } else {
+                    championWins[champion].losses++;
+                }
             });
+            for (const [champion, { wins, losses }] of Object.entries(championWins)) {
+                response += `Champion: ${champion}, Wins: ${wins}, Losses: ${losses}\n`;
+            }
             const messageChunks = Util.splitMessage(response, {
                 maxLength: 2000,
                 char:'\n'
