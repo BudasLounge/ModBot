@@ -6,6 +6,7 @@ module.exports = {
     args_to_lower: true,
     needs_api: false,
     has_state: false,
+    hasSentLongTermLimitMessage: false,
     async execute(message, args, extra) {
         message.channel.send(`Getting stats for ${args[1]}, this may take a moment...`);
         require('dotenv').config();
@@ -15,7 +16,6 @@ module.exports = {
         const RIOT_API_KEY = process.env.RIOT_API_KEY;
         const RIOT_ACCOUNT_BASE_URL = 'https://na1.api.riotgames.com/lol';
         const RIOT_API_BASE_URL = 'https://americas.api.riotgames.com/lol';
-        let hasSentLongTermLimitMessage = false;
         const http = rateLimit(axios.create(), {
             maxRequests: 20,
             perMilliseconds: 1000
@@ -30,9 +30,9 @@ module.exports = {
         }, LONG_TERM_DURATION);
 
         http.interceptors.request.use(config => {
-            if (longTermRequests >= LONG_TERM_LIMIT && !hasSentLongTermLimitMessage) {
+            if (longTermRequests >= LONG_TERM_LIMIT && !this.hasSentLongTermLimitMessage) {
                 message.channel.send(`The rate limit of ${LONG_TERM_LIMIT} requests per ${LONG_TERM_DURATION / 1000 / 60} minutes has been exceeded. Please wait 2 minutes before trying again.`);
-                hasSentLongTermLimitMessage = true; // Set the flag so the message won't be sent again
+                this.hasSentLongTermLimitMessage = true; // Set the flag so the message won't be sent again
             }
             longTermRequests++;
             return config;
@@ -104,7 +104,7 @@ module.exports = {
                         this.logger.error('Error message:', error.message);
                     }
                     // Send a generic error message if the rate limit message hasn't been sent
-                    if (!hasSentLongTermLimitMessage) {
+                    if (!this.hasSentLongTermLimitMessage) {
                         message.channel.send('An error occurred while retrieving match history.');
                     }
                     throw error;
