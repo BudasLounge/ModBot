@@ -93,9 +93,9 @@ module.exports = {
 
                 return results;
             } catch (error) {
-                if (longTermRequests >= LONG_TERM_LIMIT) {
+                /*if (longTermRequests >= LONG_TERM_LIMIT) {
                     message.channel.send(`The rate limit of ${LONG_TERM_LIMIT} requests per ${LONG_TERM_DURATION / 1000 / 60} minutes has been exceeded. Please wait 2 minutes before trying again.`);
-                } else {
+                } else {*/
                     this.logger.error('Error fetching data from Riot API:', error);
                     if (error.response) {
                         this.logger.error('Response data:', error.response.data);
@@ -111,12 +111,12 @@ module.exports = {
                         message.channel.send('An error occurred while retrieving match history.');
                     }
                     throw error;
-                }
+                //}
             }
         }
 
         getLast20Matches(args[1]).then(results => {
-            let response = 'Last 20 matches:\n';
+            let response = `Last ${args[2]} matches:\n`;
             const championWins = {};
             results.forEach(result => {
                 const champion = result.champion;
