@@ -69,7 +69,7 @@ module.exports = {
                 const matchIds = matchIdsResponse.data;
                 setTimeout(() => {
                     // code to execute after 1 second
-                }, 1000);
+                }, 2000);
                 const results = await Promise.all(matchIds.map(async (matchId) => {
                     const matchDetailResponse = await http.get(`${RIOT_API_BASE_URL}/match/v5/matches/${matchId}`, {
                         headers: {
