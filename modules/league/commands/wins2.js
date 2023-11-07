@@ -21,12 +21,12 @@ setInterval(() => {
   longTermRequests = 0;
 }, LONG_TERM_DURATION);
 
-async function getLast20Matches(username, numberOfGames) {
+async function getLastMatches(username, numberOfGames, logger) {
   const summonerResponse = await http.get(`${RIOT_ACCOUNT_BASE_URL}${encodeURIComponent(username)}`, {
     headers: { "X-Riot-Token": RIOT_API_KEY }
   });
   const { puuid } = summonerResponse.data;
-
+  logger.info(`Found summoner ${username} with puuid ${puuid}`);
   const matchIdsResponse = await http.get(`${RIOT_API_BASE_URL}by-puuid/${puuid}/ids?start=0&count=${numberOfGames}`, {
     headers: { "X-Riot-Token": RIOT_API_KEY }
   });
@@ -34,6 +34,7 @@ async function getLast20Matches(username, numberOfGames) {
 
   const matchDetails = [];
   for (const matchId of matchIds) {
+    logger.info(`Fetching match details for match ${matchId}`);
     if (longTermRequests >= LONG_TERM_LIMIT) {
       // Wait until the 2-minute window resets
       await sleep(LONG_TERM_DURATION);
@@ -70,16 +71,20 @@ async function getLast20Matches(username, numberOfGames) {
 }
 module.exports = {
     name: 'wins2',
-    description: 'Shows last 20 games in your match history',
-    syntax: 'wins2 [summoner name] [number of games up to 95]',
-    num_args: 2,
+    description: 'Shows last games in your match history',
+    syntax: 'wins2 [summoner name] [number of games up to 95](optional)',
+    num_args: 1,
     args_to_lower: true,
     needs_api: false,
     has_state: false,
 async execute(message, args) {
+    var gameCount = 20;
+    if(args[2] != null){
+        gameCount = args[2];
+    }
     try {
       message.channel.send(`Getting stats for ${args[1]}, this may take a moment...`);
-      const results = await getLast20Matches(args[1], args[2]);
+      const results = await getLastMatches(args[1], gameCount, this.logger);
       const embed = new MessageEmbed()
         .setTitle(`Last ${results.length} matches for ${args[1]}`)
         .setColor('#0099ff')
@@ -99,7 +104,7 @@ async execute(message, args) {
 
       message.channel.send({ embeds: [embed] });
     } catch (error) {
-      console.error('Error fetching data from Riot API:', error);
+      this.logger.error('Error fetching data from Riot API:', error);
       message.channel.send('An error occurred while retrieving match history.');
     }
   }
