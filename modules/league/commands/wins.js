@@ -196,7 +196,7 @@ async execute(message, args) {
       const estimatedTimeSeconds = ((estimatedTimeMs % 60000) / 1000).toFixed(0);
 
       // Send the estimated time to the user
-      message.channel.send(`Getting stats for ${args[1]}, please wait. Estimated time: ${estimatedTimeMinutes} minutes and ${estimatedTimeSeconds+parseInt(10)} seconds.`);
+      message.channel.send(`Getting stats for ${args[1]}, please wait. Estimated time: ${estimatedTimeMinutes} minutes and ${parseInt(estimatedTimeSeconds)+parseInt(10)} seconds.`);
 
       const results = await getLastMatches(args[1], gameCount, this.logger);
       const queueStats = results.reduce((stats, { champion, win, queueType }) => {
