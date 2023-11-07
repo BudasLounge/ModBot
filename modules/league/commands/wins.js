@@ -43,42 +43,39 @@ module.exports = {
 
         async function getLast20Matches(username) {
             try {
-                // Step 1: Get the summoner ID
-                this.logger.info("username: " + username);
-                const summonerResponse = await http.get(`${RIOT_API_BASE_URL}/summoner/v4/summoners/by-name/${encodeURIComponent(username)}?api_key=${RIOT_API_KEY}`, {
+                // Step 1: Get the summoner details to retrieve PUUID
+                const summonerResponse = await http.get(`${RIOT_API_BASE_URL}/summoner/v4/summoners/by-name/${encodeURIComponent(username)}`, {
                     headers: {
                         "X-Riot-Token": RIOT_API_KEY
                     }
                 });
         
-                const { accountId } = summonerResponse.data;
-                this.logger.info("accountId: " + accountId);
-                this.logger.info(`${RIOT_API_BASE_URL}/summoner/v4/summoners/by-name/${encodeURIComponent(username)}?api_key=${RIOT_API_KEY}`);
-                // Step 2: Get the matchlist for the summoner
-                const matchlistResponse = await http.get(`${RIOT_API_BASE_URL}/match/v5/matchlists/by-account/${accountId}?endIndex=20?api_key=${RIOT_API_KEY}`, {
+                const { puuid } = summonerResponse.data;
+        
+                // Step 2: Get the list of match IDs for the summoner
+                const matchIdsResponse = await http.get(`${RIOT_API_BASE_URL}/match/v5/matches/by-puuid/${puuid}/ids?start=0&count=20`, {
                     headers: {
                         "X-Riot-Token": RIOT_API_KEY
                     }
                 });
         
-                const { matches } = matchlistResponse.data;
-                this.logger.info("matches: " + matches);
-                // Step 3: Get match details and determine wins/losses
-                const results = await Promise.all(matches.map(async (match) => {
-                    const matchDetailResponse = await http.get(`${RIOT_API_BASE_URL}/match/v4/matches/${match.gameId}?api_key=${RIOT_API_KEY}`, {
+                const matchIds = matchIdsResponse.data;
+        
+                // Step 3: Get match details and determine wins/losses for each match ID
+                const results = await Promise.all(matchIds.map(async (matchId) => {
+                    const matchDetailResponse = await http.get(`${RIOT_API_BASE_URL}/match/v5/matches/${matchId}`, {
                         headers: {
                             "X-Riot-Token": RIOT_API_KEY
                         }
                     });
         
                     const matchDetail = matchDetailResponse.data;
-                    const participantId = matchDetail.participantIdentities.find(p => p.player.accountId === accountId).participantId;
-                    const participant = matchDetail.participants.find(p => p.participantId === participantId);
+                    const participant = matchDetail.info.participants.find(p => p.puuid === puuid);
         
                     return {
-                        gameId: match.gameId,
-                        champion: participant.championId,
-                        win: participant.stats.win
+                        matchId: matchId,
+                        champion: participant.championName, // v5 API provides champion names directly
+                        win: participant.win
                     };
                 }));
         
