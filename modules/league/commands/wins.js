@@ -117,11 +117,14 @@ module.exports = {
         }
 
         getLast20Matches(args[1]).then(results => {
-            let response = `Last ${args[2]} matches:\n`;
+            const embed = new MessageEmbed()
+                .setTitle(`Last ${args[2]} matches for ${args[1]}`)
+                .setColor('#0099ff')
+                .setTimestamp();
+        
             const championWins = {};
             results.forEach(result => {
                 const champion = result.champion;
-                const winLoss = result.win ? 'Win' : 'Loss';
                 if (!championWins[champion]) {
                     championWins[champion] = {
                         wins: 0,
@@ -134,16 +137,12 @@ module.exports = {
                     championWins[champion].losses++;
                 }
             });
+        
             for (const [champion, { wins, losses }] of Object.entries(championWins)) {
-                response += `Champion: ${champion}, Wins: ${wins}, Losses: ${losses}\n`;
+                embed.addField(champion, `Wins: ${wins} | Losses: ${losses}`, true);
             }
-            const messageChunks = Util.splitMessage(response, {
-                maxLength: 2000,
-                char:'\n'
-            });
-            messageChunks.forEach(async chunk => {
-                await message.channel.send(chunk);
-            })
+        
+            message.channel.send({ embeds: [embed] });
             //message.channel.send(response);
         }).catch(error => {
             this.logger.error(error.message);
