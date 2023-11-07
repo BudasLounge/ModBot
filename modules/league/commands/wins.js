@@ -49,11 +49,11 @@ module.exports = {
                 if(hasSentLongTermLimitMessage) return;
                 const retryAfter = error.response.headers['retry-after'] ? parseInt(error.response.headers['retry-after']) : 1;
                 if (retryAfter > 10) {
-                    message.channel.send(`The rate limit of ${LONG_TERM_LIMIT} requests per ${LONG_TERM_DURATION / 1000 / 60} minutes has been exceeded.`);
+                    message.channel.send(`The rate limit of ${LONG_TERM_LIMIT} requests per ${LONG_TERM_DURATION / 1000 / 60} minutes has been exceeded. Try again in ${retryAfter} seconds.`);
                     hasSentLongTermLimitMessage = true; // Set the flag so the message won't be sent again
                     return;
                 }
-                console.log(`Rate limit exceeded. Retrying after ${retryAfter} seconds.`);
+                this.logger.info(`Rate limit exceeded. Retrying after ${retryAfter} seconds.`);
                 await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
                 return http.request(error.config);
             }
