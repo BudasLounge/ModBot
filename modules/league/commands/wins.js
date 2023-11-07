@@ -79,7 +79,7 @@ module.exports = {
                         win: participant.win
                     };
                 }));
-                this.logger.info('results: ' + results)
+                this.logger.info('results: ' + JSON.stringify(results))
                 return results;
             } catch (error) {
                 console.error('Error fetching data from Riot API:', error.message);
