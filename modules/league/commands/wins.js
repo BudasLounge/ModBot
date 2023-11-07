@@ -48,6 +48,7 @@ module.exports = {
                 const retryAfter = error.response.headers['retry-after'] ? parseInt(error.response.headers['retry-after']) : 1;
                 if (retryAfter > 2) {
                     message.channel.send(`The rate limit of ${LONG_TERM_LIMIT} requests per ${LONG_TERM_DURATION / 1000 / 60} minutes has been exceeded. Please wait 2 minutes before trying again.`);
+                    hasSentLongTermLimitMessage = true; // Set the flag so the message won't be sent again
                     return;
                 }
                 console.log(`Rate limit exceeded. Retrying after ${retryAfter} seconds.`);
