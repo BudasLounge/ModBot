@@ -1,8 +1,8 @@
 module.exports = {
     name: 'wins',
     description: 'Shows last 20 games in your match history',
-    syntax: 'wins [summoner name]',
-    num_args: 1,
+    syntax: 'wins [summoner name] [number of games up to 95]',
+    num_args: 2,
     args_to_lower: true,
     needs_api: false,
     has_state: false,
@@ -67,7 +67,7 @@ module.exports = {
                 });
                 const { puuid } = summonerResponse.data;
 
-                const matchIdsResponse = await http.get(`${RIOT_API_BASE_URL}/match/v5/matches/by-puuid/${puuid}/ids?start=0&count=20`, {
+                const matchIdsResponse = await http.get(`${RIOT_API_BASE_URL}/match/v5/matches/by-puuid/${puuid}/ids?start=0&count=${args[2]}`, {
                     headers: {
                         "X-Riot-Token": RIOT_API_KEY
                     }
