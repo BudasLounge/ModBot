@@ -45,6 +45,10 @@ module.exports = {
         }, async (error) => {
             if (error.response && error.response.status === 429) {
                 const retryAfter = error.response.headers['retry-after'] ? parseInt(error.response.headers['retry-after']) : 1;
+                if (retryAfter > 2) {
+                    message.channel.send(`The rate limit of ${LONG_TERM_LIMIT} requests per ${LONG_TERM_DURATION / 1000 / 60} minutes has been exceeded. Please wait 2 minutes before trying again.`);
+                    return;
+                }
                 console.log(`Rate limit exceeded. Retrying after ${retryAfter} seconds.`);
                 await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
                 return http.request(error.config);
@@ -67,9 +71,6 @@ module.exports = {
                     }
                 });
                 const matchIds = matchIdsResponse.data;
-                setTimeout(() => {
-                    // code to execute after 1 second
-                }, 2000);
                 const results = await Promise.all(matchIds.map(async (matchId) => {
                     const matchDetailResponse = await http.get(`${RIOT_API_BASE_URL}/match/v5/matches/${matchId}`, {
                         headers: {
