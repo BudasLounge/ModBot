@@ -68,11 +68,15 @@ async function getLast20Matches(username, numberOfGames) {
 
   return matchDetails;
 }
-
 module.exports = {
-  // ... (other module exports remain unchanged)
-
-  async execute(message, args) {
+    name: 'wins2',
+    description: 'Shows last 20 games in your match history',
+    syntax: 'wins2 [summoner name] [number of games up to 95]',
+    num_args: 2,
+    args_to_lower: true,
+    needs_api: false,
+    has_state: false,
+async execute(message, args) {
     try {
       message.channel.send(`Getting stats for ${args[1]}, this may take a moment...`);
       const results = await getLast20Matches(args[1], args[2]);
@@ -81,7 +85,19 @@ module.exports = {
         .setColor('#0099ff')
         .setTimestamp();
 
-      // ... (rest of the execute function remains unchanged)
+      const championStats = results.reduce((stats, { champion, win }) => {
+        if (!stats[champion]) {
+          stats[champion] = { wins: 0, losses: 0 };
+        }
+        stats[champion][win ? 'wins' : 'losses']++;
+        return stats;
+      }, {});
+      embed.addField('total', `Wins: ${results.filter(r => r.win).length} | Losses: ${results.filter(r => !r.win).length}`, true)
+      Object.entries(championStats).forEach(([champion, { wins, losses }]) => {
+        embed.addField(champion, `Wins: ${wins} | Losses: ${losses}`, true);
+      });
+
+      message.channel.send({ embeds: [embed] });
     } catch (error) {
       console.error('Error fetching data from Riot API:', error);
       message.channel.send('An error occurred while retrieving match history.');
