@@ -94,7 +94,7 @@ module.exports = {
                 if (longTermRequests >= LONG_TERM_LIMIT) {
                     message.channel.send(`The rate limit of ${LONG_TERM_LIMIT} requests per ${LONG_TERM_DURATION / 1000 / 60} minutes has been exceeded. Please wait 2 minutes before trying again.`);
                 } else {
-                    this.logger.error('Error fetching data from Riot API:', error.error);
+                    this.logger.error('Error fetching data from Riot API:', error);
                     if (error.response) {
                         this.logger.error('Response data:', error.response.data);
                         this.logger.error('Response status:', error.response.status);
