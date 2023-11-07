@@ -222,7 +222,7 @@ async execute(message, args) {
         const embed = new MessageEmbed()
           .setTitle(`${totalGames} games in ${queueType} (${championCount} champions)`)
           .setColor('#0099ff')
-          .addField('Total', `Wins: ${totalWins} | Losses: ${totalLosses}\n-----------`, false)
+          .addField('Total', `Wins: ${totalWins} | Losses: ${totalLosses}\n---------------------`, false)
           .setTimestamp();
 
         for (const [champion, { wins, losses }] of Object.entries(champions)) {
