@@ -7,6 +7,7 @@ module.exports = {
     needs_api: false,
     has_state: false,
     async execute(message, args, extra) {
+        message.channel.send("Getting stats, this may take a moment...");
         require('dotenv').config();
         const axios = require('axios');
         const rateLimit = require('axios-rate-limit');
