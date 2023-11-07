@@ -101,7 +101,8 @@ async function saveMatchDataToFile(matchDetails, puuid) {
               const matchDetail = {
                 matchId: data.metadata.matchId,
                 champion: participant.championName,
-                win: participant.win
+                win: participant.win,
+                queueType: data.info.queueId
               };
               matchDetails.push(matchDetail);
               await saveMatchDataToFile(matchDetail, puuid);
@@ -151,7 +152,6 @@ async execute(message, args) {
         return;
     }
     try {
-      message.channel.send(`Getting stats for ${args[1]}, this may take a moment...`);
       const longTermDelays = Math.floor(gameCount / 100) * (120 * 1000); // 2 minutes for every 100 requests
       const shortTermDelays = Math.floor((gameCount % 100) / 20) * 2000; // 2 seconds for every 20 requests in the last batch
       const estimatedTimeMs = longTermDelays + shortTermDelays;
@@ -162,7 +162,7 @@ async execute(message, args) {
       message.channel.send(`Getting stats for ${args[1]}, please wait. Estimated time: ${estimatedTimeMinutes} minutes and ${estimatedTimeSeconds} seconds.`);
 
       const results = await getLastMatches(args[1], gameCount, this.logger);
-      const embed = new MessageEmbed()
+      /*const embed = new MessageEmbed()
         .setTitle(`Last ${results.length} matches for ${args[1]}`)
         .setColor('#0099ff')
         .setTimestamp();
@@ -179,6 +179,34 @@ async execute(message, args) {
         embed.addField(champion, `Wins: ${wins} | Losses: ${losses}`, true);
       });
 
+      message.channel.send({ embeds: [embed] });*/
+      const queueStats = results.reduce((stats, { champion, win, queueType }) => {
+        const queueName = `Queue ${queueType}`; // Replace with actual queue name lookup if available
+        if (!stats[queueName]) {
+          stats[queueName] = {};
+        }
+        if (!stats[queueName][champion]) {
+          stats[queueName][champion] = { wins: 0, losses: 0 };
+        }
+        stats[queueName][champion][win ? 'wins' : 'losses']++;
+        return stats;
+      }, {});
+  
+      const embed = new MessageEmbed()
+        .setTitle(`Last ${results.length} matches for ${args[1]}`)
+        .setColor('#0099ff')
+        .setTimestamp();
+  
+      Object.entries(queueStats).forEach(([queueName, champions]) => {
+        const totalWins = Object.values(champions).reduce((acc, { wins }) => acc + wins, 0);
+        const totalLosses = Object.values(champions).reduce((acc, { losses }) => acc + losses, 0);
+        embed.addField(queueName, `Wins: ${totalWins} | Losses: ${totalLosses}`, false);
+  
+        Object.entries(champions).forEach(([champion, { wins, losses }]) => {
+          embed.addField(champion, `Wins: ${wins} | Losses: ${losses}`, true);
+        });
+      });
+  
       message.channel.send({ embeds: [embed] });
     } catch (error) {
       this.logger.error('Error fetching data from Riot API:', error);
