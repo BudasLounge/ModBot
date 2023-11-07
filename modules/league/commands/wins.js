@@ -22,6 +22,22 @@ const LONG_TERM_DURATION = 120 * 1000; // 2 minutes
 setInterval(() => {
   longTermRequests = 0;
 }, LONG_TERM_DURATION);
+
+let queueTypeMapping = {};
+
+async function fetchQueueMapping() {
+  try {
+    const response = await axios.get('https://static.developer.riotgames.com/docs/lol/queues.json');
+    queueTypeMapping = response.data.reduce((acc, queue) => {
+      acc[queue.queueId] = queue.description.replace(' games', ''); // Clean up the description
+      return acc;
+    }, {});
+  } catch (error) {
+    console.error('Error fetching queue types:', error);
+    // Fallback to a default mapping or handle the error as needed
+  }
+}
+
 async function saveMatchDataToFile(matchDetails, puuid) {
     const dirPath = path.join("/home/bots/ModBot/matchJSONs/", 'match_data', puuid); // Directory path for the puuid
     const filePath = path.join(dirPath, `${matchDetails.matchId}.json`); // File path for the match data
@@ -54,6 +70,9 @@ async function saveMatchDataToFile(matchDetails, puuid) {
     }
   }
   async function getLastMatches(username, numberOfGames, logger) {
+    if (Object.keys(queueTypeMapping).length === 0) {
+      await fetchQueueMapping();
+    }
     const summonerResponse = await http.get(`${RIOT_ACCOUNT_BASE_URL}${encodeURIComponent(username)}`, {
       headers: { "X-Riot-Token": RIOT_API_KEY }
     });
@@ -80,19 +99,21 @@ async function saveMatchDataToFile(matchDetails, puuid) {
         try {
           // Check if the match data file exists locally
           const fileData = await fs.readFile(filePath, 'utf-8');
-            logger.info(`Match data for match ${matchId} found locally.`);
-            const fullMatchDetails = JSON.parse(fileData);
+          logger.info(`Match data for match ${matchId} found locally.`);
+          const fullMatchDetails = JSON.parse(fileData);
 
-            // Extract the required details from the full match data
-            const participant = fullMatchDetails.info.participants.find(p => p.puuid === puuid);
-            const matchDetail = {
-              matchId: fullMatchDetails.metadata.matchId,
-              champion: participant.championName,
-              win: participant.win,
-              queueType: fullMatchDetails.info.queueId
-            };
+          // Extract the required details from the full match data
+          const participant = fullMatchDetails.info.participants.find(p => p.puuid === puuid);
+          const queueId = fullMatchDetails.info.queueId;
+          const queueName = queueTypeMapping[queueId] || `Unknown Queue (${queueId})`;
+          const matchDetail = {
+            matchId: fullMatchDetails.metadata.matchId,
+            champion: participant.championName,
+            win: participant.win,
+            queueType: queueName
+          };
 
-            matchDetails.push(matchDetail);
+          matchDetails.push(matchDetail);
         } catch (error) {
           if (error.code === 'ENOENT') {
             // If the file does not exist, fetch the data from the Riot API
@@ -109,13 +130,14 @@ async function saveMatchDataToFile(matchDetails, puuid) {
               });
               const data = response.data;
               const participant = data.info.participants.find(p => p.puuid === puuid);
+              const queueId = data.info.queueId;
+              const queueName = queueTypeMapping[queueId] || `Unknown Queue (${queueId})`;
               const matchDetail = {
                 matchId: data.metadata.matchId,
                 champion: participant.championName,
                 win: participant.win,
-                queueType: data.info.queueId
+                queueType: queueName
               };
-              console.log(data.info.queueId)
               matchDetails.push(matchDetail);
               await saveMatchDataToFile(matchDetail, puuid);
             } catch (error) {
