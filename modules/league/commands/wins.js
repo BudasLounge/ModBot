@@ -44,37 +44,34 @@ async function fetchQueueMapping() {
   }
 }
 
-async function saveMatchDataToFile(matchDetails, puuid) {
-    const dirPath = path.join("/home/bots/ModBot/matchJSONs/", 'match_data', puuid); // Directory path for the puuid
-    const filePath = path.join(dirPath, `${matchDetails.matchId}.json`); // File path for the match data
-  
+async function saveMatchDataToFile(fullMatchData, puuid) {
+  const dirPath = path.join("/home/bots/ModBot/matchJSONs/", 'match_data', puuid); // Directory path for the puuid
+  const filePath = path.join(dirPath, `${fullMatchData.metadata.matchId}.json`); // File path for the match data
+
+  try {
+    // Ensure the directory exists
+    await fs.mkdir(dirPath, { recursive: true });
+
+    // Check if the file already exists
     try {
-      // Ensure the directory exists
-      await fs.mkdir(dirPath, { recursive: true });
-  
-      // Check if the file already exists
-      try {
-        await fs.stat(filePath);
-        console.log(`File ${filePath} already exists. Skipping write.`);
-        return; // If the file exists, skip writing to avoid overwriting
-      } catch (error) {
-        if (error.code !== 'ENOENT') {
-          // If the error is not a 'file not found' error, rethrow it
-          throw error;
-        }
-        // If the file does not exist, proceed to write it
-      }
-  
-      // Convert match details to a JSON string
-      const dataString = JSON.stringify(matchDetails, null, 2);
-  
-      // Write the JSON string to a file
-      await fs.writeFile(filePath, JSON.stringify(matchDetails, null, 2), 'utf-8');
-      console.log(`Match data saved to ${filePath}`);
+      await fs.stat(filePath);
+      console.log(`File ${filePath} already exists. Skipping write.`);
+      return; // If the file exists, skip writing to avoid overwriting
     } catch (error) {
-      console.error('Error writing match data to file:', error);
+      if (error.code !== 'ENOENT') {
+        // If the error is not a 'file not found' error, rethrow it
+        throw error;
+      }
+      // If the file does not exist, proceed to write it
     }
+
+    // Write the full match data JSON to a file
+    await fs.writeFile(filePath, JSON.stringify(fullMatchData, null, 2), 'utf-8');
+    console.log(`Match data saved to ${filePath}`);
+  } catch (error) {
+    console.error('Error writing match data to file:', error);
   }
+}
   async function getLastMatches(username, numberOfGames, logger) {
     if (Object.keys(queueTypeMapping).length === 0) {
       await fetchQueueMapping();
@@ -135,6 +132,7 @@ async function saveMatchDataToFile(matchDetails, puuid) {
                 headers: { "X-Riot-Token": RIOT_API_KEY }
               });
               const data = response.data;
+              await saveMatchDataToFile(data, puuid);
               const participant = data.info.participants.find(p => p.puuid === puuid);
               const queueId = data.info.queueId;
               const queueName = queueTypeMapping[queueId] || `Unknown Queue (${queueId})`;
@@ -145,7 +143,6 @@ async function saveMatchDataToFile(matchDetails, puuid) {
                 queueType: queueName
               };
               matchDetails.push(matchDetail);
-              await saveMatchDataToFile(matchDetail, puuid);
             } catch (error) {
               if (error.response && error.response.status === 429) {
                 // If rate limit is exceeded, use the Retry-After header to wait
