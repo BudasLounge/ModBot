@@ -11,6 +11,7 @@ module.exports = {
         message.channel.send(`Getting stats for ${args[1]}, this may take a moment...`);
         require('dotenv').config();
         const {Util} = require('discord.js');
+        const Discord = require('discord.js');
         const axios = require('axios');
         const rateLimit = require('axios-rate-limit');
 
@@ -117,7 +118,7 @@ module.exports = {
         }
 
         getLast20Matches(args[1]).then(results => {
-            const embed = new MessageEmbed()
+            const embed = new Discord.MessageEmbed()
                 .setTitle(`Last ${args[2]} matches for ${args[1]}`)
                 .setColor('#0099ff')
                 .setTimestamp();
