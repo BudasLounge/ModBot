@@ -29,7 +29,13 @@ async function fetchQueueMapping() {
   try {
     const response = await axios.get('https://static.developer.riotgames.com/docs/lol/queues.json');
     queueTypeMapping = response.data.reduce((acc, queue) => {
-      acc[queue.queueId] = queue.description.replace(' games', ''); // Clean up the description
+      // Check if description exists and is a string before replacing
+      if (queue.description && typeof queue.description === 'string') {
+        acc[queue.queueId] = queue.description.replace(' games', ''); // Clean up the description
+      } else {
+        // If no description, use a placeholder or the queueId itself
+        acc[queue.queueId] = `Queue ${queue.queueId}`;
+      }
       return acc;
     }, {});
   } catch (error) {
