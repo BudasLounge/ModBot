@@ -44,15 +44,15 @@ module.exports = {
 
         async function getLast20Matches(username) {
             try {
+                this.logger.info('username: ' + username)
                 // Step 1: Get the summoner details to retrieve PUUID
                 const summonerResponse = await http.get(`${RIOT_ACCOUNT_BASE_URL}/summoner/v4/summoners/by-name/${encodeURIComponent(username)}`, {
                     headers: {
                         "X-Riot-Token": RIOT_API_KEY
                     }
                 });
-        
                 const { puuid } = summonerResponse.data;
-        
+                this.logger.info('puuid: ' + puuid)
                 // Step 2: Get the list of match IDs for the summoner
                 const matchIdsResponse = await http.get(`${RIOT_API_BASE_URL}/match/v5/matches/by-puuid/${puuid}/ids?start=0&count=20`, {
                     headers: {
@@ -61,7 +61,7 @@ module.exports = {
                 });
         
                 const matchIds = matchIdsResponse.data;
-        
+                this.logger.info('matchIds: ' + matchIds)
                 // Step 3: Get match details and determine wins/losses for each match ID
                 const results = await Promise.all(matchIds.map(async (matchId) => {
                     const matchDetailResponse = await http.get(`${RIOT_API_BASE_URL}/match/v5/matches/${matchId}`, {
