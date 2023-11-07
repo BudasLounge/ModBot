@@ -104,6 +104,7 @@ async function saveMatchDataToFile(matchDetails, puuid) {
                 win: participant.win,
                 queueType: data.info.queueId
               };
+              console.log(data.info.queueId)
               matchDetails.push(matchDetail);
               await saveMatchDataToFile(matchDetail, puuid);
             } catch (error) {
