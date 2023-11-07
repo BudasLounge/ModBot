@@ -7,7 +7,7 @@ module.exports = {
     needs_api: false,
     has_state: false,
     async execute(message, args, extra) {
-        message.channel.send("Getting stats, this may take a moment...");
+        message.channel.send(`Getting stats for ${args[1]}, this may take a moment...`);
         require('dotenv').config();
         const axios = require('axios');
         const rateLimit = require('axios-rate-limit');
@@ -42,49 +42,62 @@ module.exports = {
         });
 
         async function getLast20Matches(username) {
-        try {
-            // Step 1: Get the summoner ID
-            const summonerResponse = await http.get(`${RIOT_API_BASE_URL}/summoner/v4/summoners/by-name/${encodeURIComponent(username)}`, {
-            headers: {
-                "X-Riot-Token": RIOT_API_KEY
-            }
-            });
-
-            const { accountId } = summonerResponse.data;
-
-            // Step 2: Get the matchlist for the summoner
-            const matchlistResponse = await http.get(`${RIOT_API_BASE_URL}/match/v4/matchlists/by-account/${accountId}?endIndex=20`, {
-            headers: {
-                "X-Riot-Token": RIOT_API_KEY
-            }
-            });
-
-            const { matches } = matchlistResponse.data;
-
-            // Step 3: Get match details and determine wins/losses
-            const results = await Promise.all(matches.map(async (match) => {
-            const matchDetailResponse = await http.get(`${RIOT_API_BASE_URL}/match/v4/matches/${match.gameId}`, {
-                headers: {
-                "X-Riot-Token": RIOT_API_KEY
+            try {
+                // Step 1: Get the summoner ID
+                const summonerResponse = await http.get(`${RIOT_API_BASE_URL}/summoner/v4/summoners/by-name/${encodeURIComponent(username)}`, {
+                    headers: {
+                        "X-Riot-Token": RIOT_API_KEY
+                    }
+                });
+        
+                const { accountId } = summonerResponse.data;
+        
+                // Step 2: Get the matchlist for the summoner
+                const matchlistResponse = await http.get(`${RIOT_API_BASE_URL}/match/v4/matchlists/by-account/${accountId}?endIndex=20`, {
+                    headers: {
+                        "X-Riot-Token": RIOT_API_KEY
+                    }
+                });
+        
+                const { matches } = matchlistResponse.data;
+        
+                // Step 3: Get match details and determine wins/losses
+                const results = await Promise.all(matches.map(async (match) => {
+                    const matchDetailResponse = await http.get(`${RIOT_API_BASE_URL}/match/v4/matches/${match.gameId}`, {
+                        headers: {
+                            "X-Riot-Token": RIOT_API_KEY
+                        }
+                    });
+        
+                    const matchDetail = matchDetailResponse.data;
+                    const participantId = matchDetail.participantIdentities.find(p => p.player.accountId === accountId).participantId;
+                    const participant = matchDetail.participants.find(p => p.participantId === participantId);
+        
+                    return {
+                        gameId: match.gameId,
+                        champion: participant.championId,
+                        win: participant.stats.win
+                    };
+                }));
+        
+                return results;
+            } catch (error) {
+                console.error('Error fetching data from Riot API:', error.message);
+                if (error.response) {
+                    // The request was made and the server responded with a status code
+                    // that falls out of the range of 2xx
+                    console.error('Response data:', error.response.data);
+                    console.error('Response status:', error.response.status);
+                    console.error('Response headers:', error.response.headers);
+                } else if (error.request) {
+                    // The request was made but no response was received
+                    console.error('Request:', error.request);
+                } else {
+                    // Something happened in setting up the request that triggered an Error
+                    console.error('Error message:', error.message);
                 }
-            });
-
-            const matchDetail = matchDetailResponse.data;
-            const participantId = matchDetail.participantIdentities.find(p => p.player.accountId === accountId).participantId;
-            const participant = matchDetail.participants.find(p => p.participantId === participantId);
-
-            return {
-                gameId: match.gameId,
-                champion: participant.championId, // You would need another API call or a static data file to convert championId to champion name
-                win: participant.stats.win
-            };
-            }));
-
-            return results;
-        } catch (error) {
-            this.logger.error(error.message);
-            throw error;
-        }
+                throw error;
+            }
         }
 
         // Usage
