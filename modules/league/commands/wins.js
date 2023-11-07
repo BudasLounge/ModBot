@@ -47,7 +47,7 @@ async function saveMatchDataToFile(matchDetails, puuid) {
       const dataString = JSON.stringify(matchDetails, null, 2);
   
       // Write the JSON string to a file
-      await fs.writeFile(filePath, dataString, 'utf-8');
+      await fs.writeFile(filePath, JSON.stringify(matchDetails, null, 2), 'utf-8');
       console.log(`Match data saved to ${filePath}`);
     } catch (error) {
       console.error('Error writing match data to file:', error);
@@ -74,14 +74,25 @@ async function saveMatchDataToFile(matchDetails, puuid) {
       numberOfGames -= count;
   
       for (const matchId of matchIds) {
-        const dirPath = path.join(__dirname, 'match_data', puuid);
+        const dirPath = path.join("/home/bots/ModBot/matchJSONs/", 'match_data', puuid); // Directory path for the puuid
         const filePath = path.join(dirPath, `${matchId}.json`);
   
         try {
           // Check if the match data file exists locally
           const fileData = await fs.readFile(filePath, 'utf-8');
-          logger.info(`Match data for match ${matchId} found locally.`);
-          matchDetails.push(JSON.parse(fileData));
+            logger.info(`Match data for match ${matchId} found locally.`);
+            const fullMatchDetails = JSON.parse(fileData);
+
+            // Extract the required details from the full match data
+            const participant = fullMatchDetails.info.participants.find(p => p.puuid === puuid);
+            const matchDetail = {
+              matchId: fullMatchDetails.metadata.matchId,
+              champion: participant.championName,
+              win: participant.win,
+              queueType: fullMatchDetails.info.queueId
+            };
+
+            matchDetails.push(matchDetail);
         } catch (error) {
           if (error.code === 'ENOENT') {
             // If the file does not exist, fetch the data from the Riot API
