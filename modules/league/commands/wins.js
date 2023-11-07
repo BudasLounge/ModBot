@@ -1,123 +1,102 @@
 module.exports = {
     name: 'wins',
-    description: 'For testing league API pulling',
-    syntax: 'wins [number of games(optional)] [summoner name] ',
+    description: 'Shows last 20 games in your match history',
+    syntax: 'wins [summoner name] ',
     num_args: 1,
     args_to_lower: true,
     needs_api: false,
     has_state: false,
     async execute(message, args, extra) {
-        const {performance} = require('perf_hooks');
-        var perfStart = performance.now();
-        message.channel.send({content : "Getting stats, this may take a moment..."})
-        var summonerName = "";
-        const apiKey = process.env.RIOT_API_KEY;
-        const {Client} = require('shieldbow')
-        var gameCount = 20
-        if(!isNaN(args[1])){
-            if(args[1]>100){
-                args[1] = 100
-                message.channel.send("I can only go up to 100 games for now, setting it to 100...")
+        require('dotenv').config();
+        const axios = require('axios');
+        const rateLimit = require('axios-rate-limit');
+
+        const RIOT_API_KEY = process.env.RIOT_API_KEY; // Your Riot API Key should be in a .env file
+        const RIOT_API_BASE_URL = 'https://na.api.riotgames.com/lol'; // Replace REGION with the appropriate region code
+
+        // Set up rate limiting according to the provided limits
+        const http = rateLimit(axios.create(), {
+            maxRequests: 20,
+            perMilliseconds: 1000
+        });
+
+        // Also set up a longer term rate limit
+        let longTermRequests = 0;
+        const LONG_TERM_LIMIT = 100; // 100 requests
+        const LONG_TERM_DURATION = 120 * 1000; // 2 minutes in milliseconds
+
+        setInterval(() => {
+        longTermRequests = 0; // Reset the long term request count every 2 minutes
+        }, LONG_TERM_DURATION);
+
+        http.interceptors.request.use(config => {
+            if (longTermRequests >= LONG_TERM_LIMIT) {
+                const errorMsg = `Rate limit exceeded: ${LONG_TERM_LIMIT} requests per ${LONG_TERM_DURATION / 1000} seconds`;
+                return Promise.reject(new Error(errorMsg));
             }
-            gameCount = parseInt(args[1])
-            args.shift()
-            args.shift()
-            summonerName = args.join(" ")
-        }else{
-            args.shift()
-            summonerName = args.join(" ")
+            longTermRequests++;
+            return config;
+        }, error => {
+            return Promise.reject(error);
+        });
+
+        async function getLast20Matches(username) {
+        try {
+            // Step 1: Get the summoner ID
+            const summonerResponse = await http.get(`${RIOT_API_BASE_URL}/summoner/v4/summoners/by-name/${encodeURIComponent(username)}`, {
+            headers: {
+                "X-Riot-Token": RIOT_API_KEY
+            }
+            });
+
+            const { accountId } = summonerResponse.data;
+
+            // Step 2: Get the matchlist for the summoner
+            const matchlistResponse = await http.get(`${RIOT_API_BASE_URL}/match/v4/matchlists/by-account/${accountId}?endIndex=20`, {
+            headers: {
+                "X-Riot-Token": RIOT_API_KEY
+            }
+            });
+
+            const { matches } = matchlistResponse.data;
+
+            // Step 3: Get match details and determine wins/losses
+            const results = await Promise.all(matches.map(async (match) => {
+            const matchDetailResponse = await http.get(`${RIOT_API_BASE_URL}/match/v4/matches/${match.gameId}`, {
+                headers: {
+                "X-Riot-Token": RIOT_API_KEY
+                }
+            });
+
+            const matchDetail = matchDetailResponse.data;
+            const participantId = matchDetail.participantIdentities.find(p => p.player.accountId === accountId).participantId;
+            const participant = matchDetail.participants.find(p => p.participantId === participantId);
+
+            return {
+                gameId: match.gameId,
+                champion: participant.championId, // You would need another API call or a static data file to convert championId to champion name
+                win: participant.stats.win
+            };
+            }));
+
+            return results;
+        } catch (error) {
+            this.logger.error(error.message);
+            throw error;
         }
-        // Construct the URL for the match history request
+        }
 
-        const client = new Client(apiKey);
-
-        client
-        .initialize({
-            region: 'na',
-            ratelimiter: {
-                retry: {
-                    retries: 3,
-                    retryDelay: 4000,
-                },
-                throw: false,
-                strategy: 'spread',
-            }, // defaults to 'na' anyways.
-        })
-        .then(async () => {
-            // After initialization, you can use the client to make requests
-            // For example, lets fetch the following details of a summoner
-            // - Summoner name, summoner level
-            // - SoloQ ranking and LP
-            // - The highest champion mastery
-            var summoner;
-            try{
-                summoner = await client.summoners.fetchBySummonerName(summonerName);
-            }catch(err){
-                message.reply("Summoner not found!")
-                return;
-            }
-            try{
-                var matchList = await summoner.fetchMatchList({count:gameCount})
-            }catch(err){
-                message.reply("An error occured, this is probably related to Arena mode!")
-            }
-            var output = ""
-            output +=`Summoner name: ${summoner.name} (level: ${summoner.level}).\n`;
-            try{
-                const leagueEntry = await summoner.fetchLeagueEntries();
-                const soloQ = leagueEntry.get('RANKED_SOLO_5x5');
-                const flexQ = leagueEntry.get('RANKED_FLEX_SR');
-                if(soloQ){
-                    output +=`SoloQ: ${soloQ.tier} ${soloQ.division} (${soloQ.lp} LP).\n`;
-                }else{
-                    output +="No soloQ rank found, finish your provisionals!\n"
-                }
-                if(flexQ){
-                    output +=`FlexQ: ${flexQ.tier} ${flexQ.division} (${flexQ.lp} LP).\n`;
-                }else{
-                    output +="No flexQ rank found, finish your provisionals!\n"
-                }
-            }catch(err){
-                output += "No rank found, finish your provisionals!\n"
-            }
-            const championMastery = summoner.championMastery;
-            const highest = await championMastery.highest();
-            
-            output +=`Highest champion mastery: ${highest.champion.name} (M${highest.level} ${highest.points} points).\n`;
-            var countWin = 0
-            var countLoss = 0
-            const champWins = {};
-            for(const match of matchList){
-                const matchInfo = await client.matches.fetch(match)
-                const redTeam = await matchInfo.teams.get("red").participants
-                const blueTeam = await matchInfo.teams.get("blue").participants
-                for(const player of redTeam){
-                    if(player.summoner.name == summoner.name){
-                        ourPlayer = player
-                    }
-                }
-                for(const player of blueTeam){
-                    if(player.summoner.name == summoner.name){
-                        ourPlayer = player
-                    }
-                }
-                if(ourPlayer.win){
-                    countWin++
-                    if(!champWins[ourPlayer.champion.id]){
-                        champWins[ourPlayer.champion.id] = {wins : 1}
-                    }else{
-                        champWins[ourPlayer.champion.id]['wins']++
-                    }
-                }else{
-                    countLoss++
-                }
-            }
-            for(const champ in champWins){
-                
-                output += champ + ": " + champWins[champ].wins + "\n"
-            }
-            output += "\nWin:Loss\n" + countWin.toString() + ":" + countLoss.toString()
-            message.reply(output + `\nIt took ${((performance.now()-perfStart)/1000).toFixed(2)} seconds to get this list`)
+        // Usage
+        getLast20Matches(args[1]).then(results => {
+            let response = 'Last 20 matches:\n';
+            results.forEach(result => {
+                const winLoss = result.win ? 'Win' : 'Loss';
+                response += `Game ID: ${result.gameId}, Champion ID: ${result.champion}, Result: ${winLoss}\n`;
+            });
+            message.channel.send(response);
+        }).catch(error => {
+            this.logger.error(error.message);
+            message.channel.send('An error occurred while retrieving match history.');
         });
     }
     
