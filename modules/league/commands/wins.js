@@ -3,7 +3,8 @@ const fs = require('fs').promises;
 const path = require('path');
 const { MessageEmbed } = require('discord.js');
 require('dotenv').config();
-
+var ApiClient = require("../../core/js/APIClient.js");
+var api = new ApiClient();
 const RIOT_API_KEY = process.env.RIOT_API_KEY;
 const RIOT_ACCOUNT_BASE_URL = 'https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/';
 const RIOT_API_BASE_URL = 'https://americas.api.riotgames.com/lol/match/v5/matches/';
@@ -72,7 +73,7 @@ async function saveMatchDataToFile(fullMatchData, puuid) {
     console.error('Error writing match data to file:', error);
   }
 }
-async function getPuuidFromDatabase(userId, api) {
+async function getPuuidFromDatabase(userId) {
   try {
     const response = await api.get('league_player', { user_id: userId });
     if (response && response.league_players && response.league_players.length > 0) {
@@ -87,7 +88,7 @@ async function getPuuidFromDatabase(userId, api) {
 }
 
 // Function to store the puuid in your database
-async function storePuuidInDatabase(userId, puuid, api) {
+async function storePuuidInDatabase(userId, puuid) {
   try {
     await api.put('league_player', { user_id: userId, puuid: puuid });
     console.log(`Stored puuid for user ${userId}`);
@@ -245,7 +246,7 @@ async execute(message, args) {
       // Send the estimated time to the user
       message.channel.send(`Getting stats for ${summonerName}, please wait. Estimated time: ${estimatedTimeMinutes} minutes and ${parseInt(estimatedTimeSeconds)+parseInt(10)} seconds.`);
       message.channel.send(`If multiple requests are made in a short period of time, the bot will take longer to respond.\nPlease only request up to 50 games at one time unless pulling mass data for website viewing.`);
-      const results = await getLastMatches(summonerName, gameCount, this.logger, this.api, message.author.id);
+      const results = await getLastMatches(summonerName, gameCount, this.logger, message.author.id);
       const queueStats = results.reduce((stats, { champion, win, queueType }) => {
         if (!stats[queueType]) {
           stats[queueType] = { games: 0, champions: {} };
