@@ -114,7 +114,16 @@ async function getLastMatches(username, numberOfGames, logger, userId) {
     const summonerResponse = await http.get(`${RIOT_ACCOUNT_BASE_URL}${encodeURIComponent(username)}`, {
       headers: { "X-Riot-Token": RIOT_API_KEY }
     });
-    puuid = summonerResponse.data.puuid;
+    const fetchedPuuid = summonerResponse.data.puuid;
+    const fetchedUsername = summonerResponse.data.name;
+
+    // Check if the fetched username matches the provided username
+    if (fetchedUsername.toLowerCase() !== username.toLowerCase()) {
+      logger.info(`The username ${username} does not match the fetched username ${fetchedUsername}.`);
+      return []; // Return early with an empty array to indicate no matches
+    }
+
+    puuid = fetchedPuuid;
     logger.info(`Found summoner ${username} with puuid ${puuid}`);
 
     // Store the puuid in your database
@@ -250,6 +259,10 @@ async execute(message, args) {
       message.channel.send(`Getting stats for ${summonerName}, please wait. Estimated time: ${estimatedTimeMinutes} minutes and ${parseInt(estimatedTimeSeconds)+parseInt(10)} seconds.`);
       message.channel.send(`If multiple requests are made in a short period of time, the bot will take longer to respond.\nPlease only request up to 50 games at one time unless pulling mass data for website viewing.`);
       const results = await getLastMatches(summonerName, gameCount, this.logger, message.author.id);
+      if (results.length === 0) {
+        message.channel.send(`No puuid on file. Please login to the website and set your league name and then run the command on yourself once before running it on others.`);
+        return;
+      }
       const queueStats = results.reduce((stats, { champion, win, queueType }) => {
         if (!stats[queueType]) {
           stats[queueType] = { games: 0, champions: {} };
