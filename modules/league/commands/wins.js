@@ -116,7 +116,7 @@ async function getLastMatches(username, numberOfGames, logger, userId) {
     });
     const fetchedPuuid = summonerResponse.data.puuid;
     const fetchedUsername = summonerResponse.data.name;
-
+    logger.info(`Fetched summoner ${fetchedUsername} with puuid ${fetchedPuuid} against username ${username}`);
     // Check if the fetched username matches the provided username
     if (fetchedUsername.toLowerCase() !== username.toLowerCase()) {
       logger.info(`The username ${username} does not match the fetched username ${fetchedUsername}.`);
