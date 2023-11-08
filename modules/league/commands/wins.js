@@ -77,6 +77,9 @@ async function getPuuidFromDatabase(userId) {
   try {
     const response = await api.get('league_player', { user_id: userId });
     if (response && response.league_players && response.league_players.length > 0) {
+      if(response.league_players[0].puuid == 'none') {
+        return null;
+      }
       // Assuming the puuid is stored in the response object
       return response.league_players[0].puuid;
     }
