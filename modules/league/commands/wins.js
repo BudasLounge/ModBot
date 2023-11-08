@@ -213,7 +213,7 @@ module.exports = {
     syntax: 'wins [summoner name] [number of games up to 1000](optional)',
     num_args: 1,
     args_to_lower: true,
-    needs_api: false,
+    needs_api: true,
     has_state: false,
 async execute(message, args) {
     args.shift();
