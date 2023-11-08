@@ -128,8 +128,8 @@ async function getLastMatches(username, numberOfGames, logger, userId) {
     }
     logger.info(`Fetched summoner ${fetchedUsername} with puuid ${fetchedPuuid} against username ${givenUsername}`);
     // Check if the fetched username matches the provided username
-    if (fetchedUsername.toLowerCase() !== username.toLowerCase()) {
-      logger.info(`The username ${username} does not match the fetched username ${fetchedUsername}.`);
+    if (fetchedUsername.toLowerCase() !== givenUsername.toLowerCase()) {
+      logger.info(`The username ${givenUsername} does not match the fetched username ${fetchedUsername}.`);
       return []; // Return early with an empty array to indicate no matches
     }
 
