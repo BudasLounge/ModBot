@@ -3,7 +3,7 @@ const fs = require('fs').promises;
 const path = require('path');
 const { MessageEmbed } = require('discord.js');
 require('dotenv').config();
-var ApiClient = require("../../core/js/APIClient.js");
+var ApiClient = require("../../../core/js/APIClient.js");
 var api = new ApiClient();
 const RIOT_API_KEY = process.env.RIOT_API_KEY;
 const RIOT_ACCOUNT_BASE_URL = 'https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/';
