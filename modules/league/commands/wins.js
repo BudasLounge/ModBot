@@ -116,7 +116,17 @@ async function getLastMatches(username, numberOfGames, logger, userId) {
     });
     const fetchedPuuid = summonerResponse.data.puuid;
     const fetchedUsername = summonerResponse.data.name;
-    logger.info(`Fetched summoner ${fetchedUsername} with puuid ${fetchedPuuid} against username ${username}`);
+    var givenUsername;
+    try {
+      const response = await api.get('league_player', { user_id: userId });
+      if (response && response.league_players && response.league_players.length > 0) {
+        givenUsername = response.league_players[0].league_name;
+      }
+    } catch (error) {
+      console.error('Error fetching puuid from database:', error);
+      throw error;
+    }
+    logger.info(`Fetched summoner ${fetchedUsername} with puuid ${fetchedPuuid} against username ${givenUsername}`);
     // Check if the fetched username matches the provided username
     if (fetchedUsername.toLowerCase() !== username.toLowerCase()) {
       logger.info(`The username ${username} does not match the fetched username ${fetchedUsername}.`);
