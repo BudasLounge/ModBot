@@ -266,8 +266,7 @@ async execute(message, args) {
       const estimatedTimeSeconds = ((estimatedTimeMs % 60000) / 1000).toFixed(0);
       var summonerName = args.join(' ');
       // Send the estimated time to the user
-      message.channel.send(`Getting stats for ${summonerName}, please wait. Estimated time: ${estimatedTimeMinutes} minutes and ${parseInt(estimatedTimeSeconds)+parseInt(10)} seconds.`);
-      message.channel.send(`If multiple requests are made in a short period of time, the bot will take longer to respond.`);
+      message.channel.send(`Getting stats for ${summonerName}, please wait. Estimated time: ${estimatedTimeMinutes} minutes and ${parseInt(estimatedTimeSeconds)+parseInt(10)} seconds.\nIf multiple requests are made in a short period of time, the bot will take longer to respond.`);
       if(gameCount > 50) {
         message.channel.send(`Please only request up to 50 games at one time unless pulling mass data for website viewing.`);
       }
