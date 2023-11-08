@@ -104,7 +104,7 @@ async function getLastMatches(username, numberOfGames, logger, api, userId) {
   }
 
   // Check if puuid is stored in your database
-  let puuid = await getPuuidFromDatabase(userId, api);
+  let puuid = await getPuuidFromDatabase(userId);
 
   if (!puuid) {
     // If puuid is not found in the database, fetch from Riot API
@@ -115,7 +115,7 @@ async function getLastMatches(username, numberOfGames, logger, api, userId) {
     logger.info(`Found summoner ${username} with puuid ${puuid}`);
 
     // Store the puuid in your database
-    await storePuuidInDatabase(userId, puuid, api);
+    await storePuuidInDatabase(userId, puuid);
   } else {
     logger.info(`Found puuid in database for summoner ${username}`);
   }
