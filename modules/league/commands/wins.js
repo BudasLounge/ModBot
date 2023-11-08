@@ -294,7 +294,7 @@ async execute(message, args) {
         await message.channel.send({ embeds: [embed] });
       }
     } catch (error) {
-      this.logger.error('Error fetching data from Riot API:', error.message);
+      this.logger.error('Error fetching data from Riot API:', error.);
       message.channel.send('An error occurred while retrieving match history.\nPlease try again in 2 minutes.');
     }
   }
