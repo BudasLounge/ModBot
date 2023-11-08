@@ -98,11 +98,11 @@ async function storePuuidInDatabase(userId, puuid) {
   }
 }
 
-async function getLastMatches(username, numberOfGames, logger, api, userId) {
+async function getLastMatches(username, numberOfGames, logger, userId) {
   if (Object.keys(queueTypeMapping).length === 0) {
     await fetchQueueMapping();
   }
-
+  console.log(`Fetching last ${numberOfGames} matches for ${username}`);
   // Check if puuid is stored in your database
   let puuid = await getPuuidFromDatabase(userId);
 
