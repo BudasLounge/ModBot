@@ -72,104 +72,141 @@ async function saveMatchDataToFile(fullMatchData, puuid) {
     console.error('Error writing match data to file:', error);
   }
 }
-  async function getLastMatches(username, numberOfGames, logger) {
-    if (Object.keys(queueTypeMapping).length === 0) {
-      await fetchQueueMapping();
+async function getPuuidFromDatabase(userId, api) {
+  try {
+    const response = await api.get('league_player', { user_id: userId });
+    if (response && response.league_players && response.league_players.length > 0) {
+      // Assuming the puuid is stored in the response object
+      return response.league_players[0].puuid;
     }
+    return null;
+  } catch (error) {
+    console.error('Error fetching puuid from database:', error);
+    throw error;
+  }
+}
+
+// Function to store the puuid in your database
+async function storePuuidInDatabase(userId, puuid, api) {
+  try {
+    await api.put('league_player', { user_id: userId, puuid: puuid });
+    console.log(`Stored puuid for user ${userId}`);
+  } catch (error) {
+    console.error('Error storing puuid in database:', error);
+    throw error;
+  }
+}
+
+async function getLastMatches(username, numberOfGames, logger, api, userId) {
+  if (Object.keys(queueTypeMapping).length === 0) {
+    await fetchQueueMapping();
+  }
+
+  // Check if puuid is stored in your database
+  let puuid = await getPuuidFromDatabase(userId, api);
+
+  if (!puuid) {
+    // If puuid is not found in the database, fetch from Riot API
     const summonerResponse = await http.get(`${RIOT_ACCOUNT_BASE_URL}${encodeURIComponent(username)}`, {
       headers: { "X-Riot-Token": RIOT_API_KEY }
     });
-    const { puuid } = summonerResponse.data;
+    puuid = summonerResponse.data.puuid;
     logger.info(`Found summoner ${username} with puuid ${puuid}`);
-  
-    let matchDetails = [];
-    let startIndex = 0;
-    const MAX_MATCHES_PER_REQUEST = 100;
-  
-    while (numberOfGames > 0) {
-      const count = Math.min(numberOfGames, MAX_MATCHES_PER_REQUEST);
-      const matchIdsResponse = await http.get(`${RIOT_API_BASE_URL}by-puuid/${puuid}/ids?start=${startIndex}&count=${count}`, {
-        headers: { "X-Riot-Token": RIOT_API_KEY }
-      });
-      const matchIds = matchIdsResponse.data;
-      startIndex += count;
-      numberOfGames -= count;
-  
-      for (const matchId of matchIds) {
-        const dirPath = path.join("/home/bots/ModBot/matchJSONs/", 'match_data', puuid); // Directory path for the puuid
-        const filePath = path.join(dirPath, `${matchId}.json`);
-  
-        try {
-          // Check if the match data file exists locally
-          const fileData = await fs.readFile(filePath, 'utf-8');
-          logger.info(`Match data for match ${matchId} found locally.`);
-          const fullMatchDetails = JSON.parse(fileData);
 
-          // Extract the required details from the full match data
-          const participant = fullMatchDetails.info.participants.find(p => p.puuid === puuid);
-          const queueId = fullMatchDetails.info.queueId;
-          const queueName = queueTypeMapping[queueId] || `Unknown Queue (${queueId})`;
-          const matchDetail = {
-            matchId: fullMatchDetails.metadata.matchId,
-            champion: participant.championName,
-            win: participant.win,
-            queueType: queueName
-          };
+    // Store the puuid in your database
+    await storePuuidInDatabase(userId, puuid, api);
+  } else {
+    logger.info(`Found puuid in database for summoner ${username}`);
+  }
 
-          matchDetails.push(matchDetail);
-        } catch (error) {
-          if (error.code === 'ENOENT') {
-            // If the file does not exist, fetch the data from the Riot API
-            logger.info(`Fetching match details for match ${matchId} from Riot API.`);
-            if (longTermRequests >= LONG_TERM_LIMIT) {
-              // Wait until the 2-minute window resets
-              await sleep(LONG_TERM_DURATION);
-              longTermRequests = 0;
-            }
-  
-            try {
-              const response = await http.get(`${RIOT_API_BASE_URL}${matchId}`, {
-                headers: { "X-Riot-Token": RIOT_API_KEY }
-              });
-              const data = response.data;
-              await saveMatchDataToFile(data, puuid);
-              const participant = data.info.participants.find(p => p.puuid === puuid);
-              const queueId = data.info.queueId;
-              const queueName = queueTypeMapping[queueId] || `Unknown Queue (${queueId})`;
-              const matchDetail = {
-                matchId: data.metadata.matchId,
-                champion: participant.championName,
-                win: participant.win,
-                queueType: queueName
-              };
-              matchDetails.push(matchDetail);
-            } catch (error) {
-              if (error.response && error.response.status === 429) {
-                // If rate limit is exceeded, use the Retry-After header to wait
-                const retryAfter = parseInt(error.response.headers['retry-after'] || '1', 10) * 1000;
-                await sleep(retryAfter);
-              } else {
-                throw error;
-              }
-            }
-  
-            longTermRequests++;
-            // Respect the short-term rate limit of 20 requests per second
-            await sleep(50); // 1000 ms / 20 requests = 50 ms per request
-          } else {
-            // If the error is not due to the file not existing, log it
-            logger.error(`Error reading match data from local file for match ${matchId}:`, error);
+  let matchDetails = [];
+  let startIndex = 0;
+  const MAX_MATCHES_PER_REQUEST = 100;
+
+  while (numberOfGames > 0) {
+    const count = Math.min(numberOfGames, MAX_MATCHES_PER_REQUEST);
+    const matchIdsResponse = await http.get(`${RIOT_API_BASE_URL}by-puuid/${puuid}/ids?start=${startIndex}&count=${count}`, {
+      headers: { "X-Riot-Token": RIOT_API_KEY }
+    });
+    const matchIds = matchIdsResponse.data;
+    startIndex += count;
+    numberOfGames -= count;
+
+    for (const matchId of matchIds) {
+      const dirPath = path.join("/home/bots/ModBot/matchJSONs/", 'match_data', puuid); // Directory path for the puuid
+      const filePath = path.join(dirPath, `${matchId}.json`);
+
+      try {
+        // Check if the match data file exists locally
+        const fileData = await fs.readFile(filePath, 'utf-8');
+        logger.info(`Match data for match ${matchId} found locally.`);
+        const fullMatchDetails = JSON.parse(fileData);
+
+        // Extract the required details from the full match data
+        const participant = fullMatchDetails.info.participants.find(p => p.puuid === puuid);
+        const queueId = fullMatchDetails.info.queueId;
+        const queueName = queueTypeMapping[queueId] || `Unknown Queue (${queueId})`;
+        const matchDetail = {
+          matchId: fullMatchDetails.metadata.matchId,
+          champion: participant.championName,
+          win: participant.win,
+          queueType: queueName
+        };
+
+        matchDetails.push(matchDetail);
+      } catch (error) {
+        if (error.code === 'ENOENT') {
+          // If the file does not exist, fetch the data from the Riot API
+          logger.info(`Fetching match details for match ${matchId} from Riot API.`);
+          if (longTermRequests >= LONG_TERM_LIMIT) {
+            // Wait until the 2-minute window resets
+            await sleep(LONG_TERM_DURATION);
+            longTermRequests = 0;
           }
+
+          try {
+            const response = await http.get(`${RIOT_API_BASE_URL}${matchId}`, {
+              headers: { "X-Riot-Token": RIOT_API_KEY }
+            });
+            const data = response.data;
+            await saveMatchDataToFile(data, puuid);
+            const participant = data.info.participants.find(p => p.puuid === puuid);
+            const queueId = data.info.queueId;
+            const queueName = queueTypeMapping[queueId] || `Unknown Queue (${queueId})`;
+            const matchDetail = {
+              matchId: data.metadata.matchId,
+              champion: participant.championName,
+              win: participant.win,
+              queueType: queueName
+            };
+            matchDetails.push(matchDetail);
+          } catch (error) {
+            if (error.response && error.response.status === 429) {
+              // If rate limit is exceeded, use the Retry-After header to wait
+              const retryAfter = parseInt(error.response.headers['retry-after'] || '1', 10) * 1000;
+              await sleep(retryAfter);
+            } else {
+              throw error;
+            }
+          }
+
+          longTermRequests++;
+          // Respect the short-term rate limit of 20 requests per second
+          await sleep(50); // 1000 ms / 20 requests = 50 ms per request
+        } else {
+          // If the error is not due to the file not existing, log it
+          logger.error(`Error reading match data from local file for match ${matchId}:`, error);
         }
       }
-      // If there are no more games to fetch, break out of the loop
-      if (numberOfGames <= 0) {
-        break;
-      }
     }
-  
-    return matchDetails;
+    // If there are no more games to fetch, break out of the loop
+    if (numberOfGames <= 0) {
+      break;
+    }
   }
+
+  return matchDetails;
+}
 module.exports = {
     name: 'wins',
     description: 'Shows last games in your match history',
@@ -208,7 +245,7 @@ async execute(message, args) {
       // Send the estimated time to the user
       message.channel.send(`Getting stats for ${summonerName}, please wait. Estimated time: ${estimatedTimeMinutes} minutes and ${parseInt(estimatedTimeSeconds)+parseInt(10)} seconds.`);
       message.channel.send(`If multiple requests are made in a short period of time, the bot will take longer to respond.\nPlease only request up to 50 games at one time unless pulling mass data for website viewing.`);
-      const results = await getLastMatches(summonerName, gameCount, this.logger);
+      const results = await getLastMatches(summonerName, gameCount, this.logger, this.api, message.author.id);
       const queueStats = results.reduce((stats, { champion, win, queueType }) => {
         if (!stats[queueType]) {
           stats[queueType] = { games: 0, champions: {} };
