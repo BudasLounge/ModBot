@@ -8,15 +8,6 @@ module.exports = {
     has_state: false,
     
     async execute(message, args, extra) {
-        module.exports = {
-            name: 'ip',
-            description: 'Gets the IP of a server',
-            syntax: 'ip [server name]',
-            num_args: 1,
-            args_to_lower: true,
-            needs_api: true,
-            has_state: false,
-            async execute(message, args, extra) {
                 var api = extra.api;
         
                 var respServer;
@@ -44,5 +35,3 @@ module.exports = {
                 }
             }
         };
-    }
-};
