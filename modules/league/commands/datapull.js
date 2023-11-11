@@ -15,6 +15,7 @@ module.exports = {
                     respServer = await api.get("league_pref_champ", {
                         id: args[1]
                     });
+                    this.logger.info(respServer);
                 }catch(error){
                     console.error(error);
                 }
