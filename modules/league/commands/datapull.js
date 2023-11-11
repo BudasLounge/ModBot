@@ -13,7 +13,8 @@ module.exports = {
                 var respServer;
                 try{
                     respServer = await api.get("league_pref_champ", {
-                        id: args[1]
+                        id: args[1],
+                        user_id: parseInt(args[2])
                     });
                     this.logger.info(respServer);
                 }catch(error){
