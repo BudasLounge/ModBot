@@ -16,7 +16,7 @@ module.exports = {
                         id: args[1],
                         user_id: parseInt(args[2])
                     });
-                    this.logger.info(respServer);
+                    this.logger.info(respServer + " " + args[1] + " " + args[2]);
                 }catch(error){
                     console.error(error);
                 }
