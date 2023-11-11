@@ -13,7 +13,7 @@ module.exports = {
                 var respServer;
                 try{
                     respServer = await api.get("league_pref_champ", {
-                        short_name: args[1]
+                        id: args[1]
                     });
                 }catch(error){
                     console.error(error);
