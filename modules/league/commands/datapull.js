@@ -19,8 +19,5 @@ module.exports = {
                 }catch(error){
                     console.error(error);
                 }
-                if(!respServer.league_pref_champs[0]){
-                    message.channel.send({ content: "short_name not found...checking display_name"});
-                }
             }
         };
