@@ -9,7 +9,6 @@ module.exports = {
     
     async execute(message, args, extra) {
                 var api = extra.api;
-        
                 var respServer;
                 try{
                     respServer = await api.get("league_pref_champ", {
