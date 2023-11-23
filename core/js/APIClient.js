@@ -1,7 +1,7 @@
 var axios = require('axios');
 var fs = require('fs');
 
-//TESTING UPDATE
+//TESTING
 
 /**
  * Class that provides a simple wrapper around Axios to make interacting with the LabsAPI easier.
