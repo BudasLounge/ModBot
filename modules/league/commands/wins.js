@@ -16,8 +16,8 @@ const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 const http = axios.create();
 
 let longTermRequests = 0;
-const LONG_TERM_LIMIT = 100;
-const LONG_TERM_DURATION = 120 * 1000; // 2 minutes
+const LONG_TERM_LIMIT = 30000;
+const LONG_TERM_DURATION = 600 * 1000; // 2 minutes
 
 // Reset long-term request count every LONG_TERM_DURATION
 setInterval(() => {
@@ -215,7 +215,7 @@ async function getLastMatches(username, numberOfGames, logger, userId) {
 
           longTermRequests++;
           // Respect the short-term rate limit of 20 requests per second
-          await sleep(50); // 1000 ms / 20 requests = 50 ms per request
+          await sleep(20); // 1000 ms / 20 requests = 50 ms per request
         } else {
           // If the error is not due to the file not existing, log it
           logger.error(`Error reading match data from local file for match ${matchId}:`, error);
@@ -259,8 +259,8 @@ async execute(message, args) {
         return;
     }
     try {
-      const longTermDelays = Math.floor(gameCount / 100) * (120 * 1000); // 2 minutes for every 100 requests
-      const shortTermDelays = Math.floor((gameCount % 100) / 20) * 2000; // 2 seconds for every 20 requests in the last batch
+      const longTermDelays = Math.floor(gameCount / 30000) * (600 * 1000); // 10 minutes for every 30,000 requests
+      const shortTermDelays = Math.floor((gameCount % 30000) / 500) * 10000; // 10 seconds for every 500 requests in the last batch
       const estimatedTimeMs = longTermDelays + shortTermDelays;
       const estimatedTimeMinutes = Math.floor(estimatedTimeMs / 60000);
       const estimatedTimeSeconds = ((estimatedTimeMs % 60000) / 1000).toFixed(0);
@@ -323,7 +323,7 @@ async execute(message, args) {
       }
     } catch (error) {
       this.logger.error('Error fetching data from Riot API:', error);
-      message.channel.send('An error occurred while retrieving match history.\nPlease try again in 2 minutes.');
+      message.channel.send('An error occurred while retrieving match history.\nPlease try again in 10 minutes.');
     }
   }
 };
