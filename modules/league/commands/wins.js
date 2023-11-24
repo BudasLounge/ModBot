@@ -45,6 +45,7 @@ async function fetchMatchDetails(matchId, puuid, logger) {
         return response.data;
       } catch (apiError) {
         if (apiError.response && apiError.response.status === 429) {
+          logger.info(`Rate limit exceeded. Waiting for ${apiError.response.headers['retry-after']} seconds.`);
           const retryAfter = parseInt(apiError.response.headers['retry-after'], 10) * 1000;
           await sleep(retryAfter);
           return fetchMatchDetails(matchId, puuid, logger); // Retry
@@ -298,6 +299,7 @@ async function getLastMatches(username, numberOfGames, logger, userId) {
     numberOfGames -= count;
     requestCount += count;
     if (requestCount >= 500) {
+      logger.info(`Request count reached 500. Waiting for 10 seconds.`);
       await sleep(10000); // Wait for 10 seconds after every 500 requests
       requestCount = 0;
     }
