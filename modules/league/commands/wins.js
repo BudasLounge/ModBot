@@ -45,12 +45,12 @@ async function fetchMatchDetails(matchId, puuid, logger) {
         return response.data;
       } catch (apiError) {
         if (apiError.response && apiError.response.status === 429) {
-          // Handle rate limit error
           const retryAfter = parseInt(apiError.response.headers['retry-after'], 10) * 1000;
-          await sleep(retryAfter); // Sleep for the duration specified in Retry-After header
-          return await fetchMatchDetails(matchId, puuid, logger); // Retry fetching this match
+          await sleep(retryAfter);
+          return fetchMatchDetails(matchId, puuid, logger); // Retry
         } else {
           logger.error(`Error fetching match data for match ${matchId}:`, apiError);
+          return null;
         }
       }
     } else {
@@ -286,6 +286,7 @@ async function getLastMatches(username, numberOfGames, logger, userId) {
   let matchDetails = [];
   let startIndex = 0;
   const MAX_MATCHES_PER_REQUEST = 100;
+  let requestCount = 0;
 
   while (numberOfGames > 0) {
     const count = Math.min(numberOfGames, MAX_MATCHES_PER_REQUEST);
@@ -295,7 +296,11 @@ async function getLastMatches(username, numberOfGames, logger, userId) {
     const matchIds = matchIdsResponse.data;
     startIndex += count;
     numberOfGames -= count;
-
+    requestCount += count;
+    if (requestCount >= 500) {
+      await sleep(10000); // Wait for 10 seconds after every 500 requests
+      requestCount = 0;
+    }
     // Create an array of promises for each matchId
     const promises = matchIds.map(matchId => fetchMatchDetails(matchId, puuid, logger));
 
