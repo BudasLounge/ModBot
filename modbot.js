@@ -55,7 +55,6 @@ client.on('ready', botInit);
 
 function authClient() {
     var token;
-
     try {
         token = fs.readFileSync(config.token_file).toString();
         token = token.replace(/\s+/g, '');
