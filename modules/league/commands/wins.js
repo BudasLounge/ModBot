@@ -44,7 +44,14 @@ async function fetchMatchDetails(matchId, puuid, logger) {
         await saveMatchDataToFile(response.data, puuid);
         return response.data;
       } catch (apiError) {
-        logger.error(`Error fetching match data for match ${matchId}:`, apiError);
+        if (apiError.response && apiError.response.status === 429) {
+          // Handle rate limit error
+          const retryAfter = parseInt(apiError.response.headers['retry-after'], 10) * 1000;
+          await sleep(retryAfter); // Sleep for the duration specified in Retry-After header
+          return await fetchMatchDetails(matchId, puuid, logger); // Retry fetching this match
+        } else {
+          logger.error(`Error fetching match data for match ${matchId}:`, apiError);
+        }
       }
     } else {
       logger.error(`Error reading match data from local file for match ${matchId}:`, error);
