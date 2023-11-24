@@ -29,7 +29,6 @@ let queueTypeMapping = {};
 async function fetchMatchDetails(matchId, puuid, logger) {
   const dirPath = path.join("/home/bots/ModBot/matchJSONs/", 'match_data', puuid);
   const filePath = path.join(dirPath, `${matchId}.json`);
-
   try {
     const fileData = await fs.readFile(filePath, 'utf-8');
     logger.info(`Match data for match ${matchId} found locally.`);
