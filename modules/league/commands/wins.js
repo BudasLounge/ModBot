@@ -17,7 +17,7 @@ const http = axios.create();
 
 let longTermRequests = 0;
 const LONG_TERM_LIMIT = 30000;
-const LONG_TERM_DURATION = 600 * 1000; // 2 minutes
+const LONG_TERM_DURATION = 600 * 1000; // 10 minutes
 
 // Reset long-term request count every LONG_TERM_DURATION
 setInterval(() => {
@@ -25,6 +25,33 @@ setInterval(() => {
 }, LONG_TERM_DURATION);
 
 let queueTypeMapping = {};
+
+async function fetchMatchDetails(matchId, puuid, logger) {
+  const dirPath = path.join("/home/bots/ModBot/matchJSONs/", 'match_data', puuid);
+  const filePath = path.join(dirPath, `${matchId}.json`);
+
+  try {
+    const fileData = await fs.readFile(filePath, 'utf-8');
+    logger.info(`Match data for match ${matchId} found locally.`);
+    return JSON.parse(fileData);
+  } catch (error) {
+    if (error.code === 'ENOENT') {
+      logger.info(`Fetching match details for match ${matchId} from Riot API.`);
+      try {
+        const response = await http.get(`${RIOT_API_BASE_URL}${matchId}`, {
+          headers: { "X-Riot-Token": RIOT_API_KEY }
+        });
+        await saveMatchDataToFile(response.data, puuid);
+        return response.data;
+      } catch (apiError) {
+        logger.error(`Error fetching match data for match ${matchId}:`, apiError);
+      }
+    } else {
+      logger.error(`Error reading match data from local file for match ${matchId}:`, error);
+    }
+  }
+  return null; // Return null in case of any failure
+}
 
 async function fetchQueueMapping() {
   try {
@@ -101,7 +128,7 @@ async function storePuuidInDatabase(userId, puuid) {
   }
 }
 
-async function getLastMatches(username, numberOfGames, logger, userId) {
+/*async function getLastMatches(username, numberOfGames, logger, userId) {
   if (Object.keys(queueTypeMapping).length === 0) {
     await fetchQueueMapping();
   }
@@ -222,6 +249,68 @@ async function getLastMatches(username, numberOfGames, logger, userId) {
         }
       }
     }
+    // If there are no more games to fetch, break out of the loop
+    if (numberOfGames <= 0) {
+      break;
+    }
+  }
+
+  return matchDetails;
+}*/
+async function getLastMatches(username, numberOfGames, logger, userId) {
+  if (Object.keys(queueTypeMapping).length === 0) {
+    await fetchQueueMapping();
+  }
+  logger.info(`Fetching last ${numberOfGames} matches for ${username}`);
+  let puuid = await getPuuidFromDatabase(userId);
+
+  if (!puuid) {
+    // Fetch puuid from Riot API if not found in the database
+    const summonerResponse = await http.get(`${RIOT_ACCOUNT_BASE_URL}${encodeURIComponent(username)}`, {
+      headers: { "X-Riot-Token": RIOT_API_KEY }
+    });
+    puuid = summonerResponse.data.puuid;
+    await storePuuidInDatabase(userId, puuid);
+    logger.info(`Found summoner ${username} with puuid ${puuid}`);
+  } else {
+    logger.info(`Found puuid in database for summoner ${username}`);
+  }
+
+  let matchDetails = [];
+  let startIndex = 0;
+  const MAX_MATCHES_PER_REQUEST = 100;
+
+  while (numberOfGames > 0) {
+    const count = Math.min(numberOfGames, MAX_MATCHES_PER_REQUEST);
+    const matchIdsResponse = await http.get(`${RIOT_API_BASE_URL}by-puuid/${puuid}/ids?start=${startIndex}&count=${count}`, {
+      headers: { "X-Riot-Token": RIOT_API_KEY }
+    });
+    const matchIds = matchIdsResponse.data;
+    startIndex += count;
+    numberOfGames -= count;
+
+    // Create an array of promises for each matchId
+    const promises = matchIds.map(matchId => fetchMatchDetails(matchId, puuid, logger));
+
+    // Use Promise.all to wait for all promises to resolve
+    const results = await Promise.all(promises);
+
+    // Filter out null results and extract the required details
+    results.forEach(fullMatchDetails => {
+      if (fullMatchDetails) {
+        const participant = fullMatchDetails.info.participants.find(p => p.puuid === puuid);
+        const queueId = fullMatchDetails.info.queueId;
+        const queueName = queueTypeMapping[queueId] || `Unknown Queue (${queueId})`;
+        const matchDetail = {
+          matchId: fullMatchDetails.metadata.matchId,
+          champion: participant.championName,
+          win: participant.win,
+          queueType: queueName
+        };
+        matchDetails.push(matchDetail);
+      }
+    });
+
     // If there are no more games to fetch, break out of the loop
     if (numberOfGames <= 0) {
       break;
