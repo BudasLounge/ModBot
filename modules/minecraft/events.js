@@ -85,6 +85,9 @@ async function onButtonClick(button){
     }
     else if(button.isModalSubmit() && button.customId==="MCSERVERCREATORMODAL"){
         if((button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && button.customId==="MCSERVERCREATORMODAL"){
+            const publicIp = require('public-ip');
+            // Get the current public IP address
+            const currentIp = await publicIp.v4();
             var display_name = button.fields.getTextInputValue('display_name');
             var short_name = button.fields.getTextInputValue('short_name');
             var port = button.fields.getTextInputValue('port');
@@ -108,7 +111,9 @@ async function onButtonClick(button){
                     server_ip: short_name+".budaslounge.com",
                     port: port.toString(),
                     status_api_port: "none",
-                    numeric_ip: "71.38.104.228",
+
+                    // Update the code to use the current IP address
+                    numeric_ip: currentIp,
                     mc_version: mc_version,
                     pack_version: pack_version,
                     rcon_port: (parseInt(port)+1).toString()
