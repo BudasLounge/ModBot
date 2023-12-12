@@ -1,7 +1,7 @@
 var ApiClient = require("../../core/js/APIClient.js");
 var api = new ApiClient();
 const {MessageActionRow, MessageButton, MessageEmbed, MessageSelectMenu, Modal, TextInputComponent} = require('discord.js');
-import {publicIp, publicIpv4, publicIpv6} from 'public-ip';
+const {publicIpv4} = require('public-ip');
 
 async function onButtonClick(button){
     if((button.member.roles.cache.find(r => r.id === "586313447965327365" || button.user.id === "185223223892377611" || button.user.id === "195677170432081920") && button.customId=="MINE-SERVERCREATOR")){
