@@ -86,15 +86,7 @@ async function onButtonClick(button){
     }
     else if(button.isModalSubmit() && button.customId==="MCSERVERCREATORMODAL"){
         if((button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && button.customId==="MCSERVERCREATORMODAL"){
-            var currentIP = "0.0.0.0";
-            axios.get('https://api.ipify.org?format=json')
-                .then(response => {
-                    console.log('My public IP address is:', response.data.ip);
-                    currentIP = response.data.ip;
-                })
-                .catch(error => {
-                    console.error('Error fetching IP:', error);
-                });
+            
             var display_name = button.fields.getTextInputValue('display_name');
             var short_name = button.fields.getTextInputValue('short_name');
             var port = button.fields.getTextInputValue('port');
@@ -112,6 +104,15 @@ async function onButtonClick(button){
                 //var date = (new Date()).toISOString().split('T')[0];
                 //button.channel.send({content: date})
             try{
+                var currentIP = "0.0.0.0";
+                axios.get('https://api.ipify.org?format=json')
+                    .then(response => {
+                        console.log('My public IP address is:', response.data.ip);
+                        currentIP = response.data.ip;
+                    })
+                    .catch(error => {
+                        console.error('Error fetching IP:', error);
+                    });
                 await api.post("minecraft_server", {
                     display_name: display_name,
                     short_name: short_name,
