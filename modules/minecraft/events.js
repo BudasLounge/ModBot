@@ -85,9 +85,8 @@ async function onButtonClick(button){
     }
     else if(button.isModalSubmit() && button.customId==="MCSERVERCREATORMODAL"){
         if((button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && button.customId==="MCSERVERCREATORMODAL"){
-            const publicIpModule = await import('public-ip');
-            // Then use the v4 function from the imported module
-            const currentIp = await publicIpModule.v4();
+            const { v4 } = (await import('public-ip')).default;
+            const currentIp = await v4();
             var display_name = button.fields.getTextInputValue('display_name');
             var short_name = button.fields.getTextInputValue('short_name');
             var port = button.fields.getTextInputValue('port');
