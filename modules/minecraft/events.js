@@ -105,7 +105,7 @@ async function onButtonClick(button){
                 //button.channel.send({content: date})
             try{
                 var currentIP = "0.0.0.0";
-                axios.get('https://api.ipify.org?format=json')
+                await axios.get('https://api.ipify.org?format=json')
                     .then(response => {
                         console.log('My public IP address is:', response.data.ip);
                         currentIP = response.data.ip;
