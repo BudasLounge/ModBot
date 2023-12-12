@@ -85,7 +85,7 @@ async function onButtonClick(button){
     }
     else if(button.isModalSubmit() && button.customId==="MCSERVERCREATORMODAL"){
         if((button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && button.customId==="MCSERVERCREATORMODAL"){
-            const publicIp = require('public-ip');
+            const publicIp = await require('public-ip');
             // Get the current public IP address
             const currentIp = await publicIp.v4();
             var display_name = button.fields.getTextInputValue('display_name');
