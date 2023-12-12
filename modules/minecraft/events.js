@@ -119,9 +119,7 @@ async function onButtonClick(button){
                     server_ip: short_name+".budaslounge.com",
                     port: port.toString(),
                     status_api_port: "none",
-
-                    // Update the code to use the current IP address
-                    numeric_ip: currentIp,
+                    numeric_ip: currentIP,
                     mc_version: mc_version,
                     pack_version: pack_version,
                     rcon_port: (parseInt(port)+1).toString()
@@ -129,9 +127,11 @@ async function onButtonClick(button){
             }catch(err){
                 logger.error(err.message);
                 button.channel.send({ content: "I hit a snag..." + err});
+                return;
             }
             }else{
                 button.channel.send({ content: "I found a server with that server_ip already, try again"});
+                return;
             }
         }
         //else if((button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && button.customId==="MCSERVERDELETORMODAL"){
