@@ -127,7 +127,7 @@ async function onButtonClick(button){
                 });
             }catch(err){
                 logger.error(err.message);
-                button.channel.send({ content: "I hit a snag..."});
+                button.channel.send({ content: "I hit a snag..." + err});
             }
             }else{
                 button.channel.send({ content: "I found a server with that server_ip already, try again"});
