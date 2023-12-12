@@ -1,7 +1,6 @@
 var ApiClient = require("../../core/js/APIClient.js");
 var api = new ApiClient();
 const {MessageActionRow, MessageButton, MessageEmbed, MessageSelectMenu, Modal, TextInputComponent} = require('discord.js');
-const {publicIpv4} = require('public-ip');
 
 async function onButtonClick(button){
     if((button.member.roles.cache.find(r => r.id === "586313447965327365" || button.user.id === "185223223892377611" || button.user.id === "195677170432081920") && button.customId=="MINE-SERVERCREATOR")){
@@ -86,7 +85,15 @@ async function onButtonClick(button){
     }
     else if(button.isModalSubmit() && button.customId==="MCSERVERCREATORMODAL"){
         if((button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && button.customId==="MCSERVERCREATORMODAL"){
-            const currentIp = await publicIpv4()
+            var currentIP = "0.0.0.0";
+            axios.get('https://api.ipify.org?format=json')
+                .then(response => {
+                    console.log('My public IP address is:', response.data.ip);
+                    currentIP = response.data.ip;
+                })
+                .catch(error => {
+                    console.error('Error fetching IP:', error);
+                });
             var display_name = button.fields.getTextInputValue('display_name');
             var short_name = button.fields.getTextInputValue('short_name');
             var port = button.fields.getTextInputValue('port');
