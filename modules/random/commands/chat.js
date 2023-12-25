@@ -13,16 +13,24 @@ module.exports = {
         //var token = await fs.readFileSync("../openai_token.txt").toString();
         const { Configuration, OpenAIApi } = require("openai");
         const configuration = new Configuration({
-            apiKey: process.env.API_KEY
+            //apiKey: process.env.API_KEY,
+            apiKey: "anything",
+            apiUrl: "http://127.0.0.1:8000/v1/engines/davinci-codex/completions"
         })
         const openai = new OpenAIApi(configuration);
-
+        client = openai.OpenAI(api_key="anything",base_url="http://0.0.0.0:8000")
+        response = client.chat.completions.create(model="gpt-3.5-turbo", messages = [
+            {
+                "role": "user",
+                "content": "this is a test request, write a short poem"
+            }
+        ])
         args.shift()
         chatMessage = args.join(" ")
         try {
           message.channel.send({content: "Generating response..."})
             const response = await openai.createChatCompletion({
-                model: "gpt-3.5-turbo",
+                model: "ollama/mistral",
                 messages: [
                     {role: "system", content: "You are a helpful assistant who responds succinctly"},
                     {role: "user", content: chatMessage}
