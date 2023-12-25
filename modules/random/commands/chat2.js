@@ -16,7 +16,7 @@ module.exports = {
         try {
             await message.channel.send({content: "Generating response..."})
             const data = JSON.stringify({
-                model: "mistral",
+                model: "custom-dolphin",
                 prompt: chatMessage,
                 stream: false
             });
