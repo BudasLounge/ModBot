@@ -40,7 +40,7 @@ module.exports = {
                     this.logger.error("req error: " + error.message);
                 });
             });
-            this.logger.info("req: " + req);
+            this.logger.info("req: " , req);
             const messageChunks = Util.splitMessage(req, {
               maxLength: 2000,
               char:'\n'
