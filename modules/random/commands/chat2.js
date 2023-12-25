@@ -37,7 +37,7 @@ module.exports = {
                     process.stdout.write(d);
                 });
                 req.on('error', (error) => {
-                    this.logger.error(error);
+                    this.logger.error("req error: " + error.message);
                 });
             });
             const messageChunks = Util.splitMessage(req, {
