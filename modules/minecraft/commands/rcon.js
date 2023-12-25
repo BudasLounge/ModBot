@@ -51,23 +51,20 @@ module.exports = {
         }
         //this.logger.info("Password: " + password);
         var conn = new Rcon(respServer.minecraft_servers[0].numeric_ip, respServer.minecraft_servers[0].rcon_port, password);
-        message.reply({content: "Sending command to server! There will not be a response on if the command was successful."})
+        //message.reply({content: "Sending command to server! There will not be a response on if the command was successful."})
         conn.on('auth', function() {
-        // You must wait until this event is fired before sending any commands,
-        // otherwise those commands will fail.
-        console.log("Authenticated");
-        console.log("Sending command:" + command)
-        conn.send(command);
+            console.log("Authenticated");
+            console.log("Sending command:" + command)
+            conn.send(command);
         }).on('response', function(str) {
-        console.log("Response: " + str);
+            console.log("Response: " + str);
+            message.reply({content: "Command executed successfully!"}); // Notify user
         }).on('error', function(err) {
-        console.log("Error: " + err);
+            console.log("Error: " + err);
+            message.reply({content: "An error occurred while executing the command."}); // Notify user
         }).on('end', function() {
-        console.log("Connection closed");
-        process.exit();
+            console.log("Connection closed");
+            process.exit();
         });
-        conn.connect();
-        //message.channel.send({content: output})
-        //conn.disconnect();
     }
 }
