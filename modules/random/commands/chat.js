@@ -15,7 +15,7 @@ module.exports = {
         const configuration = new Configuration({
             //apiKey: process.env.API_KEY,
             apiKey: "anything",
-            apiUrl: "http://127.0.0.1:8000/v1/engines/davinci-codex/completions"
+            apiUrl: "http://127.0.0.1:8000"
         })
         const openai = new OpenAIApi(configuration);
         client = openai.OpenAI(api_key="anything",base_url="http://0.0.0.0:8000")
