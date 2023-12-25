@@ -30,8 +30,7 @@ module.exports = {
                 role: 'user',
                 content: args.join(" ")
             });
-            await message.reply({content: "Generating response..."})
-            const botMessage = fetchedMessages.find(msg => msg.author.bot && msg.author.id === message.client.user.id);
+            const botMessage = await message.reply({content: "Generating response..."})
             const data = JSON.stringify({
                 model: "mistral",
                 messages: formattedMessages,
