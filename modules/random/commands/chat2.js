@@ -62,18 +62,18 @@ module.exports = {
                             char: '\n'
                         });
                         messageChunks.forEach(async chunk => {
-                            await message.editReply(chunk);
+                            await message.edit(chunk);
                         });
                     } catch (e) {
                         this.logger.error("Error parsing JSON: " + e.message);
-                        message.editReply("An error occurred while processing the response.\n" + e.message);
+                        message.edit("An error occurred while processing the response.\n" + e.message);
                     }
                 });
             });
 
             req.on('error', (error) => {
                 this.logger.error("Request error: " + error.message);
-                message.editReply("An error occurred while making the request.\n" + error.message);
+                message.edit("An error occurred while making the request.\n" + error.message);
             });
 
             req.write(data);
@@ -82,7 +82,7 @@ module.exports = {
             return
           } catch (err) {
             this.logger.error("top level error: " + err);
-            message.editReply(
+            message.edit(
               "An error has occured while trying to talk to the bot...\n"+err
             );
           }
