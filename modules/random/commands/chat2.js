@@ -22,7 +22,7 @@ module.exports = {
             });
             const options = {
                 host: '192.168.1.9',
-                port: 8000,
+                port: 11434,
                 path: '/api/generate',
                 method: 'POST',
                 headers: {
