@@ -31,18 +31,26 @@ module.exports = {
                 }
             };
             const req = http.request(options, (res) => {
-                let responseData = '';
+                let rawData = '';
                 res.on('data', (chunk) => {
-                    responseData += chunk;
+                    rawData += chunk;
                 });
                 res.on('end', () => {
-                    const messageChunks = Util.splitMessage(responseData, {
-                        maxLength: 2000,
-                        char: '\n'
-                    });
-                    messageChunks.forEach(async chunk => {
-                        await message.reply(chunk);
-                    });
+                    try {
+                        const parsedData = JSON.parse(rawData);
+                        const responseText = parsedData.response; // Extracting the response field
+            
+                        const messageChunks = Util.splitMessage(responseText, {
+                            maxLength: 2000,
+                            char: '\n'
+                        });
+                        messageChunks.forEach(async chunk => {
+                            await message.reply(chunk);
+                        });
+                    } catch (e) {
+                        this.logger.error("Error parsing JSON: " + e.message);
+                        message.reply("An error occurred while processing the response.\n" + e.message);
+                    }
                 });
             });
 
