@@ -14,16 +14,32 @@ module.exports = {
         args.shift()
         chatMessage = args.join(" ")
         try {
+            const fetchedMessages = await message.channel.messages.fetch({ limit: 10 });
+            const messageArray = Array.from(fetchedMessages.values()).reverse(); // Ensure chronological order
+
+            // Create an array of formatted messages for the API
+            const formattedMessages = messageArray.map(msg => {
+                return {
+                    role: msg.author.id === message.author.id ? 'user' : 'assistant',
+                    content: msg.content
+                };
+            });
+
+            // Add the current message
+            formattedMessages.push({
+                role: 'user',
+                content: args.join(" ")
+            });
             await message.channel.send({content: "Generating response..."})
             const data = JSON.stringify({
                 model: "custom-dolphin",
-                prompt: chatMessage,
+                prompt: formattedMessages,
                 stream: false
             });
             const options = {
                 host: 'localhost',
                 port: 11434,
-                path: '/api/generate',
+                path: '/api/chat',
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
