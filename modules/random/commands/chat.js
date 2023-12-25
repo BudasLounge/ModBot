@@ -11,14 +11,14 @@ module.exports = {
         var fs = require('fs');
         const {Util} = require('discord.js');
         const HttpsProxyAgent = require('https-proxy-agent');
-        this.logger.info("https-proxy-agent loaded" + HttpsProxyAgent)
         const http = require('http');
-        //var token = await fs.readFileSync("../openai_token.txt").toString();
-            //apiKey: process.env.API_KEY,
         const {  OpenAI } = require("openai");
+
+        const proxyAgent = new HttpsProxyAgent("http://192.168.1.9:8000");
+        console.log("Proxy Agent:", proxyAgent);
         const openai = new OpenAI({
             apiKey: "anything",
-            httpAgent: new HttpsProxyAgent("http://192.168.1.9:8000")
+            httpAgent: proxyAgent
         })
         args.shift()
         chatMessage = args.join(" ")
