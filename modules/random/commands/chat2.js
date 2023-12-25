@@ -49,14 +49,13 @@ module.exports = {
             const req = http.request(options, (res) => {
                 let rawData = '';
                 res.on('data', (chunk) => {
-                    this.logger.info("chunk: " , chunk)
                     rawData += chunk;
                 });
                 res.on('end', () => {
                     try {
                         this.logger.info("rawData: " , rawData)
                         const parsedData = JSON.parse(rawData);
-                        const responseText = parsedData.response; // Extracting the response field
+                        const responseText = parsedData.message.content; // Extracting the response field
             
                         const messageChunks = Util.splitMessage(responseText, {
                             maxLength: 2000,
