@@ -15,7 +15,7 @@ module.exports = {
         const {  OpenAI } = require("openai");
         const openai = new OpenAI({
             apiKey: "anything",
-            apiUrl: "http://172.23.213.154:8000"
+            apiUrl: "http://127.0.0.1:8000"
         })
         args.shift()
         chatMessage = args.join(" ")
