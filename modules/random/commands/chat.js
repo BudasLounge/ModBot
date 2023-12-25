@@ -21,7 +21,7 @@ module.exports = {
         chatMessage = args.join(" ")
         try {
           message.channel.send({content: "Generating response..."})
-            const response = await openai.createChatCompletion({
+            const response = await openai.chat.completions.create({
                 model: "ollama/mistral",
                 messages: [
                     {role: "system", content: "You are a helpful assistant who responds succinctly"},
