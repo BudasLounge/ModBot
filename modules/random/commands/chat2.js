@@ -1,5 +1,5 @@
 module.exports = {
-    name: '',
+    name: 'chat2',
     description: 'Talk to modbot!',
     syntax: 'chat2 [your message to the bot]',
     num_args: 2,//minimum amount of arguments to accept
