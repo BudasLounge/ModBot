@@ -32,7 +32,7 @@ module.exports = {
             });
             await message.channel.send({content: "Generating response..."})
             const data = JSON.stringify({
-                model: "custom-dolphin",
+                model: "mistral",
                 messages: formattedMessages,
                 stream: false
             });
