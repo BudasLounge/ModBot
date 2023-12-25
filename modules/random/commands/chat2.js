@@ -49,6 +49,7 @@ module.exports = {
             const req = http.request(options, (res) => {
                 let rawData = '';
                 res.on('data', (chunk) => {
+                    this.logger.info("chunk: " , chunk)
                     rawData += chunk;
                 });
                 res.on('end', () => {
