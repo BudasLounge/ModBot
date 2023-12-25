@@ -11,6 +11,7 @@ module.exports = {
         var fs = require('fs');
         const {Util} = require('discord.js');
         const HttpsProxyAgent = require('https-proxy-agent');
+        this.logger.info("https-proxy-agent loaded" + HttpsProxyAgent)
         const http = require('http');
         //var token = await fs.readFileSync("../openai_token.txt").toString();
             //apiKey: process.env.API_KEY,
@@ -22,7 +23,7 @@ module.exports = {
         args.shift()
         chatMessage = args.join(" ")
         try {
-          message.channel.send({content: "Generating response..."})
+          await message.channel.send({content: "Generating response..."})
             const response = await openai.chat.completions.create({
                 model: "gpt-3.5-turbo",
                 messages: [
