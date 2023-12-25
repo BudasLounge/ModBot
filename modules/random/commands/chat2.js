@@ -30,24 +30,29 @@ module.exports = {
                     'Content-Length': data.length
                 }
             };
-            const req = await http.request(options, (res) => {
-                console.log(`Status Code: ${res.statusCode}`);
-                
-                res.on('data', (d) => {
-                    process.stdout.write(d);
+            const req = http.request(options, (res) => {
+                let responseData = '';
+                res.on('data', (chunk) => {
+                    responseData += chunk;
                 });
-                req.on('error', (error) => {
-                    this.logger.error("req error: " + error.message);
+                res.on('end', () => {
+                    const messageChunks = Util.splitMessage(responseData, {
+                        maxLength: 2000,
+                        char: '\n'
+                    });
+                    messageChunks.forEach(async chunk => {
+                        await message.reply(chunk);
+                    });
                 });
             });
-            this.logger.info("req: " , req);
-            const messageChunks = Util.splitMessage(req, {
-              maxLength: 2000,
-              char:'\n'
+
+            req.on('error', (error) => {
+                this.logger.error("Request error: " + error.message);
+                message.reply("An error occurred while making the request.\n" + error.message);
             });
-            messageChunks.forEach(async chunk => {
-                await message.reply(chunk);
-            })
+
+            req.write(data);
+            req.end();
             //return message.reply(content);
             return
           } catch (err) {
