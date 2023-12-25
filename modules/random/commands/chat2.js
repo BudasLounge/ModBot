@@ -50,7 +50,7 @@ module.exports = {
             //return message.reply(content);
             return
           } catch (err) {
-            this.logger.error(err);
+            this.logger.error("top level error: " + err);
             message.reply(
               "An error has occured while trying to talk to the bot...\n"+err
             );
