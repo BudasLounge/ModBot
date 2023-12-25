@@ -15,7 +15,7 @@ module.exports = {
         const {  OpenAI } = require("openai");
 
         const proxyAgent = new HttpsProxyAgent("http://192.168.1.9:8000");
-        console.log("Proxy Agent:", proxyAgent);
+        this.logger.info("Proxy Agent:", proxyAgent);
         const openai = new OpenAI({
             apiKey: "anything",
             httpAgent: proxyAgent
