@@ -10,6 +10,8 @@ module.exports = {
         if (message.author.bot) return;
         var fs = require('fs');
         const {Util} = require('discord.js');
+        const HttpsProxyAgent = require('https-proxy-agent');
+        const http = require('http');
         //var token = await fs.readFileSync("../openai_token.txt").toString();
             //apiKey: process.env.API_KEY,
         const {  OpenAI } = require("openai");
