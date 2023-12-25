@@ -15,7 +15,7 @@ module.exports = {
         const {  OpenAI } = require("openai");
         const openai = new OpenAI({
             apiKey: "anything",
-            apiUrl: "http://192.168.1.9:8000"
+            httpAgent: new HttpsProxyAgent("http://192.168.1.9:8000")
         })
         args.shift()
         chatMessage = args.join(" ")
