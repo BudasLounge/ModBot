@@ -53,8 +53,8 @@ module.exports = {
                 });
                 res.on('end', () => {
                     try {
-                        this.logger.info("rawData: " , rawData)
                         const parsedData = JSON.parse(rawData);
+                        this.logger.info("parsedData: " , parsedData)
                         const responseText = parsedData.message.content; // Extracting the response field
             
                         const messageChunks = Util.splitMessage(responseText, {
