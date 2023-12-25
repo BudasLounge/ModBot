@@ -11,11 +11,11 @@ module.exports = {
         var fs = require('fs');
         const {Util} = require('discord.js');
         //var token = await fs.readFileSync("../openai_token.txt").toString();
+            //apiKey: process.env.API_KEY,
         const {  OpenAI } = require("openai");
         const openai = new OpenAI({
-            //apiKey: process.env.API_KEY,
             apiKey: "anything",
-            apiUrl: "http://192.168.1.2:8000",
+            apiUrl: "http://192.168.1.2:8000"
         })
         args.shift()
         chatMessage = args.join(" ")
