@@ -10,7 +10,7 @@ module.exports = {
         if (message.author.bot) return;
         var fs = require('fs');
         const {Util} = require('discord.js');
-        const HttpsProxyAgent = require('https-proxy-agent');
+        const {HttpsProxyAgent} = require('https-proxy-agent');
         const http = require('http');
         const {  OpenAI } = require("openai");
 
