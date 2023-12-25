@@ -22,7 +22,7 @@ module.exports = {
         try {
           message.channel.send({content: "Generating response..."})
             const response = await openai.chat.completions.create({
-                model: "ollama/mistral",
+                model: "gpt-3.5-turbo",
                 messages: [
                     {role: "system", content: "You are a helpful assistant who responds succinctly"},
                     {role: "user", content: chatMessage}
