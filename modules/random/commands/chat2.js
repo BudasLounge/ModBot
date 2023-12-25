@@ -30,7 +30,7 @@ module.exports = {
                 role: 'user',
                 content: args.join(" ")
             });
-            await message.channel.send({content: "Generating response..."})
+            await message.reply({content: "Generating response..."})
             const data = JSON.stringify({
                 model: "mistral",
                 messages: formattedMessages,
@@ -62,18 +62,18 @@ module.exports = {
                             char: '\n'
                         });
                         messageChunks.forEach(async chunk => {
-                            await message.reply(chunk);
+                            await message.editReply(chunk);
                         });
                     } catch (e) {
                         this.logger.error("Error parsing JSON: " + e.message);
-                        message.reply("An error occurred while processing the response.\n" + e.message);
+                        message.editReply("An error occurred while processing the response.\n" + e.message);
                     }
                 });
             });
 
             req.on('error', (error) => {
                 this.logger.error("Request error: " + error.message);
-                message.reply("An error occurred while making the request.\n" + error.message);
+                message.editReply("An error occurred while making the request.\n" + error.message);
             });
 
             req.write(data);
@@ -82,7 +82,7 @@ module.exports = {
             return
           } catch (err) {
             this.logger.error("top level error: " + err);
-            message.reply(
+            message.editReply(
               "An error has occured while trying to talk to the bot...\n"+err
             );
           }
