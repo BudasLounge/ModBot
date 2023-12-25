@@ -53,6 +53,7 @@ module.exports = {
                 });
                 res.on('end', () => {
                     try {
+                        this.logger.info("rawData: " , rawData)
                         const parsedData = JSON.parse(rawData);
                         const responseText = parsedData.response; // Extracting the response field
             
