@@ -21,7 +21,7 @@ module.exports = {
                 stream: false
             });
             const options = {
-                host: '192.168.1.9',
+                host: 'localhost',
                 port: 11434,
                 path: '/api/generate',
                 method: 'POST',
