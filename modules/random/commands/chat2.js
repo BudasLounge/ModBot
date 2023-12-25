@@ -30,7 +30,7 @@ module.exports = {
                     'Content-Length': data.length
                 }
             };
-            const req = http.request(options, (res) => {
+            const req = await http.request(options, (res) => {
                 console.log(`Status Code: ${res.statusCode}`);
                 
                 res.on('data', (d) => {
