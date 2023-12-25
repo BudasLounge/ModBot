@@ -54,19 +54,20 @@ module.exports = {
                 res.on('end', () => {
                     try {
                         const parsedData = JSON.parse(rawData);
-                        this.logger.info("parsedData: " , parsedData)
+                        this.logger.info("parsedData: " , parsedData.message)
                         const responseText = parsedData.message.content; // Extracting the response field
             
                         const messageChunks = Util.splitMessage(responseText, {
                             maxLength: 2000,
                             char: '\n'
                         });
+                        botMessage.delete();
                         messageChunks.forEach(async chunk => {
-                            await botMessage.edit(chunk);
+                            await message.reply(chunk);
                         });
                     } catch (e) {
                         this.logger.error("Error parsing JSON: " + e.message);
-                        botMessage.edit("An error occurred while processing the response.\n" + e.message);
+                        message.reply("An error occurred while processing the response.\n" + e.message);
                     }
                 });
             });
