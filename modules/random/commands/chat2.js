@@ -25,7 +25,7 @@ module.exports = {
                     content: msg.content
                 };
             });
-            this.logger.info("formattedMessages: " , formattedMessages)
+            //this.logger.info("formattedMessages: " , formattedMessages)
             // Add the current message
             formattedMessages.push({
                 role: 'user',
