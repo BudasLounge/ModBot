@@ -75,6 +75,10 @@ module.exports = {
         if(filter.isProfane(sayMessage)){
             sayMessage = "That had some bad words in it, bitch, try again";
         }
+        if (!this.audioPlayer) {
+            this.audioPlayer = new AudioPlayer();
+        }
+        this.audioPlayer.state = { status: AudioPlayerStatus.Idle };
         if(sayMessage.length>200){
             message.channel.send({ content: "That message is too long, no more than 200 characters per message!"});
             return;
