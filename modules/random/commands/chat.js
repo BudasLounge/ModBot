@@ -39,7 +39,7 @@ module.exports = {
               res.on('end', () => {
                   try {
                       const parsedData = JSON.parse(rawData);
-                      this.logger.info("parsedData: " , parsedData)
+                      this.logger.info("parsedData from llm: " , parsedData)
                       const responseText = parsedData.response; // Extracting the response field
           
                       const messageChunks = Util.splitMessage(responseText, {
