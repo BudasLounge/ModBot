@@ -19,6 +19,7 @@ module.exports = {
 
             // Create an array of formatted messages for the API
             const formattedMessages = messageArray.map(msg => {
+                this.logger.info("msg: " , msg)
                 return {
                     role: msg.author.id === message.author.id ? 'user' : 'assistant',
                     content: msg.content
