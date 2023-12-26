@@ -13,6 +13,7 @@ module.exports = {
         const {Util} = require('discord.js');
         args.shift()
         chatMessage = args.join(" ")
+        this.logger.info("chatMessage: " , chatMessage)
         try {
             const fetchedMessages = await message.channel.messages.fetch({ limit: 10 });
             this.logger.info("fetchedMessages: " , fetchedMessages)
