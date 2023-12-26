@@ -40,7 +40,7 @@ module.exports = {
                   try {
                       const parsedData = JSON.parse(rawData);
                       this.logger.info("parsedData: " , parsedData)
-                      const responseText = parsedData.content; // Extracting the response field
+                      const responseText = parsedData.response; // Extracting the response field
           
                       const messageChunks = Util.splitMessage(responseText, {
                           maxLength: 2000,
