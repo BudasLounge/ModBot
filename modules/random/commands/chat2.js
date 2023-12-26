@@ -26,12 +26,13 @@ module.exports = {
                     content: msg.content
                 };
             });
-            this.logger.info("formattedMessages: " , formattedMessages)
             // Add the current message
             formattedMessages.push({
                 role: 'user',
                 content: args.join(" ")
             });
+            
+            this.logger.info("formattedMessages: " , formattedMessages)
             const botMessage = await message.reply({content: "Generating response..."})
             const data = JSON.stringify({
                 model: "mistral",
