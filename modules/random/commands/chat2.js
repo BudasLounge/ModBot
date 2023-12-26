@@ -15,6 +15,7 @@ module.exports = {
         chatMessage = args.join(" ")
         try {
             const fetchedMessages = await message.channel.messages.fetch({ limit: 10 });
+            this.logger.info("fetchedMessages: " , fetchedMessages)
             const messageArray = Array.from(fetchedMessages.values()).reverse(); // Ensure chronological order
             this.logger.info("messageArray: " , messageArray)
             // Create an array of formatted messages for the API
