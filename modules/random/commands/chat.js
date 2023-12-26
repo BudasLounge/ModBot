@@ -38,6 +38,7 @@ module.exports = {
               });
               res.on('end', () => {
                   try {
+                    this.logger.info("rawData from llm: " , rawData)
                       const parsedData = JSON.parse(rawData);
                       this.logger.info("parsedData from llm: " , parsedData)
                       const responseText = parsedData.response; // Extracting the response field
