@@ -39,8 +39,8 @@ module.exports = {
               res.on('end', () => {
                   try {
                       const parsedData = JSON.parse(rawData);
-                      this.logger.info("parsedData: " , parsedData.message)
-                      const responseText = parsedData.message.content; // Extracting the response field
+                      this.logger.info("parsedData: " , parsedData)
+                      const responseText = parsedData.content; // Extracting the response field
           
                       const messageChunks = Util.splitMessage(responseText, {
                           maxLength: 2000,
