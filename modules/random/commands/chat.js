@@ -18,7 +18,7 @@ module.exports = {
           const botMessage = await message.reply({content: "Generating response..."})
           const data = JSON.stringify({
               model: "mistral",
-              messages: chatMessage,
+              prompt: chatMessage,
               stream: false
           });
           const options = {
