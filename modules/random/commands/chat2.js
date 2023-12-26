@@ -16,7 +16,7 @@ module.exports = {
         try {
             const fetchedMessages = await message.channel.messages.fetch({ limit: 10 });
             const messageArray = Array.from(fetchedMessages.values()).reverse(); // Ensure chronological order
-
+            this.logger.info("messageArray: " , messageArray)
             // Create an array of formatted messages for the API
             const formattedMessages = messageArray.map(msg => {
                 this.logger.info("msg: " , msg)
