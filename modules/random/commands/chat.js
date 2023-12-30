@@ -16,7 +16,7 @@ module.exports = {
         this.logger.info("chatMessage: " , chatMessage)
         try {
             const fetchedMessages = await message.channel.messages.fetch({ 
-                limit: 100,
+                limit: 10,
                 before: message.id,
             }).then(messages => messages.filter(msg => msg.author.id === message.author.id || msg.author.bot));
             this.logger.info("fetchedMessages: " , fetchedMessages)
@@ -31,8 +31,6 @@ module.exports = {
                 };
             });
             
-            this.logger.info("formattedMessages: " , formattedMessages)
-            const botMessage = await message.reply({content: `Generating response...\nTaking ${formattedMessages.length} messages into account.`})
             var data;
             if(args[0].includes("{")){
                 //modelName = args[0].split("{")[1].split("}")[0]
@@ -59,6 +57,10 @@ module.exports = {
                 role: 'user',
                 content: args.join(" ")
             });
+            
+            this.logger.info("formattedMessages: " , formattedMessages)
+            const botMessage = await message.reply({content: `Generating response...\nTaking ${formattedMessages.length} messages into account.`})
+
             const options = {
                 host: 'localhost',
                 port: 11434,
