@@ -30,17 +30,13 @@ module.exports = {
                     content: msg.content
                 };
             });
-            // Add the current message
-            formattedMessages.push({
-                role: 'user',
-                content: args.join(" ")
-            });
             
             this.logger.info("formattedMessages: " , formattedMessages)
             const botMessage = await message.reply({content: `Generating response...\nTaking ${formattedMessages.length} messages into account.`})
             var data;
             if(args[0].includes("{")){
-                modelName = args[0].split("{")[1].split("}")[0]
+                //modelName = args[0].split("{")[1].split("}")[0]
+                modelName = "mixtral"
                 this.logger.info("modelName: " , modelName)
                 data = JSON.stringify({
                     model: modelName,
@@ -50,6 +46,7 @@ module.exports = {
                     },
                     stream: false
                 });
+                args.shift()
             }else{
                 data = JSON.stringify({
                     model: "mistral",
@@ -57,7 +54,11 @@ module.exports = {
                     stream: false
                 });
             }
-            
+            // Add the current message
+            formattedMessages.push({
+                role: 'user',
+                content: args.join(" ")
+            });
             const options = {
                 host: 'localhost',
                 port: 11434,
