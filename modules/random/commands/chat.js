@@ -1,7 +1,7 @@
 module.exports = {
     name: 'chat',
     description: 'Talk to modbot!',
-    syntax: 'chat [your message to the bot]',
+    syntax: 'chat [{model_name}] [your message to the bot]',
     num_args: 2,//minimum amount of arguments to accept
     args_to_lower: false,//if the arguments should be lower case
     needs_api: false,//if this command needs access to the api
@@ -38,11 +38,23 @@ module.exports = {
             
             this.logger.info("formattedMessages: " , formattedMessages)
             const botMessage = await message.reply({content: "Generating response..."})
-            const data = JSON.stringify({
-                model: "mixtral",
-                messages: formattedMessages,
-                stream: false
-            });
+            var data;
+            if(args[0].contains("{")){
+                modelName = args[0].split("{")[1].split("}")[0]
+                this.logger.info("modelName: " , modelName)
+                data = JSON.stringify({
+                    model: modelName,
+                    messages: formattedMessages,
+                    stream: false
+                });
+            }else{
+                data = JSON.stringify({
+                    model: "mistral",
+                    messages: formattedMessages,
+                    stream: false
+                });
+            }
+            
             const options = {
                 host: 'localhost',
                 port: 11434,
