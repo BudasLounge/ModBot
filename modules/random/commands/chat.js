@@ -39,7 +39,7 @@ module.exports = {
             this.logger.info("formattedMessages: " , formattedMessages)
             const botMessage = await message.reply({content: "Generating response..."})
             var data;
-            if(args[0].contains("{")){
+            if(args[0].includes("{")){
                 modelName = args[0].split("{")[1].split("}")[0]
                 this.logger.info("modelName: " , modelName)
                 data = JSON.stringify({
