@@ -45,6 +45,9 @@ module.exports = {
                 data = JSON.stringify({
                     model: modelName,
                     messages: formattedMessages,
+                    options: {
+                        num_ctx: 32000,
+                    },
                     stream: false
                 });
             }else{
