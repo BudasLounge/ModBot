@@ -16,7 +16,7 @@ module.exports = {
         this.logger.info("chatMessage: " , chatMessage)
         try {
             const fetchedMessages = await message.channel.messages.fetch({ 
-                limit: 10,
+                limit: 100,
                 before: message.id,
             }).then(messages => messages.filter(msg => msg.author.id === message.author.id || msg.author.bot));
             this.logger.info("fetchedMessages: " , fetchedMessages)
