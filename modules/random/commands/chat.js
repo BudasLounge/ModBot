@@ -37,7 +37,7 @@ module.exports = {
             });
             
             this.logger.info("formattedMessages: " , formattedMessages)
-            const botMessage = await message.reply({content: "Generating response..."})
+            const botMessage = await message.reply({content: `Generating response...\nTaking ${formattedMessages.length} messages into account.`})
             var data;
             if(args[0].includes("{")){
                 modelName = args[0].split("{")[1].split("}")[0]
