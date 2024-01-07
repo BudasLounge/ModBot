@@ -17,8 +17,9 @@ async function onUserJoin(member){
         logger.error(error);
     }
     if(respServer.discord_servers[0]){
+        if(respServer.discord_servers[0].welcome_channel_id === "none") return;
             member.guild.channels.cache.find(channel => channel.id === respServer.discord_servers[0].welcome_channel_id).send({ content: "Hi! <@" + member.id + "> "+respServer.discord_servers[0].welcome_message});
-            //member.roles.add(respServer.discord_servers[0].default_role_id);
+            member.roles.add(respServer.discord_servers[0].default_role_id);
     }
 }
 /*
