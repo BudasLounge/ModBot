@@ -9,7 +9,7 @@ module.exports = {
     async execute(message, args, extra) {
         args.shift();
         var query = args.join("+");
-        var finalQuery = "https://letmegooglethat.com/?q="+query;
+        var finalQuery = "https://lmgt.org/?q="+query;
         message.channel.send({content: finalQuery});
     }
 }
