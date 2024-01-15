@@ -1,7 +1,7 @@
 module.exports = {
     name: 'name_gen',
     description: 'Generate "words" by randomly assembling letters.',
-    syntax: 'name_gen [# of words to make] [minimum # of characters] [maximum # of characters]',
+    syntax: 'name_gen [# of words] [min # of chars] [max # of chars]',
     num_args: 1,//minimum amount of arguments to accept
     args_to_lower: false,//if the arguments should be lower case
     needs_api: false,//if this command needs access to the api
