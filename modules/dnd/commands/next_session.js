@@ -108,7 +108,7 @@ module.exports = {
                 // Parse the date-time string into a JavaScript Date object
                 const dateTimestamp = new Date(respDndSession.dnd_campaigns[0].next_session);
                 // Schedule the job
-                schedule.scheduleJob(respDndSession.dnd_campaigns[0].module+"-COMMAND", dateTimestamp, async function() {
+                await schedule.scheduleJob(respDndSession.dnd_campaigns[0].module+"-COMMAND", dateTimestamp, async function() {
                     try{
                         logger.info(`Sending message for session ${respDndSession.dnd_campaigns[0].module}`);
                         const guild = await global.client.guilds.fetch('650865972051312673');
