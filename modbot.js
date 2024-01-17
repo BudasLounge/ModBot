@@ -94,6 +94,7 @@ async function botInit () {
     });
     const scheduledJobs = schedule.scheduledJobs;
     logger.info('All scheduled jobs:', scheduledJobs);
+    logger.info("Initialization of DnD scheduling messages complete!");
 }
 
 client.on('ready', botInit);

@@ -102,7 +102,7 @@ module.exports = {
             if (existingJob) {
                 existingJob.cancel();
             }
-            logger.info(`Scheduling message for session ${respDndSession.dnd_campaigns[0].module}`);
+            logger.info(`Scheduling message for session ${respDndSession.dnd_campaigns[0].module} via COMMAND`);
 
             // Parse the date-time string into a JavaScript Date object
             const dateTimestamp = new Date(respDndSession.dnd_campaigns[0].next_session);
