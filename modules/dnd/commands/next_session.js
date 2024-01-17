@@ -113,9 +113,7 @@ module.exports = {
                 // Parse the date-time string into a JavaScript Date object
                 const dateTimestamp = new Date(respDndSession.dnd_campaigns[0].next_session);
                 // Schedule the job
-                await schedule.scheduleJob(respDndSession.dnd_campaigns[0].module+"-COMMAND", dateTimestamp, async function() {
-                    var LogHandler = require('./core/js/log_handler.js');
-                    var logger = LogHandler.build_logger(__dirname + "/" + config.log_folder);
+                await schedule.scheduleJob(respDndSession.dnd_campaigns[0].module+"-COMMAND", dateTimestamp, async function(logger) {
                     try{
                         logger.info(`Sending message for session ${respDndSession.dnd_campaigns[0].module}`);
                         const guild = await global.client.guilds.fetch('650865972051312673');
