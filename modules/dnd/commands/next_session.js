@@ -85,6 +85,7 @@ module.exports = {
             await message.channel.setTopic("Next Session: <t:" + newDate.toString() + ":R>" );
         }else{
             try{
+                this.logger.info("Setting date time, scheduling message, and setting channel topic")
                 var dateTime = args[1] + " " + args[2];
                 var unixTimeStamp = Math.floor(new Date(dateTime).getTime()/1000);
                 var respNextSession = "";
