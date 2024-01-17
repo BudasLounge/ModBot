@@ -125,7 +125,7 @@ module.exports = {
                         console.log(`Sending message for session ${respDndSession.dnd_campaigns[0].module}`);
                         const guild = await message.client.guilds.fetch('650865972051312673');
                             if (!guild) {
-                                console.log(`Guild not found for ID 650865972051312673`);
+                                console.error(`Guild not found for ID 650865972051312673`);
                                 return;
                             }
                         const channel = await guild.channels.resolve(respDndSession.dnd_campaigns[0].schedule_channel);
