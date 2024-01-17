@@ -65,7 +65,7 @@ async function botInit () {
         logger.error(err.message);
     }
     const sessions = respDNDCampaigns.dnd_campaigns;
-    logger.info(respDNDCampaigns.dnd_campaigns)
+    logger.info(respDNDCampaigns)
     sessions.forEach(session => {
         logger.info(`Scheduling message for session ${session.module}`);
         const { next_session, schedule_channel } = session;
