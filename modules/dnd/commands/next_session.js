@@ -97,7 +97,7 @@ module.exports = {
                 }catch(err2){
                     this.logger.error(err2.message);
                 }
-                await message.channel.setTopic("Next Session: <t:" + unixTimeStamp.toString() + ":R>" );
+                message.channel.setTopic("Next Session: <t:" + unixTimeStamp.toString() + ":R>" );
 
 
                 const existingJob = schedule.scheduledJobs[respDndSession.dnd_campaigns[0].module];
