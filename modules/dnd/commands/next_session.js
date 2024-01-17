@@ -120,12 +120,12 @@ module.exports = {
                 // Parse the date-time string into a JavaScript Date object
                 const dateTimestamp = new Date(respDndSession.dnd_campaigns[0].next_session);
                 // Schedule the job
-                await schedule.scheduleJob(respDndSession.dnd_campaigns[0].module+"-COMMAND", dateTimestamp, async function(logger = this.logger) {
+                await schedule.scheduleJob(respDndSession.dnd_campaigns[0].module+"-COMMAND", dateTimestamp, async function() {
                     try{
-                        logger.info(`Sending message for session ${respDndSession.dnd_campaigns[0].module}`);
+                        console.log(`Sending message for session ${respDndSession.dnd_campaigns[0].module}`);
                         const guild = await message.client.guilds.fetch('650865972051312673');
                             if (!guild) {
-                                logger.error(`Guild not found for ID 650865972051312673`);
+                                console.log(`Guild not found for ID 650865972051312673`);
                                 return;
                             }
                         const channel = await guild.channels.resolve(respDndSession.dnd_campaigns[0].schedule_channel);
@@ -133,7 +133,7 @@ module.exports = {
                             var unixTimeStamp = Math.floor(new Date(respDndSession.dnd_campaigns[0].next_session).getTime()/1000);
                             channel.send({content: "<@&"+respDndSession.dnd_campaigns[0].role_id.toString()+">, the session starts <t:" + unixTimeStamp.toString() + ":R>"});
                         }else {
-                            logger.error(`Channel not found for ID ${respDndSession.dnd_campaigns[0].schedule_channel} in guild ${guild.id}`);
+                            console.error(`Channel not found for ID ${respDndSession.dnd_campaigns[0].schedule_channel} in guild ${guild.id}`);
                         }
                     }catch(err){
                         console.error(err.message);
