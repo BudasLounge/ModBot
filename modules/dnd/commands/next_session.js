@@ -95,6 +95,34 @@ module.exports = {
                 this.logger.error(err2.message);
             }
             message.channel.setTopic("Next Session: <t:" + unixTimeStamp.toString() + ":R>" );
+
+            const sessions = respDNDCampaigns.dnd_campaigns;
+            logger.info(respDNDCampaigns)
+            sessions.forEach(session => {
+                logger.info(`Scheduling message for session ${session.module}`);
+                const { next_session, schedule_channel } = session;
+
+                // Parse the date-time string into a JavaScript Date object
+                const dateTime = new Date(next_session);
+
+                // Schedule the job
+                schedule.scheduleJob(dateTime, async function() {
+                    const guild = await client.guilds.fetch('650865972051312673');
+                        if (!guild) {
+                            logger.error(`Guild not found for ID 650865972051312673`);
+                            return;
+                        }
+                    const channel = await guild.channels.resolve(schedule_channel);
+                    if (channel) {
+                        var unixTimeStamp = Math.floor(new Date(session.next_session).getTime()/1000);
+                        channel.send({content: "<@&"+session.role_id.toString()+">, the session starts <t:" + unixTimeStamp.toString() + ":R>"});
+                    }else {
+                        logger.error(`Channel not found for ID ${schedule_channel} in guild ${guild.id}`);
+                    }
+                });
+            });
+            const scheduledJobs = schedule.scheduledJobs;
+            logger.info('All scheduled jobs:', scheduledJobs);
         }
     }
 }

@@ -68,13 +68,13 @@ async function botInit () {
     logger.info(respDNDCampaigns)
     sessions.forEach(session => {
         logger.info(`Scheduling message for session ${session.module}`);
-        const { next_session, schedule_channel } = session;
+        const { module, next_session, schedule_channel } = session;
 
         // Parse the date-time string into a JavaScript Date object
         const dateTime = new Date(next_session);
 
         // Schedule the job
-        schedule.scheduleJob(dateTime, async function() {
+        schedule.scheduleJob(module, dateTime, async function() {
             const guild = await client.guilds.fetch('650865972051312673');
                 if (!guild) {
                     logger.error(`Guild not found for ID 650865972051312673`);
