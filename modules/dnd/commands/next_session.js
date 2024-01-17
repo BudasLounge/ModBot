@@ -116,7 +116,7 @@ module.exports = {
                 await schedule.scheduleJob(respDndSession.dnd_campaigns[0].module+"-COMMAND", dateTimestamp, async function(logger, message) {
                     try{
                         logger.info(`Sending message for session ${respDndSession.dnd_campaigns[0].module}`);
-                        const guild = await message.guild.fetch('650865972051312673');
+                        const guild = await message.client.guilds.fetch('650865972051312673');
                             if (!guild) {
                                 logger.error(`Guild not found for ID 650865972051312673`);
                                 return;
@@ -132,7 +132,7 @@ module.exports = {
                         logger.error(err.message);
                     }
                 });
-                
+
                 const scheduledJobs = schedule.scheduledJobs;
                 logger.info('All scheduled jobs:', scheduledJobs);
             }catch(err){
