@@ -84,6 +84,7 @@ module.exports = {
             }
             await message.channel.setTopic("Next Session: <t:" + newDate.toString() + ":R>" );
         }else{
+            try{
             var dateTime = args[1] + " " + args[2];
             var unixTimeStamp = Math.floor(new Date(dateTime).getTime()/1000);
             var respNextSession = "";
@@ -124,6 +125,9 @@ module.exports = {
             });
             const scheduledJobs = schedule.scheduledJobs;
             logger.info('All scheduled jobs:', scheduledJobs);
+        }catch(err){
+            this.logger.error(err.message);
+        }
         }
     }
 }
