@@ -123,8 +123,8 @@ module.exports = {
                             }
                         const channel = await guild.channels.resolve(respDndSession.dnd_campaigns[0].schedule_channel);
                         if (channel) {
-                            var unixTimeStamp = Math.floor(new Date(session.next_session).getTime()/1000);
-                            channel.send({content: "<@&"+session.role_id.toString()+">, the session starts <t:" + unixTimeStamp.toString() + ":R>"});
+                            var unixTimeStamp = Math.floor(new Date(respDndSession.dnd_campaigns[0].next_session).getTime()/1000);
+                            channel.send({content: "<@&"+respDndSession.dnd_campaigns[0].role_id.toString()+">, the session starts <t:" + unixTimeStamp.toString() + ":R>"});
                         }else {
                             logger.error(`Channel not found for ID ${respDndSession.dnd_campaigns[0].schedule_channel} in guild ${guild.id}`);
                         }
