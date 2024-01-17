@@ -81,6 +81,8 @@ async function botInit () {
                 channel.send({content: "<@&"+session.role_id.toString()+">, the session starts <t:" + unixTimeStamp.toString() + ":R>"});
             }
         });
+        const scheduledJobs = schedule.scheduledJobs;
+        logger.info('All scheduled jobs:', scheduledJobs);
     });
 }
 
