@@ -98,7 +98,14 @@ module.exports = {
                     this.logger.error(err2.message);
                 }
                 message.channel.setTopic("Next Session: <t:" + unixTimeStamp.toString() + ":R>" );
-
+                
+                try{
+                    respDndSession = await api.get("dnd_campaign",{
+                        schedule_channel:message.channel.id
+                    });
+                }catch(err){
+                    this.logger.error(err.message);
+                }
 
                 const existingJob = schedule.scheduledJobs[respDndSession.dnd_campaigns[0].module];
                 if (existingJob) {
