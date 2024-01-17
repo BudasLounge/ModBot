@@ -75,10 +75,17 @@ async function botInit () {
 
         // Schedule the job
         schedule.scheduleJob(dateTime, async function() {
-            const channel = await client.channels.fetch(schedule_channel);
+            const guild = await client.guilds.fetch('650865972051312673');
+                if (!guild) {
+                    logger.error(`Guild not found for ID 650865972051312673`);
+                    return;
+                }
+            const channel = await guild.channels.resolve(schedule_channel);
             if (channel) {
                 var unixTimeStamp = Math.floor(new Date(session.next_session).getTime()/1000);
                 channel.send({content: "<@&"+session.role_id.toString()+">, the session starts <t:" + unixTimeStamp.toString() + ":R>"});
+            }else {
+                logger.error(`Channel not found for ID ${schedule_channel} in guild ${guild.id}`);
             }
         });
     });
