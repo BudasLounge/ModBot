@@ -78,6 +78,7 @@ async function botInit () {
         }
         // Schedule the job
         schedule.scheduleJob(module, dateTime, async function() {
+            logger.info(`Sending message for session ${session.module}`);
             const guild = await client.guilds.fetch('650865972051312673');
                 if (!guild) {
                     logger.error(`Guild not found for ID 650865972051312673`);
