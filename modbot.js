@@ -66,7 +66,7 @@ async function botInit () {
     }
     const sessions = respDNDCampaigns.dnd_campaigns;
     logger.info(respDNDCampaigns)
-    sessions.forEach(session => {
+    sessions.forEach(session => async function() {
         logger.info(`Scheduling message for session ${session.module}`);
         const { module, next_session, schedule_channel } = session;
 
@@ -77,7 +77,7 @@ async function botInit () {
             existingJob.cancel();
         }
         // Schedule the job
-        schedule.scheduleJob(module, dateTime, async function() {
+        await schedule.scheduleJob(module, dateTime, async function() {
             logger.info(`Sending message for session ${session.module}`);
             const guild = await client.guilds.fetch('650865972051312673');
                 if (!guild) {
