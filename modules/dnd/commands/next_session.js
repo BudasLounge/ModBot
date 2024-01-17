@@ -142,6 +142,7 @@ module.exports = {
 
                 const scheduledJobs = schedule.scheduledJobs;
                 logger.info('All scheduled jobs:', scheduledJobs);
+                
             }catch(err){
                 this.logger.error(err.message);
             }
