@@ -72,7 +72,10 @@ async function botInit () {
 
         // Parse the date-time string into a JavaScript Date object
         const dateTime = new Date(next_session);
-
+        const existingJob = schedule.scheduledJobs[module];
+        if (existingJob) {
+            existingJob.cancel();
+        }
         // Schedule the job
         schedule.scheduleJob(module, dateTime, async function() {
             const guild = await client.guilds.fetch('650865972051312673');
