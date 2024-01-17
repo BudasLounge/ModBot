@@ -103,6 +103,10 @@ module.exports = {
                 if (existingJob) {
                     existingJob.cancel();
                 }
+                const existingJobCommand = schedule.scheduledJobs[respDndSession.dnd_campaigns[0].module+"-COMMAND"];
+                if (existingJobCommand) {
+                    existingJobCommand.cancel();
+                }
                 logger.info(`Scheduling message for session ${respDndSession.dnd_campaigns[0].module} via COMMAND`);
 
                 // Parse the date-time string into a JavaScript Date object
