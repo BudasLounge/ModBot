@@ -58,7 +58,7 @@ async function botInit () {
     var respDNDCampaigns;
     try{
         respDNDCampaigns = await api.get("dnd_campaign",{
-            active: "true",
+            //active: "true",
             _limit: 200
         })
     }catch(err){
