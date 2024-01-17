@@ -71,6 +71,7 @@ async function botInit () {
 
         // Parse the date-time string into a JavaScript Date object
         const dateTime = new Date(next_session);
+        dateTime.setDate(dateTime.getDate() - 1);
         const existingJob = schedule.scheduledJobs[module];
         if (existingJob) {
             existingJob.cancel();
