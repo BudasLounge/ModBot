@@ -124,7 +124,7 @@ module.exports = {
                             logger.error(`Channel not found for ID ${respDndSession.dnd_campaigns[0].schedule_channel} in guild ${guild.id}`);
                         }
                     }catch(err){
-                        this.logger.error(err.message);
+                        logger.error(err.message);
                     }
                 });
                 const scheduledJobs = schedule.scheduledJobs;
