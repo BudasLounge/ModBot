@@ -49,6 +49,37 @@ async function botInit () {
         channel.send({ content: config.startup_messages.restart});
     }
     client.user.setActivity(config.bot_activity.name, { type: config.bot_activity.type });
+
+    logger.info("Initialization of DnD scheduling messages starting...");
+    const schedule = require('node-schedule');
+    const APIClient = require('./core/js/APIClient.js');
+    const api = new APIClient();
+
+    var respDNDCampaigns;
+    try{
+        respDNDCampaigns = await api.get("dnd_campaign",{
+            active: true
+        })
+    }catch(err){
+        logger.error(err.message);
+    }
+    const sessions = respDNDCampaigns.dnd_campaigns;
+    sessions.forEach(session => {
+        logger.info(`Scheduling message for session ${session.module}`);
+        const { next_session, schedule_channel } = session;
+
+        // Parse the date-time string into a JavaScript Date object
+        const dateTime = new Date(next_session);
+
+        // Schedule the job
+        schedule.scheduleJob(dateTime, async function() {
+            const channel = await client.channels.fetch(schedule_channel);
+            if (channel) {
+                var unixTimeStamp = Math.floor(new Date(session.next_session).getTime()/1000);
+                channel.send({content: "<@&"+session.role_id.toString()+">, the session starts <t:" + unixTimeStamp.toString() + ":R>"});
+            }
+        });
+    });
 }
 
 client.on('ready', botInit);
