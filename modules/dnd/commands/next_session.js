@@ -119,6 +119,7 @@ module.exports = {
 
                 // Parse the date-time string into a JavaScript Date object
                 const dateTimestamp = new Date(respDndSession.dnd_campaigns[0].next_session);
+                dateTimestamp.setDate(dateTimestamp.getDate() - 1);
                 // Schedule the job
                 await schedule.scheduleJob(respDndSession.dnd_campaigns[0].module+"-COMMAND", dateTimestamp, async function() {
                     try{
