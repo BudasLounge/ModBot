@@ -108,7 +108,7 @@ module.exports = {
             const dateTimestamp = new Date(respDndSession.dnd_campaigns[0].next_session);
 
             // Schedule the job
-            schedule.scheduleJob(respDndSession.dnd_campaigns[0].module, dateTimestamp, async function() {
+            schedule.scheduleJob(respDndSession.dnd_campaigns[0].module+"-COMMAND", dateTimestamp, async function() {
                 logger.info(`Sending message for session ${respDndSession.dnd_campaigns[0].module}`);
                 const guild = await global.client.guilds.fetch('650865972051312673');
                     if (!guild) {
