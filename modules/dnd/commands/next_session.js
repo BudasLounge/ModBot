@@ -106,7 +106,7 @@ module.exports = {
 
             // Parse the date-time string into a JavaScript Date object
             const dateTimestamp = new Date(respDndSession.dnd_campaigns[0].next_session);
-
+            this.logger.info(global.client)
             // Schedule the job
             schedule.scheduleJob(respDndSession.dnd_campaigns[0].module+"-COMMAND", dateTimestamp, async function() {
                 logger.info(`Sending message for session ${respDndSession.dnd_campaigns[0].module}`);
