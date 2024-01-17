@@ -98,7 +98,7 @@ module.exports = {
                     this.logger.error(err2.message);
                 }
                 message.channel.setTopic("Next Session: <t:" + unixTimeStamp.toString() + ":R>" );
-                
+
                 try{
                     respDndSession = await api.get("dnd_campaign",{
                         schedule_channel:message.channel.id
@@ -136,7 +136,7 @@ module.exports = {
                             logger.error(`Channel not found for ID ${respDndSession.dnd_campaigns[0].schedule_channel} in guild ${guild.id}`);
                         }
                     }catch(err){
-                        logger.error(err.message);
+                        this.logger.error(err.message);
                     }
                 });
 
