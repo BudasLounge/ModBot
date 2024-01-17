@@ -120,10 +120,9 @@ module.exports = {
                 // Parse the date-time string into a JavaScript Date object
                 const dateTimestamp = new Date(respDndSession.dnd_campaigns[0].next_session);
                 // Schedule the job
-                const logger = this.logger;
                 await schedule.scheduleJob(respDndSession.dnd_campaigns[0].module+"-COMMAND", dateTimestamp, async function() {
                     try{
-                        logger.info(`Sending message for session ${respDndSession.dnd_campaigns[0].module}`);
+                        console.log(`Sending message for session ${respDndSession.dnd_campaigns[0].module}`);
                         const guild = await message.client.guilds.fetch('650865972051312673');
                             if (!guild) {
                                 console.log(`Guild not found for ID 650865972051312673`);
