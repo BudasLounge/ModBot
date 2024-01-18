@@ -148,48 +148,45 @@ async function getLastMatches(username, numberOfGames, logger, userId) {
     puuid = summonerResponse.data.puuid;
     await storePuuidInDatabase(userId, puuid);
   }
-  let blueSideWins = 0;
-  let blueSideLosses = 0;
-  let redSideWins = 0;
-  let redSideLosses = 0;
-  let blueSideCount = 0;
-  let redSideCount = 0;
-  let startIndex = 0;
-  const MAX_MATCHES_PER_REQUEST = 100;
-
-  while (numberOfGames > 0) {
-    const count = Math.min(numberOfGames, MAX_MATCHES_PER_REQUEST);
-    const matchIdsResponse = await axios.get(`${RIOT_API_BASE_URL}by-puuid/${puuid}/ids?start=${startIndex}&count=${count}`, {
-      headers: { "X-Riot-Token": RIOT_API_KEY }
-    });
-    const matchIds = matchIdsResponse.data;
-    startIndex += count;
-    numberOfGames -= count;
+  let queueStats = {};
 
     for (const matchId of matchIds) {
-        const matchDetails = await fetchMatchDetails(matchId, puuid, logger);
-        if (matchDetails) {
-          const participant = matchDetails.info.participants.find(p => p.puuid === puuid);
-          if (participant.teamId === 100) {
-            blueSideCount++;
-            if (participant.win) {
-              blueSideWins++;
-            } else {
-              blueSideLosses++;
-            }
-          } else if (participant.teamId === 200) {
-            redSideCount++;
-            if (participant.win) {
-              redSideWins++;
-            } else {
-              redSideLosses++;
-            }
-          }
+    const matchDetails = await fetchMatchDetails(matchId, puuid, logger);
+    if (matchDetails) {
+        const participant = matchDetails.info.participants.find(p => p.puuid === puuid);
+        const queueId = matchDetails.info.queueId;
+
+        // Initialize the queueStats object for each queueId
+        if (!queueStats[queueId]) {
+        queueStats[queueId] = {
+            blueSideWins: 0,
+            blueSideLosses: 0,
+            blueSideCount: 0,
+            redSideWins: 0,
+            redSideLosses: 0,
+            redSideCount: 0
+        };
+        }
+
+        if (participant.teamId === 100) {
+        queueStats[queueId].blueSideCount++;
+        if (participant.win) {
+            queueStats[queueId].blueSideWins++;
+        } else {
+            queueStats[queueId].blueSideLosses++;
+        }
+        } else if (participant.teamId === 200) {
+        queueStats[queueId].redSideCount++;
+        if (participant.win) {
+            queueStats[queueId].redSideWins++;
+        } else {
+            queueStats[queueId].redSideLosses++;
+        }
         }
     }
-  }
+    }
 
-  return { blueSideCount, redSideCount, blueSideWins, blueSideLosses, redSideWins, redSideLosses };
+    return queueStats;
 }
 
 module.exports = {
@@ -222,20 +219,24 @@ module.exports = {
         message.channel.send(`Analyzing matches for ${summonerName}, please wait...`);
 
         try {
-            const { blueSideCount, redSideCount, blueSideWins, blueSideLosses, redSideWins, redSideLosses } = await getLastMatches(summonerName, gameCount, this.logger, message.author.id);
-            
-            const blueSideWinrate = (blueSideWins / (blueSideWins + blueSideLosses) * 100).toFixed(2);
-            const redSideWinrate = (redSideWins / (redSideWins + redSideLosses) * 100).toFixed(2);
-            
+            const queueStats = await getLastMatches(summonerName, gameCount, this.logger, message.author.id);
             let embed = new MessageEmbed()
                 .setTitle(`Side Counts and Winrates for ${summonerName}`)
-                .setColor('#0099ff')
-                .addField('Blue Side', `count: ${blueSideCount} (winrate: ${blueSideWinrate}%)`, true)
-                .addField('Red Side', `count: ${redSideCount} (winrate: ${redSideWinrate}%)`, true)
-                .setTimestamp();
-            
+                .setColor('#0099ff');
+          
+            Object.keys(queueStats).forEach(queueId => {
+              const { blueSideCount, blueSideWins, blueSideLosses, redSideCount, redSideWins, redSideLosses } = queueStats[queueId];
+              const queueName = queueTypeMapping[queueId] || `Queue ${queueId}`;
+              const blueSideWinrate = (blueSideWins / (blueSideWins + blueSideLosses) * 100).toFixed(2);
+              const redSideWinrate = (redSideWins / (redSideWins + redSideLosses) * 100).toFixed(2);
+          
+              embed.addField(`${queueName} - Blue Side`, `${blueSideCount} (${blueSideWinrate}%)`, true);
+              embed.addField(`${queueName} - Red Side`, `${redSideCount} (${redSideWinrate}%)`, true);
+            });
+          
+            embed.setTimestamp();
             await message.channel.send({ embeds: [embed] });
-            } catch (error) {
+        } catch (error) {
             this.logger.error('Error fetching data:', error);
             message.channel.send('An error occurred while retrieving match history. Please try again later.');
         }
