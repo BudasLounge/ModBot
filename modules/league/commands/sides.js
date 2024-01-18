@@ -237,21 +237,20 @@ module.exports = {
                 .setTitle(`Side Counts and Winrates for ${summonerName}`)
                 .setColor('#0099ff');
           
-            Object.keys(queueStats).forEach(queueId => {
-              const { blueSideCount, blueSideWins, blueSideLosses, redSideCount, redSideWins, redSideLosses } = queueStats[queueId];
+            for (const [queueId, stats] of Object.entries(queueStats)) {
               const queueName = queueTypeMapping[queueId] || `Queue ${queueId}`;
-              const blueSideWinrate = (blueSideWins / (blueSideWins + blueSideLosses) * 100).toFixed(2);
-              const redSideWinrate = (redSideWins / (redSideWins + redSideLosses) * 100).toFixed(2);
+              const blueSideWinrate = ((stats.blueSideWins / (stats.blueSideWins + stats.blueSideLosses)) * 100).toFixed(2);
+              const redSideWinrate = ((stats.redSideWins / (stats.redSideWins + stats.redSideLosses)) * 100).toFixed(2);
           
-              embed.addField(`${queueName} - Blue Side`, `${blueSideCount} (${blueSideWinrate}%)`, true);
-              embed.addField(`${queueName} - Red Side`, `${redSideCount} (${redSideWinrate}%)`, true);
-            });
+              let queueFieldText = `Blue Side: ${stats.blueSideCount} (${blueSideWinrate}%) | Red Side: ${stats.redSideCount} (${redSideWinrate}%)`;
+              embed.addField(queueName, queueFieldText, false);
+            }
           
             embed.setTimestamp();
             await message.channel.send({ embeds: [embed] });
-        } catch (error) {
+          } catch (error) {
             this.logger.error('Error fetching data:', error);
             message.channel.send('An error occurred while retrieving match history. Please try again later.');
-        }
+          }
     }
 };
