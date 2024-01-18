@@ -175,6 +175,7 @@ async function getLastMatches(username, numberOfGames, logger, userId) {
         if (matchDetails) {
           const participant = matchDetails.info.participants.find(p => p.puuid === puuid);
           const queueId = matchDetails.info.queueId;
+          logger.info(`Match ${matchId} is a ${queueTypeMapping[queueId]} match.`);
   
           // Initialize the queueStats object for each queueId
           if (!queueStats[queueId]) {
