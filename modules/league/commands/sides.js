@@ -268,7 +268,7 @@ module.exports = {
               } else {
                 // Special handling for the Arena queue
                 for (let i = 1; i <= 4; i++) {
-                  const teamStats = stats[`team${i}`];
+                  const teamStats = stats[`team${i}`] || { wins: 0, losses: 0, count: 0 };
                   const winCount = teamStats.wins;
                   const lossCount = teamStats.losses;
                   const totalCount = teamStats.count;
