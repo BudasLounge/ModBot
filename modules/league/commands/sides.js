@@ -193,9 +193,9 @@ async function getLastMatches(username, numberOfGames, logger, userId) {
 }
 
 module.exports = {
-    name: 'sidecounts',
+    name: 'sides',
     description: 'Shows how many times you played on Red or Blue side',
-    syntax: 'sidecounts [summoner name] [number of games up to 1000](optional)',
+    syntax: 'sides [summoner name] [number of games up to 1000](optional)',
     num_args: 1,
     args_to_lower: true,
     needs_api: true,
