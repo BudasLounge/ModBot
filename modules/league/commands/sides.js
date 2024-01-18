@@ -258,7 +258,7 @@ module.exports = {
                 .setColor('#0099ff');
         
             for (const [queueId, stats] of Object.entries(queueStats)) {
-              if (queueId !== 'ARENA_QUEUE_ID') { // Replace with actual Arena queue ID
+              if (queueId !== '1700') { // Replace with actual Arena queue ID
                 const queueName = queueTypeMapping[queueId] || `Queue ${queueId}`;
                 const blueSideWinrate = ((stats.blueSideWins / (stats.blueSideWins + stats.blueSideLosses)) * 100).toFixed(2);
                 const redSideWinrate = ((stats.redSideWins / (stats.redSideWins + stats.redSideLosses)) * 100).toFixed(2);
