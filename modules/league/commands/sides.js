@@ -148,7 +148,10 @@ async function getLastMatches(username, numberOfGames, logger, userId) {
     puuid = summonerResponse.data.puuid;
     await storePuuidInDatabase(userId, puuid);
   }
-
+  let blueSideWins = 0;
+  let blueSideLosses = 0;
+  let redSideWins = 0;
+  let redSideLosses = 0;
   let blueSideCount = 0;
   let redSideCount = 0;
   let startIndex = 0;
@@ -164,19 +167,29 @@ async function getLastMatches(username, numberOfGames, logger, userId) {
     numberOfGames -= count;
 
     for (const matchId of matchIds) {
-      const matchDetails = await fetchMatchDetails(matchId, puuid, logger);
-      if (matchDetails) {
-        const participant = matchDetails.info.participants.find(p => p.puuid === puuid);
-        if (participant.teamId === 100) {
-          blueSideCount++;
-        } else if (participant.teamId === 200) {
-          redSideCount++;
+        const matchDetails = await fetchMatchDetails(matchId, puuid, logger);
+        if (matchDetails) {
+          const participant = matchDetails.info.participants.find(p => p.puuid === puuid);
+          if (participant.teamId === 100) {
+            blueSideCount++;
+            if (participant.win) {
+              blueSideWins++;
+            } else {
+              blueSideLosses++;
+            }
+          } else if (participant.teamId === 200) {
+            redSideCount++;
+            if (participant.win) {
+              redSideWins++;
+            } else {
+              redSideLosses++;
+            }
+          }
         }
-      }
     }
   }
 
-  return { blueSideCount, redSideCount };
+  return { blueSideCount, redSideCount, blueSideWins, blueSideLosses, redSideWins, redSideLosses };
 }
 
 module.exports = {
@@ -209,17 +222,20 @@ module.exports = {
         message.channel.send(`Analyzing matches for ${summonerName}, please wait...`);
 
         try {
-            const { blueSideCount, redSideCount } = await getLastMatches(summonerName, gameCount, this.logger, message.author.id);
-
+            const { blueSideCount, redSideCount, blueSideWins, blueSideLosses, redSideWins, redSideLosses } = await getLastMatches(summonerName, gameCount, this.logger, message.author.id);
+            
+            const blueSideWinrate = (blueSideWins / (blueSideWins + blueSideLosses) * 100).toFixed(2);
+            const redSideWinrate = (redSideWins / (redSideWins + redSideLosses) * 100).toFixed(2);
+            
             let embed = new MessageEmbed()
-                .setTitle(`Side Counts for ${summonerName}`)
+                .setTitle(`Side Counts and Winrates for ${summonerName}`)
                 .setColor('#0099ff')
-                .addField('Blue Side', blueSideCount.toString(), true)
-                .addField('Red Side', redSideCount.toString(), true)
+                .addField('Blue Side', `${blueSideCount} (${blueSideWinrate}%)`, true)
+                .addField('Red Side', `${redSideCount} (${redSideWinrate}%)`, true)
                 .setTimestamp();
-
+            
             await message.channel.send({ embeds: [embed] });
-        } catch (error) {
+            } catch (error) {
             this.logger.error('Error fetching data:', error);
             message.channel.send('An error occurred while retrieving match history. Please try again later.');
         }
