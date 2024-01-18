@@ -135,59 +135,72 @@ async function fetchMatchDetails(matchId, puuid, logger) {
 }
 
 async function getLastMatches(username, numberOfGames, logger, userId) {
-  if (Object.keys(queueTypeMapping).length === 0) {
-    await fetchQueueMapping();
-  }
-  logger.info(`Fetching last ${numberOfGames} matches for ${username}`);
-  let puuid = await getPuuidFromDatabase(userId);
-  
-  if (!puuid) {
-    const summonerResponse = await axios.get(`${RIOT_ACCOUNT_BASE_URL}${encodeURIComponent(username)}`, {
-      headers: { "X-Riot-Token": RIOT_API_KEY }
-    });
-    puuid = summonerResponse.data.puuid;
-    await storePuuidInDatabase(userId, puuid);
-  }
-  let queueStats = {};
-
-    for (const matchId of matchIds) {
-    const matchDetails = await fetchMatchDetails(matchId, puuid, logger);
-    if (matchDetails) {
-        const participant = matchDetails.info.participants.find(p => p.puuid === puuid);
-        const queueId = matchDetails.info.queueId;
-
-        // Initialize the queueStats object for each queueId
-        if (!queueStats[queueId]) {
-        queueStats[queueId] = {
-            blueSideWins: 0,
-            blueSideLosses: 0,
-            blueSideCount: 0,
-            redSideWins: 0,
-            redSideLosses: 0,
-            redSideCount: 0
-        };
-        }
-
-        if (participant.teamId === 100) {
-        queueStats[queueId].blueSideCount++;
-        if (participant.win) {
-            queueStats[queueId].blueSideWins++;
-        } else {
-            queueStats[queueId].blueSideLosses++;
-        }
-        } else if (participant.teamId === 200) {
-        queueStats[queueId].redSideCount++;
-        if (participant.win) {
-            queueStats[queueId].redSideWins++;
-        } else {
-            queueStats[queueId].redSideLosses++;
-        }
-        }
+    if (Object.keys(queueTypeMapping).length === 0) {
+        await fetchQueueMapping();
     }
+    logger.info(`Fetching last ${numberOfGames} matches for ${username}`);
+    let puuid = await getPuuidFromDatabase(userId);
+
+    if (!puuid) {
+        const summonerResponse = await axios.get(`${RIOT_ACCOUNT_BASE_URL}${encodeURIComponent(username)}`, {
+        headers: { "X-Riot-Token": RIOT_API_KEY }
+        });
+        puuid = summonerResponse.data.puuid;
+        await storePuuidInDatabase(userId, puuid);
+    }
+
+    let queueStats = {};
+    let startIndex = 0;
+    const MAX_MATCHES_PER_REQUEST = 100;
+
+    while (numberOfGames > 0) {
+        const count = Math.min(numberOfGames, MAX_MATCHES_PER_REQUEST);
+        const matchIdsResponse = await axios.get(`${RIOT_API_BASE_URL}by-puuid/${puuid}/ids?start=${startIndex}&count=${count}`, {
+        headers: { "X-Riot-Token": RIOT_API_KEY }
+        });
+        const matchIds = matchIdsResponse.data;
+        startIndex += count;
+        numberOfGames -= count;
+
+        for (const matchId of matchIds) {
+        const matchDetails = await fetchMatchDetails(matchId, puuid, logger);
+        if (matchDetails) {
+            const participant = matchDetails.info.participants.find(p => p.puuid === puuid);
+            const queueId = matchDetails.info.queueId;
+
+            // Initialize the queueStats object for each queueId
+            if (!queueStats[queueId]) {
+            queueStats[queueId] = {
+                blueSideWins: 0,
+                blueSideLosses: 0,
+                blueSideCount: 0,
+                redSideWins: 0,
+                redSideLosses: 0,
+                redSideCount: 0
+            };
+            }
+
+            if (participant.teamId === 100) {
+            queueStats[queueId].blueSideCount++;
+            if (participant.win) {
+                queueStats[queueId].blueSideWins++;
+            } else {
+                queueStats[queueId].blueSideLosses++;
+            }
+            } else if (participant.teamId === 200) {
+            queueStats[queueId].redSideCount++;
+            if (participant.win) {
+                queueStats[queueId].redSideWins++;
+            } else {
+                queueStats[queueId].redSideLosses++;
+            }
+            }
+        }
+        }
     }
 
     return queueStats;
-}
+    }
 
 module.exports = {
     name: 'sides',
