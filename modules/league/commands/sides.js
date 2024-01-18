@@ -170,7 +170,7 @@ async function getLastMatches(username, numberOfGames, logger, userId) {
           
           // Skip processing if the match is an Arena match
           if (queueTypeMapping[queueId] === 'Arena') { 
-            logger.info(`Skipping Arena match with ID ${matchId}.`);
+            //logger.info(`Skipping Arena match with ID ${matchId}.`);
             continue;
           }
 
