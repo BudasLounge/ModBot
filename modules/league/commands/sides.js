@@ -190,6 +190,7 @@ async function getLastMatches(username, numberOfGames, logger, userId) {
   
           if (queueId === '1700') { // Replace with actual Arena queue ID
             // Determine the team and update stats; replace with actual team logic
+            logger.info(`ARENAARENA Match ${matchId} is an Arena match.`);
             let teamKey = `team${participant.teamId}`;
             queueStats[queueId][`${teamKey}Count`]++;
             if (participant.win) {
