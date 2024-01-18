@@ -149,15 +149,7 @@ async function getLastMatches(username, numberOfGames, logger, userId) {
       await storePuuidInDatabase(userId, puuid);
     }
   
-    let queueStats = {
-      // Placeholder for Arena stats initialization, adjust as needed
-      'Arena': {
-        team1Wins: 0, team1Losses: 0, team1Count: 0,
-        team2Wins: 0, team2Losses: 0, team2Count: 0,
-        team3Wins: 0, team3Losses: 0, team3Count: 0,
-        team4Wins: 0, team4Losses: 0, team4Count: 0
-      }
-    };
+    let queueStats = {};
     let startIndex = 0;
     const MAX_MATCHES_PER_REQUEST = 100;
   
@@ -175,8 +167,13 @@ async function getLastMatches(username, numberOfGames, logger, userId) {
         if (matchDetails) {
           const participant = matchDetails.info.participants.find(p => p.puuid === puuid);
           const queueId = matchDetails.info.queueId;
-          logger.info(`Match ${matchId} is a ${queueTypeMapping[queueId]} match with ID of ${queueId}.`);
-  
+          
+          // Skip processing if the match is an Arena match
+          if (queueTypeMapping[queueId] === 'Arena') { 
+            logger.info(`Skipping Arena match with ID ${matchId}.`);
+            continue;
+          }
+
           // Initialize the queueStats object for each queueId
           if (!queueStats[queueId]) {
             queueStats[queueId] = {
@@ -188,42 +185,21 @@ async function getLastMatches(username, numberOfGames, logger, userId) {
               redSideCount: 0
             };
           }
-  
-          if (queueTypeMapping[queueId] === 'Arena') { // Replace with actual Arena queue ID
-            // Determine the team and update stats; replace with actual team logic
-            logger.info(`ARENAARENA Match ${matchId} is an Arena match.`);
-            let teamKey = `team${participant.teamId}`;
-            queueStats[queueId][`${teamKey}Count`]++;
-            if (participant.win) {
-              queueStats[queueId][`${teamKey}Wins`]++;
-            } else {
-              queueStats[queueId][`${teamKey}Losses`]++;
-            }
+
+          // Update stats based on the teamId
+          const side = participant.teamId === 100 ? 'blueSide' : 'redSide';
+          queueStats[queueId][`${side}Count`]++;
+          if (participant.win) {
+            queueStats[queueId][`${side}Wins`]++;
           } else {
-            // Handle non-Arena queues
-            if (participant.teamId === 100) {
-              queueStats[queueId].blueSideCount++;
-              if (participant.win) {
-                queueStats[queueId].blueSideWins++;
-              } else {
-                queueStats[queueId].blueSideLosses++;
-              }
-            } else if (participant.teamId === 200) {
-              queueStats[queueId].redSideCount++;
-              if (participant.win) {
-                queueStats[queueId].redSideWins++;
-              } else {
-                queueStats[queueId].redSideLosses++;
-              }
-            }
+            queueStats[queueId][`${side}Losses`]++;
           }
         }
       }
     }
   
     return queueStats;
-  }
-
+}
 module.exports = {
     name: 'sides',
     description: 'Shows how many times you played on Red or Blue side',
@@ -260,25 +236,17 @@ module.exports = {
                 .setColor('#0099ff');
         
             for (const [queueId, stats] of Object.entries(queueStats)) {
-              if (queueId !== '1700') { // Replace with actual Arena queue ID
-                const queueName = queueTypeMapping[queueId] || `Queue ${queueId}`;
-                const blueSideWinrate = ((stats.blueSideWins / (stats.blueSideWins + stats.blueSideLosses)) * 100).toFixed(2);
-                const redSideWinrate = ((stats.redSideWins / (stats.redSideWins + stats.redSideLosses)) * 100).toFixed(2);
-        
-                let queueFieldText = `Blue Side: ${stats.blueSideCount} (${blueSideWinrate}%) | Red Side: ${stats.redSideCount} (${redSideWinrate}%)`;
-                embed.addField(queueName, queueFieldText, false);
-              } else {
-                // Special handling for the Arena queue
-                for (let i = 1; i <= 4; i++) {
-                  const teamStats = stats[`team${i}`] || { wins: 0, losses: 0, count: 0 };
-                  const winCount = teamStats.wins;
-                  const lossCount = teamStats.losses;
-                  const totalCount = teamStats.count;
-                  const winrate = totalCount > 0 ? ((winCount / totalCount) * 100).toFixed(2) : "N/A";
-        
-                  embed.addField(`Arena - Team ${i}`, `Played: ${totalCount} | Winrate: ${winrate}%`, false);
-                }
+              if (queueId === 'ARENA_QUEUE_ID') { // Replace with actual Arena queue ID
+                // Skip processing for Arena
+                continue;
               }
+        
+              const queueName = queueTypeMapping[queueId] || `Queue ${queueId}`;
+              const blueSideWinrate = ((stats.blueSideWins / (stats.blueSideWins + stats.blueSideLosses)) * 100).toFixed(2);
+              const redSideWinrate = ((stats.redSideWins / (stats.redSideWins + stats.redSideLosses)) * 100).toFixed(2);
+        
+              let queueFieldText = `Blue Side: ${stats.blueSideCount} (${blueSideWinrate}%) | Red Side: ${stats.redSideCount} (${redSideWinrate}%)`;
+              embed.addField(queueName, queueFieldText, false);
             }
         
             embed.setTimestamp();
