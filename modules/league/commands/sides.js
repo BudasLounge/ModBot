@@ -136,71 +136,91 @@ async function fetchMatchDetails(matchId, puuid, logger) {
 
 async function getLastMatches(username, numberOfGames, logger, userId) {
     if (Object.keys(queueTypeMapping).length === 0) {
-        await fetchQueueMapping();
+      await fetchQueueMapping();
     }
     logger.info(`Fetching last ${numberOfGames} matches for ${username}`);
     let puuid = await getPuuidFromDatabase(userId);
-
+  
     if (!puuid) {
-        const summonerResponse = await axios.get(`${RIOT_ACCOUNT_BASE_URL}${encodeURIComponent(username)}`, {
+      const summonerResponse = await axios.get(`${RIOT_ACCOUNT_BASE_URL}${encodeURIComponent(username)}`, {
         headers: { "X-Riot-Token": RIOT_API_KEY }
-        });
-        puuid = summonerResponse.data.puuid;
-        await storePuuidInDatabase(userId, puuid);
+      });
+      puuid = summonerResponse.data.puuid;
+      await storePuuidInDatabase(userId, puuid);
     }
-
-    let queueStats = {};
+  
+    let queueStats = {
+      // Placeholder for Arena stats initialization, adjust as needed
+      'Arena': {
+        team1Wins: 0, team1Losses: 0, team1Count: 0,
+        team2Wins: 0, team2Losses: 0, team2Count: 0,
+        team3Wins: 0, team3Losses: 0, team3Count: 0,
+        team4Wins: 0, team4Losses: 0, team4Count: 0
+      }
+    };
     let startIndex = 0;
     const MAX_MATCHES_PER_REQUEST = 100;
-
+  
     while (numberOfGames > 0) {
-        const count = Math.min(numberOfGames, MAX_MATCHES_PER_REQUEST);
-        const matchIdsResponse = await axios.get(`${RIOT_API_BASE_URL}by-puuid/${puuid}/ids?start=${startIndex}&count=${count}`, {
+      const count = Math.min(numberOfGames, MAX_MATCHES_PER_REQUEST);
+      const matchIdsResponse = await axios.get(`${RIOT_API_BASE_URL}by-puuid/${puuid}/ids?start=${startIndex}&count=${count}`, {
         headers: { "X-Riot-Token": RIOT_API_KEY }
-        });
-        const matchIds = matchIdsResponse.data;
-        startIndex += count;
-        numberOfGames -= count;
-
-        for (const matchId of matchIds) {
+      });
+      const matchIds = matchIdsResponse.data;
+      startIndex += count;
+      numberOfGames -= count;
+  
+      for (const matchId of matchIds) {
         const matchDetails = await fetchMatchDetails(matchId, puuid, logger);
         if (matchDetails) {
-            const participant = matchDetails.info.participants.find(p => p.puuid === puuid);
-            const queueId = matchDetails.info.queueId;
-
-            // Initialize the queueStats object for each queueId
-            if (!queueStats[queueId]) {
+          const participant = matchDetails.info.participants.find(p => p.puuid === puuid);
+          const queueId = matchDetails.info.queueId;
+  
+          // Initialize the queueStats object for each queueId
+          if (!queueStats[queueId]) {
             queueStats[queueId] = {
-                blueSideWins: 0,
-                blueSideLosses: 0,
-                blueSideCount: 0,
-                redSideWins: 0,
-                redSideLosses: 0,
-                redSideCount: 0
+              blueSideWins: 0,
+              blueSideLosses: 0,
+              blueSideCount: 0,
+              redSideWins: 0,
+              redSideLosses: 0,
+              redSideCount: 0
             };
+          }
+  
+          if (queueId === '1700') { // Replace with actual Arena queue ID
+            // Determine the team and update stats; replace with actual team logic
+            let teamKey = `team${participant.teamId}`;
+            queueStats[queueId][`${teamKey}Count`]++;
+            if (participant.win) {
+              queueStats[queueId][`${teamKey}Wins`]++;
+            } else {
+              queueStats[queueId][`${teamKey}Losses`]++;
             }
-
+          } else {
+            // Handle non-Arena queues
             if (participant.teamId === 100) {
-            queueStats[queueId].blueSideCount++;
-            if (participant.win) {
+              queueStats[queueId].blueSideCount++;
+              if (participant.win) {
                 queueStats[queueId].blueSideWins++;
-            } else {
+              } else {
                 queueStats[queueId].blueSideLosses++;
-            }
+              }
             } else if (participant.teamId === 200) {
-            queueStats[queueId].redSideCount++;
-            if (participant.win) {
+              queueStats[queueId].redSideCount++;
+              if (participant.win) {
                 queueStats[queueId].redSideWins++;
-            } else {
+              } else {
                 queueStats[queueId].redSideLosses++;
+              }
             }
-            }
+          }
         }
-        }
+      }
     }
-
+  
     return queueStats;
-    }
+  }
 
 module.exports = {
     name: 'sides',
@@ -236,16 +256,29 @@ module.exports = {
             let embed = new MessageEmbed()
                 .setTitle(`Side Counts and Winrates for ${summonerName}`)
                 .setColor('#0099ff');
-          
+        
             for (const [queueId, stats] of Object.entries(queueStats)) {
-              const queueName = queueTypeMapping[queueId] || `Queue ${queueId}`;
-              const blueSideWinrate = ((stats.blueSideWins / (stats.blueSideWins + stats.blueSideLosses)) * 100).toFixed(2);
-              const redSideWinrate = ((stats.redSideWins / (stats.redSideWins + stats.redSideLosses)) * 100).toFixed(2);
-          
-              let queueFieldText = `Blue Side: ${stats.blueSideCount} (${blueSideWinrate}%) | Red Side: ${stats.redSideCount} (${redSideWinrate}%)`;
-              embed.addField(queueName, queueFieldText, false);
+              if (queueId !== 'ARENA_QUEUE_ID') { // Replace with actual Arena queue ID
+                const queueName = queueTypeMapping[queueId] || `Queue ${queueId}`;
+                const blueSideWinrate = ((stats.blueSideWins / (stats.blueSideWins + stats.blueSideLosses)) * 100).toFixed(2);
+                const redSideWinrate = ((stats.redSideWins / (stats.redSideWins + stats.redSideLosses)) * 100).toFixed(2);
+        
+                let queueFieldText = `Blue Side: ${stats.blueSideCount} (${blueSideWinrate}%) | Red Side: ${stats.redSideCount} (${redSideWinrate}%)`;
+                embed.addField(queueName, queueFieldText, false);
+              } else {
+                // Special handling for the Arena queue
+                for (let i = 1; i <= 4; i++) {
+                  const teamStats = stats[`team${i}`];
+                  const winCount = teamStats.wins;
+                  const lossCount = teamStats.losses;
+                  const totalCount = teamStats.count;
+                  const winrate = totalCount > 0 ? ((winCount / totalCount) * 100).toFixed(2) : "N/A";
+        
+                  embed.addField(`Arena - Team ${i}`, `Played: ${totalCount} | Winrate: ${winrate}%`, false);
+                }
+              }
             }
-          
+        
             embed.setTimestamp();
             await message.channel.send({ embeds: [embed] });
           } catch (error) {
