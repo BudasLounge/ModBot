@@ -332,6 +332,34 @@ async function getLastMatches(username, numberOfGames, logger, userId) {
 
   return matchDetails;
 }
+
+async function sendEmbeds(message, queueType, data) {
+  let embed = new MessageEmbed()
+    .setTitle(`${data.games} games in ${queueType}`)
+    .setColor('#0099ff')
+    .setTimestamp();
+
+  let fieldCount = 0;
+
+  for (const [champion, { wins, losses }] of Object.entries(data.champions)) {
+    if (fieldCount === 25) {
+      // Send the current embed and create a new one
+      await message.channel.send({ embeds: [embed] });
+      embed = new MessageEmbed()
+        .setTitle(`Continued: ${queueType}`)
+        .setColor('#0099ff')
+        .setTimestamp();
+      fieldCount = 0;
+    }
+
+    embed.addField(champion, `Wins: ${wins} | Losses: ${losses}`, true);
+    fieldCount++;
+  }
+
+  // Send the last or only embed for the current queue type
+  await message.channel.send({ embeds: [embed] });
+}
+
 module.exports = {
     name: 'wins',
     description: 'Shows last games in your match history',
@@ -405,7 +433,7 @@ async execute(message, args) {
   
         let fieldCount = 0;
   
-        for (const [champion, { wins, losses }] of Object.entries(champions)) {
+        /*for (const [champion, { wins, losses }] of Object.entries(champions)) {
           if (fieldCount === 25) {
             // Send the current embed and create a new one
             await message.channel.send({ embeds: [embed] });
@@ -418,10 +446,11 @@ async execute(message, args) {
   
           embed.addField(champion, `Wins: ${wins} | Losses: ${losses}`, true);
           fieldCount++;
-        }
+        }*/
   
         // Send the last or only embed for the current queue type
         await message.channel.send({ embeds: [embed] });
+        await sendEmbeds(message, queueType, data);
       }
     } catch (error) {
       this.logger.error('Error fetching data from Riot API:', error);
