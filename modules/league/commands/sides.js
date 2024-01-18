@@ -230,8 +230,8 @@ module.exports = {
             let embed = new MessageEmbed()
                 .setTitle(`Side Counts and Winrates for ${summonerName}`)
                 .setColor('#0099ff')
-                .addField('Blue Side', `${blueSideCount} (${blueSideWinrate}%)`, true)
-                .addField('Red Side', `${redSideCount} (${redSideWinrate}%)`, true)
+                .addField('Blue Side', `count: ${blueSideCount} (winrate: ${blueSideWinrate}%)`, true)
+                .addField('Red Side', `count: ${redSideCount} (winrate: ${redSideWinrate}%)`, true)
                 .setTimestamp();
             
             await message.channel.send({ embeds: [embed] });
