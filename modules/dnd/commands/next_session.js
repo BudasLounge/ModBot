@@ -92,6 +92,9 @@ module.exports = {
         }
 
         try {
+            // Log detailed information about the date and time
+            logger.info(`Scheduling job with dateTimestamp: ${dateTimestamp.toISOString()} and current time: ${new Date().toISOString()}`);
+
             const job = schedule.scheduleJob(jobName, dateTimestamp, function() {
                 logger.info(`Job ${jobName} executed.`);
             });
