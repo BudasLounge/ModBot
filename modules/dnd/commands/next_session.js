@@ -9,17 +9,17 @@ module.exports = {
     async execute(message, args, extra) {
 
 
-        async function scheduleMessage(respDndSession, dateTime) {
+        async function scheduleMessage(respDndSession, dateTime, logger) {
             const existingJob = schedule.scheduledJobs[respDndSession.dnd_campaigns[0].module];
             if (existingJob) {
                 existingJob.cancel();
             }
             // Schedule the job
             schedule.scheduleJob(respDndSession.dnd_campaigns[0].module, dateTime, async function() {
-                this.logger.info(`Sending message for session ${respDndSession.dnd_campaigns[0].module}`);
+                //logger.info(`Sending message for session ${respDndSession.dnd_campaigns[0].module}`);
                 const guild = await client.guilds.fetch('650865972051312673');
                 if (!guild) {
-                    this.logger.error(`Guild not found for ID 650865972051312673`);
+                    //logger.error(`Guild not found for ID 650865972051312673`);
                     return;
                 }
                 const channel = await guild.channels.resolve(respDndSession.dnd_campaigns[0].schedule_channel);
@@ -27,11 +27,11 @@ module.exports = {
                     var unixTimeStamp = Math.floor(new Date(respDndSession.dnd_campaigns[0].next_session).getTime()/1000);
                     channel.send({content: "<@&"+respDndSession.dnd_campaigns[0].role_id.toString()+">, the session starts <t:" + unixTimeStamp.toString() + ":R>"});
                 } else {
-                    this.logger.error(`Channel not found for ID ${respDndSession.dnd_campaigns[0].schedule_channel} in guild ${guild.id}`);
+                    //logger.error(`Channel not found for ID ${respDndSession.dnd_campaigns[0].schedule_channel} in guild ${guild.id}`);
                 }
 
                 const scheduledJobs = schedule.scheduledJobs;
-                this.logger.info('All scheduled jobs:', scheduledJobs);
+                //logger.info('All scheduled jobs:', scheduledJobs);
             });
         }
 
@@ -118,7 +118,7 @@ module.exports = {
             }catch(err){
                 this.logger.error(err.message);
             }
-            await scheduleMessage(respDndSession, newDateStamp);
+            await scheduleMessage(respDndSession, newDateStamp, this.logger);
 
             await message.channel.setTopic("Next Session: <t:" + newDate.toString() + ":R>" );
         }else{
@@ -145,7 +145,7 @@ module.exports = {
                     this.logger.error(err.message);
                 }
 
-                await scheduleMessage(respDndSession, dateTime);
+                await scheduleMessage(respDndSession, dateTime, this.logger);
 
             }catch(err){
                 this.logger.error(err.message);
