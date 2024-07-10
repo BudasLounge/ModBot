@@ -89,7 +89,7 @@ module.exports = {
             }catch(err){
                 this.logger.error(err.message);
             }
-            await scheduleMessage(respDndSession);
+            await scheduleMessage(respDndSession, newDateStamp);
 
             await message.channel.setTopic("Next Session: <t:" + newDate.toString() + ":R>" );
         }else{
@@ -116,7 +116,7 @@ module.exports = {
                     this.logger.error(err.message);
                 }
 
-                await scheduleMessage(respDndSession.dnd_campaigns[0]);
+                await scheduleMessage(respDndSession, dateTime);
 
             }catch(err){
                 this.logger.error(err.message);
@@ -125,7 +125,7 @@ module.exports = {
     }
 }
 
-async function scheduleMessage(respDndSession){
+async function scheduleMessage(respDndSession, dateTime){
     const schedule = require('node-schedule');
     const existingJob = schedule.scheduledJobs[respDndSession.dnd_campaigns[0].module];
     if (existingJob) {
