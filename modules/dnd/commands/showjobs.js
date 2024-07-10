@@ -7,8 +7,18 @@ module.exports = {
     needs_api: true,//if this command needs access to the api
     has_state: false,//if this command uses the state engine
     async execute(message, args, extra) {
-        const schedule = require('node-schedule');
-        const scheduledJobs = schedule.scheduledJobs;
-        await message.reply('All scheduled jobs:', schedule);
+        const jobs = schedule.scheduledJobs;
+        const jobNames = Object.keys(jobs);
+
+        if (jobNames.length === 0) {
+            return 'No scheduled jobs.';
+        }
+
+        let jobList = 'All scheduled jobs:\n';
+        jobNames.forEach(name => {
+            const job = jobs[name];
+            jobList += `Job Name: ${name}, Next Invocation: ${job.nextInvocation().toString()}\n`;
+        });
+        await message.reply(jobList);
     }
 }
