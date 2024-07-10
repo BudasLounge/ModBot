@@ -119,7 +119,7 @@ module.exports = {
         await message.channel.setTopic(`📅 Next Session: <t:${unixTimeStamp}:R>`);
 
         const jobName = `${campaign.module}-COMMAND`;
-        const reminderTime = new Date(unixTimeStamp * 1000 - 24 * 60 * 60 * 1000); // 24 hours before session
+        const reminderTime = new Date(unixTimeStamp * 1000 - 24 * 60 * 60 * 1000); // 24 hours before session notify players
 
         logger.info(`Attempting to schedule job ${jobName} for ${reminderTime.toISOString()}`);
 
