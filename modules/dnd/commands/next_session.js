@@ -103,7 +103,6 @@ module.exports = {
 
         // Cancel any existing job with the same name
         if (schedule.scheduledJobs[jobName]) {
-            logger.info(`Existing job details before cancellation: ${JSON.stringify(schedule.scheduledJobs[jobName], null, 2)}`);
             logger.info(`Cancelling existing job with name ${jobName}`);
             schedule.cancelJob(jobName);
         }
