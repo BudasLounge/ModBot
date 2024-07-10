@@ -7,6 +7,7 @@ module.exports = {
     needs_api: true,//if this command needs access to the api
     has_state: false,//if this command uses the state engine
     async execute(message, args, extra) {
+        const schedule = require('node-schedule');
         const jobs = schedule.scheduledJobs;
         const jobNames = Object.keys(jobs);
 
