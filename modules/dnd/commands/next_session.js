@@ -41,23 +41,39 @@ module.exports = {
         }
 
         let dateTime, unixTimeStamp, time;
+
         if (!args[1]) {
-            await message.reply('Please enter a datetime stamp for this command!\nYYYY-MM-DD HH:MM:SS timestamp');
-            return;
+            if (campaign.next_session) {
+                unixTimeStamp = Math.floor(new Date(campaign.next_session).getTime() / 1000);
+                await message.channel.send({ content: `<@&${campaign.role_id}>, the session starts <t:${unixTimeStamp}:R>` });
+                return;
+            } else {
+                await message.channel.send({ content: "Please enter a datetime stamp for this command!\nYYYY-MM-DD HH:MM:SS time stamp" });
+                return;
+            }
         }
 
         if (!args[2]) {
-            await message.reply('Please enter both date and time for this command!\nYYYY-MM-DD HH:MM:SS timestamp');
-            return;
-        }
+            const lastDate = Math.floor(new Date(campaign.next_session).getTime() / 1000);
+            const newDate = lastDate + (args[1] * 86400);
+            const newDateStamp = new Date(newDate * 1000);
+            time = `${newDateStamp.getFullYear()}-${String(newDateStamp.getMonth() + 1).padStart(2, '0')}-${String(newDateStamp.getDate()).padStart(2, '0')} ${String(newDateStamp.getHours()).padStart(2, '0')}:${String(newDateStamp.getMinutes()).padStart(2, '0')}:${String(newDateStamp.getSeconds()).padStart(2, '0')}`;
 
-        dateTime = `${args[1]} ${args[2]}`;
-        unixTimeStamp = Math.floor(new Date(dateTime).getTime() / 1000);
-        time = dateTime;
+            dateTime = `${time}`;
+            unixTimeStamp = Math.floor(new Date(dateTime).getTime() / 1000);
+            time = newDateStamp.toISOString();
 
-        if (isNaN(unixTimeStamp)) {
-            await message.reply('Invalid date format. Please use YYYY-MM-DD HH:MM:SS.');
-            return;
+        } else {
+            dateTime = `${args[1]} ${args[2]}`;
+            const localDate = new Date(dateTime);
+
+            if (isNaN(localDate.getTime())) {
+                await message.reply('Invalid date format. Please use YYYY-MM-DD HH:MM:SS.');
+                return;
+            }
+
+            unixTimeStamp = Math.floor(localDate.getTime() / 1000);
+            time = localDate.toISOString();
         }
 
         try {
@@ -73,16 +89,21 @@ module.exports = {
 
         await message.channel.setTopic(`Next Session: <t:${unixTimeStamp}:R>`);
 
-        const dateTimestamp = new Date(unixTimeStamp * 1000 - 24 * 60 * 60 * 1000); // Subtracting 24 hours
+        // Calculate the job's execution time (subtracting 24 hours)
+        const executionTime = new Date(unixTimeStamp * 1000);
+        executionTime.setDate(executionTime.getDate() - 1);
 
-        if (isNaN(dateTimestamp.getTime())) {
-            logger.error(`Invalid dateTimestamp: ${dateTimestamp}`);
-            await message.reply('Failed to schedule job due to invalid date.');
+        const now = new Date();
+        const delay = executionTime - now;
+
+        if (delay <= 0) {
+            logger.error(`Failed to schedule job due to negative delay.`);
+            await message.reply(`Failed to schedule job due to negative delay.`);
             return;
         }
 
         const jobName = `${campaign.module}-COMMAND`;
-        logger.info(`Attempting to schedule job ${jobName} for ${dateTimestamp.toISOString()}`);
+        logger.info(`Attempting to schedule job ${jobName} for ${executionTime.toISOString()}`);
 
         // Cancel any existing job with the same name
         if (schedule.scheduledJobs[jobName]) {
@@ -92,33 +113,16 @@ module.exports = {
         }
 
         try {
-            const delay = dateTimestamp.getTime() - Date.now();
+            const job = schedule.scheduleJob(jobName, executionTime, function() {
+                logger.info(`Job ${jobName} executed.`);
+            });
 
-            if (delay > 0) {
-                setTimeout(async function() {
-                    logger.info(`Job ${jobName} executed.`);
-                    try {
-                        const guild = await message.client.guilds.fetch('650865972051312673');
-                        if (!guild) {
-                            logger.error(`Guild not found for ID 650865972051312673`);
-                            return;
-                        }
-                        const channel = await guild.channels.resolve(campaign.schedule_channel);
-                        if (channel) {
-                            const unixTimeStamp = Math.floor(new Date(campaign.next_session).getTime() / 1000);
-                            await channel.send(`<@&${campaign.role_id}>, the session starts <t:${unixTimeStamp}:R>`);
-                        } else {
-                            logger.error(`Channel not found for ID ${campaign.schedule_channel} in guild ${guild.id}`);
-                        }
-                    } catch (err) {
-                        logger.error(`Error sending message for session: ${err.message}`);
-                    }
-                }, delay);
-                logger.info(`Scheduled job ${jobName} for ${dateTimestamp.toISOString()}`);
-                await message.reply(`Job ${jobName} scheduled successfully for ${dateTimestamp.toISOString()}.`);
+            if (job) {
+                logger.info(`Scheduled job ${jobName} for ${executionTime.toISOString()}`);
+                await message.reply(`Job ${jobName} scheduled successfully for ${executionTime.toISOString()}.`);
             } else {
-                logger.error(`Failed to schedule job ${jobName} due to negative delay.`);
-                await message.reply(`Failed to schedule job ${jobName} due to negative delay.`);
+                logger.error(`Failed to schedule job ${jobName}`);
+                await message.reply(`Failed to schedule job ${jobName}.`);
             }
         } catch (err) {
             logger.error(`Exception occurred while scheduling job: ${err.message}`);
