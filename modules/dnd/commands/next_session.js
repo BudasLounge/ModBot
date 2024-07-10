@@ -89,7 +89,7 @@ module.exports = {
             }catch(err){
                 this.logger.error(err.message);
             }
-            await scheduleMessage(respDndSession.dnd_campaigns[0]);
+            await scheduleMessage(respDndSession);
 
             await message.channel.setTopic("Next Session: <t:" + newDate.toString() + ":R>" );
         }else{
