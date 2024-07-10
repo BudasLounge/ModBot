@@ -71,12 +71,11 @@ module.exports = {
         await message.channel.setTopic(`Next Session: <t:${unixTimeStamp}:R>`);
 
         // Schedule the job
-        const dateTimestamp = new Date(time);
-        dateTimestamp.setDate(dateTimestamp.getDate() - 1);
+        const dateTimestamp = new Date(new Date(time).getTime() - 24 * 60 * 60 * 1000); // Subtracting 24 hours
 
         try {
             const jobName = `${respDndSession.dnd_campaigns[0].module}-COMMAND`;
-            logger.info(`Attempting to schedule job ${jobName} for ${dateTimestamp}`);
+            logger.info(`Attempting to schedule job ${jobName} for ${dateTimestamp.toISOString()}`);
 
             const job = schedule.scheduleJob(jobName, dateTimestamp, async function() {
                 try {
@@ -99,13 +98,15 @@ module.exports = {
             });
 
             if (job) {
-                logger.info(`Scheduled job ${jobName} for ${dateTimestamp}`);
+                logger.info(`Scheduled job ${jobName} for ${dateTimestamp.toISOString()}`);
                 logger.info(`Job details: ${JSON.stringify(job, null, 2)}`);
             } else {
                 logger.error(`Failed to schedule job ${jobName}`);
+                logger.error(`Job scheduling failed. job: ${job}, jobName: ${jobName}, dateTimestamp: ${dateTimestamp.toISOString()}`);
             }
         } catch (err) {
             logger.error(`Exception occurred while scheduling job: ${err.message}`);
+            logger.error(`Exception details: ${err.stack}`);
         }
     }
 };
