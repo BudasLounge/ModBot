@@ -99,7 +99,9 @@ module.exports = {
         await message.channel.setTopic(`📅 Next Session: <t:${unixTimeStamp}:R>`);
 
         const jobName = `${campaign.module}-COMMAND`;
-        logger.info(`Attempting to schedule job ${jobName} for ${executionTime.toISOString()}`);
+        const reminderTime = new Date(executionTime.getTime() - 24 * 60 * 60 * 1000); // 24 hours before session
+
+        logger.info(`Attempting to schedule job ${jobName} for ${reminderTime.toISOString()}`);
 
         // Cancel any existing job with the same name
         if (schedule.scheduledJobs[jobName]) {
@@ -108,13 +110,28 @@ module.exports = {
         }
 
         try {
-            const job = schedule.scheduleJob(jobName, executionTime, function() {
+            const job = schedule.scheduleJob(jobName, reminderTime, async function() {
                 logger.info(`Job ${jobName} executed.`);
+                try {
+                    const guild = await message.client.guilds.fetch(message.guild.id);
+                    if (!guild) {
+                        logger.error(`Guild not found for ID ${message.guild.id}`);
+                        return;
+                    }
+                    const channel = await guild.channels.resolve(campaign.schedule_channel);
+                    if (channel) {
+                        await channel.send(`<@&${campaign.role_id}>, the session starts <t:${unixTimeStamp}:R>.`);
+                    } else {
+                        logger.error(`Channel not found for ID ${campaign.schedule_channel} in guild ${guild.id}`);
+                    }
+                } catch (err) {
+                    logger.error(`Error sending message for session: ${err.message}`);
+                }
             });
 
             if (job) {
-                logger.info(`Scheduled job ${jobName} for ${executionTime.toISOString()}`);
-                await message.reply(`✅ Job \`${jobName}\` scheduled successfully for ${executionTime.toISOString()}.`);
+                logger.info(`Scheduled job ${jobName} for ${reminderTime.toISOString()}`);
+                await message.reply(`✅ Session scheduled successfully! You will be reminded 24 hours before the session.`);
             } else {
                 logger.error(`Failed to schedule job ${jobName}`);
                 await message.reply(`❌ Failed to schedule job \`${jobName}\`.`);
