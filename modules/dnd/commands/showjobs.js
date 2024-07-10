@@ -9,6 +9,6 @@ module.exports = {
     async execute(message, args, extra) {
         const schedule = require('node-schedule');
         const scheduledJobs = schedule.scheduledJobs;
-        await message.reply('All scheduled jobs:', scheduledJobs);
+        await message.reply('All scheduled jobs:', schedule);
     }
 }
