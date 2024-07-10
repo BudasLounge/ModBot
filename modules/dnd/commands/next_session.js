@@ -1,5 +1,4 @@
 const schedule = require('node-schedule');
-const { format } = require('date-fns'); // Importing date-fns for date formatting
 
 module.exports = {
     name: 'next_session',
@@ -78,9 +77,9 @@ module.exports = {
                 return;
             }
 
-            dateTime = newDate;
+            dateTime = `${newDate.getFullYear()}-${String(newDate.getMonth() + 1).padStart(2, '0')}-${String(newDate.getDate()).padStart(2, '0')} ${String(newDate.getHours()).padStart(2, '0')}:${String(newDate.getMinutes()).padStart(2, '0')}:${String(newDate.getSeconds()).padStart(2, '0')}`;
             unixTimeStamp = Math.floor(newDate.getTime() / 1000);
-            time = format(newDate, 'yyyy-MM-dd HH:mm:ss'); // Correctly formatted time
+            time = dateTime;
 
         } else {
             dateTime = `${args[1]} ${args[2]}`;
@@ -97,7 +96,7 @@ module.exports = {
             }
 
             unixTimeStamp = Math.floor(localDate.getTime() / 1000);
-            time = format(localDate, 'yyyy-MM-dd HH:mm:ss'); // Correctly formatted time
+            time = `${localDate.getFullYear()}-${String(localDate.getMonth() + 1).padStart(2, '0')}-${String(localDate.getDate()).padStart(2, '0')} ${String(localDate.getHours()).padStart(2, '0')}:${String(localDate.getMinutes()).padStart(2, '0')}:${String(localDate.getSeconds()).padStart(2, '0')}`;
         }
 
         try {
