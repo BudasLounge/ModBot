@@ -102,7 +102,12 @@ module.exports = {
                 logger.info(`Job details: ${JSON.stringify(job, null, 2)}`);
             } else {
                 logger.error(`Failed to schedule job ${jobName}`);
-                logger.error(`Job scheduling failed. job: ${job}, jobName: ${jobName}, dateTimestamp: ${dateTimestamp.toISOString()}`);
+                // Additional logging to capture potential conflicts or issues
+                if (schedule.scheduledJobs[jobName]) {
+                    logger.error(`A job with the name ${jobName} already exists.`);
+                } else {
+                    logger.error(`Job scheduling failed for an unknown reason.`);
+                }
             }
         } catch (err) {
             logger.error(`Exception occurred while scheduling job: ${err.message}`);
