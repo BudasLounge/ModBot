@@ -73,6 +73,12 @@ module.exports = {
         // Schedule the job
         const dateTimestamp = new Date(new Date(time).getTime() - 24 * 60 * 60 * 1000); // Subtracting 24 hours
 
+        if (isNaN(dateTimestamp.getTime())) {
+            logger.error(`Invalid dateTimestamp: ${dateTimestamp}`);
+            await message.channel.send({ content: "Failed to schedule job due to invalid date." });
+            return;
+        }
+
         try {
             const jobName = `${respDndSession.dnd_campaigns[0].module}-COMMAND`;
             logger.info(`Attempting to schedule job ${jobName} for ${dateTimestamp.toISOString()}`);
@@ -109,6 +115,7 @@ module.exports = {
                 logger.info(`Job details: ${JSON.stringify(job, null, 2)}`);
             } else {
                 logger.error(`Failed to schedule job ${jobName}`);
+                await message.channel.send({ content: `Failed to schedule job ${jobName}.` });
             }
         } catch (err) {
             logger.error(`Exception occurred while scheduling job: ${err.message}`);
