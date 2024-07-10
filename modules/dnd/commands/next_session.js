@@ -18,7 +18,7 @@ module.exports = {
                 schedule_channel: message.channel.id
             });
         } catch (err) {
-            logger.error(err.message);
+            logger.error(`Error fetching campaign data: ${err.message}`);
             return;
         }
 
@@ -64,7 +64,7 @@ module.exports = {
                 next_session: time
             });
         } catch (err) {
-            logger.error(err.message);
+            logger.error(`Error updating campaign data: ${err.message}`);
             return;
         }
 
@@ -76,6 +76,8 @@ module.exports = {
 
         try {
             const jobName = `${respDndSession.dnd_campaigns[0].module}-COMMAND`;
+            logger.info(`Attempting to schedule job ${jobName} for ${dateTimestamp}`);
+
             const job = schedule.scheduleJob(jobName, dateTimestamp, async function() {
                 try {
                     logger.info(`Sending message for session ${respDndSession.dnd_campaigns[0].module}`);
@@ -92,7 +94,7 @@ module.exports = {
                         logger.error(`Channel not found for ID ${respDndSession.dnd_campaigns[0].schedule_channel} in guild ${guild.id}`);
                     }
                 } catch (err) {
-                    logger.error(err.message);
+                    logger.error(`Error sending message for session: ${err.message}`);
                 }
             });
 
