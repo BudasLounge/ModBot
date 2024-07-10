@@ -7,34 +7,6 @@ module.exports = {
     needs_api: true,//if this command needs access to the api
     has_state: false,//if this command uses the state engine
     async execute(message, args, extra) {
-
-
-        async function scheduleMessage(respDndSession, dateTime, logger) {
-            const existingJob = schedule.scheduledJobs[respDndSession.dnd_campaigns[0].module];
-            if (existingJob) {
-                existingJob.cancel();
-            }
-            // Schedule the job
-            schedule.scheduleJob(respDndSession.dnd_campaigns[0].module, dateTime, async function() {
-                //logger.info(`Sending message for session ${respDndSession.dnd_campaigns[0].module}`);
-                const guild = await client.guilds.fetch('650865972051312673');
-                if (!guild) {
-                    //logger.error(`Guild not found for ID 650865972051312673`);
-                    return;
-                }
-                const channel = await guild.channels.resolve(respDndSession.dnd_campaigns[0].schedule_channel);
-                if (channel) {
-                    var unixTimeStamp = Math.floor(new Date(respDndSession.dnd_campaigns[0].next_session).getTime()/1000);
-                    channel.send({content: "<@&"+respDndSession.dnd_campaigns[0].role_id.toString()+">, the session starts <t:" + unixTimeStamp.toString() + ":R>"});
-                } else {
-                    //logger.error(`Channel not found for ID ${respDndSession.dnd_campaigns[0].schedule_channel} in guild ${guild.id}`);
-                }
-
-                const scheduledJobs = schedule.scheduledJobs;
-                //logger.info('All scheduled jobs:', scheduledJobs);
-            });
-        }
-
         const schedule = require('node-schedule');
         var api = extra.api;
         var respDndSession = "";
@@ -82,9 +54,8 @@ module.exports = {
             }
             var lastDate = Math.floor(new Date(respLastSession.dnd_campaigns[0].next_session).getTime()/1000);
             var newDate = lastDate + (args[1]*86400);
-            this.logger.info("Last Date: " + new Date(lastDate*1000).toString());
-            this.logger.info("New Date: " + new Date(newDate*1000).toString());
-            var newDateStamp = new Date(newDate*1000);
+            this.logger.info(newDate.toString())
+            var newDateStamp = new Date(newDate*1000)
             var year = newDateStamp.getFullYear();
             var month = newDateStamp.getMonth()+1;
             if(month<10){
@@ -118,7 +89,31 @@ module.exports = {
             }catch(err){
                 this.logger.error(err.message);
             }
-            await scheduleMessage(respDndSession, newDateStamp, this.logger);
+            const dateTimestamp = new Date(respDndSession.dnd_campaigns[0].next_session);
+                dateTimestamp.setDate(dateTimestamp.getDate() - 1);
+                // Schedule the job
+                await schedule.scheduleJob(respDndSession.dnd_campaigns[0].module+"-COMMAND", dateTimestamp, async function() {
+                    try{
+                        console.log(`Sending message for session ${respDndSession.dnd_campaigns[0].module}`);
+                        const guild = await message.client.guilds.fetch('650865972051312673');
+                            if (!guild) {
+                                console.error(`Guild not found for ID 650865972051312673`);
+                                return;
+                            }
+                        const channel = await guild.channels.resolve(respDndSession.dnd_campaigns[0].schedule_channel);
+                        if (channel) {
+                            var unixTimeStamp = Math.floor(new Date(respDndSession.dnd_campaigns[0].next_session).getTime()/1000);
+                            channel.send({content: "<@&"+respDndSession.dnd_campaigns[0].role_id.toString()+">, the session starts <t:" + unixTimeStamp.toString() + ":R>"});
+                        }else {
+                            console.error(`Channel not found for ID ${respDndSession.dnd_campaigns[0].schedule_channel} in guild ${guild.id}`);
+                        }
+                    }catch(err){
+                        console.error(err.message);
+                    }
+                });
+
+                const scheduledJobs = schedule.scheduledJobs;
+                logger.info('All scheduled jobs:', scheduledJobs);
 
             await message.channel.setTopic("Next Session: <t:" + newDate.toString() + ":R>" );
         }else{
@@ -145,7 +140,31 @@ module.exports = {
                     this.logger.error(err.message);
                 }
 
-                await scheduleMessage(respDndSession, dateTime, this.logger);
+                const dateTimestamp = new Date(respDndSession.dnd_campaigns[0].next_session);
+                dateTimestamp.setDate(dateTimestamp.getDate() - 1);
+                // Schedule the job
+                await schedule.scheduleJob(respDndSession.dnd_campaigns[0].module+"-COMMAND", dateTimestamp, async function() {
+                    try{
+                        console.log(`Sending message for session ${respDndSession.dnd_campaigns[0].module}`);
+                        const guild = await message.client.guilds.fetch('650865972051312673');
+                            if (!guild) {
+                                console.error(`Guild not found for ID 650865972051312673`);
+                                return;
+                            }
+                        const channel = await guild.channels.resolve(respDndSession.dnd_campaigns[0].schedule_channel);
+                        if (channel) {
+                            var unixTimeStamp = Math.floor(new Date(respDndSession.dnd_campaigns[0].next_session).getTime()/1000);
+                            channel.send({content: "<@&"+respDndSession.dnd_campaigns[0].role_id.toString()+">, the session starts <t:" + unixTimeStamp.toString() + ":R>"});
+                        }else {
+                            console.error(`Channel not found for ID ${respDndSession.dnd_campaigns[0].schedule_channel} in guild ${guild.id}`);
+                        }
+                    }catch(err){
+                        console.error(err.message);
+                    }
+                });
+
+                const scheduledJobs = schedule.scheduledJobs;
+                logger.info('All scheduled jobs:', scheduledJobs);
 
             }catch(err){
                 this.logger.error(err.message);
