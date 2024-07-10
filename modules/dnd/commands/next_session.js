@@ -76,9 +76,13 @@ module.exports = {
         try {
             const jobName = `${respDndSession.dnd_campaigns[0].module}-COMMAND`;
             logger.info(`Attempting to schedule job ${jobName} for ${dateTimestamp.toISOString()}`);
-
+            const existingJob = schedule.scheduledJobs[module];
+            if (existingJob) {
+                existingJob.cancel();
+            }
             const job = schedule.scheduleJob(jobName, dateTimestamp, async function() {
                 try {
+                    
                     logger.info(`Sending message for session ${respDndSession.dnd_campaigns[0].module}`);
                     const guild = await message.client.guilds.fetch('650865972051312673');
                     if (!guild) {
