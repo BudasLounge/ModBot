@@ -29,7 +29,7 @@ module.exports = {
         }
 
         const campaign = respDndSession.dnd_campaigns[0];
-        this.logger.info(`Campaign data: ${campaign}`);
+        this.logger.info(`Campaign data: ${JSON.stringify(campaign)}`);
         if (campaign.dm_role_id === "") {
             await message.reply('❌ This command requires a DM role but no main DM role has been selected for this category.');
             return;
