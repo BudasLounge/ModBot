@@ -1,4 +1,5 @@
 const schedule = require('node-schedule');
+const { format } = require('date-fns'); // Importing date-fns for date formatting
 
 module.exports = {
     name: 'next_session',
@@ -29,7 +30,7 @@ module.exports = {
         }
 
         const campaign = respDndSession.dnd_campaigns[0];
-        this.logger.info(`Campaign data: ${JSON.stringify(campaign)}`);
+
         if (campaign.dm_role_id === "") {
             await message.reply('❌ This command requires a DM role but no main DM role has been selected for this category.');
             return;
@@ -53,15 +54,33 @@ module.exports = {
             }
         }
 
-        if (!args[2]) {
-            const lastDate = Math.floor(new Date(campaign.next_session).getTime() / 1000);
-            const newDate = lastDate + (args[1] * 86400);
-            const newDateStamp = new Date(newDate * 1000);
-            time = `${newDateStamp.getFullYear()}-${String(newDateStamp.getMonth() + 1).padStart(2, '0')}-${String(newDateStamp.getDate()).padStart(2, '0')} ${String(newDateStamp.getHours()).padStart(2, '0')}:${String(newDateStamp.getMinutes()).padStart(2, '0')}:${String(newDateStamp.getSeconds()).padStart(2, '0')}`;
+        const now = new Date();
 
-            dateTime = `${time}`;
-            unixTimeStamp = Math.floor(new Date(dateTime).getTime() / 1000);
-            time = newDateStamp.toISOString();
+        if (!args[2]) {
+            if (!campaign.next_session) {
+                await message.reply('❌ No existing session found to calculate the new date.');
+                return;
+            }
+
+            const lastSessionDate = new Date(campaign.next_session);
+            const daysToAdd = parseInt(args[1], 10);
+
+            if (isNaN(daysToAdd)) {
+                await message.reply('❌ Invalid number of days.');
+                return;
+            }
+
+            const newDate = new Date(lastSessionDate);
+            newDate.setDate(newDate.getDate() + daysToAdd);
+
+            if (newDate <= now) {
+                await message.reply('⚠️ Please schedule the session at least 24 hours in advance.');
+                return;
+            }
+
+            dateTime = newDate;
+            unixTimeStamp = Math.floor(newDate.getTime() / 1000);
+            time = format(newDate, 'yyyy-MM-dd HH:mm:ss'); // Correctly formatted time
 
         } else {
             dateTime = `${args[1]} ${args[2]}`;
@@ -72,24 +91,25 @@ module.exports = {
                 return;
             }
 
+            if (localDate <= now) {
+                await message.reply('⚠️ Please schedule the session at least 24 hours in advance.');
+                return;
+            }
+
             unixTimeStamp = Math.floor(localDate.getTime() / 1000);
-            time = localDate.toISOString();
-        }
-
-        const now = new Date();
-        const executionTime = new Date(unixTimeStamp * 1000);
-        const delay = executionTime - now;
-
-        if (delay < 24 * 60 * 60 * 1000) { // Less than 24 hours
-            await message.reply('⚠️ Please schedule the session at least 24 hours in advance.');
-            return;
+            time = format(localDate, 'yyyy-MM-dd HH:mm:ss'); // Correctly formatted time
         }
 
         try {
-            var respPut = await api.put("dnd_campaign", {
+            const respPut = await api.put("dnd_campaign", {
                 campaign_id: parseInt(campaign.campaign_id),
                 next_session: time
             });
+
+            if (!respPut) {
+                throw new Error('API response was undefined');
+            }
+
             this.logger.info(`Updated campaign data: ${JSON.stringify(respPut)}`);
         } catch (err) {
             logger.error(`Error updating campaign data: ${err.message}`);
@@ -100,7 +120,7 @@ module.exports = {
         await message.channel.setTopic(`📅 Next Session: <t:${unixTimeStamp}:R>`);
 
         const jobName = `${campaign.module}-COMMAND`;
-        const reminderTime = new Date(executionTime.getTime() - 24 * 60 * 60 * 1000); // 24 hours before session
+        const reminderTime = new Date(unixTimeStamp * 1000 - 24 * 60 * 60 * 1000); // 24 hours before session
 
         logger.info(`Attempting to schedule job ${jobName} for ${reminderTime.toISOString()}`);
 
