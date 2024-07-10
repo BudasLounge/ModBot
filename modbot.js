@@ -92,9 +92,22 @@ async function botInit () {
             }
         });
     });
-    const scheduledJobs = schedule.scheduledJobs;
-    logger.info('All scheduled jobs:', scheduledJobs);
-    logger.info("Initialization of DnD scheduling messages complete!");
+    const jobs = schedule.scheduledJobs;
+    const jobNames = Object.keys(jobs);
+
+    if (jobNames.length === 0) {
+        logger.info('No scheduled jobs.');
+        return;
+    }
+
+    let jobList = 'All scheduled jobs:\n';
+    jobNames.forEach(name => {
+        const job = jobs[name];
+        const nextInvocation = job.nextInvocation();
+        jobList += `Job Name: ${name}, Next Invocation: ${nextInvocation ? nextInvocation.toString() : 'No next invocation'}\n`;
+    });
+
+    logger.info(jobList);
 }
 
 client.on('ready', botInit);
