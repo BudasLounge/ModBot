@@ -92,19 +92,33 @@ module.exports = {
         }
 
         try {
-            // Log detailed information about the date and time
-            logger.info(`Scheduling job with dateTimestamp: ${dateTimestamp.toISOString()} and current time: ${new Date().toISOString()}`);
+            const delay = dateTimestamp.getTime() - Date.now();
 
-            const job = schedule.scheduleJob(jobName, dateTimestamp, function() {
-                logger.info(`Job ${jobName} executed.`);
-            });
-
-            if (job) {
+            if (delay > 0) {
+                setTimeout(async function() {
+                    logger.info(`Job ${jobName} executed.`);
+                    try {
+                        const guild = await message.client.guilds.fetch('650865972051312673');
+                        if (!guild) {
+                            logger.error(`Guild not found for ID 650865972051312673`);
+                            return;
+                        }
+                        const channel = await guild.channels.resolve(campaign.schedule_channel);
+                        if (channel) {
+                            const unixTimeStamp = Math.floor(new Date(campaign.next_session).getTime() / 1000);
+                            await channel.send(`<@&${campaign.role_id}>, the session starts <t:${unixTimeStamp}:R>`);
+                        } else {
+                            logger.error(`Channel not found for ID ${campaign.schedule_channel} in guild ${guild.id}`);
+                        }
+                    } catch (err) {
+                        logger.error(`Error sending message for session: ${err.message}`);
+                    }
+                }, delay);
                 logger.info(`Scheduled job ${jobName} for ${dateTimestamp.toISOString()}`);
                 await message.reply(`Job ${jobName} scheduled successfully for ${dateTimestamp.toISOString()}.`);
             } else {
-                logger.error(`Failed to schedule job ${jobName}`);
-                await message.reply(`Failed to schedule job ${jobName}.`);
+                logger.error(`Failed to schedule job ${jobName} due to negative delay.`);
+                await message.reply(`Failed to schedule job ${jobName} due to negative delay.`);
             }
         } catch (err) {
             logger.error(`Exception occurred while scheduling job: ${err.message}`);
