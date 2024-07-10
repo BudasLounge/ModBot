@@ -86,10 +86,11 @@ module.exports = {
         }
 
         try {
-            await api.put("dnd_campaign", {
+            respPut = await api.put("dnd_campaign", {
                 campaign_id: parseInt(campaign.campaign_id),
                 next_session: time
             });
+            this.logger.info(`Updated campaign data: ${JSON.stringify(respPut)}`);
         } catch (err) {
             logger.error(`Error updating campaign data: ${err.message}`);
             await message.reply('❌ Failed to update campaign data.');
