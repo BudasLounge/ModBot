@@ -54,8 +54,9 @@ module.exports = {
             }
             var lastDate = Math.floor(new Date(respLastSession.dnd_campaigns[0].next_session).getTime()/1000);
             var newDate = lastDate + (args[1]*86400);
-            this.logger.info(newDate.toString())
-            var newDateStamp = new Date(newDate*1000)
+            this.logger.info("Last Date: " + new Date(lastDate*1000).toString());
+            this.logger.info("New Date: " + new Date(newDate*1000).toString());
+            var newDateStamp = new Date(newDate*1000);
             var year = newDateStamp.getFullYear();
             var month = newDateStamp.getMonth()+1;
             if(month<10){
