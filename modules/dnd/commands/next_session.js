@@ -76,6 +76,15 @@ module.exports = {
             time = localDate.toISOString();
         }
 
+        const now = new Date();
+        const executionTime = new Date(unixTimeStamp * 1000);
+        const delay = executionTime - now;
+
+        if (delay < 24 * 60 * 60 * 1000) { // Less than 24 hours
+            await message.reply('Please schedule the session at least 24 hours in advance.');
+            return;
+        }
+
         try {
             await api.put("dnd_campaign", {
                 campaign_id: parseInt(campaign.campaign_id),
@@ -88,19 +97,6 @@ module.exports = {
         }
 
         await message.channel.setTopic(`Next Session: <t:${unixTimeStamp}:R>`);
-
-        // Calculate the job's execution time (subtracting 24 hours)
-        const executionTime = new Date(unixTimeStamp * 1000);
-        executionTime.setDate(executionTime.getDate() - 1);
-
-        const now = new Date();
-        const delay = executionTime - now;
-
-        if (delay <= 0) {
-            logger.error(`Failed to schedule job due to negative delay.`);
-            await message.reply(`Failed to schedule job due to negative delay.`);
-            return;
-        }
 
         const jobName = `${campaign.module}-COMMAND`;
         logger.info(`Attempting to schedule job ${jobName} for ${executionTime.toISOString()}`);
