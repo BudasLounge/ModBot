@@ -82,6 +82,15 @@ module.exports = {
             }catch(err4){
                 this.logger.error(err4.message);
             }
+            try{
+                respDndSession = await api.get("dnd_campaign",{
+                    schedule_channel:message.channel.id
+                });
+            }catch(err){
+                this.logger.error(err.message);
+            }
+            await scheduleMessage(respDndSession.dnd_campaigns[0]);
+
             await message.channel.setTopic("Next Session: <t:" + newDate.toString() + ":R>" );
         }else{
             try{
@@ -107,46 +116,38 @@ module.exports = {
                     this.logger.error(err.message);
                 }
 
-                const existingJob = schedule.scheduledJobs[respDndSession.dnd_campaigns[0].module];
-                if (existingJob) {
-                    existingJob.cancel();
-                }
-                const existingJobCommand = schedule.scheduledJobs[respDndSession.dnd_campaigns[0].module+"-COMMAND"];
-                if (existingJobCommand) {
-                    existingJobCommand.cancel();
-                }
-                logger.info(`Scheduling message for session ${respDndSession.dnd_campaigns[0].module} via COMMAND`);
-
-                // Parse the date-time string into a JavaScript Date object
-                const dateTimestamp = new Date(respDndSession.dnd_campaigns[0].next_session);
-                dateTimestamp.setDate(dateTimestamp.getDate() - 1);
-                // Schedule the job
-                await schedule.scheduleJob(respDndSession.dnd_campaigns[0].module+"-COMMAND", dateTimestamp, async function() {
-                    try{
-                        console.log(`Sending message for session ${respDndSession.dnd_campaigns[0].module}`);
-                        const guild = await message.client.guilds.fetch('650865972051312673');
-                            if (!guild) {
-                                console.error(`Guild not found for ID 650865972051312673`);
-                                return;
-                            }
-                        const channel = await guild.channels.resolve(respDndSession.dnd_campaigns[0].schedule_channel);
-                        if (channel) {
-                            var unixTimeStamp = Math.floor(new Date(respDndSession.dnd_campaigns[0].next_session).getTime()/1000);
-                            channel.send({content: "<@&"+respDndSession.dnd_campaigns[0].role_id.toString()+">, the session starts <t:" + unixTimeStamp.toString() + ":R>"});
-                        }else {
-                            console.error(`Channel not found for ID ${respDndSession.dnd_campaigns[0].schedule_channel} in guild ${guild.id}`);
-                        }
-                    }catch(err){
-                        console.error(err.message);
-                    }
-                });
-
-                const scheduledJobs = schedule.scheduledJobs;
-                logger.info('All scheduled jobs:', scheduledJobs);
+                await scheduleMessage(respDndSession.dnd_campaigns[0]);
 
             }catch(err){
                 this.logger.error(err.message);
             }
         }
     }
+}
+
+async function scheduleMessage(respDndSession){
+    const schedule = require('node-schedule');
+    const existingJob = schedule.scheduledJobs[respDndSession.dnd_campaigns[0].module];
+    if (existingJob) {
+        existingJob.cancel();
+    }
+    // Schedule the job
+    schedule.scheduleJob(respDndSession.dnd_campaigns[0].module, dateTime, async function() {
+        logger.info(`Sending message for session ${respDndSession.dnd_campaigns[0].module}`);
+        const guild = await client.guilds.fetch('650865972051312673');
+            if (!guild) {
+                logger.error(`Guild not found for ID 650865972051312673`);
+                return;
+            }
+        const channel = await guild.channels.resolve(respDndSession.dnd_campaigns[0].schedule_channel);
+        if (channel) {
+            var unixTimeStamp = Math.floor(new Date(respDndSession.dnd_campaigns[0].next_session).getTime()/1000);
+            channel.send({content: "<@&"+respDndSession.dnd_campaigns[0].role_id.toString()+">, the session starts <t:" + unixTimeStamp.toString() + ":R>"});
+        }else {
+            logger.error(`Channel not found for ID ${respDndSession.dnd_campaigns[0].schedule_channel} in guild ${guild.id}`);
+        }
+
+        const scheduledJobs = schedule.scheduledJobs;
+        logger.info('All scheduled jobs:', scheduledJobs);
+    });
 }
