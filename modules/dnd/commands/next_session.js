@@ -86,7 +86,7 @@ module.exports = {
         }
 
         try {
-            respPut = await api.put("dnd_campaign", {
+            var respPut = await api.put("dnd_campaign", {
                 campaign_id: parseInt(campaign.campaign_id),
                 next_session: time
             });
