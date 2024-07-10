@@ -19,6 +19,7 @@ module.exports = {
             });
         } catch (err) {
             logger.error(err.message);
+            return;
         }
 
         if (respDndSession.dnd_campaigns[0]) {
@@ -34,9 +35,10 @@ module.exports = {
             return;
         }
 
+        let dateTime, unixTimeStamp, newDateStamp, time;
         if (!args[1]) {
             if (respDndSession.dnd_campaigns[0] && respDndSession.dnd_campaigns[0].next_session) {
-                const unixTimeStamp = Math.floor(new Date(respDndSession.dnd_campaigns[0].next_session).getTime() / 1000);
+                unixTimeStamp = Math.floor(new Date(respDndSession.dnd_campaigns[0].next_session).getTime() / 1000);
                 await message.channel.send({ content: `<@&${respDndSession.dnd_campaigns[0].role_id}>, the session starts <t:${unixTimeStamp}:R>` });
                 return;
             } else {
@@ -45,9 +47,7 @@ module.exports = {
             }
         }
 
-        let dateTime, unixTimeStamp, newDateStamp, time;
         if (!args[2]) {
-            // Calculate new date from the last session plus the number of days provided in args[1]
             const lastDate = Math.floor(new Date(respDndSession.dnd_campaigns[0].next_session).getTime() / 1000);
             const newDate = lastDate + (args[1] * 86400);
             newDateStamp = new Date(newDate * 1000);
@@ -65,6 +65,7 @@ module.exports = {
             });
         } catch (err) {
             logger.error(err.message);
+            return;
         }
 
         await message.channel.setTopic(`Next Session: <t:${unixTimeStamp}:R>`);
@@ -73,7 +74,8 @@ module.exports = {
         const dateTimestamp = new Date(time);
         dateTimestamp.setDate(dateTimestamp.getDate() - 1);
 
-        schedule.scheduleJob(`${respDndSession.dnd_campaigns[0].module}-COMMAND`, dateTimestamp, async function() {
+        const jobName = `${respDndSession.dnd_campaigns[0].module}-COMMAND`;
+        const job = schedule.scheduleJob(jobName, dateTimestamp, async function() {
             try {
                 logger.info(`Sending message for session ${respDndSession.dnd_campaigns[0].module}`);
                 const guild = await message.client.guilds.fetch('650865972051312673');
@@ -93,6 +95,11 @@ module.exports = {
             }
         });
 
-        logger.info('Scheduled job for next session.');
+        if (job) {
+            logger.info(`Scheduled job ${jobName} for ${dateTimestamp}`);
+            logger.info(`Job details: ${JSON.stringify(job, null, 2)}`);
+        } else {
+            logger.error(`Failed to schedule job ${jobName}`);
+        }
     }
 };
