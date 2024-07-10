@@ -19,24 +19,24 @@ module.exports = {
             });
         } catch (err) {
             logger.error(`Error fetching campaign data: ${err.message}`);
-            await message.reply('Failed to fetch campaign data.');
+            await message.reply('❌ Failed to fetch campaign data.');
             return;
         }
 
         if (!respDndSession.dnd_campaigns[0]) {
-            await message.reply('No DnD campaigns were found linked to this channel. Please set up a scheduling channel to use this command.');
+            await message.reply('❌ No DnD campaigns were found linked to this channel. Please set up a scheduling channel to use this command.');
             return;
         }
 
         const campaign = respDndSession.dnd_campaigns[0];
 
         if (campaign.dm_role_id === "") {
-            await message.reply('This command requires a DM role but no main DM role has been selected for this category.');
+            await message.reply('❌ This command requires a DM role but no main DM role has been selected for this category.');
             return;
         }
 
         if (!message.member.roles.cache.has(campaign.dm_role_id)) {
-            await message.reply('You do not have permission to use this command.');
+            await message.reply('❌ You do not have permission to use this command.');
             return;
         }
 
@@ -45,10 +45,10 @@ module.exports = {
         if (!args[1]) {
             if (campaign.next_session) {
                 unixTimeStamp = Math.floor(new Date(campaign.next_session).getTime() / 1000);
-                await message.channel.send({ content: `<@&${campaign.role_id}>, the session starts <t:${unixTimeStamp}:R>` });
+                await message.channel.send({ content: `⏳ The next session starts <t:${unixTimeStamp}:R> <@&${campaign.role_id}>.` });
                 return;
             } else {
-                await message.channel.send({ content: "Please enter a datetime stamp for this command!\nYYYY-MM-DD HH:MM:SS time stamp" });
+                await message.channel.send({ content: "❌ Please enter a datetime stamp for this command!\n`YYYY-MM-DD HH:MM:SS`" });
                 return;
             }
         }
@@ -68,7 +68,7 @@ module.exports = {
             const localDate = new Date(dateTime);
 
             if (isNaN(localDate.getTime())) {
-                await message.reply('Invalid date format. Please use YYYY-MM-DD HH:MM:SS.');
+                await message.reply('❌ Invalid date format. Please use `YYYY-MM-DD HH:MM:SS`.');
                 return;
             }
 
@@ -81,7 +81,7 @@ module.exports = {
         const delay = executionTime - now;
 
         if (delay < 24 * 60 * 60 * 1000) { // Less than 24 hours
-            await message.reply('Please schedule the session at least 24 hours in advance.');
+            await message.reply('⚠️ Please schedule the session at least 24 hours in advance.');
             return;
         }
 
@@ -92,11 +92,11 @@ module.exports = {
             });
         } catch (err) {
             logger.error(`Error updating campaign data: ${err.message}`);
-            await message.reply('Failed to update campaign data.');
+            await message.reply('❌ Failed to update campaign data.');
             return;
         }
 
-        await message.channel.setTopic(`Next Session: <t:${unixTimeStamp}:R>`);
+        await message.channel.setTopic(`📅 Next Session: <t:${unixTimeStamp}:R>`);
 
         const jobName = `${campaign.module}-COMMAND`;
         logger.info(`Attempting to schedule job ${jobName} for ${executionTime.toISOString()}`);
@@ -114,15 +114,15 @@ module.exports = {
 
             if (job) {
                 logger.info(`Scheduled job ${jobName} for ${executionTime.toISOString()}`);
-                await message.reply(`Job ${jobName} scheduled successfully for ${executionTime.toISOString()}.`);
+                await message.reply(`✅ Job \`${jobName}\` scheduled successfully for ${executionTime.toISOString()}.`);
             } else {
                 logger.error(`Failed to schedule job ${jobName}`);
-                await message.reply(`Failed to schedule job ${jobName}.`);
+                await message.reply(`❌ Failed to schedule job \`${jobName}\`.`);
             }
         } catch (err) {
             logger.error(`Exception occurred while scheduling job: ${err.message}`);
             logger.error(`Exception details: ${err.stack}`);
-            await message.reply('An error occurred while scheduling the job.');
+            await message.reply('❌ An error occurred while scheduling the job.');
         }
     }
 };
