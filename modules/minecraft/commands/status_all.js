@@ -25,7 +25,7 @@ module.exports = {
     const ListEmbed = new Discord.MessageEmbed()
       .setColor('#f92f03')
       .setTitle('List of all minecraft servers: ')
-      .addFields('Notice:\n', 'If the server crashed, it should auto restart in 5 minutes or less\nContact a server admin if it does not.');
+      .addField('Notice:\n', 'If the server crashed, it should auto restart in 5 minutes or less\nContact a server admin if it does not.');
 
     const SensitiveCharacters = ['\\', '*', '_', '~', '`', '|', '>'];
 
@@ -49,7 +49,7 @@ module.exports = {
       } catch (error) {
         this.logger.error(`${error}, setting flag to true`);
         const item = `${server.display_name} is currently offline!\n\n`;
-        ListEmbed.addFields(`${server.display_name} server info:`, item);
+        ListEmbed.addField(`${server.display_name} server info:`, item);
         return item;
       }
     });
