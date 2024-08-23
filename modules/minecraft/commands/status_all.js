@@ -31,7 +31,7 @@ module.exports = {
 
     const serverPromises = respServer.minecraft_servers.map(async (server) => {
       try {
-        const item = await pinger.pingWithPromise(server.numeric_ip, server.port).catch(() => "OFFLINE");
+        const item = await pinger.pingWithPromise(server.server_ip).catch(() => "OFFLINE");
         const isOnline = item.players.online > 0;
 
         let nextItem = `${server.display_name} is currently ${isOnline ? `online with ${item.players.online} player${item.players.online === 1 ? '' : 's'} online\n` : 'online but no players are.\n\n'}`;
