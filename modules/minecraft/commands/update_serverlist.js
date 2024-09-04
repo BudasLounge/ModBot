@@ -45,6 +45,7 @@ module.exports = {
 • **Status API Port**: ${server.status_api_port}
 • **MC Version**: ${server.mc_version}
 • **Pack Version**: ${server.pack_version}
+• **Pack URL**: ${server.url}
 
 **After Update:**
 • **Short Name**: ${updatedServer.short_name}
@@ -54,6 +55,7 @@ module.exports = {
 • **Status API Port**: ${updatedServer.status_api_port}
 • **MC Version**: ${updatedServer.mc_version}
 • **Pack Version**: ${updatedServer.pack_version}
+• **Pack Version**: ${updatedServer.url}
 `;
 
         const embed = new MessageEmbed()
