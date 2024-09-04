@@ -57,7 +57,7 @@ module.exports = {
         const command = args.slice(2).join(' ');
 
         // Establish RCON connection
-        const conn = new Rcon(server.numeric_ip, server.rcon_port, password);
+        const conn = new Rcon("192.168.1.4", server.rcon_port, password);
 
         // RCON connection events
         conn.on('auth', function() {
