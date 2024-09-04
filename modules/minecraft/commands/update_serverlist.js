@@ -40,7 +40,7 @@ module.exports = {
 **Before Update:**
 • **Short Name**: ${server.short_name}
 • **Display Name**: ${server.display_name}
-• **IP + Port**: ${server.server_ip}:${server.port}
+• **IP + Port**: ${server.server_ip}
 • **Numeric IP**: ${server.numeric_ip}:${server.port}
 • **Status API Port**: ${server.status_api_port}
 • **MC Version**: ${server.mc_version}
@@ -50,7 +50,7 @@ module.exports = {
 **After Update:**
 • **Short Name**: ${updatedServer.short_name}
 • **Display Name**: ${updatedServer.display_name}
-• **IP + Port**: ${updatedServer.server_ip}:${updatedServer.port}
+• **IP + Port**: ${updatedServer.server_ip}
 • **Numeric IP**: ${updatedServer.numeric_ip}:${updatedServer.port}
 • **Status API Port**: ${updatedServer.status_api_port}
 • **MC Version**: ${updatedServer.mc_version}
