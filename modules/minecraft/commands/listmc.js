@@ -1,4 +1,6 @@
-module.exports ={
+const { MessageEmbed } = require('discord.js');
+
+module.exports = {
     name: 'listmc',
     description: 'Shows all servers and their information',
     syntax: 'listmc',
@@ -6,18 +8,40 @@ module.exports ={
     args_to_lower: false,
     needs_api: true,
     has_state: false,
+
     async execute(message, args, { api }) {
-        const Discord = require('discord.js');
-        const respServer = await api.get("minecraft_server", {
-            _limit: 20
-        });
-        const ListEmbed = new Discord.MessageEmbed()
-            .setColor("#f92f03")
-            .setTitle("List of all minecraft servers: ");
-        respServer.minecraft_servers.map(({ display_name, short_name, server_ip, numeric_ip, port, mc_version, pack_version, date_created, url }) => {
-            const nextItem = `${display_name}:\nshort name: ${short_name}\nserver ip: ${server_ip}\nnumeric ip: ${numeric_ip}:${port}\nminecraft version: ${mc_version}\npack version: ${pack_version}\ndate created: ${date_created}\nurl: ${url}\n`;
-            ListEmbed.addField(`${display_name} server info:`, nextItem);
-        });
-        message.channel.send({ embeds: [ListEmbed] });
+        try {
+            const respServer = await api.get('minecraft_server', { _limit: 20 });
+            const servers = respServer.minecraft_servers;
+
+            if (!servers.length) {
+                return message.channel.send({ content: 'No Minecraft servers found.' });
+            }
+
+            const embed = new MessageEmbed()
+                .setColor('#f92f03')
+                .setTitle('List of All Minecraft Servers')
+                .setFooter('Server Information');
+
+            // Loop through the servers and format the information cleanly
+            servers.forEach(server => {
+                const serverInfo = `
+**Short Name**: ${server.short_name}
+**Server IP**: ${server.server_ip}
+**Numeric IP**: ${server.numeric_ip}:${server.port}
+**Minecraft Version**: ${server.mc_version}
+**Pack Version**: ${server.pack_version}
+**Date Created**: ${new Date(server.date_created).toLocaleDateString()}
+**URL**: ${server.url || 'N/A'}
+                `;
+
+                embed.addField(`${server.display_name}`, serverInfo, false);
+            });
+
+            message.channel.send({ embeds: [embed] });
+        } catch (error) {
+            console.error('Error fetching server list:', error);
+            message.channel.send({ content: 'An error occurred while fetching the server list.' });
+        }
     }
 };
