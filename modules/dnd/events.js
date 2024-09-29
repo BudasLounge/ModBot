@@ -80,10 +80,10 @@ async function onButtonClick(button){
             const thirdActionRow = new MessageActionRow().addComponents(textChannelInput);
             const fourthActionRow = new MessageActionRow().addComponents(voiceChannelInput);
             // Add inputs to the modal
-			
             modal.addComponents(firstActionRow, secondActionRow, thirdActionRow, fourthActionRow);
             // Show the modal to the user
             await button.showModal(modal);
+			// testing a push
         }
     }
     else if(button.isModalSubmit()){
