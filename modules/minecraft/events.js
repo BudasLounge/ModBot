@@ -103,32 +103,33 @@ async function onButtonClick(button){
             if(respServer.minecraft_servers.length<1){
                 //var date = (new Date()).toISOString().split('T')[0];
                 //button.channel.send({content: date})
-            try{
-                var currentIP = "0.0.0.0";
-                await axios.get('https://api.ipify.org?format=json')
-                    .then(response => {
-                        console.log('My public IP address is:', response.data.ip);
-                        currentIP = response.data.ip;
-                    })
-                    .catch(error => {
-                        console.error('Error fetching IP:', error);
+                try{
+                    /*
+                    var currentIP = "0.0.0.0";
+                    await axios.get('https://api.ipify.org?format=json')
+                        .then(response => {
+                            console.log('My public IP address is:', response.data.ip);
+                            currentIP = response.data.ip;
+                        })
+                        .catch(error => {
+                            console.error('Error fetching IP:', error);
+                        });*/
+                    await api.post("minecraft_server", {
+                        display_name: display_name,
+                        short_name: short_name,
+                        server_ip: short_name+".budaslounge.com",
+                        port: port.toString(),
+                        status_api_port: "none",
+                        numeric_ip: "PROXIED",
+                        mc_version: mc_version,
+                        pack_version: pack_version,
+                        rcon_port: (parseInt(port)+1).toString()
                     });
-                await api.post("minecraft_server", {
-                    display_name: display_name,
-                    short_name: short_name,
-                    server_ip: short_name+".budaslounge.com",
-                    port: port.toString(),
-                    status_api_port: "none",
-                    numeric_ip: currentIP,
-                    mc_version: mc_version,
-                    pack_version: pack_version,
-                    rcon_port: (parseInt(port)+1).toString()
-                });
-            }catch(err){
-                logger.error(err.message);
-                button.channel.send({ content: "I hit a snag..." + err});
-                return;
-            }
+                }catch(err){
+                    logger.error(err.message);
+                    button.channel.send({ content: "I hit a snag..." + err});
+                    return;
+                }
             }else{
                 button.channel.send({ content: "I found a server with that server_ip already, try again"});
                 return;
