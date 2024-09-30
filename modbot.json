@@ -6,7 +6,7 @@
         "restart": "I have restarted!"
     },
     "bot_activity": {
-        "name": "in the matrix",
+        "name": "in devland",
         "type": "PLAYING"
     },
     "modules_folder": "modules",
