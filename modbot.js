@@ -126,7 +126,6 @@ function authClient() {
 
 client.on('messageCreate', (message) => {
     logger.info("Got message!");
-    
     //Add ability to check first time someone sends a message (not command) and grant them points
     modules.handle_command(message);
 });
