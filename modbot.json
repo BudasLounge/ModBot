@@ -1,5 +1,5 @@
 {
-    "token_file": "../token.txt",
+    "token_file": "../token-dev.txt",
     "default_channel": "880900861692358696",
     "startup_messages": {
         "update": "I have been updated!",
