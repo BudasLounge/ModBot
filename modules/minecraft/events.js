@@ -136,7 +136,6 @@ async function onButtonClick(button){
             }
         }
         //else if((button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && button.customId==="MCSERVERDELETORMODAL"){
-
         //}
         else{
             button.channel.send({ content: "You don't have permission to use that button!"});
