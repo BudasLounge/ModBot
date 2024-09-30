@@ -11,7 +11,7 @@ require('dotenv/config')
 
 const {Client, GatewayIntentBits, Intents} = require('discord.js');
 const Discord = require('discord.js');
-const client = new Client({ intents: [GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages, GatewayIntentBits.DIRECT_MESSAGES, Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_BANS, Intents.FLAGS.GUILD_INVITES, Intents.FLAGS.GUILD_VOICE_STATES] });
+const client = new Client({ intents: [GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages, GatewayIntentBits.DIRECT_MESSAGES, GatewayIntentBits.GUILDS, GatewayIntentBits.GUILD_BANS, GatewayIntentBits.GUILD_INVITES, GatewayIntentBits.GUILD_VOICE_STATES] });
 var config = JSON.parse(fs.readFileSync('modbot.json'));
 
 var ModuleHandler = require('./core/js/module_handler.js');
