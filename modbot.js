@@ -1,7 +1,7 @@
 /**
  * Entry point for the bot. Sets up the discord client,
  * loads all the internal systems, then discovers modules and commands.
- * CURRENT IN THE DEVELOP djs14 BRANCH
+ * CURRENT IN THE DEVELOP djs14 BRANCH!
  */
 
 var fs = require('fs');
