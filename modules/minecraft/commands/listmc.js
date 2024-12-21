@@ -33,6 +33,7 @@ module.exports = {
 **Pack Version**: ${server.pack_version}
 **Date Created**: ${new Date(server.date_created).toLocaleDateString()}
 **URL**: ${server.url || 'N/A'}
+**Join Type**: ${server.whitelist}
                 `;
 
                 embed.addField(`${server.display_name}`, serverInfo, false);
