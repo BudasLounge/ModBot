@@ -14,7 +14,8 @@ module.exports = {
         var separator;
         if(args[4]){
             separator = args[4];
-        }else{
+        }
+        else{
             separator = " ";
         }
         if(interval>0 && start>end){
@@ -46,5 +47,6 @@ module.exports = {
                 
             message.channel.send({ content: output});
         }
+        message.channel.send({ content: "This is a practice command."});
     }
 }
