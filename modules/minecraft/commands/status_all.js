@@ -13,6 +13,10 @@ module.exports = {
     const Discord = require('discord.js');
     const axios = require('axios');
     const pinger = require('minecraft-ping-js');
+    const fs = require('fs');
+
+    // Read Palworld password from file
+    const password = fs.readFileSync('../palworld_password.txt').toString().trim();
 
     message.channel.send({ content: 'Let me get that for you... this might take a moment' });
 
@@ -54,10 +58,46 @@ module.exports = {
       }
     });
 
-    const stat_server = await Promise.all(serverPromises);
+    await Promise.all(serverPromises);
 
+    // Create Palworld embed
+    const PalworldEmbed = new Discord.MessageEmbed()
+      .setColor('#0a74da')
+      .setTitle('Palworld Server Status');
+
+    try {
+      // Fetch Palworld metrics
+      const metricsResp = await axios.get('http://192.168.1.4:8212/v1/api/metrics', {
+        auth: { username: 'admin', password }
+      });
+      const metrics = metricsResp.data;
+
+      PalworldEmbed.addField('Player Count', `${metrics.currentplayernum} / ${metrics.maxplayernum}`, true);
+      PalworldEmbed.addField('Server FPS', `${metrics.serverfps}`, true);
+      
+      const uptimeSeconds = metrics.uptime;
+      const uptimeHours = Math.floor(uptimeSeconds / 3600);
+      const uptimeMinutes = Math.floor((uptimeSeconds % 3600) / 60);
+      PalworldEmbed.addField('Uptime', `${uptimeHours}h ${uptimeMinutes}m`, true);
+
+      // If players online, fetch player list
+      if (metrics.currentplayernum > 0) {
+        const playersResp = await axios.get('http://192.168.1.4:8212/v1/api/players', {
+          auth: { username: 'admin', password }
+        });
+        const playerNames = playersResp.data.players.map(p => p.name);
+        const namesList = playerNames.length ? playerNames.join('\n') : 'No players online';
+        PalworldEmbed.addField('Players Online', namesList);
+      } else {
+        PalworldEmbed.addField('Players Online', 'No players online');
+      }
+    } catch (error) {
+      PalworldEmbed.setDescription('Failed to fetch Palworld server data.');
+    }
+
+    // Send both embeds
     message.channel.send({
-      embeds: [ListEmbed],
+      embeds: [ListEmbed, PalworldEmbed],
       content: `It took ${((performance.now() - perfStart) / 1000).toFixed(2)} seconds to get this list:`,
     });
 
