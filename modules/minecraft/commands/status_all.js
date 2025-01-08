@@ -85,7 +85,8 @@ module.exports = {
         const playersResp = await axios.get('http://192.168.1.4:8212/v1/api/players', {
           auth: { username: 'admin', password }
         });
-        const playerNames = playersResp.data.players.map(p => p.name);
+        // Map each player as "name" ("accountName")
+        const playerNames = playersResp.data.players.map(p => `${p.name} (${p.accountName})`);
         const namesList = playerNames.length ? playerNames.join('\n') : 'No players online';
         PalworldEmbed.addField('Players Online', namesList);
       } else {
