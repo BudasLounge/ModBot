@@ -73,7 +73,7 @@ module.exports = {
       const metrics = metricsResp.data;
 
       PalworldEmbed.addField('Player Count', `${metrics.currentplayernum} / ${metrics.maxplayernum}`, true);
-      PalworldEmbed.addField('Server FPS', `${metrics.serverfps}`, true);
+      PalworldEmbed.addField('Server FPS', `${metrics.serverfps}/60`, true);
       
       const uptimeSeconds = metrics.uptime;
       const uptimeHours = Math.floor(uptimeSeconds / 3600);
