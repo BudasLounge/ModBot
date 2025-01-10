@@ -7,6 +7,10 @@ module.exports = {
     needs_api: false,
     has_state: false,
     async execute(message, args) {
+      if(!message.member.roles.cache.some(role => role.name === "PalworldAdmin")){
+        message.channel.send({ content: "You don't have permission to use that command!"});
+        return;
+      }
       const axios = require('axios');
       const fs = require('fs');
   
