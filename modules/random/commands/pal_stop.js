@@ -38,7 +38,7 @@ module.exports = {
         });
         const metrics = metricsResp.data;
         // Inform channel with some of the metrics info
-        message.channel.send(`Server restarted successfully. Uptime: ${Math.floor(metrics.uptime/3600)}h ${Math.floor((metrics.uptime%3600)/60)}m, Players: ${metrics.currentplayernum}/${metrics.maxplayernum}, FPS: ${metrics.serverfps}.`);
+        message.channel.send(`Server restarted successfully.`);
       } catch (error) {
         console.error('Error fetching metrics after restart:', error);
         message.channel.send('Server does not seem to have restarted correctly.');
