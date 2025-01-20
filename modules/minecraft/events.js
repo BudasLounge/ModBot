@@ -130,7 +130,8 @@ async function onButtonClick(button){
                     numeric_ip: "PROXIED",
                     mc_version: mc_version,
                     pack_version: pack_version,
-                    rcon_port: (parseInt(port)+1).toString()
+                    rcon_port: (parseInt(port)+1).toString(),
+                    server: "linux"
                 });
             
                 logger.info("Response from API POST:", respServerPost);
