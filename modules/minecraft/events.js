@@ -121,7 +121,7 @@ async function onButtonClick(button){
         
             try {
                 // Attempt to create a new Minecraft server record
-                respServerPost = await api.post("minecraft_server", {
+                const respServerPost = await api.post("minecraft_server", {
                     display_name,
                     short_name,
                     server_ip: `${short_name}.budaslounge.com`,
@@ -132,15 +132,25 @@ async function onButtonClick(button){
                     pack_version,
                     rcon_port: (parseInt(port, 10) + 1).toString()
                 });
+            
+                logger.info("Response from API POST:", respServerPost);
+                // Check if the response indicates success. Adjust based on your API's conventions.
+                if (!respServerPost || !respServerPost.ok) {
+                    logger.error("API did not confirm the creation of the server:", respServerPost);
+                    await button.channel.send({ content: "Failed to create server due to API response." });
+                    return;
+                }
+            
                 // Notify the user of successful creation
                 await button.reply({ 
                     content: `Added a new server with Display Name: ${display_name}` 
                 });
             } catch (err) {
                 logger.error("Error creating server:", err.message);
-                button.channel.send({ content: "I hit a snag... " + err.message });
+                await button.channel.send({ content: "I hit a snag... " + err.message });
                 return;
             }
+            
         } else {
             button.channel.send({ content: "You don't have permission to use that button!" });
         }
