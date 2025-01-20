@@ -121,16 +121,16 @@ async function onButtonClick(button){
         
             try {
                 // Attempt to create a new Minecraft server record
-                const respServerPost = await api.post("minecraft_server", {
-                    display_name,
-                    short_name,
-                    server_ip: `${short_name}.budaslounge.com`,
+                const respServerPost =  await api.post("minecraft_server", {
+                    display_name: display_name,
+                    short_name: short_name,
+                    server_ip: short_name+".budaslounge.com",
                     port: port.toString(),
                     status_api_port: "none",
                     numeric_ip: "PROXIED",
-                    mc_version,
-                    pack_version,
-                    rcon_port: (parseInt(port, 10) + 1).toString()
+                    mc_version: mc_version,
+                    pack_version: pack_version,
+                    rcon_port: (parseInt(port)+1).toString()
                 });
             
                 logger.info("Response from API POST:", respServerPost);
