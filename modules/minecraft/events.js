@@ -85,15 +85,18 @@ async function onButtonClick(button){
         await button.reply({content: "An option was selected!"})
     }
     else if(button.isModalSubmit() && button.customId==="MCSERVERCREATORMODAL"){
+        logger.info(">>MCSERVERCREATORMODAL()");
         if (
             (button.member.roles.cache.some(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") 
             && button.customId === "MCSERVERCREATORMODAL"
         ) {
+            logger.info("User has permission to use the button");
             const display_name = button.fields.getTextInputValue('display_name');
             const short_name = button.fields.getTextInputValue('short_name');
             const port = button.fields.getTextInputValue('port');
             const mc_version = button.fields.getTextInputValue('mc_version');
             const pack_version = button.fields.getTextInputValue('pack_version');
+            logger.info(`Display Name: ${display_name}, Short Name: ${short_name}, Port: ${port}, MC Version: ${mc_version}, Pack Version: ${pack_version}`);
         
             let respServer;
         
@@ -104,7 +107,10 @@ async function onButtonClick(button){
                 });
             } catch (error) {
                 logger.error("Error fetching server:", error.message);
+                button.channel.send({ content: "I hit a snag... " + error.message });
+                return;
             }
+            logger.info("Server info fetched");
         
             // If a server with that IP exists, inform the user and exit
             if (respServer?.minecraft_servers?.length > 0) {
@@ -115,7 +121,7 @@ async function onButtonClick(button){
         
             try {
                 // Attempt to create a new Minecraft server record
-                await api.post("minecraft_server", {
+                respServerPost = await api.post("minecraft_server", {
                     display_name,
                     short_name,
                     server_ip: `${short_name}.budaslounge.com`,
@@ -126,7 +132,7 @@ async function onButtonClick(button){
                     pack_version,
                     rcon_port: (parseInt(port, 10) + 1).toString()
                 });
-        
+                logger.info("Server created: ", respServerPost.ok);
                 // Notify the user of successful creation
                 await button.reply({ 
                     content: `Added a new server with Display Name: ${display_name}` 
@@ -134,10 +140,12 @@ async function onButtonClick(button){
             } catch (err) {
                 logger.error("Error creating server:", err.message);
                 button.channel.send({ content: "I hit a snag... " + err.message });
+                return;
             }
         } else {
             button.channel.send({ content: "You don't have permission to use that button!" });
-        }        
+        }
+        logger.info("<<MCSERVERCREATORMODAL() SUCCESS");     
     }
 }
 
