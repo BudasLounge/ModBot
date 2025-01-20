@@ -132,7 +132,6 @@ async function onButtonClick(button){
                     pack_version,
                     rcon_port: (parseInt(port, 10) + 1).toString()
                 });
-                logger.info("Server created: ", respServerPost.ok);
                 // Notify the user of successful creation
                 await button.reply({ 
                     content: `Added a new server with Display Name: ${display_name}` 
