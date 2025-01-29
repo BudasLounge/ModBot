@@ -6,7 +6,7 @@ module.exports = {
     syntax: '!monitor <product_url>',
     num_args: 1, // Minimum amount of arguments to accept
     args_to_lower: false, // Arguments should preserve case (URLs are case-sensitive)
-    needs_api: false, // Does not need access to the API
+    needs_api: true, // This command needs access to the internet
     has_state: false, // Not using a state engine
     async execute(message, args, extra) {
         const productUrl = args[1];
@@ -25,6 +25,10 @@ module.exports = {
 
         // Flag to prevent multiple notifications
         let isAvailable = false;
+
+        // Declare intervalId and timeoutId before defining the checkAvailability function
+        let intervalId;
+        let timeoutId;
 
         // Function to check product availability
         const checkAvailability = async () => {
@@ -64,7 +68,13 @@ module.exports = {
                     // Product is not available yet; no action needed
                 }
             } catch (error) {
-                console.error(`Error checking availability: ${error.message}`);
+                // Use this.logger.error instead of console.error
+                if (this.logger && typeof this.logger.error === 'function') {
+                    this.logger.error(`Error checking availability: ${error.message}`);
+                } else {
+                    // Fallback to console.error if logger is not available
+                    console.error(`Error checking availability: ${error.message}`);
+                }
                 message.channel.send(`⚠️ An error occurred while checking the product: ${error.message}`);
 
                 // Optionally, stop monitoring on error
@@ -73,18 +83,28 @@ module.exports = {
             }
         };
 
-        // Perform an initial availability check immediately
-        await checkAvailability();
+        try {
+            // Perform an initial availability check immediately
+            await checkAvailability();
 
-        // Set up the interval to check every 5 seconds
-        const intervalId = setInterval(checkAvailability, checkInterval);
+            // Set up the interval to check every 5 seconds
+            intervalId = setInterval(checkAvailability, checkInterval);
 
-        // Set up a timeout to stop monitoring after 10 minutes
-        const timeoutId = setTimeout(() => {
-            if (!isAvailable) {
-                message.channel.send(`⏰ **Monitoring stopped:** The product is still unavailable after 10 minutes.\n${productUrl}`);
+            // Set up a timeout to stop monitoring after 10 minutes
+            timeoutId = setTimeout(() => {
+                if (!isAvailable) {
+                    message.channel.send(`⏰ **Monitoring stopped:** The product is still unavailable after 10 minutes.\n${productUrl}`);
+                }
+                clearInterval(intervalId);
+            }, maxDuration);
+        } catch (initError) {
+            // Handle any errors during the initial setup
+            if (this.logger && typeof this.logger.error === 'function') {
+                this.logger.error(`Initialization error: ${initError.message}`);
+            } else {
+                console.error(`Initialization error: ${initError.message}`);
             }
-            clearInterval(intervalId);
-        }, maxDuration);
+            message.channel.send(`⚠️ An error occurred during monitoring setup: ${initError.message}`);
+        }
     }
 };
