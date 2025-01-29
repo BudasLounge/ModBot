@@ -49,7 +49,7 @@ module.exports = {
 
                 if (isAvailableNow && !isAvailable) {
                     isAvailable = true;
-                    message.channel.send(`🎉 **Product is AVAILABLE!** 🎉\n${productUrl}`);
+                    message.channel.send(`<@185223223892377611> 🎉 **Product is AVAILABLE!** 🎉\n${productUrl}`);
                     this.logger.info(`Product available: ${productUrl}`);
 
                     clearInterval(intervalId);
