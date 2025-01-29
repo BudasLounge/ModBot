@@ -13,97 +13,74 @@ module.exports = {
 
         // Validate the URL
         if (!productUrl.startsWith('https://www.bestbuy.com/site/')) {
+            this.logger.error('Invalid URL provided.');
             return message.channel.send('❌ Please provide a valid Best Buy product URL.');
         }
 
         // Inform the user that monitoring has started
         message.channel.send(`🔍 **Started monitoring the product:** ${productUrl}\n⏳ Monitoring will stop automatically after 10 minutes.`);
+        this.logger.info(`Started monitoring: ${productUrl}`);
 
         // Define the interval and timeout durations
-        const checkInterval = 5 * 1000; // 5,000 ms = 5 seconds
-        const maxDuration = 10 * 60 * 1000; // 600,000 ms = 10 minutes
+        const checkInterval = 5 * 1000; // 5 seconds
+        const maxDuration = 10 * 60 * 1000; // 10 minutes
 
-        // Flag to prevent multiple notifications
         let isAvailable = false;
-
-        // Declare intervalId and timeoutId before defining the checkAvailability function
         let intervalId;
         let timeoutId;
 
-        // Function to check product availability
         const checkAvailability = async () => {
             try {
                 const response = await axios.get(productUrl, {
                     headers: {
                         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
                     },
-                    timeout: 5000, // 5 seconds timeout for the request
+                    timeout: 5000, // 5 seconds timeout
                 });
 
                 const html = response.data;
 
-                // Simple string search for availability indicators
-                // Note: This method is fragile and depends on the website's HTML structure
-                // You may need to update the search strings based on Best Buy's actual page content
+                const availableIndicator = 'data-button-state="ADD_TO_CART"';
+                const availableText = 'Add to Cart';
 
-                // Example indicators (these may vary; inspect the page to find accurate ones)
-                const indicators = [
-                    'Add to Cart', // Common text for available products
-                    'In Stock',    // Another possible indicator
-                ];
+                const isAvailableNow = html.includes(availableIndicator) && html.includes(availableText);
 
-                // Check if any of the indicators are present in the HTML
-                const available = indicators.some(indicator => html.includes(indicator));
+                this.logger.info(`Checked availability: ${isAvailableNow ? 'AVAILABLE' : 'UNAVAILABLE'}`);
 
-                console.log(`[${new Date().toLocaleTimeString()}] Checked availability: ${available ? 'AVAILABLE' : 'UNAVAILABLE'}`);
-
-                if (available && !isAvailable) {
+                if (isAvailableNow && !isAvailable) {
                     isAvailable = true;
                     message.channel.send(`🎉 **Product is AVAILABLE!** 🎉\n${productUrl}`);
+                    this.logger.info(`Product available: ${productUrl}`);
 
-                    // Stop monitoring after availability is detected
                     clearInterval(intervalId);
                     clearTimeout(timeoutId);
-                } else {
-                    // Product is not available yet; no action needed
                 }
             } catch (error) {
-                // Use this.logger.error instead of console.error
-                if (this.logger && typeof this.logger.error === 'function') {
-                    this.logger.error(`Error checking availability: ${error.message}`);
-                } else {
-                    // Fallback to console.error if logger is not available
-                    console.error(`Error checking availability: ${error.message}`);
-                }
+                this.logger.error(`Error checking availability: ${error.message}`);
                 message.channel.send(`⚠️ An error occurred while checking the product: ${error.message}`);
 
-                // Optionally, stop monitoring on error
                 clearInterval(intervalId);
                 clearTimeout(timeoutId);
             }
         };
 
         try {
-            // Perform an initial availability check immediately
+            // Initial check
             await checkAvailability();
 
-            // Set up the interval to check every 5 seconds
+            // Set up interval
             intervalId = setInterval(checkAvailability, checkInterval);
 
-            // Set up a timeout to stop monitoring after 10 minutes
+            // Set up timeout
             timeoutId = setTimeout(() => {
                 if (!isAvailable) {
                     message.channel.send(`⏰ **Monitoring stopped:** The product is still unavailable after 10 minutes.\n${productUrl}`);
+                    this.logger.info(`Monitoring stopped after timeout: ${productUrl}`);
                 }
                 clearInterval(intervalId);
             }, maxDuration);
         } catch (initError) {
-            // Handle any errors during the initial setup
-            if (this.logger && typeof this.logger.error === 'function') {
-                this.logger.error(`Initialization error: ${initError.message}`);
-            } else {
-                console.error(`Initialization error: ${initError.message}`);
-            }
+            this.logger.error(`Initialization error: ${initError.message}`);
             message.channel.send(`⚠️ An error occurred during monitoring setup: ${initError.message}`);
         }
     }
