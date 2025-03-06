@@ -59,7 +59,7 @@ module.exports = {
     });
 
     await Promise.all(serverPromises);
-
+    message.channel.send({embeds: [ListEmbed], content: `Now getting palworld status...`})
     // Create Palworld embed
     const PalworldEmbed = new Discord.MessageEmbed()
       .setColor('#0a74da')
@@ -98,7 +98,7 @@ module.exports = {
 
     // Send both embeds
     message.channel.send({
-      embeds: [ListEmbed, PalworldEmbed],
+      embeds: [PalworldEmbed],
       content: `It took ${((performance.now() - perfStart) / 1000).toFixed(2)} seconds to get this list:`,
     });
 
