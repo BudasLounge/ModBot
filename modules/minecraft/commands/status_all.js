@@ -59,7 +59,11 @@ module.exports = {
     });
 
     await Promise.all(serverPromises);
-    message.channel.send({embeds: [ListEmbed], content: `Now getting palworld status...`})
+    message.channel.send({embeds: [ListEmbed]})
+    
+    // Send a separate message to better separate the different game statuses
+    message.channel.send({ content: `Now getting palworld status...` })
+    
     // Create Palworld embed
     const PalworldEmbed = new Discord.MessageEmbed()
       .setColor('#0a74da')
@@ -93,10 +97,23 @@ module.exports = {
         PalworldEmbed.addField('Players Online', 'No players online');
       }
     } catch (error) {
-      PalworldEmbed.setDescription('Failed to fetch Palworld server data.');
+      this.logger.error(`Palworld server error: ${error.message}`);
+      
+      // More robust offline message
+      PalworldEmbed.setDescription('⚠️ **Palworld server appears to be offline!**')
+        .addField('Error Details', 'Unable to connect to the Palworld server API')
+        .addField('What to do', 'If the server should be online, please contact a server admin')
+        .addField('Auto-restart', 'The server should auto-restart within 5 minutes if it crashed');
+        
+      // If we have specific error information, add it (useful for admins)
+      if (error.response) {
+        PalworldEmbed.addField('Status Code', `${error.response.status} ${error.response.statusText}`, true);
+      } else if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
+        PalworldEmbed.addField('Connection Error', `${error.code}: Server may be down or restarting`, true);
+      }
     }
 
-    // Send both embeds
+    // Send the final Palworld embed
     message.channel.send({
       embeds: [PalworldEmbed],
       content: `It took ${((performance.now() - perfStart) / 1000).toFixed(2)} seconds to get this list:`,
