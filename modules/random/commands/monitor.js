@@ -35,7 +35,7 @@ module.exports = {
                     headers: {
                         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
                     },
-                    timeout: 1000, // 5 seconds timeout
+                    timeout: 1000, // 1 seconds timeout
                 });
 
                 const html = response.data;
