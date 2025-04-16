@@ -57,11 +57,8 @@ module.exports = {
         const command = args.slice(2).join(' ');
         var conn;
         // Establish RCON connection
-        if (server.server == "windows"){
-            conn = new Rcon("192.168.1.4", server.rcon_port, password);
-        }else if (server.server == "linux"){
-            conn = new Rcon("192.168.1.9", server.rcon_port, password);
-        }
+            conn = new Rcon(server.backend_ip, server.rcon_port, password);
+        
 
 
         // RCON connection events
