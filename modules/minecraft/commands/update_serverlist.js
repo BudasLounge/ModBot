@@ -3,7 +3,7 @@ const { MessageEmbed } = require('discord.js');
 module.exports = {
   name: 'updatesl',
   description: 'Used to update parts of the Minecraft server list',
-  syntax: 'updatesl [server name] [whats updating] [new value]',
+  syntax: 'updatesl [server name] [field] [new value] (or "updatesl help" to see available fields)',
   num_args: 3,
   args_to_lower: true,
   needs_api: true,
@@ -17,7 +17,47 @@ module.exports = {
       return message.channel.send({ content: 'You don\'t have permission to use that command!' });
     }
 
+    // Check if user is asking for help
+    if (args[1]?.toLowerCase() === 'help') {
+      const helpEmbed = new MessageEmbed()
+        .setColor('#0099ff')
+        .setTitle('Minecraft Server List Update Help')
+        .setDescription('Available fields that can be updated:')
+        .addFields(
+          { name: 'short_name', value: 'The server\'s short name identifier' },
+          { name: 'display_name', value: 'The server\'s display name' },
+          { name: 'server_ip', value: 'The server IP address (with port if needed)' },
+          { name: 'numeric_ip', value: 'The numeric IP address' },
+          { name: 'port', value: 'The server port' },
+          { name: 'status_api_port', value: 'Port for the status API' },
+          { name: 'mc_version', value: 'Minecraft version' },
+          { name: 'pack_version', value: 'Modpack version' },
+          { name: 'url', value: 'URL for the modpack' }
+        )
+        .setFooter({ text: 'Usage: updatesl [server name] [field] [new value]' });
+      
+      return message.channel.send({ embeds: [helpEmbed] });
+    }
+
+    // Not enough arguments
+    if (args.length < 4) {
+      return message.channel.send({ 
+        content: 'Not enough arguments. Use `updatesl help` to see available fields and proper syntax.' 
+      });
+    }
+
     const [shortName, fieldToUpdate, newValue] = args.slice(1);
+
+    // Define allowed fields for update
+    const allowedFields = ['short_name', 'display_name', 'server_ip', 'numeric_ip', 
+                          'port', 'status_api_port', 'mc_version', 'pack_version', 'url'];
+    
+    // Check if the field is valid
+    if (!allowedFields.includes(fieldToUpdate)) {
+      return message.channel.send({ 
+        content: `Invalid field: "${fieldToUpdate}". Use \`updatesl help\` to see available fields.` 
+      });
+    }
 
     try {
       let { minecraft_servers: [server] } = await api.get('minecraft_server', { short_name: shortName });
@@ -55,14 +95,14 @@ module.exports = {
 • **Status API Port**: ${updatedServer.status_api_port}
 • **MC Version**: ${updatedServer.mc_version}
 • **Pack Version**: ${updatedServer.pack_version}
-• **Pack Version**: ${updatedServer.url}
+• **Pack URL**: ${updatedServer.url}
 `;
 
         const embed = new MessageEmbed()
           .setColor('#f92f03')
           .setTitle(`Field Updated: ${fieldToUpdate}`)
           .setDescription(changedInfo)
-          .setFooter('Minecraft Server List Update');
+          .setFooter({ text: 'Minecraft Server List Update' });
 
         return message.channel.send({ embeds: [embed] });
       }
