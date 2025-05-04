@@ -25,6 +25,11 @@ module.exports = {
     });
 
     if (!respServer.minecraft_servers[0]) return;
+    
+    // Sort servers alphabetically by display_name
+    const sortedServers = [...respServer.minecraft_servers].sort((a, b) => 
+      a.display_name.localeCompare(b.display_name)
+    );
 
     const ListEmbed = new Discord.MessageEmbed()
       .setColor('#f92f03')
@@ -33,7 +38,7 @@ module.exports = {
 
     const SensitiveCharacters = ['\\', '*', '_', '~', '`', '|', '>'];
 
-    const serverPromises = respServer.minecraft_servers.map(async (server) => {
+    const serverPromises = sortedServers.map(async (server) => {
       try {
         const item = await pinger.pingWithPromise(server.server_ip).catch(() => "OFFLINE");
         
