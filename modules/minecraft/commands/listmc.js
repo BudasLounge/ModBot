@@ -21,22 +21,23 @@ module.exports = {
             const embed = new MessageEmbed()
                 .setColor('#f92f03')
                 .setTitle('List of All Minecraft Servers')
-                .setFooter('Server Information');
+                .setFooter({ text: 'Server Information' });
 
             // Loop through the servers and format the information cleanly
             servers.forEach(server => {
+                // Format date nicely
+                const dateCreated = new Date(server.date_created).toLocaleDateString();
+
                 const serverInfo = `
-**Short Name**: ${server.short_name}
 **Server IP**: ${server.server_ip}
-**Numeric IP**: ${server.numeric_ip}:${server.port}
 **Minecraft Version**: ${server.mc_version}
 **Pack Version**: ${server.pack_version}
-**Date Created**: ${new Date(server.date_created).toLocaleDateString()}
+**Date Created**: ${dateCreated}
 **URL**: ${server.url || 'N/A'}
-**Join Type**: ${server.whitelist}
+**Access**: ${server.whitelist === 'Public' ? '🟢 Public' : '🔒 Whitelist'}
                 `;
 
-                embed.addField(`${server.display_name}`, serverInfo, false);
+                embed.addField(`${server.display_name} (${server.short_name})`, serverInfo, false);
             });
 
             message.channel.send({ embeds: [embed] });
