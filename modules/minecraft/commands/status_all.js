@@ -33,7 +33,8 @@ module.exports = {
 
     const ListEmbed = new Discord.MessageEmbed()
       .setColor('#f92f03')
-      .setTitle('Minecraft Servers Status');
+      .setTitle('Minecraft Servers Status')
+      .setDescription('If a server crashed, it should auto restart in 5 minutes or less.\nContact a server admin if it should be online but remains offline.');
 
     const SensitiveCharacters = ['\\', '*', '_', '~', '`', '|', '>'];
 
@@ -46,23 +47,27 @@ module.exports = {
         if (item === "OFFLINE") {
           statusInfo = `❌ **OFFLINE**`;
         } else {
-          statusInfo = `✅ **ONLINE**\n**Players:** ${item.players.online}/${item.players.max}`;
+          statusInfo = `✅ **ONLINE**\nPlayers: ${item.players.online}/${item.players.max}`;
           
           if (item.players.online > 0 && item.players.sample) {
             statusInfo += '\n' + item.players.sample.map(({ name }) => {
               const escapedName = SensitiveCharacters.reduce((acc, unsafe) => 
                 acc.replaceAll(unsafe, `\\${unsafe}`), name);
-              return `- ${escapedName}`;
+              return `• ${escapedName}`;
             }).join('\n');
           } else if (item.players.online > 0) {
-            statusInfo += '\nPlayers online (names unavailable)';
+            statusInfo += '\n(Player names unavailable)';
           }
         }
         
         ListEmbed.addField(server.display_name, statusInfo, false);
         return statusInfo;
       } catch (error) {
-        ListEmbed.addField(server.display_name, `❌ **OFFLINE**`, false);
+        ListEmbed.addField(
+          server.display_name, 
+          `❌ **OFFLINE**`, 
+          false
+        );
         return error;
       }
     });
@@ -91,12 +96,12 @@ module.exports = {
       const metrics = metricsResp.data;
 
       let status = `✅ **ONLINE**\n`;
-      status += `**Players:** ${metrics.currentplayernum}/${metrics.maxplayernum}`;
+      status += `Players: ${metrics.currentplayernum}/${metrics.maxplayernum}`;
       
       const uptimeSeconds = metrics.uptime;
       const uptimeHours = Math.floor(uptimeSeconds / 3600);
       const uptimeMinutes = Math.floor((uptimeSeconds % 3600) / 60);
-      status += `\n**Uptime:** ${uptimeHours}h ${uptimeMinutes}m`;
+      status += `\nUptime: ${uptimeHours}h ${uptimeMinutes}m`;
       
       PalworldEmbed.setDescription(status);
 
@@ -113,7 +118,7 @@ module.exports = {
           const playersResp = await fetchPlayers();
           
           // Map each player as "name" ("accountName")
-          const playerNames = playersResp.data.players.map(p => `- ${p.name} (${p.accountName})`).join('\n');
+          const playerNames = playersResp.data.players.map(p => `• ${p.name} (${p.accountName})`).join('\n');
           if (playerNames) {
             PalworldEmbed.addField('Players Online', playerNames);
           }
@@ -123,7 +128,7 @@ module.exports = {
       }
     } catch (error) {
       this.logger.error(`Palworld server error: ${error.message}`);
-      PalworldEmbed.setDescription('❌ **OFFLINE**');
+      PalworldEmbed.setDescription('❌ **OFFLINE**\n\nIf the server should be online, please contact a server admin.\nThe server should auto-restart within 5 minutes if it crashed.');
     }
 
     // Send the final Palworld embed
