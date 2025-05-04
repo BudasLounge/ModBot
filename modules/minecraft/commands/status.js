@@ -30,7 +30,7 @@ module.exports = {
                     .addField("Notice:", "If the server crashed, it should auto restart in 5 minutes or less\nContact a server admin if it does not.");
 
                 try {
-                    const response = await pinger.pingWithPromise(server.numeric_ip, server.port);
+                    const response = await pinger.pingWithPromise(server.backend_ip, server.port);
                     
                     if (response) {
                         ListEmbed.addField("Status:", "✅ **ONLINE**", true);
