@@ -26,7 +26,7 @@ module.exports = {
                 const ListEmbed = new Discord.MessageEmbed()
                     .setColor("#f92f03")
                     .setTitle(`${server.display_name} Status`)
-                    .setDescription(`IP: \`${server.numeric_ip}\` | Port: \`${server.port || 25565}\``)
+                    .setDescription(`IP: \`${server.server_ip}\``)
                     .addField("Notice:", "If the server crashed, it should auto restart in 5 minutes or less\nContact a server admin if it does not.");
 
                 try {
