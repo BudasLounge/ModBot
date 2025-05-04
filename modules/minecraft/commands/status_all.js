@@ -26,10 +26,16 @@ module.exports = {
 
     if (!respServer.minecraft_servers[0]) return;
     
-    // Sort servers alphabetically by display_name
+    // Sort servers alphabetically by display_name - force case insensitive sorting
     const sortedServers = [...respServer.minecraft_servers].sort((a, b) => 
-      a.display_name.localeCompare(b.display_name)
+      a.display_name.toLowerCase().localeCompare(b.display_name.toLowerCase())
     );
+    
+    // Debug logging to verify sorting
+    this.logger.info("Server order after sorting:");
+    sortedServers.forEach(server => {
+      this.logger.info(`- ${server.display_name}`);
+    });
 
     const ListEmbed = new Discord.MessageEmbed()
       .setColor('#f92f03')
@@ -37,8 +43,11 @@ module.exports = {
       .setDescription('If a server crashed, it should auto restart in 5 minutes or less.\nContact a server admin if it should be online but remains offline.');
 
     const SensitiveCharacters = ['\\', '*', '_', '~', '`', '|', '>'];
+    
+    // Create empty fields array to ensure order is preserved
+    const serverFields = [];
 
-    const serverPromises = sortedServers.map(async (server) => {
+    const serverPromises = sortedServers.map(async (server, index) => {
       try {
         const item = await pinger.pingWithPromise(server.server_ip).catch(() => "OFFLINE");
         
@@ -60,19 +69,34 @@ module.exports = {
           }
         }
         
-        ListEmbed.addField(server.display_name, statusInfo, false);
+        // Store field data with original index to preserve order
+        serverFields[index] = {
+          name: server.display_name,
+          value: statusInfo,
+          inline: false
+        };
+        
         return statusInfo;
       } catch (error) {
-        ListEmbed.addField(
-          server.display_name, 
-          `❌ **OFFLINE**`, 
-          false
-        );
+        // Store field data with original index to preserve order
+        serverFields[index] = {
+          name: server.display_name,
+          value: `❌ **OFFLINE**`,
+          inline: false
+        };
         return error;
       }
     });
 
     await Promise.all(serverPromises);
+    
+    // Add fields in correct order
+    serverFields.forEach(field => {
+      if (field) { // Check if field exists
+        ListEmbed.addField(field.name, field.value, field.inline);
+      }
+    });
+    
     message.channel.send({embeds: [ListEmbed]})
     
     // Send a separate message to better separate the different game statuses
