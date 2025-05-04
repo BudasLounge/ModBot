@@ -37,7 +37,7 @@ module.exports = {
 **Access**: ${server.whitelist === 'Public' ? '🟢 Public' : '🔒 Whitelist'}
                 `;
 
-                embed.addField(`${server.display_name} (${server.short_name})`, serverInfo, false);
+                embed.addField(`${server.display_name} (shortname: ${server.short_name})`, serverInfo, false);
             });
 
             message.channel.send({ embeds: [embed] });
