@@ -53,31 +53,54 @@ module.exports = {
             return message.reply({ content: "No server found with that short name. Use `,listmc` to find a valid server." });
         }
 
+        // Validate server details
+        if (!server.backend_ip || !server.rcon_port) {
+            return message.reply({ content: "Server configuration is incomplete. Missing IP or RCON port." });
+        }
+
         // Construct the RCON command
         const command = args.slice(2).join(' ');
-        var conn;
-        // Establish RCON connection
-            conn = new Rcon(server.backend_ip, server.rcon_port, password);
+        let conn;
         
-
-
-        // RCON connection events
-        conn.on('auth', function() {
-            console.log('RCON authenticated.');
-            console.log('Sending command:', command);
-            conn.send(command);
-        }).on('response', function(str) {
-            console.log('RCON response:', str);
-            message.reply({ content: `Command executed successfully:\n${str}` }); // Notify user with response
-        }).on('error', function(err) {
-            console.error('RCON error:', err);
-            message.reply({ content: 'An error occurred while executing the command.' });
-        }).on('end', function() {
-            console.log('RCON connection closed.');
-            conn.disconnect(); // Close connection gracefully without exiting the process
-        });
-
-        // Connect to RCON
-        conn.connect();
+        try {
+            // Establish RCON connection
+            conn = new Rcon(server.backend_ip, server.rcon_port, password);
+            
+            // Set connection timeout
+            const timeout = setTimeout(() => {
+                if (conn) {
+                    console.log('RCON connection timed out');
+                    message.reply({ content: `Connection to ${server.backend_ip}:${server.rcon_port} timed out. Server might be down or unreachable.` });
+                    try { conn.disconnect(); } catch (e) { /* ignore cleanup errors */ }
+                }
+            }, 5000); // 5 second timeout
+            
+            // RCON connection events
+            conn.on('auth', function() {
+                clearTimeout(timeout);
+                console.log('RCON authenticated.');
+                console.log('Sending command:', command);
+                conn.send(command);
+            }).on('response', function(str) {
+                console.log('RCON response:', str);
+                message.reply({ content: `Command executed successfully:\n${str}` }); // Notify user with response
+            }).on('error', function(err) {
+                clearTimeout(timeout);
+                console.error('RCON error:', err);
+                const errorMessage = `Failed to connect to ${server.backend_ip}:${server.rcon_port}. ${err.code === 'ECONNREFUSED' ? 
+                    'The server is refusing connections. It might be down, the RCON port might be wrong, or a firewall might be blocking the connection.' : 
+                    'An error occurred while executing the command.'}`;
+                message.reply({ content: errorMessage });
+            }).on('end', function() {
+                clearTimeout(timeout);
+                console.log('RCON connection closed.');
+            });
+            
+            // Connect to RCON with error handling
+            conn.connect();
+        } catch (err) {
+            console.error('Error setting up RCON connection:', err);
+            message.reply({ content: `Failed to set up RCON connection: ${err.message}` });
+        }
     }
 };
