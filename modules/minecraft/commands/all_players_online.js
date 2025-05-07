@@ -10,7 +10,7 @@ module.exports = {
         var api = extra.api;
 
         const axios = require('axios');
-        const Discord = require('discord.js');
+        const { EmbedBuilder } = require('discord.js'); // Updated to EmbedBuilder
         console.log(">>all_players_online");
 	try {
         var respServer;
@@ -22,7 +22,7 @@ module.exports = {
         } catch(error2){
             console.error(error2);
         }
-        const ListEmbed = new Discord.MessageEmbed()
+        const ListEmbed = new EmbedBuilder() // Updated to EmbedBuilder
             .setColor("#f92f03")
             .setTitle("List of all players on all online servers:");
         for(var i = 0;i<respServer.minecraft_servers.length;i++){
@@ -41,11 +41,11 @@ module.exports = {
                             msg += "\n  - " + player.username;
                         }
                     }
-                    ListEmbed.addField(num_players, msg);
+                    ListEmbed.addFields({ name: num_players, value: msg }); // Updated to addFields with object
                 }
             }
         }
-        message.channel.send({ embeds: [ListEmbed]});
+        await message.channel.send({ embeds: [ListEmbed]}); // Added await
 	} catch (error) {
 		console.error(error);
     }

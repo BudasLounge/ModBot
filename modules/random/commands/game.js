@@ -8,10 +8,10 @@ module.exports = {
     has_state: false,
     async execute(message, args, extra) {
         var api = extra.api;
-        const { MessageActionRow, MessageButton, MessageEmbed } = require('discord.js');
+        const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
         const voiceChannel = message.member.voice.channel;
         if (!voiceChannel) {
-            message.channel.send({ content: "You need to be in a voice channel to use this command."});
+            await message.channel.send({ content: "You need to be in a voice channel to use this command."});
             return;
         }
         var voiceChannelId = voiceChannel.id;
@@ -48,9 +48,9 @@ module.exports = {
                             })
                         }catch(error){
                             logger.error(error);
-                            button.reply({ content: "There was an error ending the game...", ephemeral: true})
+                            await message.channel.send({ content: "There was an error ending the game..."}); // Corrected to message.channel.send
                         }
-                        message.channel.send({ content: `Found open game, ending it and creating a new one!`});
+                        await message.channel.send({ content: `Found open game, ending it and creating a new one!`});
                 }
                 try{
                     respGame = await api.post("game_joining_master",{
@@ -61,39 +61,39 @@ module.exports = {
                     this.logger.error(error2.message);
                 }
                 if(!respGame.ok){
-                    message.channel.send({ content: "Game creation failed..."});
+                    await message.channel.send({ content: "Game creation failed..."});
                 }else{
-                    message.channel.send({ content: "Created a game! Let me pull up the menu for you..."});
+                    await message.channel.send({ content: "Created a game! Let me pull up the menu for you..."});
                 }
-                const ListEmbed = new MessageEmbed()
+                const ListEmbed = new EmbedBuilder()
                 .setColor("#c586b6")
                 .setTitle(`${message.member.displayName}'s game menu.`);
                 ListEmbed.addField("Info about the buttons:", "Host is not added to their own game by default, but can join if they want to.\n\nBlurple buttons = anyone can interact\nGray buttons = only host can interact");
-                const row = new MessageActionRow()
+                const row = new ActionRowBuilder()
                 .addComponents(
-                    new MessageButton()
+                    new ButtonBuilder()
                         .setCustomId('GAMEjoin-'+message.member.id)
                         .setLabel('Join')
-                        .setStyle('PRIMARY'),
-                    new MessageButton()
+                        .setStyle(ButtonStyle.Primary),
+                    new ButtonBuilder()
                         .setCustomId('GAMEleave-'+message.member.id)
                         .setLabel('Leave')
-                        .setStyle('PRIMARY'),
+                        .setStyle(ButtonStyle.Primary),
                 );
-                const row2 = new MessageActionRow()
+                const row2 = new ActionRowBuilder()
                 .addComponents(
-                    new MessageButton()
+                    new ButtonBuilder()
                         .setCustomId('GAMEstart-'+message.member.id)
                         .setLabel('Start')
-                        .setStyle('SECONDARY'),
-                    new MessageButton()
+                        .setStyle(ButtonStyle.Secondary),
+                    new ButtonBuilder()
                         .setCustomId('GAMEend-'+message.member.id)
                         .setLabel('End')
-                        .setStyle('SECONDARY'),
+                        .setStyle(ButtonStyle.Secondary),
                 );
                 this.logger.info("Sending game menu");
                 try{
-                    message.channel.send({embeds: [ListEmbed], components: [row, row2] });
+                    await message.channel.send({embeds: [ListEmbed], components: [row, row2] });
                 }catch(err){
                     this.logger.error(err);
                 }

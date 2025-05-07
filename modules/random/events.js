@@ -1,6 +1,6 @@
 var ApiClient = require("../../core/js/APIClient.js");
 var api = new ApiClient();
-const {MessageActionRow, MessageButton, MessageEmbed, MessageSelectMenu, Permissions} = require('discord.js');
+const { ActionRowBuilder, ButtonBuilder, EmbedBuilder, SelectMenuBuilder, PermissionsBitField, ButtonStyle } = require('discord.js');
 //todo: add a way to track how many times a user streams and for how long
 async function onButtonClick(button){
     //if (!button.isButton()){return}
@@ -47,7 +47,7 @@ async function onButtonClick(button){
             logger.info("Printing array to a table after sorting...")
             console.table(totalTime);
             var output = "";
-            var ListEmbed = new MessageEmbed()
+            var ListEmbed = new EmbedBuilder()
             .setColor("#c586b6")
             .setTitle("Voice Channel Leaderboard (Bottom 10)");
             var count = 10;
@@ -73,50 +73,50 @@ async function onButtonClick(button){
                 s = (diff % units[i].d) + " " + units[i].l + " " + s;
                 diff = Math.floor(diff / units[i].d);
                 }
-                ListEmbed.addField((k+1).toString() + ". " + mention, s.toString());
+                ListEmbed.addFields({ name: (k+1).toString() + ". " + mention, value: s.toString() });
             }
             
 
-            var timingFilters = new MessageActionRow()
+            var timingFilters = new ActionRowBuilder()
             .addComponents(
-                new MessageButton()
+                new ButtonBuilder()
                     .setCustomId("VOICEnon-muted")
                     .setLabel("Non-muted times only")
-                    .setStyle('PRIMARY')
-                    .setDisabled("false"),
-                new MessageButton()
+                    .setStyle(ButtonStyle.Primary)
+                    .setDisabled(false),
+                new ButtonBuilder()
                     .setCustomId("VOICEmuted")
                     .setLabel("Muted times only")
-                    .setStyle('PRIMARY')
-                    .setDisabled("false"),
-                new MessageButton()
+                    .setStyle(ButtonStyle.Primary)
+                    .setDisabled(false),
+                new ButtonBuilder()
                     .setCustomId("VOICEtop")
                     .setLabel("Top Talkers")
-                    .setStyle('PRIMARY')
-                    .setDisabled("false"),
+                    .setStyle(ButtonStyle.Primary)
+                    .setDisabled(false),
             );
-            var timingFilters2 = new MessageActionRow()
+            var timingFilters2 = new ActionRowBuilder()
             .addComponents(
-                new MessageButton()
+                new ButtonBuilder()
                     .setCustomId("VOICE30days")
                     .setLabel("Top - Last 30 Days")
-                    .setStyle('PRIMARY')
-                    .setDisabled("false"),
-                new MessageButton()
+                    .setStyle(ButtonStyle.Primary)
+                    .setDisabled(false),
+                new ButtonBuilder()
                     .setCustomId("VOICE7days")
                     .setLabel("Top - Last 7 Days")
-                    .setStyle('PRIMARY')
-                    .setDisabled("false"),
-                    new MessageButton()
+                    .setStyle(ButtonStyle.Primary)
+                    .setDisabled(false),
+                    new ButtonBuilder()
                     .setCustomId("VOICEchannel")
                     .setLabel("Top Talkers - By Channel")
-                    .setStyle('PRIMARY')
-                    .setDisabled("false"),
-                    new MessageButton()
+                    .setStyle(ButtonStyle.Primary)
+                    .setDisabled(false),
+                    new ButtonBuilder()
                 .setCustomId("VOICEchannelUse")
                 .setLabel("Top Channels by use")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
             );
 
         await button.editReply({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
@@ -161,7 +161,7 @@ async function onButtonClick(button){
         totalTime.sort(compareSecondColumn);
         logger.info("Printing array to a table after sorting...")
             console.table(totalTime);
-        var ListEmbed = new MessageEmbed()
+        var ListEmbed = new EmbedBuilder()
         .setColor("#c586b6")
         .setTitle("Voice Channel Leaderboard (Top 10)");
         var count = 10;
@@ -188,50 +188,50 @@ async function onButtonClick(button){
             s = (diff % units[i].d) + " " + units[i].l + " " + s;
             diff = Math.floor(diff / units[i].d);
             }
-            ListEmbed.addField((k+1).toString() + ". " + mention, s.toString());
+            ListEmbed.addFields({ name: (k+1).toString() + ". " + mention, value: s.toString() });
         }
         
 
-        var timingFilters = new MessageActionRow()
+        var timingFilters = new ActionRowBuilder()
         .addComponents(
-            new MessageButton()
+            new ButtonBuilder()
                 .setCustomId("VOICEnon-muted")
                 .setLabel("Non-muted times only")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
-            new MessageButton()
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            new ButtonBuilder()
                 .setCustomId("VOICEmuted")
                 .setLabel("Muted times only")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
-            new MessageButton()
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            new ButtonBuilder()
                 .setCustomId("VOICEbottom")
                 .setLabel("Bottom Talkers")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
         );
-        var timingFilters2 = new MessageActionRow()
+        var timingFilters2 = new ActionRowBuilder()
         .addComponents(
-            new MessageButton()
+            new ButtonBuilder()
                 .setCustomId("VOICE30days")
                 .setLabel("Top - Last 30 Days")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
-            new MessageButton()
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            new ButtonBuilder()
                 .setCustomId("VOICE7days")
                 .setLabel("Top - Last 7 Days")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
-                new MessageButton()
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+                new ButtonBuilder()
                 .setCustomId("VOICEchannel")
                 .setLabel("Top Talkers - By Channel")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
-                new MessageButton()
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+                new ButtonBuilder()
                 .setCustomId("VOICEchannelUse")
                 .setLabel("Top Channels by use")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
         );
     await button.editReply({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
     logger.info("Sent Voice Leaderboard!")
@@ -278,7 +278,7 @@ async function onButtonClick(button){
         var output = "";
 
         totalTime.sort(compareSecondColumn);
-        var ListEmbed = new MessageEmbed()
+        var ListEmbed = new EmbedBuilder()
         .setColor("#c586b6")
         .setTitle("Voice Channel Leaderboard (Top 10 muters)");
         var count = 10;
@@ -303,50 +303,50 @@ async function onButtonClick(button){
             s = (diff % units[i].d) + " " + units[i].l + " " + s;
             diff = Math.floor(diff / units[i].d);
             }
-            ListEmbed.addField((k+1).toString() + ". " + mention, s.toString());
+            ListEmbed.addFields({ name: (k+1).toString() + ". " + mention, value: s.toString() });
         }
         
 
-        var timingFilters = new MessageActionRow()
+        var timingFilters = new ActionRowBuilder()
         .addComponents(
-            new MessageButton()
+            new ButtonBuilder()
                 .setCustomId("VOICEnon-muted")
                 .setLabel("Non-muted times only")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
-            new MessageButton()
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            new ButtonBuilder()
                 .setCustomId("VOICEmuted")
                 .setLabel("Muted times only")
-                .setStyle('PRIMARY')
-                .setDisabled("true"),
-            new MessageButton()
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(true),
+            new ButtonBuilder()
                 .setCustomId("VOICEtop")
                 .setLabel("Top Talkers")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
         );
-        var timingFilters2 = new MessageActionRow()
+        var timingFilters2 = new ActionRowBuilder()
         .addComponents(
-            new MessageButton()
+            new ButtonBuilder()
                 .setCustomId("VOICE30days")
                 .setLabel("Top - Last 30 Days")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
-            new MessageButton()
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            new ButtonBuilder()
                 .setCustomId("VOICE7days")
                 .setLabel("Top - Last 7 Days")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
-                new MessageButton()
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+                new ButtonBuilder()
                 .setCustomId("VOICEchannel")
                 .setLabel("Top Talkers - By Channel")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
-                new MessageButton()
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+                new ButtonBuilder()
                 .setCustomId("VOICEchannelUse")
                 .setLabel("Top Channels by use")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
         );
         await button.editReply({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
         logger.info("Sent Voice Leaderboard!")
@@ -392,7 +392,7 @@ async function onButtonClick(button){
         var output = "";
 
         totalTime.sort(compareSecondColumn);
-        var ListEmbed = new MessageEmbed()
+        var ListEmbed = new EmbedBuilder()
         .setColor("#c586b6")
         .setTitle("Voice Channel Leaderboard (Top 10 non-muters)");
         var count = 10;
@@ -418,50 +418,50 @@ async function onButtonClick(button){
             s = (diff % units[i].d) + " " + units[i].l + " " + s;
             diff = Math.floor(diff / units[i].d);
             }
-            ListEmbed.addField((k+1).toString() + ". " + mention, s.toString());
+            ListEmbed.addFields({ name: (k+1).toString() + ". " + mention, value: s.toString() });
         }
         
 
-        var timingFilters = new MessageActionRow()
+        var timingFilters = new ActionRowBuilder()
         .addComponents(
-            new MessageButton()
+            new ButtonBuilder()
                 .setCustomId("VOICEnon-muted")
                 .setLabel("Non-muted times only")
-                .setStyle('PRIMARY')
-                .setDisabled("true"),
-            new MessageButton()
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(true),
+            new ButtonBuilder()
                 .setCustomId("VOICEmuted")
                 .setLabel("Muted times only")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
-            new MessageButton()
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            new ButtonBuilder()
                 .setCustomId("VOICEtop")
                 .setLabel("Top Talkers")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
         );
-        var timingFilters2 = new MessageActionRow()
+        var timingFilters2 = new ActionRowBuilder()
         .addComponents(
-            new MessageButton()
+            new ButtonBuilder()
                 .setCustomId("VOICE30days")
                 .setLabel("Top - Last 30 Days")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
-            new MessageButton()
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            new ButtonBuilder()
                 .setCustomId("VOICE7days")
                 .setLabel("Top - Last 7 Days")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
-                new MessageButton()
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+                new ButtonBuilder()
                 .setCustomId("VOICEchannel")
                 .setLabel("Top Talkers - By Channel")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
-                new MessageButton()
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+                new ButtonBuilder()
                 .setCustomId("VOICEchannelUse")
                 .setLabel("Top Channels by use")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
         );
         await button.editReply({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
         logger.info("Sent Voice Leaderboard!")
@@ -512,7 +512,7 @@ async function onButtonClick(button){
             var output = "";
     
             totalTime.sort(compareSecondColumn);
-            var ListEmbed = new MessageEmbed()
+            var ListEmbed = new EmbedBuilder()
             .setColor("#c586b6")
             .setTitle("Voice Channel Leaderboard (Top 10 channel times)");
             var count = 10;
@@ -532,46 +532,46 @@ async function onButtonClick(button){
                 }
                 ListEmbed.addField((k+1).toString() + ". " + totalTime[k][0], s.toString());
             }
-            var timingFilters = new MessageActionRow()
+            var timingFilters = new ActionRowBuilder()
                 .addComponents(
-            new MessageButton()
+            new ButtonBuilder()
                 .setCustomId("VOICEnon-muted")
                 .setLabel("Non-muted times only")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
-            new MessageButton()
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            new ButtonBuilder()
                 .setCustomId("VOICEmuted")
                 .setLabel("Muted times only")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
-            new MessageButton()
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            new ButtonBuilder()
                 .setCustomId("VOICEtop")
                 .setLabel("Top Talkers")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
         );
-        var timingFilters2 = new MessageActionRow()
+        var timingFilters2 = new ActionRowBuilder()
         .addComponents(
-            new MessageButton()
+            new ButtonBuilder()
                 .setCustomId("VOICE30days")
                 .setLabel("Top - Last 30 Days")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
-            new MessageButton()
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            new ButtonBuilder()
                 .setCustomId("VOICE7days")
                 .setLabel("Top - Last 7 Days")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
-            new MessageButton()
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            new ButtonBuilder()
                 .setCustomId("VOICEchannel")
                 .setLabel("Top Talkers - By Channel")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
-            new MessageButton()
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            new ButtonBuilder()
                 .setCustomId("VOICEchannelUse")
                 .setLabel("Top Channels by use")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
         );
         await button.update({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
         logger.info("Sent Voice Leaderboard!")*/
@@ -622,7 +622,7 @@ async function onButtonClick(button){
           
             const sortedTotalTime = [...totalTime].sort((a, b) => b[1] - a[1]);
           
-            const ListEmbed = new MessageEmbed()
+            const ListEmbed = new EmbedBuilder()
               .setColor("#c586b6")
               .setTitle("Voice Channel Leaderboard (Top 10 channel times)");
           
@@ -643,47 +643,47 @@ async function onButtonClick(button){
                 diff = Math.floor(diff / units[i].d);
               }
           
-              ListEmbed.addField(`${i + 1}. ${usernameChannel}`, s);
+              ListEmbed.addFields({ name: `${i + 1}. ${usernameChannel}`, value: s });
             }
           
-            const timingFilters = new MessageActionRow().addComponents(
-              new MessageButton()
+            const timingFilters = new ActionRowBuilder().addComponents(
+              new ButtonBuilder()
                 .setCustomId("VOICEnon-muted")
                 .setLabel("Non-muted times only")
-                .setStyle("PRIMARY")
+                .setStyle(ButtonStyle.Primary)
                 .setDisabled(false),
-              new MessageButton()
+              new ButtonBuilder()
                 .setCustomId("VOICEmuted")
                 .setLabel("Muted times only")
-                .setStyle("PRIMARY")
+                .setStyle(ButtonStyle.Primary)
                 .setDisabled(false),
-              new MessageButton()
+              new ButtonBuilder()
                 .setCustomId("VOICEtop")
                 .setLabel("Top Talkers")
-                .setStyle("PRIMARY")
+                .setStyle(ButtonStyle.Primary)
                 .setDisabled(false)
             );
           
-            const timingFilters2 = new MessageActionRow().addComponents(
-              new MessageButton()
+            const timingFilters2 = new ActionRowBuilder().addComponents(
+              new ButtonBuilder()
                 .setCustomId("VOICE30days")
                 .setLabel("Top - Last 30 Days")
-                .setStyle("PRIMARY")
+                .setStyle(ButtonStyle.Primary)
                 .setDisabled(false),
-              new MessageButton()
+              new ButtonBuilder()
                 .setCustomId("VOICE7days")
                 .setLabel("Top - Last 7 Days")
-                .setStyle("PRIMARY")
+                .setStyle(ButtonStyle.Primary)
                 .setDisabled(false),
-              new MessageButton()
+              new ButtonBuilder()
                 .setCustomId("VOICEchannel")
                 .setLabel("Top Talkers - By Channel")
-                .setStyle("PRIMARY")
+                .setStyle(ButtonStyle.Primary)
                 .setDisabled(false),
-              new MessageButton()
+              new ButtonBuilder()
                 .setCustomId("VOICEchannelUse")
                 .setLabel("Top Channels by use")
-                .setStyle("PRIMARY")
+                .setStyle(ButtonStyle.Primary)
                 .setDisabled(false)
             );
           
@@ -738,7 +738,7 @@ async function onButtonClick(button){
         var output = "";
 
         totalTime.sort(compareSecondColumn);
-        var ListEmbed = new MessageEmbed()
+        var ListEmbed = new EmbedBuilder()
         .setColor("#c586b6")
         .setTitle("Voice Channel Leaderboard (Top 10 Channels by use)");
         var count = 10;
@@ -760,46 +760,46 @@ async function onButtonClick(button){
         }
         
 
-        var timingFilters = new MessageActionRow()
+        var timingFilters = new ActionRowBuilder()
         .addComponents(
-            new MessageButton()
+            new ButtonBuilder()
                 .setCustomId("VOICEnon-muted")
                 .setLabel("Non-muted times only")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
-            new MessageButton()
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            new ButtonBuilder()
                 .setCustomId("VOICEmuted")
                 .setLabel("Muted times only")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
-            new MessageButton()
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            new ButtonBuilder()
                 .setCustomId("VOICEtop")
                 .setLabel("Top Talkers")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
         );
-        var timingFilters2 = new MessageActionRow()
+        var timingFilters2 = new ActionRowBuilder()
         .addComponents(
-            new MessageButton()
+            new ButtonBuilder()
                 .setCustomId("VOICE30days")
                 .setLabel("Top - Last 30 Days")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
-            new MessageButton()
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            new ButtonBuilder()
                 .setCustomId("VOICE7days")
                 .setLabel("Top - Last 7 Days")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
-                new MessageButton()
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+                new ButtonBuilder()
                 .setCustomId("VOICEchannel")
                 .setLabel("Top Talkers - By Channel")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
-                new MessageButton()
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+                new ButtonBuilder()
                 .setCustomId("VOICEchannelUse")
                 .setLabel("Top Channels by use")
-                .setStyle('PRIMARY')
-                .setDisabled("true"),
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(true),
         );
         await button.update({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
         logger.info("Sent Voice Leaderboard!")*/
@@ -840,7 +840,7 @@ async function onButtonClick(button){
           
             const sortedTotalTime = [...totalTime].sort((a, b) => b[1] - a[1]);
           
-            const ListEmbed = new MessageEmbed()
+            const ListEmbed = new EmbedBuilder()
               .setColor("#c586b6")
               .setTitle("Voice Channel Leaderboard (Top 10 Channels by use)");
           
@@ -862,47 +862,47 @@ async function onButtonClick(button){
                 diff = Math.floor(diff / units[i].d);
               }
           
-              ListEmbed.addField(`${i + 1}. ${channelName}`, s);
+              ListEmbed.addFields({ name: `${i + 1}. ${channelName}`, value: s });
             }
           
-            const timingFilters = new MessageActionRow().addComponents(
-              new MessageButton()
+            const timingFilters = new ActionRowBuilder().addComponents(
+              new ButtonBuilder()
                 .setCustomId("VOICEnon-muted")
                 .setLabel("Non-muted times only")
-                .setStyle("PRIMARY")
+                .setStyle(ButtonStyle.Primary)
                 .setDisabled(false),
-              new MessageButton()
+              new ButtonBuilder()
                 .setCustomId("VOICEmuted")
                 .setLabel("Muted times only")
-                .setStyle("PRIMARY")
+                .setStyle(ButtonStyle.Primary)
                 .setDisabled(false),
-              new MessageButton()
+              new ButtonBuilder()
                 .setCustomId("VOICEtop")
                 .setLabel("Top Talkers")
-                .setStyle("PRIMARY")
+                .setStyle(ButtonStyle.Primary)
                 .setDisabled(false)
             );
           
-            const timingFilters2 = new MessageActionRow().addComponents(
-              new MessageButton()
+            const timingFilters2 = new ActionRowBuilder().addComponents(
+              new ButtonBuilder()
                 .setCustomId("VOICE30days")
                 .setLabel("Top - Last 30 Days")
-                .setStyle("PRIMARY")
+                .setStyle(ButtonStyle.Primary)
                 .setDisabled(false),
-              new MessageButton()
+              new ButtonBuilder()
                 .setCustomId("VOICE7days")
                 .setLabel("Top - Last 7 Days")
-                .setStyle("PRIMARY")
+                .setStyle(ButtonStyle.Primary)
                 .setDisabled(false),
-              new MessageButton()
+              new ButtonBuilder()
                 .setCustomId("VOICEchannel")
                 .setLabel("Top Talkers - By Channel")
-                .setStyle("PRIMARY")
+                .setStyle(ButtonStyle.Primary)
                 .setDisabled(false),
-              new MessageButton()
+              new ButtonBuilder()
                 .setCustomId("VOICEchannelUse")
                 .setLabel("Top Channels by use")
-                .setStyle("PRIMARY")
+                .setStyle(ButtonStyle.Primary)
                 .setDisabled(true)
             );
           
@@ -960,7 +960,7 @@ async function onButtonClick(button){
         var output = "";
 
         totalTime.sort(compareSecondColumn);
-        var ListEmbed = new MessageEmbed()
+        var ListEmbed = new EmbedBuilder()
         .setColor("#c586b6")
         .setTitle("Voice Channel Leaderboard (Top talkers - Last 30 days)");
         var count = 10;
@@ -986,50 +986,50 @@ async function onButtonClick(button){
             s = (diff % units[i].d) + " " + units[i].l + " " + s;
             diff = Math.floor(diff / units[i].d);
             }
-            ListEmbed.addField((k+1).toString() + ". " + mention, s.toString());
+            ListEmbed.addFields({ name: (k+1).toString() + ". " + mention, value: s.toString() });
         }
         
 
-        var timingFilters = new MessageActionRow()
+        var timingFilters = new ActionRowBuilder()
         .addComponents(
-            new MessageButton()
+            new ButtonBuilder()
                 .setCustomId("VOICEnon-muted")
                 .setLabel("Non-muted times only")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
-            new MessageButton()
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            new ButtonBuilder()
                 .setCustomId("VOICEmuted")
                 .setLabel("Muted times only")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
-            new MessageButton()
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            new ButtonBuilder()
                 .setCustomId("VOICEtop")
                 .setLabel("Top Talkers")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
         );
-        var timingFilters2 = new MessageActionRow()
+        var timingFilters2 = new ActionRowBuilder()
         .addComponents(
-            new MessageButton()
+            new ButtonBuilder()
                 .setCustomId("VOICE30days")
                 .setLabel("Top - Last 30 Days")
-                .setStyle('PRIMARY')
-                .setDisabled("true"),
-            new MessageButton()
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(true),
+            new ButtonBuilder()
                 .setCustomId("VOICE7days")
                 .setLabel("Top - Last 7 Days")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
-                new MessageButton()
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+                new ButtonBuilder()
                 .setCustomId("VOICEchannel")
                 .setLabel("Top Talkers - By Channel")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
-                new MessageButton()
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+                new ButtonBuilder()
                 .setCustomId("VOICEchannelUse")
                 .setLabel("Top Channels by use")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
         );
         await button.editReply({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
         logger.info("Sent Voice Leaderboard!")
@@ -1085,7 +1085,7 @@ async function onButtonClick(button){
         var output = "";
 
         totalTime.sort(compareSecondColumn);
-        var ListEmbed = new MessageEmbed()
+        var ListEmbed = new EmbedBuilder()
         .setColor("#c586b6")
         .setTitle("Voice Channel Leaderboard (Top talkers - Last 7 days)");
         var count = 10;
@@ -1111,50 +1111,50 @@ async function onButtonClick(button){
             s = (diff % units[i].d) + " " + units[i].l + " " + s;
             diff = Math.floor(diff / units[i].d);
             }
-            ListEmbed.addField((k+1).toString() + ". " + mention, s.toString());
+            ListEmbed.addFields({ name: (k+1).toString() + ". " + mention, value: s.toString() });
         }
         
 
-        var timingFilters = new MessageActionRow()
+        var timingFilters = new ActionRowBuilder()
         .addComponents(
-            new MessageButton()
+            new ButtonBuilder()
                 .setCustomId("VOICEnon-muted")
                 .setLabel("Non-muted times only")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
-            new MessageButton()
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            new ButtonBuilder()
                 .setCustomId("VOICEmuted")
                 .setLabel("Muted times only")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
-            new MessageButton()
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            new ButtonBuilder()
                 .setCustomId("VOICEtop")
                 .setLabel("Top Talkers")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
         );
-        var timingFilters2 = new MessageActionRow()
+        var timingFilters2 = new ActionRowBuilder()
         .addComponents(
-            new MessageButton()
+            new ButtonBuilder()
                 .setCustomId("VOICE30days")
                 .setLabel("Top - Last 30 Days")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
-            new MessageButton()
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            new ButtonBuilder()
                 .setCustomId("VOICE7days")
                 .setLabel("Top - Last 7 Days")
-                .setStyle('PRIMARY')
-                .setDisabled("true"),
-                new MessageButton()
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(true),
+                new ButtonBuilder()
                 .setCustomId("VOICEchannel")
                 .setLabel("Top Talkers - By Channel")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
-                new MessageButton()
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+                new ButtonBuilder()
                 .setCustomId("VOICEchannelUse")
                 .setLabel("Top Channels by use")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
         );
         await button.editReply({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
         logger.info("Sent Voice Leaderboard!")
@@ -1221,7 +1221,7 @@ async function onButtonClick(button){
                     }catch(error){
                         logger.error(error.message);
                     }
-                    var kickableList = new MessageSelectMenu()
+                    var kickableList = new SelectMenuBuilder()
                         .setCustomId('GAMEkick-'+hostId)
                         .setPlaceholder('Select someone to remove');
                     var playersList = "";
@@ -1238,34 +1238,34 @@ async function onButtonClick(button){
                             
                     var guild = button.guild;
                     var host = await guild.members.fetch(hostId);
-                    var ListEmbed = new MessageEmbed()
+                    var ListEmbed = new EmbedBuilder()
                         .setColor("#c586b6")
                         .setTitle(`${host.displayName}'s game menu.`);
-                        ListEmbed.addField("Info about the buttons:", "Host is not added to their own game by default, but can join if they want to.\n\nBlurple buttons = anyone can interact\nGray buttons = only host can interact");
-                        ListEmbed.addField("Current Players:", playersList);
-                        var row = new MessageActionRow()
+                        ListEmbed.addFields({ name: "Info about the buttons:", value: "Host is not added to their own game by default, but can join if they want to.\n\nBlurple buttons = anyone can interact\nGray buttons = only host can interact" });
+                        ListEmbed.addFields({ name: "Current Players:", value: playersList });
+                        var row = new ActionRowBuilder()
                         .addComponents(
-                            new MessageButton()
+                            new ButtonBuilder()
                                 .setCustomId('GAMEjoin-'+hostId)
                                 .setLabel('Join')
-                                .setStyle('PRIMARY'),
-                            new MessageButton()
+                                .setStyle(ButtonStyle.Primary),
+                            new ButtonBuilder()
                                 .setCustomId('GAMEleave-'+hostId)
                                 .setLabel('Leave')
-                                .setStyle('PRIMARY'),
+                                .setStyle(ButtonStyle.Primary),
                         );
-                        var row2 = new MessageActionRow()
+                        var row2 = new ActionRowBuilder()
                         .addComponents(
-                            new MessageButton()
+                            new ButtonBuilder()
                                 .setCustomId('GAMEstart-'+hostId)
                                 .setLabel('Start')
-                                .setStyle('SECONDARY'),
-                            new MessageButton()
+                                .setStyle(ButtonStyle.Secondary),
+                            new ButtonBuilder()
                                 .setCustomId('GAMEend-'+hostId)
                                 .setLabel('End')
-                                .setStyle('SECONDARY'),
+                                .setStyle(ButtonStyle.Secondary),
                         );
-                        var row3 = new MessageActionRow()
+                        var row3 = new ActionRowBuilder()
                             .addComponents(kickableList);
 
                     button.editReply({ embeds: [ListEmbed], components: [row, row2, row3] })
@@ -1322,7 +1322,7 @@ async function onButtonClick(button){
                     if(playersList === ""){
                         playersList = "No players currently in the game...";
                     }
-                    var kickableList = new MessageSelectMenu()
+                    var kickableList = new SelectMenuBuilder()
                     .setCustomId('GAMEkick-'+hostId)
                     .setPlaceholder('Select someone to remove');
                     var playersList = "";
@@ -1339,34 +1339,34 @@ async function onButtonClick(button){
 
                     var guild = button.guild;
                     var host = await guild.members.fetch(hostId);
-                    var ListEmbed = new MessageEmbed()
+                    var ListEmbed = new EmbedBuilder()
                         .setColor("#c586b6")
                         .setTitle(`${host.displayName}'s game menu.`);
-                        ListEmbed.addField("Info about the buttons:", "Host is not added to their own game by default, but can join if they want to.\n\nBlurple buttons = anyone can interact\nGray buttons = only host can interact");
-                        ListEmbed.addField("Current Players:", playersList);
-                        var row = new MessageActionRow()
+                        ListEmbed.addFields({ name: "Info about the buttons:", value: "Host is not added to their own game by default, but can join if they want to.\n\nBlurple buttons = anyone can interact\nGray buttons = only host can interact" });
+                        ListEmbed.addFields({ name: "Current Players:", value: playersList });
+                        var row = new ActionRowBuilder()
                         .addComponents(
-                            new MessageButton()
+                            new ButtonBuilder()
                                 .setCustomId('GAMEjoin-'+hostId)
                                 .setLabel('Join')
-                                .setStyle('PRIMARY'),
-                            new MessageButton()
+                                .setStyle(ButtonStyle.Primary),
+                            new ButtonBuilder()
                                 .setCustomId('GAMEleave-'+hostId)
                                 .setLabel('Leave')
-                                .setStyle('PRIMARY'),
+                                .setStyle(ButtonStyle.Primary),
                         );
-                        var row2 = new MessageActionRow()
+                        var row2 = new ActionRowBuilder()
                         .addComponents(
-                            new MessageButton()
+                            new ButtonBuilder()
                                 .setCustomId('GAMEstart-'+hostId)
                                 .setLabel('Start')
-                                .setStyle('SECONDARY'),
-                            new MessageButton()
+                                .setStyle(ButtonStyle.Secondary),
+                            new ButtonBuilder()
                                 .setCustomId('GAMEend-'+hostId)
                                 .setLabel('End')
-                                .setStyle('SECONDARY'),
+                                .setStyle(ButtonStyle.Secondary),
                         );
-                        var row3 = new MessageActionRow()
+                        var row3 = new ActionRowBuilder()
                             .addComponents(kickableList);
                     button.editReply({ embeds: [ListEmbed], components: [row, row2, row3] })
                     break;
@@ -1423,32 +1423,32 @@ async function onButtonClick(button){
                     
                     var guild = button.guild;
                     var host = await guild.members.fetch(hostId);
-                    var ListEmbed = new MessageEmbed()
+                    var ListEmbed = new EmbedBuilder()
                         .setColor("#c586b6")
                         .setTitle(`${host.displayName}'s game menu.`);
-                    ListEmbed.addField("Game is starting...", "Only the host can interact with the menu now");
-                    ListEmbed.addField("Current Players:", playersList);
-                    var row = new MessageActionRow()
+                    ListEmbed.addFields({ name: "Game is starting...", value: "Only the host can interact with the menu now" });
+                    ListEmbed.addFields({ name: "Current Players:", value: playersList });
+                    var row = new ActionRowBuilder()
                         .addComponents(
-                            new MessageButton()
+                            new ButtonBuilder()
                                 .setCustomId('GAMEgamemodes-'+hostId)
                                 .setLabel('See gamemodes')
-                                .setStyle('SECONDARY'),
-                            new MessageButton()
+                                .setStyle(ButtonStyle.Secondary),
+                            new ButtonBuilder()
                                 .setCustomId('GAMEreturn-'+hostId)
                                 .setLabel('Return players to starting channel')
-                                .setStyle('SECONDARY'),
+                                .setStyle(ButtonStyle.Secondary),
                         );
-                    var row2 = new MessageActionRow()
+                    var row2 = new ActionRowBuilder()
                         .addComponents(
-                            new MessageButton()
+                            new ButtonBuilder()
                                 .setCustomId('GAMEend-'+hostId)
                                 .setLabel('End game')
-                                .setStyle('SECONDARY'),
-                            new MessageButton()
+                                .setStyle(ButtonStyle.Secondary),
+                            new ButtonBuilder()
                                 .setCustomId('GAMEreopen-'+hostId)
                                 .setLabel('Re-open game')
-                                .setStyle('SECONDARY'),
+                                .setStyle(ButtonStyle.Secondary),
                         );
                     
                     button.editReply({ embeds: [ListEmbed], components: [row, row2] })
@@ -1486,32 +1486,32 @@ async function onButtonClick(button){
 
                     var guild = button.guild;
                     var host = await guild.members.fetch(hostId);
-                    var ListEmbed = new MessageEmbed()
+                    var ListEmbed = new EmbedBuilder()
                         .setColor("#c586b6")
                         .setTitle(`${host.displayName}'s game menu.`);
-                    ListEmbed.addField("Host is choosing gamemode...", "Only the host can interact with the menu now");
-                    ListEmbed.addField("Current Players:", playersList);
-                    var row = new MessageActionRow()
+                    ListEmbed.addFields({ name: "Host is choosing gamemode...", value: "Only the host can interact with the menu now" });
+                    ListEmbed.addFields({ name: "Current Players:", value: playersList });
+                    var row = new ActionRowBuilder()
                         .addComponents(
-                            new MessageButton()
+                            new ButtonBuilder()
                                 .setCustomId('GAMErandomize-'+hostId)
                                 .setLabel('Random Teams')
-                                .setStyle('SECONDARY'),
-                            new MessageButton()
+                                .setStyle(ButtonStyle.Secondary),
+                            new ButtonBuilder()
                                 .setCustomId('GAMEcaptains-'+hostId)
                                 .setLabel('Captains pick')
-                                .setStyle('SECONDARY'),
+                                .setStyle(ButtonStyle.Secondary),
                         );
-                    var row2 = new MessageActionRow()
+                    var row2 = new ActionRowBuilder()
                         .addComponents(
-                            new MessageButton()
+                            new ButtonBuilder()
                                 .setCustomId('GAMEend-'+hostId)
                                 .setLabel('End game')
-                                .setStyle('SECONDARY'),
-                            new MessageButton()
+                                .setStyle(ButtonStyle.Secondary),
+                            new ButtonBuilder()
                                 .setCustomId('GAMEstart-'+hostId)
                                 .setLabel('Go back')
-                                .setStyle('SECONDARY'),
+                                .setStyle(ButtonStyle.Secondary),
                         );
                     
                     button.editReply({ embeds: [ListEmbed], components: [row, row2] })
@@ -1564,7 +1564,7 @@ async function onButtonClick(button){
                         }
                         var guild = button.guild;
                         var host = await guild.members.fetch(hostId);
-                        var ListEmbed = new MessageEmbed()
+                        var ListEmbed = new EmbedBuilder()
                             .setColor("#c586b6")
                             .setTitle(`${host.displayName}'s game has ended.`);
                         button.editReply({ embeds: [ListEmbed], components: []})
@@ -1616,7 +1616,7 @@ async function onButtonClick(button){
                                 captain:"no"
                             })
                         }
-                        const kickableList = new MessageSelectMenu()
+                        const kickableList = new SelectMenuBuilder()
                             .setCustomId('GAMEkick-'+hostId)
                             .setPlaceholder('Select someone to remove');
                         var playersList = "";
@@ -1637,34 +1637,34 @@ async function onButtonClick(button){
                         button.channel.send({ content: `The game has been re-opened, new people can join!`})
                         var guild = button.guild;
                         var host = await guild.members.fetch(hostId);
-                        var ListEmbed = new MessageEmbed()
+                        var ListEmbed = new EmbedBuilder()
                             .setColor("#c586b6")
                             .setTitle(`${host.displayName}'s game menu.`);
-                        ListEmbed.addField("Info about the buttons:", "Host is not added to their own game by default, but can join if they want to.\n\nBlurple buttons = anyone can interact\nGray buttons = only host can interact");
-                        ListEmbed.addField("Current Players:", playersList);
-                        var row = new MessageActionRow()
+                        ListEmbed.addFields({ name: "Info about the buttons:", value: "Host is not added to their own game by default, but can join if they want to.\n\nBlurple buttons = anyone can interact\nGray buttons = only host can interact" });
+                        ListEmbed.addFields({ name: "Current Players:", value: playersList });
+                        var row = new ActionRowBuilder()
                             .addComponents(
-                                new MessageButton()
+                                new ButtonBuilder()
                                     .setCustomId('GAMEjoin-'+hostId)
                                     .setLabel('Join')
-                                    .setStyle('PRIMARY'),
-                                new MessageButton()
+                                    .setStyle(ButtonStyle.Primary),
+                                new ButtonBuilder()
                                     .setCustomId('GAMEleave-'+hostId)
                                     .setLabel('Leave')
-                                    .setStyle('PRIMARY'),
+                                    .setStyle(ButtonStyle.Primary),
                             );
-                        var row2 = new MessageActionRow()
+                        var row2 = new ActionRowBuilder()
                             .addComponents(
-                                new MessageButton()
+                                new ButtonBuilder()
                                     .setCustomId('GAMEstart-'+hostId)
                                     .setLabel('Start')
-                                    .setStyle('SECONDARY'),
-                                new MessageButton()
+                                    .setStyle(ButtonStyle.Secondary),
+                                new ButtonBuilder()
                                     .setCustomId('GAMEend-'+hostId)
                                     .setLabel('End')
-                                    .setStyle('SECONDARY'),
+                                    .setStyle(ButtonStyle.Secondary),
                             );
-                        var row3 = new MessageActionRow()
+                        var row3 = new ActionRowBuilder()
                             .addComponents(kickableList);
                         button.editReply({ embeds: [ListEmbed], components: [row, row2, row3] })
                     }
@@ -1728,11 +1728,11 @@ async function onButtonClick(button){
                             // Check if any of the roles has VIEW_CHANNEL permission in the channel
                             return roles.some(role => {
                                 if(!role) return false; // Skip if the role is undefined or null
-                                return channel.permissionsFor(role).has(Permissions.FLAGS.VIEW_CHANNEL);
+                                return channel.permissionsFor(role).has(PermissionsBitField.Flags.ViewChannel);
                             });
 
                         });
-                        const channelListTeam1 = new MessageSelectMenu()
+                        const channelListTeam1 = new SelectMenuBuilder()
                             .setCustomId('GAMEchannelTeam1-'+hostId)
                             .setPlaceholder('Select a voice channel to send Team 1 to');
                         voiceChannels.forEach((channel) => {
@@ -1743,7 +1743,7 @@ async function onButtonClick(button){
                                 },
                             ]);
                         });
-                        const channelListTeam2 = new MessageSelectMenu()
+                        const channelListTeam2 = new SelectMenuBuilder()
                             .setCustomId('GAMEchannelTeam2-'+hostId)
                             .setPlaceholder('Select a voice channel to send Team 2 to');
                         voiceChannels.forEach((channel) => {
@@ -1796,37 +1796,37 @@ async function onButtonClick(button){
                         }
                         var guild = button.guild;
                         var host = await guild.members.fetch(hostId);
-                        var ListEmbed = new MessageEmbed()
+                        var ListEmbed = new EmbedBuilder()
                             .setColor("#c586b6")
                             .setTitle(`${host.displayName}'s game menu.`);
-                        ListEmbed.addField("Game is randomized!", "Only the host can interact with the menu now");
-                        ListEmbed.addField("Team 1:", playersList.join("\n"));
-                        ListEmbed.addField("Team 2:", team2.join("\n"));
-                        var row = new MessageActionRow()
+                        ListEmbed.addFields({ name: "Game is randomized!", value: "Only the host can interact with the menu now" });
+                        ListEmbed.addFields({ name: "Team 1:", value: playersList.join("\n") });
+                        ListEmbed.addFields({ name: "Team 2:", value: team2.join("\n") });
+                        var row = new ActionRowBuilder()
                             .addComponents(
-                                new MessageButton()
+                                new ButtonBuilder()
                                     .setCustomId('GAMErandomize-'+hostId)
                                     .setLabel('Randomize Teams')
-                                    .setStyle('SECONDARY'),
-                                new MessageButton()
+                                    .setStyle(ButtonStyle.Secondary),
+                                new ButtonBuilder()
                                     .setCustomId('GAMEreturn-'+hostId)
                                     .setLabel('Return players to starting channel')
-                                    .setStyle('SECONDARY'),
+                                    .setStyle(ButtonStyle.Secondary),
                             );
-                        var row2 = new MessageActionRow()
+                        var row2 = new ActionRowBuilder()
                             .addComponents(
-                                new MessageButton()
+                                new ButtonBuilder()
                                     .setCustomId('GAMEend-'+hostId)
                                     .setLabel('End')
-                                    .setStyle('SECONDARY'),
-                                new MessageButton()
+                                    .setStyle(ButtonStyle.Secondary),
+                                new ButtonBuilder()
                                     .setCustomId('GAMEreopen-'+hostId)
                                     .setLabel('Re-open game')
-                                    .setStyle('SECONDARY'),
+                                    .setStyle(ButtonStyle.Secondary),
                             );
-                        var row3 = new MessageActionRow()
+                        var row3 = new ActionRowBuilder()
                             .addComponents(channelListTeam1);
-                        var row4 = new MessageActionRow()
+                        var row4 = new ActionRowBuilder()
                             .addComponents(channelListTeam2);
                         button.editReply({ embeds: [ListEmbed], components: [row, row2, row3, row4] })
                     }
@@ -1871,7 +1871,7 @@ async function onButtonClick(button){
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
                         playersList += ("<@" + respPlayersList.game_joining_players[i].player_id + ">\n");
                     }
-                    var chooseCaptain1 = new MessageSelectMenu()
+                    var chooseCaptain1 = new SelectMenuBuilder()
                         .setCustomId('GAMEcaptain1-'+hostId)
                         .setPlaceholder('Select a player to make into the captain for Team 1');
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
@@ -1887,30 +1887,30 @@ async function onButtonClick(button){
                     
                     var guild = button.guild;
                     var host = await guild.members.fetch(hostId);
-                    var ListEmbed = new MessageEmbed()
+                    var ListEmbed = new EmbedBuilder()
                         .setColor("#c586b6")
                         .setTitle(`${host.displayName}'s game menu.`);
-                    ListEmbed.addField("Choosing Captains!", "Only the host can interact with the menu now");
-                    ListEmbed.addField("Current Players:", playersList);
-                    var row = new MessageActionRow()
+                    ListEmbed.addFields({ name: "Choosing Captains!", value: "Only the host can interact with the menu now" });
+                    ListEmbed.addFields({ name: "Current Players:", value: playersList });
+                    var row = new ActionRowBuilder()
                         .addComponents(
-                            new MessageButton()
+                            new ButtonBuilder()
                                 .setCustomId('GAMEreturn-'+hostId)
                                 .setLabel('Return players to starting channel')
-                                .setStyle('SECONDARY'),
+                                .setStyle(ButtonStyle.Secondary),
                         );
-                    var row2 = new MessageActionRow()
+                    var row2 = new ActionRowBuilder()
                         .addComponents(
-                            new MessageButton()
+                            new ButtonBuilder()
                                 .setCustomId('GAMEend-'+hostId)
                                 .setLabel('End')
-                                .setStyle('SECONDARY'),
-                            new MessageButton()
+                                .setStyle(ButtonStyle.Secondary),
+                            new ButtonBuilder()
                                 .setCustomId('GAMEreopen-'+hostId)
                                 .setLabel('Re-open game')
-                                .setStyle('SECONDARY'),
+                                .setStyle(ButtonStyle.Secondary),
                         );
-                    var row3 = new MessageActionRow()
+                    var row3 = new ActionRowBuilder()
                         .addComponents(chooseCaptain1);
                     button.editReply({ embeds: [ListEmbed], components: [row, row2, row3] })
                     break;
@@ -1976,7 +1976,7 @@ async function onButtonClick(button){
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
                         playersList += ("<@" + respPlayersList.game_joining_players[i].player_id + ">\n");
                     }
-                    var chooseCaptain2 = new MessageSelectMenu()
+                    var chooseCaptain2 = new SelectMenuBuilder()
                         .setCustomId('GAMEcaptain2-'+hostId)
                         .setPlaceholder('Select a player to make into the captain for Team 2');
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
@@ -1995,30 +1995,30 @@ async function onButtonClick(button){
                     
                     var guild = button.guild;
                     var host = await guild.members.fetch(hostId);
-                    var ListEmbed = new MessageEmbed()
+                    var ListEmbed = new EmbedBuilder()
                         .setColor("#c586b6")
                         .setTitle(`${host.displayName}'s game menu.`);
-                    ListEmbed.addField("Choosing Captains!", "Only the host can interact with the menu now");
-                    ListEmbed.addField("Current Players:", playersList);
-                    var row = new MessageActionRow()
+                    ListEmbed.addFields({ name: "Choosing Captains!", value: "Only the host can interact with the menu now" });
+                    ListEmbed.addFields({ name: "Current Players:", value: playersList });
+                    var row = new ActionRowBuilder()
                         .addComponents(
-                            new MessageButton()
+                            new ButtonBuilder()
                                 .setCustomId('GAMEreturn-'+hostId)
                                 .setLabel('Return players to starting channel')
-                                .setStyle('SECONDARY'),
+                                .setStyle(ButtonStyle.Secondary),
                         );
-                    var row2 = new MessageActionRow()
+                    var row2 = new ActionRowBuilder()
                         .addComponents(
-                            new MessageButton()
+                            new ButtonBuilder()
                                 .setCustomId('GAMEend-'+hostId)
                                 .setLabel('End')
-                                .setStyle('SECONDARY'),
-                            new MessageButton()
+                                .setStyle(ButtonStyle.Secondary),
+                            new ButtonBuilder()
                                 .setCustomId('GAMEreopen-'+hostId)
                                 .setLabel('Re-open game')
-                                .setStyle('SECONDARY'),
+                                .setStyle(ButtonStyle.Secondary),
                         );
-                    var row3 = new MessageActionRow()
+                    var row3 = new ActionRowBuilder()
                         .addComponents(chooseCaptain2);
                     button.editReply({ embeds: [ListEmbed], components: [row, row2, row3] })
                     break;
@@ -2080,7 +2080,7 @@ async function onButtonClick(button){
                         logger.error(error.message);
                     }
 
-                    var captain1pick = new MessageSelectMenu()
+                    var captain1pick = new SelectMenuBuilder()
                         .setCustomId('GAMEcaptain1pick-'+hostId)
                         .setPlaceholder('Select someone to add to team 1');
                         captain1pick.addOptions({
@@ -2100,7 +2100,7 @@ async function onButtonClick(button){
                             emoji: '1️⃣',
                         })
                     }
-                    var captain2pick = new MessageSelectMenu()
+                    var captain2pick = new SelectMenuBuilder()
                         .setCustomId('GAMEcaptain2pick-'+hostId)
                         .setPlaceholder('Select someone to add to team 2');
                         captain2pick.addOptions({
@@ -2150,31 +2150,31 @@ async function onButtonClick(button){
                     }
                     var guild = button.guild;
                     var host = await guild.members.fetch(hostId);
-                    var ListEmbed = new MessageEmbed()
+                    var ListEmbed = new EmbedBuilder()
                         .setColor("#c586b6")
                         .setTitle(`${host.displayName}'s game menu.`);
-                        ListEmbed.addField("Captains are choosing!", "Choose a player from the corresponding drop down to add them to your team!\nGrey buttons are for the host");
-                        ListEmbed.addField("No team:", playersListNoTeam);
-                        ListEmbed.addField("Team 1:", playersListTeam1);
-                        ListEmbed.addField("Team 2:", playersListTeam2);
-                    var row = new MessageActionRow()
+                        ListEmbed.addFields({ name: "Captains are choosing!", value: "Choose a player from the corresponding drop down to add them to your team!\nGrey buttons are for the host" });
+                        ListEmbed.addFields({ name: "No team:", value: playersListNoTeam });
+                        ListEmbed.addFields({ name: "Team 1:", value: playersListTeam1 });
+                        ListEmbed.addFields({ name: "Team 2:", value: playersListTeam2 });
+                    var row = new ActionRowBuilder()
                         .addComponents(
                             captain1pick
                         );
-                    var row2 = new MessageActionRow()
+                    var row2 = new ActionRowBuilder()
                         .addComponents(
                             captain2pick
                         );
-                    var row3 = new MessageActionRow()
+                    var row3 = new ActionRowBuilder()
                         .addComponents(
-                            new MessageButton()
+                            new ButtonBuilder()
                                 .setCustomId('GAMEend-'+hostId)
                                 .setLabel('End')
-                                .setStyle('SECONDARY'),
-                            new MessageButton()
+                                .setStyle(ButtonStyle.Secondary),
+                            new ButtonBuilder()
                                 .setCustomId('GAMEreopen-'+hostId)
                                 .setLabel('Re-open game')
-                                .setStyle('SECONDARY'),
+                                .setStyle(ButtonStyle.Secondary),
                         );
                     button.editReply({ embeds: [ListEmbed], components: [row, row2, row3] })
 
@@ -2250,7 +2250,7 @@ async function onButtonClick(button){
                             logger.error(error.message);
                         }
                     }
-                    var captain1pick = new MessageSelectMenu()
+                    var captain1pick = new SelectMenuBuilder()
                         .setCustomId('GAMEcaptain1pick-'+hostId)
                         .setPlaceholder('Select someone to add to team 1');
                         captain1pick.addOptions({
@@ -2270,7 +2270,7 @@ async function onButtonClick(button){
                             emoji: '1️⃣',
                         })
                     }
-                    var captain2pick = new MessageSelectMenu()
+                    var captain2pick = new SelectMenuBuilder()
                         .setCustomId('GAMEcaptain2pick-'+hostId)
                         .setPlaceholder('Select someone to add to team 2');
                         captain2pick.addOptions({
@@ -2331,11 +2331,11 @@ async function onButtonClick(button){
                         // Check if any of the roles has VIEW_CHANNEL permission in the channel
                         return roles.some(role => {
                             if(!role) return false; // Skip if the role is undefined or null
-                            return channel.permissionsFor(role).has(Permissions.FLAGS.VIEW_CHANNEL);
+                            return channel.permissionsFor(role).has(PermissionsBitField.Flags.ViewChannel);
                         });
 
                     });
-                    const channelListTeam1pick1 = new MessageSelectMenu()
+                    const channelListTeam1pick1 = new SelectMenuBuilder()
                         .setCustomId('GAMEchannelTeam1-'+hostId)
                         .setPlaceholder('Select a voice channel to send Team 1 to');
                     voiceChannelspick1.forEach((channel) => {
@@ -2346,7 +2346,7 @@ async function onButtonClick(button){
                             },
                         ]);
                     });
-                    const channelListTeam2pick1 = new MessageSelectMenu()
+                    const channelListTeam2pick1 = new SelectMenuBuilder()
                         .setCustomId('GAMEchannelTeam2-'+hostId)
                         .setPlaceholder('Select a voice channel to send Team 2 to');
                     voiceChannelspick1.forEach((channel) => {
@@ -2360,39 +2360,39 @@ async function onButtonClick(button){
 
                     var guild = button.guild;
                     var host = await guild.members.fetch(hostId);
-                    var ListEmbed = new MessageEmbed()
+                    var ListEmbed = new EmbedBuilder()
                         .setColor("#c586b6")
                         .setTitle(`${host.displayName}'s game menu.`);
-                    ListEmbed.addField("Captains are choosing!", "Choose a player from the corresponding drop down to add them to your team!\nGrey buttons are for the host");
-                    ListEmbed.addField("No team:", playersListNoTeam);
-                    ListEmbed.addField("Team 1:", playersListTeam1);
-                    ListEmbed.addField("Team 2:", playersListTeam2);
-                    var row = new MessageActionRow()
+                    ListEmbed.addFields({ name: "Captains are choosing!", value: "Choose a player from the corresponding drop down to add them to your team!\nGrey buttons are for the host" });
+                    ListEmbed.addFields({ name: "No team:", value: playersListNoTeam });
+                    ListEmbed.addFields({ name: "Team 1:", value: playersListTeam1 });
+                    ListEmbed.addFields({ name: "Team 2:", value: playersListTeam2 });
+                    var row = new ActionRowBuilder()
                         .addComponents(
                             captain1pick
                         );
-                    var row2 = new MessageActionRow()
+                    var row2 = new ActionRowBuilder()
                         .addComponents(
                             captain2pick
                         );
-                    var row3 = new MessageActionRow()
+                    var row3 = new ActionRowBuilder()
                         .addComponents(channelListTeam1pick1);
-                    var row4 = new MessageActionRow()
+                    var row4 = new ActionRowBuilder()
                         .addComponents(channelListTeam2pick1);
-                    var row5 = new MessageActionRow()
+                    var row5 = new ActionRowBuilder()
                         .addComponents(
-                            new MessageButton()
+                            new ButtonBuilder()
                                 .setCustomId('GAMEend-'+hostId)
                                 .setLabel('End')
-                                .setStyle('SECONDARY'),
-                            new MessageButton()
+                                .setStyle(ButtonStyle.Secondary),
+                            new ButtonBuilder()
                                 .setCustomId('GAMEreopen-'+hostId)
                                 .setLabel('Re-open game')
-                                .setStyle('SECONDARY'),
-                            new MessageButton()
+                                .setStyle(ButtonStyle.Secondary),
+                            new ButtonBuilder()
                                 .setCustomId('GAMEreturn-'+hostId)
                                 .setLabel('Return players to starting channel')
-                                .setStyle('SECONDARY'),
+                                .setStyle(ButtonStyle.Secondary),
                         );
                     button.editReply({ embeds: [ListEmbed], components: [row, row2, row3, row4, row5] })
                     break;
@@ -2467,7 +2467,7 @@ async function onButtonClick(button){
                             logger.error(error.message);
                         }
                     }
-                    var captain1pick = new MessageSelectMenu()
+                    var captain1pick = new SelectMenuBuilder()
                         .setCustomId('GAMEcaptain1pick-'+hostId)
                         .setPlaceholder('Select someone to add to team 1');
                         captain1pick.addOptions({
@@ -2487,7 +2487,7 @@ async function onButtonClick(button){
                             emoji: '1️⃣',
                         })
                     }
-                    var captain2pick = new MessageSelectMenu()
+                    var captain2pick = new SelectMenuBuilder()
                         .setCustomId('GAMEcaptain2pick-'+hostId)
                         .setPlaceholder('Select someone to add to team 2');
                         captain2pick.addOptions({
@@ -2548,11 +2548,11 @@ async function onButtonClick(button){
                         // Check if any of the roles has VIEW_CHANNEL permission in the channel
                         return roles.some(role => {
                             if(!role) return false; // Skip if the role is undefined or null
-                            return channel.permissionsFor(role).has(Permissions.FLAGS.VIEW_CHANNEL);
+                            return channel.permissionsFor(role).has(PermissionsBitField.Flags.ViewChannel);
                         });
 
                     });
-                    const channelListTeam1pick2 = new MessageSelectMenu()
+                    const channelListTeam1pick2 = new SelectMenuBuilder()
                         .setCustomId('GAMEchannelTeam1-'+hostId)
                         .setPlaceholder('Select a voice channel to send Team 1 to');
                     voiceChannelspick2.forEach((channel) => {
@@ -2563,7 +2563,7 @@ async function onButtonClick(button){
                             },
                         ]);
                     });
-                    const channelListTeam2pick2 = new MessageSelectMenu()
+                    const channelListTeam2pick2 = new SelectMenuBuilder()
                         .setCustomId('GAMEchannelTeam2-'+hostId)
                         .setPlaceholder('Select a voice channel to send Team 2 to');
                     voiceChannelspick2.forEach((channel) => {
@@ -2577,39 +2577,39 @@ async function onButtonClick(button){
 
                     var guild = button.guild;
                     var host = await guild.members.fetch(hostId);
-                    var ListEmbed = new MessageEmbed()
+                    var ListEmbed = new EmbedBuilder()
                         .setColor("#c586b6")
                         .setTitle(`${host.displayName}'s game menu.`);
-                    ListEmbed.addField("Captains are choosing!", "Choose a player from the corresponding drop down to add them to your team!\nGrey buttons are for the host");
-                    ListEmbed.addField("No team:", playersListNoTeam);
-                    ListEmbed.addField("Team 1:", playersListTeam1);
-                    ListEmbed.addField("Team 2:", playersListTeam2);
-                    var row = new MessageActionRow()
+                    ListEmbed.addFields({ name: "Captains are choosing!", value: "Choose a player from the corresponding drop down to add them to your team!\nGrey buttons are for the host" });
+                    ListEmbed.addFields({ name: "No team:", value: playersListNoTeam });
+                    ListEmbed.addFields({ name: "Team 1:", value: playersListTeam1 });
+                    ListEmbed.addFields({ name: "Team 2:", value: playersListTeam2 });
+                    var row = new ActionRowBuilder()
                         .addComponents(
                             captain1pick
                         );
-                    var row2 = new MessageActionRow()
+                    var row2 = new ActionRowBuilder()
                         .addComponents(
                             captain2pick
                         );
-                    var row3 = new MessageActionRow()
+                    var row3 = new ActionRowBuilder()
                         .addComponents(channelListTeam1pick2);
-                    var row4 = new MessageActionRow()
+                    var row4 = new ActionRowBuilder()
                         .addComponents(channelListTeam2pick2);
-                    var row5 = new MessageActionRow()
+                    var row5 = new ActionRowBuilder()
                         .addComponents(
-                            new MessageButton()
+                            new ButtonBuilder()
                                 .setCustomId('GAMEend-'+hostId)
                                 .setLabel('End')
-                                .setStyle('SECONDARY'),
-                            new MessageButton()
+                                .setStyle(ButtonStyle.Secondary),
+                            new ButtonBuilder()
                                 .setCustomId('GAMEreopen-'+hostId)
                                 .setLabel('Re-open game')
-                                .setStyle('SECONDARY'),
-                            new MessageButton()
+                                .setStyle(ButtonStyle.Secondary),
+                            new ButtonBuilder()
                                 .setCustomId('GAMEreturn-'+hostId)
                                 .setLabel('Return players to starting channel')
-                                .setStyle('SECONDARY'),
+                                .setStyle(ButtonStyle.Secondary),
                         );
                     button.editReply({ embeds: [ListEmbed], components: [row, row2, row3, row4, row5] })
                     break;
@@ -2805,7 +2805,7 @@ async function onButtonClick(button){
                     if(playersList === ""){
                         playersList = "No players currently in the game...";
                     }
-                    var kickableList = new MessageSelectMenu()
+                    var kickableList = new SelectMenuBuilder()
                     .setCustomId('GAMEkick-'+hostId)
                     .setPlaceholder('Select someone to remove');
                     var playersList = "";
@@ -2822,34 +2822,34 @@ async function onButtonClick(button){
 
                     var guild = button.guild;
                     var host = await guild.members.fetch(hostId);
-                    var ListEmbed = new MessageEmbed()
+                    var ListEmbed = new EmbedBuilder()
                         .setColor("#c586b6")
                         .setTitle(`${host.displayName}'s game menu.`);
-                        ListEmbed.addField("Info about the buttons:", "Host is not added to their own game by default, but can join if they want to.\n\nBlurple buttons = anyone can interact\nGray buttons = only host can interact");
-                        ListEmbed.addField("Current Players:", playersList);
-                        var row = new MessageActionRow()
+                        ListEmbed.addFields({ name: "Info about the buttons:", value: "Host is not added to their own game by default, but can join if they want to.\n\nBlurple buttons = anyone can interact\nGray buttons = only host can interact" });
+                        ListEmbed.addFields({ name: "Current Players:", value: playersList });
+                        var row = new ActionRowBuilder()
                         .addComponents(
-                            new MessageButton()
+                            new ButtonBuilder()
                                 .setCustomId('GAMEjoin-'+hostId)
                                 .setLabel('Join')
-                                .setStyle('PRIMARY'),
-                            new MessageButton()
+                                .setStyle(ButtonStyle.Primary),
+                            new ButtonBuilder()
                                 .setCustomId('GAMEleave-'+hostId)
                                 .setLabel('Leave')
-                                .setStyle('PRIMARY'),
+                                .setStyle(ButtonStyle.Primary),
                         );
-                        var row2 = new MessageActionRow()
+                        var row2 = new ActionRowBuilder()
                         .addComponents(
-                            new MessageButton()
+                            new ButtonBuilder()
                                 .setCustomId('GAMEstart-'+hostId)
                                 .setLabel('Start')
-                                .setStyle('SECONDARY'),
-                            new MessageButton()
+                                .setStyle(ButtonStyle.Secondary),
+                            new ButtonBuilder()
                                 .setCustomId('GAMEend-'+hostId)
                                 .setLabel('End')
-                                .setStyle('SECONDARY'),
+                                .setStyle(ButtonStyle.Secondary),
                         );
-                        var row3 = new MessageActionRow()
+                        var row3 = new ActionRowBuilder()
                             .addComponents(kickableList);
                     button.editReply({ embeds: [ListEmbed], components: [row, row2, row3] })
                     break;

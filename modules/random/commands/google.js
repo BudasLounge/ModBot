@@ -10,6 +10,6 @@ module.exports = {
         args.shift();
         var query = args.join("+");
         var finalQuery = "https://lmgt.org/?q="+query;
-        message.channel.send({content: finalQuery});
+        await message.channel.send({content: finalQuery});
     }
 }

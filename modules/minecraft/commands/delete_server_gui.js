@@ -11,21 +11,21 @@ module.exports = {
 
         this.logger.info(">>delete_server_gui");
         if(message.member.roles.cache.find(r => r.id === "586313447965327365") || message.author.id === "185223223892377611"){
-            const {MessageActionRow, MessageButton, MessageEmbed, MessageSelectMenu} = require('discord.js');
-            const modalStarter = new MessageActionRow()
+            const { ActionRowBuilder, ButtonBuilder, EmbedBuilder, SelectMenuBuilder, ButtonStyle } = require('discord.js');
+            const modalStarter = new ActionRowBuilder()
             .addComponents(
-                new MessageButton()
+                new ButtonBuilder()
                 .setCustomId("MINE-SERVERDELETOR")
                 .setLabel("Click here to start the Server Deleting tool!")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
             );
-            const outputEmbed = new MessageEmbed()
+            const outputEmbed = new EmbedBuilder()
             .setTitle("Server Deleting Tool!")
-            .addField("Click the button below","Use the button below to start up the server deleting tool!")
-            message.channel.send({embeds: [outputEmbed],components: [modalStarter]});
+            .addFields({ name: "Click the button below", value: "Use the button below to start up the server deleting tool!"});
+            await message.channel.send({embeds: [outputEmbed],components: [modalStarter]});
         }else{
-            message.channel.send({ content: "You don't have permission to use that command!"});
+            await message.channel.send({ content: "You don't have permission to use that command!"});
         }
         this.logger.info("<<delete_server_gui");
     }

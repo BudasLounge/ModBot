@@ -19,7 +19,7 @@ module.exports = {
                 console.error(error);
             }
             if(!respServer.minecraft_servers[0]){
-                message.channel.send({ content: "short_name not found...checking display_name"});
+                await message.channel.send({ content: "short_name not found...checking display_name"});
                 try{
                     respServer = await api.get("minecraft_server", {
                         display_name: args[1]
@@ -34,13 +34,13 @@ module.exports = {
                     server_id: server_id
                 });  
                 if(respDelete.ok){
-                    message.channel.send({ content: respServer.minecraft_servers[0].display_name + " has been successfully deleted."});
+                    await message.channel.send({ content: respServer.minecraft_servers[0].display_name + " has been successfully deleted."});
                 }
             }else{
-                message.channel.send({ content: "That server could not be found..."});
+                await message.channel.send({ content: "That server could not be found..."});
             }
         }else{
-            message.channel.send({ content: "You don't have permission to do that"});
+            await message.channel.send({ content: "You don't have permission to do that"});
         }
     }
 };

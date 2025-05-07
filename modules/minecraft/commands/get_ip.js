@@ -18,7 +18,7 @@ module.exports = {
             console.error(error);
         }
         if(!respServer.minecraft_servers[0]){
-            message.channel.send({ content: "short_name not found...checking display_name"});
+            await message.channel.send({ content: "short_name not found...checking display_name"});
             try{
                 respServer = await api.get("minecraft_server", {
                     display_name: args[1]
@@ -28,9 +28,9 @@ module.exports = {
             }
         }
         if(respServer.minecraft_servers[0]){
-            message.channel.send({ content: "The IP of " + respServer.minecraft_servers[0].display_name + "(" + respServer.minecraft_servers[0].short_name + ")" + " is: **" + respServer.minecraft_servers[0].server_ip + "**"});
+            await message.channel.send({ content: "The IP of " + respServer.minecraft_servers[0].display_name + "(" + respServer.minecraft_servers[0].short_name + ")" + " is: **" + respServer.minecraft_servers[0].server_ip + "**"});
         }else{
-            message.channel.send({ content: "That server could not be found..."});
+            await message.channel.send({ content: "That server could not be found..."});
         }
     }
 };

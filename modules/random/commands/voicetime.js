@@ -21,7 +21,7 @@ module.exports = {
 
         const voiceTrackings = respVoice.voice_trackings;
         if (!voiceTrackings[0]) {
-        message.channel.send({ content: "There is no data available yet..." });
+        await message.channel.send({ content: "There is no data available yet..." });
         return;
         }
 
@@ -131,7 +131,7 @@ module.exports = {
             .setDisabled(false),
         );
 
-        message.channel.send({ components: [timingFilters, timingFilters2], embeds: [ListEmbed] });
+        await message.channel.send({ components: [timingFilters, timingFilters2], embeds: [ListEmbed] });
         this.logger.info("Sent Voice Leaderboard!");
     }
 }

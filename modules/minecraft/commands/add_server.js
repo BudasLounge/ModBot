@@ -10,7 +10,7 @@ module.exports = {
         var api = extra.api;
 
         this.logger.info(">>add_server");
-        if(message.member.roles.has("586313447965327365")){
+        if(message.member.roles.cache.has("586313447965327365")){ // Updated to use cache
             var respServer;
             try{
                 this.logger.info("in try");
@@ -21,7 +21,7 @@ module.exports = {
                 console.error(error);
             } 
             if(!respServer.minecraft_servers[0]){
-                message.channel.send({ content: "Adding server " + args[1] + " to the database, here we goooooooo"});
+                await message.channel.send({ content: "Adding server " + args[1] + " to the database, here we goooooooo"}); // Added await
                 if(!Number.isInteger(args[5])){
                     args[5] = "none";
                 }
@@ -38,15 +38,15 @@ module.exports = {
                     });
                 }catch(err){
                     console.error(err);
-                    message.channel.send({ content: "I hit a snag..."});
+                    await message.channel.send({ content: "I hit a snag..."}); // Added await
                 }
             }
             else{
-                message.channel.send({ content: "I found a server with that server_ip already, try again"});
+                await message.channel.send({ content: "I found a server with that server_ip already, try again"}); // Added await
             }
             this.logger.info("<<add_server");
         }else{
-            message.channel.send({ content: "You don't have permission to use that command!"});
+            await message.channel.send({ content: "You don't have permission to use that command!"}); // Added await
         }
     }
 

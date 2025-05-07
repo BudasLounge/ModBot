@@ -54,7 +54,7 @@ module.exports = {
                     message.channel.send({ content: "Successfully updated this server's config"});
                 }
             }else{
-                message.channel.send({ content: "That option doesn't exist try:point_name, recharge_amount, base_amount, recharge_cooldown, bet_buyin_time\n"})
+                message.channel.send({ content: "That option doesn't exist try:point_name, recharge_amount, base_amount, recharge_cooldown, bet_buyin_time\n"});
             }
         }else{
             message.channel.send({ content: "That server hasn't been set up yet. Use /point_start_server to get a config loaded"});

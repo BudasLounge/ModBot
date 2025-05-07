@@ -1,4 +1,4 @@
-const { MessageEmbed } = require('discord.js');
+const { EmbedBuilder } = require('discord.js'); // Updated to EmbedBuilder
 
 module.exports = {
     name: 'listmc',
@@ -15,13 +15,13 @@ module.exports = {
             const servers = respServer.minecraft_servers;
 
             if (!servers.length) {
-                return message.channel.send({ content: 'No Minecraft servers found.' });
+                return await message.channel.send({ content: 'No Minecraft servers found.' }); // Added await
             }
 
-            const embed = new MessageEmbed()
+            const embed = new EmbedBuilder() // Updated to EmbedBuilder
                 .setColor('#f92f03')
                 .setTitle('List of All Minecraft Servers')
-                .setFooter('Server Information');
+                .setFooter({ text: 'Server Information' }); // setFooter now takes an object
 
             // Loop through the servers and format the information cleanly
             servers.forEach(server => {
@@ -36,13 +36,13 @@ module.exports = {
 **Join Type**: ${server.whitelist}
                 `;
 
-                embed.addField(`${server.display_name}`, serverInfo, false);
+                embed.addFields({ name: `${server.display_name}`, value: serverInfo, inline: false }); // Updated to addFields with object, and inline property
             });
 
-            message.channel.send({ embeds: [embed] });
+            await message.channel.send({ embeds: [embed] }); // Added await
         } catch (error) {
             console.error('Error fetching server list:', error);
-            message.channel.send({ content: 'An error occurred while fetching the server list.' });
+            await message.channel.send({ content: 'An error occurred while fetching the server list.' }); // Added await
         }
     }
 };

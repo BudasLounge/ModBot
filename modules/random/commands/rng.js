@@ -23,6 +23,6 @@ module.exports = {
             }
         }
         var rng = Math.floor(Math.random() * (ending - starting + 1)) + parseInt(starting);
-        message.channel.send({ content: "Rolling "+starting.toString() + " to " + ending.toString() + ". Outcome:\n" + rng.toString()});
+        await message.channel.send({ content: "Rolling "+starting.toString() + " to " + ending.toString() + ". Outcome:\n" + rng.toString()});
     }
 }
