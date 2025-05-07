@@ -1,5 +1,6 @@
 const fs = require('fs');
 const Rcon = require('rcon');
+const { EmbedBuilder } = require('discord.js');
 
 module.exports = {
     name: 'rcon',
@@ -18,24 +19,38 @@ module.exports = {
             password = fs.readFileSync('../rcon_password.txt').toString().trim();
         } catch (err) {
             console.error('Error reading RCON password:', err);
-            return await message.reply({ content: 'Unable to read RCON password. Please check the configuration.' });
+            return message.reply({ content: 'Unable to read RCON password. Please check the configuration.' });
         }
 
         // Display help information
         if (args[1] === 'help') {
-            return await message.reply({
-                content: "Arguments:\n`minecraft_shortname`: the short name of the Minecraft server (first part of the IP, use ,listmc to find).\n`rcon_command`: any in-game server command, usually prefixed with `/`.\nMUST BE LISTED AS AN MC ADMIN TO USE THIS COMMAND."
+            return message.channel.send({
+                embeds: [
+                    new EmbedBuilder()
+                        .setTitle('RCON Command Help')
+                        .setDescription("Arguments:\n`minecraft_shortname`: the short name of the Minecraft server (first part of the IP, use ,listmc to find).\n`rcon_command`: any in-game server command, usually prefixed with `/`.\nMUST BE LISTED AS AN MC ADMIN TO USE THIS COMMAND.")
+                ]
             });
         }
 
         // Ensure the user has the required role
         if (!message.member.roles.cache.some(role => role.name === 'MCadmin')) {
-            return await message.reply({ content: "You are not an MC Admin, so you cannot use this command." });
+            return message.channel.send({
+                embeds: [
+                    new EmbedBuilder()
+                        .setDescription("You are not an MC Admin, so you cannot use this command.")
+                ]
+            });
         }
 
         // Ensure all arguments are provided
         if (!args[2]) {
-            return await message.reply({ content: "Please provide all required arguments. Use `rcon help` for instructions." });
+            return message.channel.send({
+                embeds: [
+                    new EmbedBuilder()
+                        .setDescription("Please provide all required arguments. Use `rcon help` for instructions.")
+                ]
+            });
         }
 
         // Fetch the server information from the API
@@ -44,36 +59,45 @@ module.exports = {
             respServer = await api.get('minecraft_server', { short_name: args[1] });
         } catch (error) {
             console.error('Error fetching server data:', error.message);
-            return await message.reply({ content: 'Error retrieving server information. Please try again.' });
+            return message.reply({ content: 'Error retrieving server information. Please try again.' });
         }
 
         // Check if the server exists
         const server = respServer.minecraft_servers && respServer.minecraft_servers[0];
         if (!server) {
-            return await message.reply({ content: "No server found with that short name. Use `,listmc` to find a valid server." });
+            return message.reply({ content: "No server found with that short name. Use `,listmc` to find a valid server." });
         }
 
         // Construct the RCON command
         const command = args.slice(2).join(' ');
         var conn;
         // Establish RCON connection
-        if (server.server == "windows"){
-            conn = new Rcon("192.168.1.4", server.rcon_port, password);
-        }else if (server.server == "linux"){
-            conn = new Rcon("192.168.1.9", server.rcon_port, password);
-        }
+            conn = new Rcon(server.backend_ip, server.rcon_port, password);
+        
+
 
         // RCON connection events
         conn.on('auth', function() {
             console.log('RCON authenticated.');
             console.log('Sending command:', command);
             conn.send(command);
-        }).on('response', async function(str) {
+        }).on('response', function(str) {
             console.log('RCON response:', str);
-            await message.reply({ content: `Command executed successfully:\n${str}` }); // Notify user with response
-        }).on('error', async function(err) {
+            message.channel.send({
+                embeds: [
+                    new EmbedBuilder()
+                        .setTitle('RCON Command Executed')
+                        .setDescription(`Command executed successfully:\n${str}`)
+                ]
+            });
+        }).on('error', function(err) {
             console.error('RCON error:', err);
-            await message.reply({ content: 'An error occurred while executing the command.' });
+            message.channel.send({
+                embeds: [
+                    new EmbedBuilder()
+                        .setDescription('An error occurred while executing the command.')
+                ]
+            });
         }).on('end', function() {
             console.log('RCON connection closed.');
             conn.disconnect(); // Close connection gracefully without exiting the process
