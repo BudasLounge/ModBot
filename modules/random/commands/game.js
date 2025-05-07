@@ -10,12 +10,11 @@ module.exports = {
         var api = extra.api;
         const { MessageActionRow, MessageButton, MessageEmbed } = require('discord.js');
         const voiceChannel = message.member.voice.channel;
-        if (voiceChannel) {
-            var voiceChannelId = voiceChannel.id;
-        } else {
-            message.channel.send({ content: "You need to be in a voice channel to use this command."})
+        if (!voiceChannel) {
+            message.channel.send({ content: "You need to be in a voice channel to use this command."});
             return;
         }
+        var voiceChannelId = voiceChannel.id;
         var respGame;
                 try{
                     respGame = await api.get("game_joining_master",{
@@ -51,7 +50,7 @@ module.exports = {
                             logger.error(error);
                             button.reply({ content: "There was an error ending the game...", ephemeral: true})
                         }
-                        message.channel.send({ content: `Found open game, ending it and creating a new one!`})
+                        message.channel.send({ content: `Found open game, ending it and creating a new one!`});
                 }
                 try{
                     respGame = await api.post("game_joining_master",{
@@ -63,8 +62,9 @@ module.exports = {
                 }
                 if(!respGame.ok){
                     message.channel.send({ content: "Game creation failed..."});
+                }else{
+                    message.channel.send({ content: "Created a game! Let me pull up the menu for you..."});
                 }
-                message.channel.send({ content: "Created a game! Let me pull up the menu for you..."});
                 const ListEmbed = new MessageEmbed()
                 .setColor("#c586b6")
                 .setTitle(`${message.member.displayName}'s game menu.`);
@@ -91,6 +91,11 @@ module.exports = {
                         .setLabel('End')
                         .setStyle('SECONDARY'),
                 );
-                message.channel.send({embeds: [ListEmbed], components: [row, row2] });
+                this.logger.info("Sending game menu");
+                try{
+                    message.channel.send({embeds: [ListEmbed], components: [row, row2] });
+                }catch(err){
+                    this.logger.error(err);
+                }
         }
 };

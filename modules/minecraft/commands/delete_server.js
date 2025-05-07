@@ -29,8 +29,9 @@ module.exports = {
                 }
             }
             if(respServer.minecraft_servers[0]){
+                var server_id = respServer.minecraft_servers[0].server_id;
                 var respDelete = await api.delete("minecraft_server", {
-                    short_name: respServer.minecraft_servers[0].short_name
+                    server_id: server_id
                 });  
                 if(respDelete.ok){
                     message.channel.send({ content: respServer.minecraft_servers[0].display_name + " has been successfully deleted."});

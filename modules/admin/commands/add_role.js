@@ -29,7 +29,7 @@ module.exports = {
             message.channel.send({ content: "This command requires an admin role but no main admin role has been selected for this server."});
             return;
         }
-        const Discord = require('discord.js');
+        const { EmbedBuilder } = require('discord.js');
         var strLength = 0;
 		var messageString = "";
 		var role = "";
@@ -60,7 +60,7 @@ module.exports = {
             message.channel.send({ content: "Role adding failed!"});
             return;
         }
-        const ListEmbed = new Discord.MessageEmbed()
+        const ListEmbed = new EmbedBuilder()
         .setTitle(`Made this edit to ${member.user.username}:`)
         .setDescription("Added role: "+role.name);
         message.channel.send({ embeds: [ListEmbed]});

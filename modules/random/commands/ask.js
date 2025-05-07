@@ -47,12 +47,13 @@ module.exports = {
                           char: '\n'
                       });
                       botMessage.delete();
-                      messageChunks.forEach(async chunk => {
-                          await message.reply(chunk);
-                      });
+                      for (let i = 0; i < responseText.length; i += 2000) {
+                          const chunk = responseText.substring(i, Math.min(i + 2000, responseText.length));
+                          message.reply({ content: chunk });
+                      }
                   } catch (e) {
                       this.logger.error("Error parsing JSON: " + e.message);
-                      message.reply("An error occurred while processing the response.\n" + e.message);
+                      message.reply({ content: "An error occurred while processing the response.\n" + e.message});
                   }
               });
           });

@@ -39,7 +39,7 @@ module.exports = {
             return;
         } else if(args.length > 1 && args[1] === "<shutup>") {
             this.audioPlayer.state = { status: AudioPlayerStatus.Idle };
-            message.channel.send({content: "Jeez, fine. I'll stop talking."});
+            message.channel.send({ content: "Jeez, fine. I'll stop talking." });
             this.logger.info("I shut up now");
             return;
         }
@@ -80,7 +80,7 @@ module.exports = {
         }
         this.audioPlayer.state = { status: AudioPlayerStatus.Idle };
         if(sayMessage.length>200){
-            message.channel.send({ content: "That message is too long, no more than 200 characters per message!"});
+            message.channel.send({ content: "That message is too long, no more than 200 characters per message!" });
             return;
         }
 
