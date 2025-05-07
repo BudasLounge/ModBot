@@ -1,12 +1,12 @@
 var ApiClient = require("../../core/js/APIClient.js");
 var api = new ApiClient();
+const { EmbedBuilder, PermissionsBitField } = require('discord.js');
 
 async function onButtonClick(button){
 if (button.isButton() || button.isSelectMenu()){
     if(!(button.customId.substring(0,4)==="BETS")) return;
     button.channel.send(button.customId.substring(0,4))
 if(button.isButton()){
-    const {MessageEmbed} = require('discord.js');
     const moment = require("moment");
     button.customId = button.customId.substr(4)
     button.channel.send(button.customId)
@@ -127,7 +127,7 @@ if(button.isButton()){
                 }
             }
             button.channel.send({content: "Bet with total pot of: " + pot + ". Which had " + forBet.length + " for it and " + againstBet.length + " against it. The winners will split: " + winTotal.toString()});
-            const listWinners = new MessageEmbed()
+            const listWinners = new EmbedBuilder()
             .setColor("#f92f03")
             .setTitle("Here are the winners of this bet: ")
             .addField("Winners: ", output.toString());
@@ -184,7 +184,7 @@ if(button.isButton()){
                 }
             }
             button.channel.send({content: "Bet with total pot of: " + pot + ". Which had " + forBet.length + " for it and " + againstBet.length + " against it. The winners will split: " + winTotal.toString()});
-            const listWinners = new MessageEmbed()
+            const listWinners = new EmbedBuilder()
             .setColor("#f92f03")
             .setTitle("Here are the winners of this bet: ")
             .addField("Winners: ", output.toString());
@@ -231,7 +231,7 @@ if(button.isButton()){
                 if(againstOutput === ""){
                     againstOutput = "none";
                 }
-                const listBetters = new MessageEmbed()
+                const listBetters = new EmbedBuilder()
                 .setColor("#f92f03")
                 .setTitle("Here are the current standings: ")
                 .addField(forCount + " For: ", forOutput.toString())

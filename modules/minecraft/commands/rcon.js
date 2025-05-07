@@ -18,24 +18,24 @@ module.exports = {
             password = fs.readFileSync('../rcon_password.txt').toString().trim();
         } catch (err) {
             console.error('Error reading RCON password:', err);
-            return message.reply({ content: 'Unable to read RCON password. Please check the configuration.' });
+            return await message.reply({ content: 'Unable to read RCON password. Please check the configuration.' });
         }
 
         // Display help information
         if (args[1] === 'help') {
-            return message.reply({
+            return await message.reply({
                 content: "Arguments:\n`minecraft_shortname`: the short name of the Minecraft server (first part of the IP, use ,listmc to find).\n`rcon_command`: any in-game server command, usually prefixed with `/`.\nMUST BE LISTED AS AN MC ADMIN TO USE THIS COMMAND."
             });
         }
 
         // Ensure the user has the required role
         if (!message.member.roles.cache.some(role => role.name === 'MCadmin')) {
-            return message.reply({ content: "You are not an MC Admin, so you cannot use this command." });
+            return await message.reply({ content: "You are not an MC Admin, so you cannot use this command." });
         }
 
         // Ensure all arguments are provided
         if (!args[2]) {
-            return message.reply({ content: "Please provide all required arguments. Use `rcon help` for instructions." });
+            return await message.reply({ content: "Please provide all required arguments. Use `rcon help` for instructions." });
         }
 
         // Fetch the server information from the API
@@ -44,13 +44,13 @@ module.exports = {
             respServer = await api.get('minecraft_server', { short_name: args[1] });
         } catch (error) {
             console.error('Error fetching server data:', error.message);
-            return message.reply({ content: 'Error retrieving server information. Please try again.' });
+            return await message.reply({ content: 'Error retrieving server information. Please try again.' });
         }
 
         // Check if the server exists
         const server = respServer.minecraft_servers && respServer.minecraft_servers[0];
         if (!server) {
-            return message.reply({ content: "No server found with that short name. Use `,listmc` to find a valid server." });
+            return await message.reply({ content: "No server found with that short name. Use `,listmc` to find a valid server." });
         }
 
         // Construct the RCON command
@@ -68,12 +68,12 @@ module.exports = {
             console.log('RCON authenticated.');
             console.log('Sending command:', command);
             conn.send(command);
-        }).on('response', function(str) {
+        }).on('response', async function(str) {
             console.log('RCON response:', str);
-            message.reply({ content: `Command executed successfully:\n${str}` }); // Notify user with response
-        }).on('error', function(err) {
+            await message.reply({ content: `Command executed successfully:\n${str}` }); // Notify user with response
+        }).on('error', async function(err) {
             console.error('RCON error:', err);
-            message.reply({ content: 'An error occurred while executing the command.' });
+            await message.reply({ content: 'An error occurred while executing the command.' });
         }).on('end', function() {
             console.log('RCON connection closed.');
             conn.disconnect(); // Close connection gracefully without exiting the process

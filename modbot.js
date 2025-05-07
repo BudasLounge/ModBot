@@ -47,7 +47,7 @@ async function botInit () {
     } else {
         channel.send({ content: config.startup_messages.restart});
     }
-    client.user.setActivity(config.bot_activity.name, { type: ActivityType[config.bot_activity.type] });
+    client.user.setActivity(config.bot_activity.name, { type: config.bot_activity.type });
 
     logger.info("Initialization of DnD scheduling messages starting...");
     const schedule = require('node-schedule');

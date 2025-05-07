@@ -1,6 +1,6 @@
 var ApiClient = require("../../core/js/APIClient.js");
 var api = new ApiClient();
-const {MessageActionRow, MessageButton, MessageEmbed, MessageSelectMenu, Permissions} = require('discord.js');
+const {MessageActionRow, MessageButton, EmbedBuilder, MessageSelectMenu, PermissionsBitField} = require('discord.js');
 //todo: add a way to track how many times a user streams and for how long
 async function onButtonClick(button){
     //if (!button.isButton()){return}
@@ -47,7 +47,7 @@ async function onButtonClick(button){
             logger.info("Printing array to a table after sorting...")
             console.table(totalTime);
             var output = "";
-            var ListEmbed = new MessageEmbed()
+            var ListEmbed = new EmbedBuilder()
             .setColor("#c586b6")
             .setTitle("Voice Channel Leaderboard (Bottom 10)");
             var count = 10;
@@ -161,7 +161,7 @@ async function onButtonClick(button){
         totalTime.sort(compareSecondColumn);
         logger.info("Printing array to a table after sorting...")
             console.table(totalTime);
-        var ListEmbed = new MessageEmbed()
+        var ListEmbed = new EmbedBuilder()
         .setColor("#c586b6")
         .setTitle("Voice Channel Leaderboard (Top 10)");
         var count = 10;
@@ -278,7 +278,7 @@ async function onButtonClick(button){
         var output = "";
 
         totalTime.sort(compareSecondColumn);
-        var ListEmbed = new MessageEmbed()
+        var ListEmbed = new EmbedBuilder()
         .setColor("#c586b6")
         .setTitle("Voice Channel Leaderboard (Top 10 muters)");
         var count = 10;
@@ -392,7 +392,7 @@ async function onButtonClick(button){
         var output = "";
 
         totalTime.sort(compareSecondColumn);
-        var ListEmbed = new MessageEmbed()
+        var ListEmbed = new EmbedBuilder()
         .setColor("#c586b6")
         .setTitle("Voice Channel Leaderboard (Top 10 non-muters)");
         var count = 10;
@@ -512,7 +512,7 @@ async function onButtonClick(button){
             var output = "";
     
             totalTime.sort(compareSecondColumn);
-            var ListEmbed = new MessageEmbed()
+            var ListEmbed = new EmbedBuilder()
             .setColor("#c586b6")
             .setTitle("Voice Channel Leaderboard (Top 10 channel times)");
             var count = 10;
@@ -622,7 +622,7 @@ async function onButtonClick(button){
           
             const sortedTotalTime = [...totalTime].sort((a, b) => b[1] - a[1]);
           
-            const ListEmbed = new MessageEmbed()
+            const ListEmbed = new EmbedBuilder()
               .setColor("#c586b6")
               .setTitle("Voice Channel Leaderboard (Top 10 channel times)");
           
@@ -738,7 +738,7 @@ async function onButtonClick(button){
         var output = "";
 
         totalTime.sort(compareSecondColumn);
-        var ListEmbed = new MessageEmbed()
+        var ListEmbed = new EmbedBuilder()
         .setColor("#c586b6")
         .setTitle("Voice Channel Leaderboard (Top 10 Channels by use)");
         var count = 10;
@@ -840,7 +840,7 @@ async function onButtonClick(button){
           
             const sortedTotalTime = [...totalTime].sort((a, b) => b[1] - a[1]);
           
-            const ListEmbed = new MessageEmbed()
+            const ListEmbed = new EmbedBuilder()
               .setColor("#c586b6")
               .setTitle("Voice Channel Leaderboard (Top 10 Channels by use)");
           
@@ -960,7 +960,7 @@ async function onButtonClick(button){
         var output = "";
 
         totalTime.sort(compareSecondColumn);
-        var ListEmbed = new MessageEmbed()
+        var ListEmbed = new EmbedBuilder()
         .setColor("#c586b6")
         .setTitle("Voice Channel Leaderboard (Top talkers - Last 30 days)");
         var count = 10;
@@ -1085,7 +1085,7 @@ async function onButtonClick(button){
         var output = "";
 
         totalTime.sort(compareSecondColumn);
-        var ListEmbed = new MessageEmbed()
+        var ListEmbed = new EmbedBuilder()
         .setColor("#c586b6")
         .setTitle("Voice Channel Leaderboard (Top talkers - Last 7 days)");
         var count = 10;
@@ -1238,7 +1238,7 @@ async function onButtonClick(button){
                             
                     var guild = button.guild;
                     var host = await guild.members.fetch(hostId);
-                    var ListEmbed = new MessageEmbed()
+                    var ListEmbed = new EmbedBuilder()
                         .setColor("#c586b6")
                         .setTitle(`${host.displayName}'s game menu.`);
                         ListEmbed.addField("Info about the buttons:", "Host is not added to their own game by default, but can join if they want to.\n\nBlurple buttons = anyone can interact\nGray buttons = only host can interact");
@@ -1339,7 +1339,7 @@ async function onButtonClick(button){
 
                     var guild = button.guild;
                     var host = await guild.members.fetch(hostId);
-                    var ListEmbed = new MessageEmbed()
+                    var ListEmbed = new EmbedBuilder()
                         .setColor("#c586b6")
                         .setTitle(`${host.displayName}'s game menu.`);
                         ListEmbed.addField("Info about the buttons:", "Host is not added to their own game by default, but can join if they want to.\n\nBlurple buttons = anyone can interact\nGray buttons = only host can interact");
@@ -1423,7 +1423,7 @@ async function onButtonClick(button){
                     
                     var guild = button.guild;
                     var host = await guild.members.fetch(hostId);
-                    var ListEmbed = new MessageEmbed()
+                    var ListEmbed = new EmbedBuilder()
                         .setColor("#c586b6")
                         .setTitle(`${host.displayName}'s game menu.`);
                     ListEmbed.addField("Game is starting...", "Only the host can interact with the menu now");
@@ -1486,7 +1486,7 @@ async function onButtonClick(button){
 
                     var guild = button.guild;
                     var host = await guild.members.fetch(hostId);
-                    var ListEmbed = new MessageEmbed()
+                    var ListEmbed = new EmbedBuilder()
                         .setColor("#c586b6")
                         .setTitle(`${host.displayName}'s game menu.`);
                     ListEmbed.addField("Host is choosing gamemode...", "Only the host can interact with the menu now");
@@ -1564,7 +1564,7 @@ async function onButtonClick(button){
                         }
                         var guild = button.guild;
                         var host = await guild.members.fetch(hostId);
-                        var ListEmbed = new MessageEmbed()
+                        var ListEmbed = new EmbedBuilder()
                             .setColor("#c586b6")
                             .setTitle(`${host.displayName}'s game has ended.`);
                         button.editReply({ embeds: [ListEmbed], components: []})
@@ -1637,7 +1637,7 @@ async function onButtonClick(button){
                         button.channel.send({ content: `The game has been re-opened, new people can join!`})
                         var guild = button.guild;
                         var host = await guild.members.fetch(hostId);
-                        var ListEmbed = new MessageEmbed()
+                        var ListEmbed = new EmbedBuilder()
                             .setColor("#c586b6")
                             .setTitle(`${host.displayName}'s game menu.`);
                         ListEmbed.addField("Info about the buttons:", "Host is not added to their own game by default, but can join if they want to.\n\nBlurple buttons = anyone can interact\nGray buttons = only host can interact");
@@ -1728,7 +1728,7 @@ async function onButtonClick(button){
                             // Check if any of the roles has VIEW_CHANNEL permission in the channel
                             return roles.some(role => {
                                 if(!role) return false; // Skip if the role is undefined or null
-                                return channel.permissionsFor(role).has(Permissions.FLAGS.VIEW_CHANNEL);
+                                return channel.permissionsFor(role).has(PermissionsBitField.Flags.ViewChannel);
                             });
 
                         });
@@ -1796,7 +1796,7 @@ async function onButtonClick(button){
                         }
                         var guild = button.guild;
                         var host = await guild.members.fetch(hostId);
-                        var ListEmbed = new MessageEmbed()
+                        var ListEmbed = new EmbedBuilder()
                             .setColor("#c586b6")
                             .setTitle(`${host.displayName}'s game menu.`);
                         ListEmbed.addField("Game is randomized!", "Only the host can interact with the menu now");
@@ -1887,7 +1887,7 @@ async function onButtonClick(button){
                     
                     var guild = button.guild;
                     var host = await guild.members.fetch(hostId);
-                    var ListEmbed = new MessageEmbed()
+                    var ListEmbed = new EmbedBuilder()
                         .setColor("#c586b6")
                         .setTitle(`${host.displayName}'s game menu.`);
                     ListEmbed.addField("Choosing Captains!", "Only the host can interact with the menu now");
@@ -1995,7 +1995,7 @@ async function onButtonClick(button){
                     
                     var guild = button.guild;
                     var host = await guild.members.fetch(hostId);
-                    var ListEmbed = new MessageEmbed()
+                    var ListEmbed = new EmbedBuilder()
                         .setColor("#c586b6")
                         .setTitle(`${host.displayName}'s game menu.`);
                     ListEmbed.addField("Choosing Captains!", "Only the host can interact with the menu now");
@@ -2150,7 +2150,7 @@ async function onButtonClick(button){
                     }
                     var guild = button.guild;
                     var host = await guild.members.fetch(hostId);
-                    var ListEmbed = new MessageEmbed()
+                    var ListEmbed = new EmbedBuilder()
                         .setColor("#c586b6")
                         .setTitle(`${host.displayName}'s game menu.`);
                         ListEmbed.addField("Captains are choosing!", "Choose a player from the corresponding drop down to add them to your team!\nGrey buttons are for the host");
@@ -2331,7 +2331,7 @@ async function onButtonClick(button){
                         // Check if any of the roles has VIEW_CHANNEL permission in the channel
                         return roles.some(role => {
                             if(!role) return false; // Skip if the role is undefined or null
-                            return channel.permissionsFor(role).has(Permissions.FLAGS.VIEW_CHANNEL);
+                            return channel.permissionsFor(role).has(PermissionsBitField.Flags.ViewChannel);
                         });
 
                     });
@@ -2360,7 +2360,7 @@ async function onButtonClick(button){
 
                     var guild = button.guild;
                     var host = await guild.members.fetch(hostId);
-                    var ListEmbed = new MessageEmbed()
+                    var ListEmbed = new EmbedBuilder()
                         .setColor("#c586b6")
                         .setTitle(`${host.displayName}'s game menu.`);
                     ListEmbed.addField("Captains are choosing!", "Choose a player from the corresponding drop down to add them to your team!\nGrey buttons are for the host");
@@ -2548,7 +2548,7 @@ async function onButtonClick(button){
                         // Check if any of the roles has VIEW_CHANNEL permission in the channel
                         return roles.some(role => {
                             if(!role) return false; // Skip if the role is undefined or null
-                            return channel.permissionsFor(role).has(Permissions.FLAGS.VIEW_CHANNEL);
+                            return channel.permissionsFor(role).has(PermissionsBitField.Flags.ViewChannel);
                         });
 
                     });
@@ -2577,7 +2577,7 @@ async function onButtonClick(button){
 
                     var guild = button.guild;
                     var host = await guild.members.fetch(hostId);
-                    var ListEmbed = new MessageEmbed()
+                    var ListEmbed = new EmbedBuilder()
                         .setColor("#c586b6")
                         .setTitle(`${host.displayName}'s game menu.`);
                     ListEmbed.addField("Captains are choosing!", "Choose a player from the corresponding drop down to add them to your team!\nGrey buttons are for the host");
@@ -2822,7 +2822,7 @@ async function onButtonClick(button){
 
                     var guild = button.guild;
                     var host = await guild.members.fetch(hostId);
-                    var ListEmbed = new MessageEmbed()
+                    var ListEmbed = new EmbedBuilder()
                         .setColor("#c586b6")
                         .setTitle(`${host.displayName}'s game menu.`);
                         ListEmbed.addField("Info about the buttons:", "Host is not added to their own game by default, but can join if they want to.\n\nBlurple buttons = anyone can interact\nGray buttons = only host can interact");

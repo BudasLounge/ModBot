@@ -1,6 +1,6 @@
 var ApiClient = require("../../core/js/APIClient.js");
 var api = new ApiClient();
-const {MessageActionRow, MessageButton, MessageEmbed, MessageSelectMenu} = require('discord.js');
+const {ActionRowBuilder, ButtonBuilder, EmbedBuilder, SelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ButtonStyle} = require('discord.js');
 
 async function onButtonClick(button){
     if(!(button.customId.substr(0,3)==="DND")) return;
@@ -45,40 +45,39 @@ async function onButtonClick(button){
                 logger.info("The invite was rejected.")
             }
         }else if(button.customId=="CAMPAIGNCREATOR"){
-            const { MessageActionRow, Modal, TextInputComponent } = require('discord.js');
-            const modal = new Modal()
+            const modal = new ModalBuilder()
 			.setCustomId('campaign-'+button.user.id.toString())
 			.setTitle('Campaign Creator');
             // Add components to modal
             // Create the text input components
-            const moduleInput = new TextInputComponent()
+            const moduleInput = new TextInputBuilder()
                 .setCustomId('module')
                 // The label is the prompt the user sees for this input
                 .setLabel("What is the name of the module?")
                 // Short means only a single line of text
-                .setStyle('SHORT');
-            const roleInput = new TextInputComponent()
+                .setStyle(TextInputStyle.Short);
+            const roleInput = new TextInputBuilder()
                 .setCustomId('role_name')
                 .setLabel("Player role name?")
-                .setStyle('SHORT');
-            const textChannelInput = new TextInputComponent()
+                .setStyle(TextInputStyle.Short);
+            const textChannelInput = new TextInputBuilder()
                 .setCustomId('textchannel')
                 // The label is the prompt the user sees for this input
                 .setLabel("How many text channels do you need?")
                 // Short means only a single line of text
-                .setStyle('SHORT');
-            const voiceChannelInput = new TextInputComponent()
+                .setStyle(TextInputStyle.Short);
+            const voiceChannelInput = new TextInputBuilder()
                 .setCustomId('voicechannel')
                 // The label is the prompt the user sees for this input
                 .setLabel("How many voice channels do you need?")
                 // Short means only a single line of text
-                .setStyle('SHORT');
+                .setStyle(TextInputStyle.Short);
             // An action row only holds one text input,
             // so you need one action row per text input.
-            const firstActionRow = new MessageActionRow().addComponents(moduleInput);
-            const secondActionRow = new MessageActionRow().addComponents(roleInput);
-            const thirdActionRow = new MessageActionRow().addComponents(textChannelInput);
-            const fourthActionRow = new MessageActionRow().addComponents(voiceChannelInput);
+            const firstActionRow = new ActionRowBuilder().addComponents(moduleInput);
+            const secondActionRow = new ActionRowBuilder().addComponents(roleInput);
+            const thirdActionRow = new ActionRowBuilder().addComponents(textChannelInput);
+            const fourthActionRow = new ActionRowBuilder().addComponents(voiceChannelInput);
             // Add inputs to the modal
             modal.addComponents(firstActionRow, secondActionRow, thirdActionRow, fourthActionRow);
             // Show the modal to the user

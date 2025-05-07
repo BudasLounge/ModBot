@@ -1,50 +1,50 @@
 var ApiClient = require("../../core/js/APIClient.js");
 var api = new ApiClient();
-const {MessageActionRow, MessageButton, MessageEmbed, MessageSelectMenu, Modal, TextInputComponent} = require('discord.js');
+const {ActionRowBuilder, ButtonBuilder, EmbedBuilder, SelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ButtonStyle} = require('discord.js');
 const axios = require('axios');
 
 async function onButtonClick(button){
     if((button.member.roles.cache.find(r => r.id === "586313447965327365" || button.user.id === "185223223892377611" || button.user.id === "195677170432081920") && button.customId=="MINE-SERVERCREATOR")){
-        const modal = new Modal()
+        const modal = new ModalBuilder()
         .setCustomId('MCSERVERCREATORMODAL')
         .setTitle('MC Server Adder');
         // Add components to modal
         // Create the text input components
-        const displayNameInput = new TextInputComponent()
+        const displayNameInput = new TextInputBuilder()
             .setCustomId('display_name')
             // The label is the prompt the user sees for this input
             .setLabel("What is the display name of the server?")
             // Short means only a single line of text
-            .setStyle('SHORT');
-        const shortNameInput = new TextInputComponent()
+            .setStyle(TextInputStyle.Short);
+        const shortNameInput = new TextInputBuilder()
             .setCustomId('short_name')
             .setLabel("Server short name?")
-            .setStyle('SHORT');
-        const portInput = new TextInputComponent()
+            .setStyle(TextInputStyle.Short);
+        const portInput = new TextInputBuilder()
             .setCustomId('port')
             // The label is the prompt the user sees for this input
             .setLabel("What is the port of the server?")
             // Short means only a single line of text
-            .setStyle('SHORT');
-        const mcVersionInput = new TextInputComponent()
+            .setStyle(TextInputStyle.Short);
+        const mcVersionInput = new TextInputBuilder()
             .setCustomId('mc_version')
             // The label is the prompt the user sees for this input
             .setLabel("What version of minecraft is this on?")
             // Short means only a single line of text
-            .setStyle('SHORT');
-        const packVersionInput = new TextInputComponent()
+            .setStyle(TextInputStyle.Short);
+        const packVersionInput = new TextInputBuilder()
             .setCustomId('pack_version')
             // The label is the prompt the user sees for this input
             .setLabel("What version of the modpack is this on?")
             // Short means only a single line of text
-            .setStyle('SHORT');
+            .setStyle(TextInputStyle.Short);
         // An action row only holds one text input,
         // so you need one action row per text input.
-        const firstActionRow = new MessageActionRow().addComponents(displayNameInput);
-        const secondActionRow = new MessageActionRow().addComponents(shortNameInput);
-        const thirdActionRow = new MessageActionRow().addComponents(portInput);
-        const fourthActionRow = new MessageActionRow().addComponents(mcVersionInput);
-        const fifthActionRow = new MessageActionRow().addComponents(packVersionInput);
+        const firstActionRow = new ActionRowBuilder().addComponents(displayNameInput);
+        const secondActionRow = new ActionRowBuilder().addComponents(shortNameInput);
+        const thirdActionRow = new ActionRowBuilder().addComponents(portInput);
+        const fourthActionRow = new ActionRowBuilder().addComponents(mcVersionInput);
+        const fifthActionRow = new ActionRowBuilder().addComponents(packVersionInput);
         // Add inputs to the modal
         modal.addComponents(firstActionRow, secondActionRow, thirdActionRow, fourthActionRow, fifthActionRow);
         // Show the modal to the user
@@ -59,15 +59,15 @@ async function onButtonClick(button){
         } catch(error){
             console.error(error);
         };
-        //const modal = new Modal()
+        //const modal = new ModalBuilder()
         //.setCustomId('MCSERVERDELETORMODAL')
         //.setTitle('MC Server DELETOR');
-        const serverSelector = new MessageActionRow()
+        const serverSelector = new ActionRowBuilder()
         .addComponents(
-            new MessageSelectMenu()
+            new SelectMenuBuilder()
                 .setCustomId('MCSERVERDELETORMODAL')
                 .setPlaceholder('Select a server from the list')
-                .setDisabled("false"),
+                .setDisabled(false),
         );
 
         respServer.minecraft_servers.forEach(server => {

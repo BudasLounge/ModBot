@@ -10,11 +10,11 @@ module.exports = {
 
     const { performance } = require('perf_hooks');
     const perfStart = performance.now();
-    const Discord = require('discord.js');
+    const { EmbedBuilder } = require('discord.js'); // Updated to EmbedBuilder
     const axios = require('axios');
     const pinger = require('minecraft-ping-js');
 
-    message.channel.send({ content: 'Let me get that for you... this might take a moment' });
+    await message.channel.send({ content: 'Let me get that for you... this might take a moment' }); // Added await
 
     const respServer = await api.get('minecraft_server', { _limit: 20 }).catch((error) => {
       this.logger.error(error.response);
@@ -22,10 +22,10 @@ module.exports = {
 
     if (!respServer.minecraft_servers[0]) return;
 
-    const ListEmbed = new Discord.MessageEmbed()
+    const ListEmbed = new EmbedBuilder() // Updated to EmbedBuilder
       .setColor('#f92f03')
       .setTitle('List of all minecraft servers: ')
-      .addField('Notice:\n', 'If the server crashed, it should auto restart in 5 minutes or less\nContact a server admin if it does not.');
+      .addFields({ name: 'Notice:\n', value: 'If the server crashed, it should auto restart in 5 minutes or less\nContact a server admin if it does not.' }); // Updated to addFields with object
 
     const SensitiveCharacters = ['\\', '*', '_', '~', '`', '|', '>'];
 
@@ -44,19 +44,19 @@ module.exports = {
           }
         }
 
-        ListEmbed.addField(`${server.display_name} server info:`, nextItem);
+        ListEmbed.addFields({ name: `${server.display_name} server info:`, value: nextItem }); // Updated to addFields with object
         return nextItem;
       } catch (error) {
         this.logger.error(`${error}, setting flag to true`);
         const item = `${server.display_name} is currently offline!\n\n`;
-        ListEmbed.addField(`${server.display_name} server info:`, item);
+        ListEmbed.addFields({ name: `${server.display_name} server info:`, value: item }); // Updated to addFields with object
         return item;
       }
     });
 
     const stat_server = await Promise.all(serverPromises);
 
-    message.channel.send({
+    await message.channel.send({ // Added await
       embeds: [ListEmbed],
       content: `It took ${((performance.now() - perfStart) / 1000).toFixed(2)} seconds to get this list:`,
     });

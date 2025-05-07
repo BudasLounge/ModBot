@@ -9,11 +9,11 @@ module.exports = {
     async execute(message, args, extra) {
 
         if(args[1] == "on"){
-            message.member.addRole("761355940955291678");
+            message.member.roles.add("761355940955291678");
             message.channel.send({ content: "You were added to the lfg group!"});
         }
         else if(args[1] == "off"){
-            message.member.removeRole("761355940955291678");
+            message.member.roles.remove("761355940955291678");
             message.channel.send({ content: "You were taken out of the lfg group!"});
         }
     }
