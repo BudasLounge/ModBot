@@ -598,12 +598,13 @@ async function handleGameSetupTeamsModal(modalInteraction, logger, localApi) {
         }
 
         const updatePayload = {
+            gameId: gameId,
             num_teams: parsedNumTeams,
             max_players: parsedMaxPlayers,
             status: 'lobby_configured'
         };
 
-        await localApi.put("game_joining_master", gameId, updatePayload);
+        await localApi.put("game_joining_master", updatePayload);
         logger.info(`[GAME_MODAL_SETUP] Game ${gameId} updated by host ${userId}. New settings: Teams=${parsedNumTeams}, MaxPlayers=${parsedMaxPlayers}, Status=lobby_configured`);
 
         // Fetch the original game message to update it
