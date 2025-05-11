@@ -44,7 +44,7 @@ module.exports = {
             respServer = await api.get('minecraft_server', { short_name: args[1] });
         } catch (error) {
             console.error('Error fetching server data:', error.message);
-            return message.reply({ content: 'Error retrieving server information. Please try again.' });
+            return message.reply({ content: `Error retrieving server information: ${error.message}. Please try again.` });
         }
 
         // Check if the server exists
@@ -71,7 +71,7 @@ module.exports = {
             message.reply({ content: `Command executed successfully:\n${str}` }); // Notify user with response
         }).on('error', function(err) {
             console.error('RCON error:', err);
-            message.reply({ content: 'An error occurred while executing the command.' });
+            message.reply({ content: `An RCON error occurred: ${err.message}` });
         }).on('end', function() {
             console.log('RCON connection closed.');
             conn.disconnect(); // Close connection gracefully without exiting the process
