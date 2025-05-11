@@ -286,7 +286,7 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
                 }
                 logger.info(`[GAME_BTN_END] Deleted ${deletedPlayersCount} players from game ${gameId}.`);
 
-                await localApi.delete("game_joining_master", { game_id: gameId });
+                await localApi.delete("game_joining_master", { game_id: Number(gameId) });
                 logger.info(`[GAME_BTN_END] Deleted game master record for game ${gameId}.`);
 
                 const endedEmbed = new MessageEmbed()
