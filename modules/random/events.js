@@ -174,47 +174,75 @@ async function onButtonClick(interaction) {
             });
 
             const records = recordsToDeleteResp.voice_trackings || [];
-            logger.info(`[BTN_CLEANUP_CONFIRM] Found ${records.length} voice tracking records for guild ${targetGuildId}.`);
+            const recordsWithId = records.filter(session => session.voice_state_id);
+            const recordsWithoutIdCount = records.length - recordsWithId.length;
 
-            if (records.length === 0) {
-                await button.editReply({ content: "No voice tracking data found for this server to delete.", components: [] });
+            logger.info(`[BTN_CLEANUP_CONFIRM] Found ${records.length} total voice tracking records for guild ${targetGuildId}.`);
+            logger.info(`[BTN_CLEANUP_CONFIRM] ${recordsWithId.length} records have a voice_state_id and will be targeted for deletion.`);
+            if (recordsWithoutIdCount > 0) {
+                logger.warn(`[BTN_CLEANUP_CONFIRM] ${recordsWithoutIdCount} records were found without a voice_state_id and will be skipped.`);
+            }
+
+            if (recordsWithId.length === 0) {
+                let noRecordsMessage = "No voice tracking data with a deletable ID found for this server.";
+                if (recordsWithoutIdCount > 0) {
+                    noRecordsMessage += ` ${recordsWithoutIdCount} record(s) were found but lacked a voice_state_id.`;
+                }
+                await button.editReply({ content: noRecordsMessage, components: [] });
                 return;
             }
+
+            // Inform user before starting deletions
+            await button.editReply({ content: `Found ${recordsWithId.length} voice session record(s) for guild ${targetGuildId}. Attempting to delete them now... (this may take a moment)`, components: [] });
+
+            const deletionPromises = recordsWithId.map(session => {
+                logger.info(`[BTN_CLEANUP_CONFIRM] Preparing to delete session ${session.voice_state_id} for guild ${targetGuildId}`);
+                return api.delete(`voice_tracking`, {
+                    voice_state_id: parseInt(session.voice_state_id, 10),
+                    discord_server_id: targetGuildId, // Including discord_server_id as per your specified syntax
+                }).then(response => ({
+                    status: 'fulfilled',
+                    voice_state_id: session.voice_state_id,
+                    response: response
+                })).catch(error => ({
+                    status: 'rejected',
+                    voice_state_id: session.voice_state_id,
+                    reason: error
+                }));
+            });
+
+            const results = await Promise.allSettled(deletionPromises);
 
             let deletedCount = 0;
             let failedCount = 0;
 
-            for (const session of records) {
-                if (session.voice_state_id) {
-                    try {
-                        logger.info(`[BTN_CLEANUP_CONFIRM] Deleting session ${session.voice_state_id} for guild ${targetGuildId}`);
-                        await api.delete(`voice_tracking`, {
-                            voice_state_id: parseInt(session.voice_state_id, 10),
-                            discord_server_id: targetGuildId,
-                        });
-                        logger.info(`[BTN_CLEANUP_CONFIRM] Successfully deleted session ${session.voice_state_id} for guild ${targetGuildId}`);
-                        deletedCount++;
-                    } catch (deleteError) {
-                        failedCount++;
-                        logger.error(`[BTN_CLEANUP_CONFIRM] Failed to delete session ${session.voice_state_id} for guild ${targetGuildId}: ${deleteError.message || deleteError}`);
-                        // Optionally, collect failed IDs to report or retry
-                    }
+            results.forEach(result => {
+                if (result.status === 'fulfilled') {
+                    logger.info(`[BTN_CLEANUP_CONFIRM] Successfully deleted session ${result.value.voice_state_id} for guild ${targetGuildId}. Response: ${JSON.stringify(result.value.response)}`);
+                    deletedCount++;
                 } else {
-                    logger.warn(`[BTN_CLEANUP_CONFIRM] Record found without a voice_state_id for guild ${targetGuildId}: ${JSON.stringify(session)}`);
+                    failedCount++;
+                    logger.error(`[BTN_CLEANUP_CONFIRM] Failed to delete session ${result.reason.voice_state_id || 'unknown ID'} for guild ${targetGuildId}: ${result.reason.reason ? (result.reason.reason.message || result.reason.reason) : result.reason}`);
                 }
-            }
+            });
 
-            let replyMessage = `Voice data cleanup for guild ${targetGuildId} complete. `;
+            let replyMessage = `Voice data cleanup for guild ${targetGuildId} process finished. `;
             if (deletedCount > 0) {
                 replyMessage += `Successfully deleted ${deletedCount} record(s). `;
             }
             if (failedCount > 0) {
-                replyMessage += `Failed to delete ${failedCount} record(s). Please check logs for details.`;
-            } else if (deletedCount === 0 && records.length > 0) {
-                 replyMessage = `Found ${records.length} record(s) but could not delete any. Check logs and record structure (e.g., missing voice_state_id).`;
-            } else if (deletedCount === 0 && records.length === 0) {
+                replyMessage += `Failed to delete ${failedCount} record(s). `;
+            }
+            if (deletedCount === 0 && failedCount === 0 && recordsWithId.length > 0) {
+                replyMessage = `Attempted to delete ${recordsWithId.length} record(s), but none were confirmed deleted and no errors were reported. This is an unusual state. `;
+            }
+            if (recordsWithoutIdCount > 0) {
+                replyMessage += `${recordsWithoutIdCount} record(s) were skipped due to missing voice_state_id. `;
+            }
+            if (deletedCount === 0 && failedCount === 0 && recordsWithId.length === 0 && recordsWithoutIdCount === 0) {
                  replyMessage = "No voice tracking data found for this server to delete.";
             }
+            replyMessage += "Please check logs for more details if needed.";
 
             logger.info(`[BTN_CLEANUP_CONFIRM] ${replyMessage}`);
             await button.editReply({ content: replyMessage, components: [] });
