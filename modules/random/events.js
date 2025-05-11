@@ -193,38 +193,45 @@ async function onButtonClick(interaction) {
             }
 
             // Inform user before starting deletions
-            await button.editReply({ content: `Found ${recordsWithId.length} voice session record(s) for guild ${targetGuildId}. Attempting to delete them now... (this may take a moment)`, components: [] });
-
-            const deletionPromises = recordsWithId.map(session => {
-                logger.info(`[BTN_CLEANUP_CONFIRM] Preparing to delete session ${session.voice_state_id} for guild ${targetGuildId}`);
-                return api.delete(`voice_tracking`, {
-                    voice_state_id: parseInt(session.voice_state_id, 10),
-                    discord_server_id: targetGuildId, // Including discord_server_id as per your specified syntax
-                }).then(response => ({
-                    status: 'fulfilled',
-                    voice_state_id: session.voice_state_id,
-                    response: response
-                })).catch(error => ({
-                    status: 'rejected',
-                    voice_state_id: session.voice_state_id,
-                    reason: error
-                }));
-            });
-
-            const results = await Promise.allSettled(deletionPromises);
+            await button.editReply({ content: `Found ${recordsWithId.length} voice session record(s) for guild ${targetGuildId}. Attempting to delete them in batches... (this may take a moment)`, components: [] });
 
             let deletedCount = 0;
             let failedCount = 0;
+            const chunkSize = 100;
 
-            results.forEach(result => {
-                if (result.status === 'fulfilled') {
-                    logger.info(`[BTN_CLEANUP_CONFIRM] Successfully deleted session ${result.value.voice_state_id} for guild ${targetGuildId}. Response: ${JSON.stringify(result.value.response)}`);
-                    deletedCount++;
-                } else {
-                    failedCount++;
-                    logger.error(`[BTN_CLEANUP_CONFIRM] Failed to delete session ${result.reason.voice_state_id || 'unknown ID'} for guild ${targetGuildId}: ${result.reason.reason ? (result.reason.reason.message || result.reason.reason) : result.reason}`);
-                }
-            });
+            for (let i = 0; i < recordsWithId.length; i += chunkSize) {
+                const chunk = recordsWithId.slice(i, i + chunkSize);
+                logger.info(`[BTN_CLEANUP_CONFIRM] Processing chunk ${Math.floor(i / chunkSize) + 1}/${Math.ceil(recordsWithId.length / chunkSize)} with ${chunk.length} records for guild ${targetGuildId}.`);
+
+                const deletionPromises = chunk.map(session => {
+                    logger.info(`[BTN_CLEANUP_CONFIRM] Preparing to delete session ${session.voice_state_id} for guild ${targetGuildId}`);
+                    return api.delete(`voice_tracking`, {
+                        voice_state_id: parseInt(session.voice_state_id, 10),
+                        discord_server_id: targetGuildId,
+                    }).then(response => ({
+                        status: 'fulfilled',
+                        voice_state_id: session.voice_state_id,
+                        response: response
+                    })).catch(error => ({
+                        status: 'rejected',
+                        voice_state_id: session.voice_state_id,
+                        reason: error
+                    }));
+                });
+
+                const results = await Promise.allSettled(deletionPromises);
+
+                results.forEach(result => {
+                    if (result.status === 'fulfilled') {
+                        logger.info(`[BTN_CLEANUP_CONFIRM] Successfully deleted session ${result.value.voice_state_id} for guild ${targetGuildId}. Response: ${JSON.stringify(result.value.response)}`);
+                        deletedCount++;
+                    } else {
+                        failedCount++;
+                        logger.error(`[BTN_CLEANUP_CONFIRM] Failed to delete session ${result.reason.voice_state_id || 'unknown ID'} for guild ${targetGuildId}: ${result.reason.reason ? (result.reason.reason.message || result.reason.reason) : result.reason}`);
+                    }
+                });
+            }
+
 
             let replyMessage = `Voice data cleanup for guild ${targetGuildId} process finished. `;
             if (deletedCount > 0) {
