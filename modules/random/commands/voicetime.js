@@ -101,7 +101,7 @@ module.exports = {
             await reply.edit({ content: report, components });
             return;
 
-        } else if (subCommand === "") {
+        } else {
             // Original leaderboard logic
             this.logger.info(`[voicetime] Initial leaderboard request by ${message.author.tag} for guild ${message.guild.id}`);
             let respVoice;
@@ -207,9 +207,7 @@ module.exports = {
             message.channel.send({ components: [timingFilters, timingFilters2], embeds: [listEmbed] });
             this.logger.info("[voicetime] Sent initial Voice Leaderboard!");
 
-        } else {
-            await message.reply({content: `Unknown voicetime subcommand: ${subCommand}. Valid subcommands are 'cleanup' or 'diagnose'. Or use no subcommand for the leaderboard.`, ephemeral: true});
-        }
+        } 
     },
     formatDuration(totalSeconds) { // Moved formatDuration to be part of the exported module
         if (totalSeconds <= 0) return "0 seconds";
