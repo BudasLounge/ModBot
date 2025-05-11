@@ -35,7 +35,6 @@ module.exports = {
 
         for (const track of voiceTrackings) {
             const { user_id, connect_time, disconnect_time } = track;
-            // Ensure connect_time and disconnect_time are parsed as integers
             const connectTime = parseInt(connect_time, 10);
             const rawDisconnectTime = parseInt(disconnect_time, 10);
             
@@ -45,15 +44,10 @@ module.exports = {
             }
 
             const effectiveDisconnectTime = (rawDisconnectTime === 0 || isNaN(rawDisconnectTime)) ? currentTime : rawDisconnectTime;
-            
             const duration = Math.max(0, Math.floor(effectiveDisconnectTime - connectTime));
 
             if (user_id) {
-                if (totalTime.has(user_id)) {
-                    totalTime.set(user_id, totalTime.get(user_id) + duration);
-                } else {
-                    totalTime.set(user_id, duration);
-                }
+                totalTime.set(user_id, (totalTime.get(user_id) || 0) + duration);
             } else {
                 this.logger.warn(`Voice tracking entry missing user_id: ${JSON.stringify(track)}`);
             }
@@ -90,33 +84,13 @@ module.exports = {
                 const [userId, duration] = sortedTotalTime[i];
                 let mention = `User ID: ${userId}`;
                 try {
-                    const user = await message.guild.members.fetch(userId);
-                    mention = user.displayName;
+                    const member = await message.guild.members.fetch(userId);
+                    if (member) mention = member.displayName;
                 } catch (error) {
                     this.logger.error(`Failed to fetch member for user ID ${userId}: ${error.message}. Using ID as fallback.`);
                 }
 
-                let diff = duration;
-                const units = [
-                    { d: 60, l: "seconds" }, { d: 60, l: "minutes" },
-                    { d: 24, l: "hours" }, { d: 1000, l: "days" }
-                ];
-
-                let timeString = '';
-                if (diff === 0) {
-                    timeString = "0 seconds";
-                } else {
-                    for (let j = 0; j < units.length; ++j) {
-                        if (diff === 0 && timeString !== '') break; 
-                        const currentUnitValue = diff % units[j].d;
-                        if (currentUnitValue > 0 || (units[j].l === "seconds" && timeString === '')) {
-                           timeString = `${currentUnitValue} ${units[j].l} ${timeString}`;
-                        }
-                        diff = Math.floor(diff / units[j].d);
-                        if (diff === 0 && j < units.length -1 && timeString !== '') break; 
-                    }
-                }
-                listEmbed.addField(`${i + 1}. ${mention}`, timeString.trim() || "0 seconds");
+                listEmbed.addField(`${i + 1}. ${mention}`, formatDuration(duration));
             }
         }
 
@@ -138,5 +112,28 @@ module.exports = {
 
         message.channel.send({ components: [timingFilters, timingFilters2], embeds: [listEmbed] });
         this.logger.info("Sent Voice Leaderboard!");
-    }
+    },
+    formatDuration
 };
+
+function formatDuration(totalSeconds) {
+    if (totalSeconds <= 0) return "0 seconds";
+
+    const days = Math.floor(totalSeconds / (24 * 60 * 60));
+    totalSeconds %= (24 * 60 * 60);
+    const hours = Math.floor(totalSeconds / (60 * 60));
+    totalSeconds %= (60 * 60);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = Math.floor(totalSeconds % 60);
+
+    const parts = [];
+    if (days > 0) parts.push(days + " " + (days === 1 ? "day" : "days"));
+    if (hours > 0) parts.push(hours + " " + (hours === 1 ? "hour" : "hours"));
+    if (minutes > 0) parts.push(minutes + " " + (minutes === 1 ? "minute" : "minutes"));
+    if (seconds > 0) parts.push(seconds + " " + (seconds === 1 ? "second" : "seconds"));
+    
+    if (parts.length === 0) {
+        return "0 seconds";
+    }
+    return parts.join(" ");
+}

@@ -7,28 +7,25 @@ var logger;
 
 // Helper function to format seconds into a human-readable string
 function formatDuration(totalSeconds) {
-    if (totalSeconds === 0) return "0 seconds";
+    if (totalSeconds <= 0) return "0 seconds";
 
-    let diff = totalSeconds;
-    const units = [
-        { d: 60, l: "seconds" }, { d: 60, l: "minutes" },
-        { d: 24, l: "hours" }, { d: 365, l: "days" }
-    ];
+    const days = Math.floor(totalSeconds / (24 * 60 * 60));
+    totalSeconds %= (24 * 60 * 60);
+    const hours = Math.floor(totalSeconds / (60 * 60));
+    totalSeconds %= (60 * 60);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = Math.floor(totalSeconds % 60); // Ensure seconds is an integer
 
-    let timeString = '';
-    for (let i = 0; i < units.length; ++i) {
-        if (diff === 0 && timeString !== '') break;
-        const currentUnitValue = diff % units[i].d;
-        if (currentUnitValue > 0 || (units[i].l === "seconds" && timeString === '')) {
-            timeString = `${currentUnitValue} ${units[i].l} ${timeString}`;
-        }
-        diff = Math.floor(diff / units[i].d);
-        if (diff === 0 && i < units.length -1 && timeString !== '') break;
+    const parts = [];
+    if (days > 0) parts.push(days + " " + (days === 1 ? "day" : "days"));
+    if (hours > 0) parts.push(hours + " " + (hours === 1 ? "hour" : "hours"));
+    if (minutes > 0) parts.push(minutes + " " + (minutes === 1 ? "minute" : "minutes"));
+    if (seconds > 0) parts.push(seconds + " " + (seconds === 1 ? "second" : "seconds"));
+    
+    if (parts.length === 0) { // This case handles input like 0.5 seconds becoming 0 seconds after floor
+        return "0 seconds";
     }
-    if (diff > 0) { // Remaining days if any
-        timeString = `${diff} days ${timeString}`;
-    }
-    return timeString.trim() || "0 seconds";
+    return parts.join(" ");
 }
 
 // Helper function for generating standard voice leaderboards
