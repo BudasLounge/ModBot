@@ -224,14 +224,17 @@ async function onButtonClick(interaction) {
 
                     for (let i = 1; i < sessions.length; i++) {
                         const sessionToClose = sessions[i];
-                        logger.info(`[BTN_FIX_ALL] Closing ghost session ${sessionToClose.voice_state_id} for user ${userId} (connected at ${sessionToClose.connect_time}). Setting disconnect_time to ${currentTime}.`);
+                        const originalConnectTime = parseInt(sessionToClose.connect_time, 10);
+                        const newDisconnectTime = originalConnectTime + 3600; // Add 1 hour
+
+                        logger.info(`[BTN_FIX_ALL] Closing ghost session ${sessionToClose.voice_state_id} for user ${userId} (connected at ${originalConnectTime}). Setting disconnect_time to ${newDisconnectTime}.`);
                         try {
                             await api.put(`voice_tracking/${sessionToClose.voice_state_id}`, {
-                                disconnect_time: currentTime,
+                                disconnect_time: newDisconnectTime,
                                 user_id: sessionToClose.user_id,
                                 discord_server_id: sessionToClose.discord_server_id,
                                 channel_id: sessionToClose.channel_id,
-                                connect_time: sessionToClose.connect_time,
+                                connect_time: originalConnectTime, // Keep original connect_time
                                 selfmute: sessionToClose.selfmute,
                                 selfdeaf: sessionToClose.selfdeaf,
                             });
