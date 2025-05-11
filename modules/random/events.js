@@ -154,6 +154,104 @@ async function generateVoiceLeaderboard(button, title, options) {
 async function onButtonClick(interaction) {
     if (!interaction.isButton()) return;
     const button = interaction; // Alias for clarity, as original code uses 'button'
+    const guildId = button.guild.id; // Extract guildId early for new handlers
+
+    // Handle new dynamic custom IDs first
+    if (button.customId.startsWith("VOICE_CLEANUP_CONFIRM_")) {
+        await button.deferUpdate();
+        const targetGuildId = button.customId.split('_').pop();
+        if (targetGuildId !== guildId) {
+            logger.warn(`[BTN_CLEANUP_CONFIRM] Guild ID mismatch: button.customId=${button.customId}, interaction.guild.id=${guildId}`);
+            await button.editReply({ content: "Error: Guild ID mismatch. Cannot perform cleanup.", components: [] });
+            return;
+        }
+        try {
+            logger.info(`[BTN_CLEANUP_CONFIRM] Attempting to delete all voice data for guild ${targetGuildId}`);
+            const mockApiResponse = await api.post("voice_tracking_bulk_delete", { discord_server_id: targetGuildId }); 
+            logger.info(`[BTN_CLEANUP_CONFIRM] Successfully deleted voice data for guild ${targetGuildId}. Response: ${JSON.stringify(mockApiResponse)}`);
+            await button.editReply({ content: "All voice tracking data for this server has been successfully deleted.", components: [] });
+        } catch (error) {
+            logger.error(`[BTN_CLEANUP_CONFIRM] API error deleting voice data for guild ${targetGuildId}: ${error.message || error}`);
+            await button.editReply({ content: "An error occurred while trying to delete voice data. Please check the logs.", components: [] });
+        }
+        return;
+    } else if (button.customId.startsWith("VOICE_CLEANUP_CANCEL_")) {
+        await button.deferUpdate();
+        logger.info(`[BTN_CLEANUP_CANCEL] Voice data cleanup cancelled for guild ${guildId}`);
+        await button.editReply({ content: "Voice data cleanup has been cancelled.", components: [] });
+        return;
+    } else if (button.customId.startsWith("VOICE_FIX_ALL_")) {
+        await button.deferUpdate();
+        const targetGuildId = button.customId.split('_').pop();
+        if (targetGuildId !== guildId) {
+            logger.warn(`[BTN_FIX_ALL] Guild ID mismatch: button.customId=${button.customId}, interaction.guild.id=${guildId}`);
+            await button.editReply({ content: "Error: Guild ID mismatch. Cannot perform fix.", components: [] });
+            return;
+        }
+        logger.info(`[BTN_FIX_ALL] Attempting to fix ghost sessions for guild ${targetGuildId}`);
+        try {
+            const activeSessionsResp = await api.get("voice_tracking", {
+                discord_server_id: targetGuildId,
+                disconnect_time: 0,
+                _limit: 500 // Fetch a large number to ensure all active sessions are retrieved
+            });
+
+            if (!activeSessionsResp || !activeSessionsResp.voice_trackings || activeSessionsResp.voice_trackings.length === 0) {
+                await button.editReply({ content: "No active voice sessions found to diagnose or fix.", components: [] });
+                return;
+            }
+
+            const sessionsByUser = new Map();
+            for (const session of activeSessionsResp.voice_trackings) {
+                if (!sessionsByUser.has(session.user_id)) {
+                    sessionsByUser.set(session.user_id, []);
+                }
+                sessionsByUser.get(session.user_id).push(session);
+            }
+
+            let fixedSessionsCount = 0;
+            let usersAffectedCount = 0;
+            const currentTime = Math.floor(Date.now() / 1000);
+
+            for (const [userId, sessions] of sessionsByUser.entries()) {
+                if (sessions.length > 1) {
+                    usersAffectedCount++;
+                    // Sort sessions by connect_time descending (most recent first)
+                    sessions.sort((a, b) => parseInt(b.connect_time, 10) - parseInt(a.connect_time, 10));
+                    
+                    const sessionToKeep = sessions[0]; // Keep the most recent one
+                    logger.info(`[BTN_FIX_ALL] User ${userId} has ${sessions.length} active sessions. Keeping ${sessionToKeep.voice_state_id} (connected at ${sessionToKeep.connect_time}).`);
+
+                    for (let i = 1; i < sessions.length; i++) {
+                        const sessionToClose = sessions[i];
+                        logger.info(`[BTN_FIX_ALL] Closing ghost session ${sessionToClose.voice_state_id} for user ${userId} (connected at ${sessionToClose.connect_time}). Setting disconnect_time to ${currentTime}.`);
+                        try {
+                            await api.patch(`voice_tracking/${sessionToClose.voice_state_id}`, {
+                                disconnect_time: currentTime
+                            });
+                            fixedSessionsCount++;
+                        } catch (patchError) {
+                            logger.error(`[BTN_FIX_ALL] Error patching session ${sessionToClose.voice_state_id} for user ${userId}: ${patchError.message || patchError}`);
+                        }
+                    }
+                }
+            }
+
+            if (fixedSessionsCount > 0) {
+                await button.editReply({ content: `Attempted to fix ${fixedSessionsCount} ghost session(s) for ${usersAffectedCount} user(s). Please run the diagnose command again to verify.`, components: [] });
+            } else if (usersAffectedCount > 0 && fixedSessionsCount === 0) {
+                await button.editReply({ content: `Found ${usersAffectedCount} user(s) with multiple sessions, but no sessions were fixed. This might indicate an issue with the patching process or the sessions were already fixed. Check logs.`, components: [] });
+            } else {
+                await button.editReply({ content: "No users with multiple active sessions found. Everything seems to be in order.", components: [] });
+            }
+
+        } catch (error) {
+            logger.error(`[BTN_FIX_ALL] Error fixing ghost sessions for guild ${targetGuildId}: ${error.message || error}`);
+            await button.editReply({ content: "An error occurred while trying to fix ghost sessions. Please check the logs.", components: [] });
+        }
+        return;
+    }
+
 
     if ((button.customId.substr(0, 5) === "VOICE")) {
         const commandName = button.customId.substr(5);
