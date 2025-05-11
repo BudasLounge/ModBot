@@ -9,7 +9,7 @@ module.exports = {
     async execute(message, args, extra) {
         const { MessageActionRow, MessageButton, MessageEmbed } = require('discord.js');
         const api = extra.api;
-        const subCommand = args[0]; // Already lowercased by args_to_lower: true
+        const subCommand = args[1]; // Already lowercased by args_to_lower: true
 
         if (subCommand === 'cleanup') {
             this.logger.info(`[voicetime cleanup] User ${message.author.tag} initiated cleanup request for guild ${message.guild.id}`);
