@@ -263,6 +263,163 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
             logger.info(`[GAME_BTN] Host ${userId} initiated team setup for game ${gameId}`);
             break;
 
+        case "HOST_MANAGE_PLAYERS":
+            if (!isHost) {
+                await buttonInteraction.reply({ content: "Only the host can manage players.", ephemeral: true });
+                return;
+            }
+            if (gameDetails.status === 'setup' || !gameDetails.num_teams || gameDetails.num_teams === 0) {
+                 await buttonInteraction.reply({ content: "Teams need to be configured first. Use 'Setup Teams' / 'Reconfigure Teams'.", ephemeral: true });
+                 return;
+            }
+            try {
+                await buttonInteraction.deferReply({ ephemeral: true });
+                const playersResp = await localApi.get("game_joining_player", { game_id: gameId, _limit: 100 });
+                const playersInLobby = playersResp.game_joining_players || [];
+
+                if (playersInLobby.length === 0) {
+                    await buttonInteraction.editReply({ content: "No players currently in the lobby to manage.", components: [] });
+                    return;
+                }
+
+                const embed = new MessageEmbed()
+                    .setTitle(`Manage Players for Game ${gameId}`)
+                    .setColor("#c586b6")
+                    .setDescription("Assign players to teams. This is a basic interface.");
+
+                let unassignedPlayersDescription = "**Unassigned Players:**\n";
+                const unassignedPlayers = [];
+                const teamPlayers = new Array(gameDetails.num_teams).fill(null).map(() => []);
+
+                for (const player of playersInLobby) {
+                    const member = await buttonInteraction.guild.members.fetch(player.player_id).catch(() => null);
+                    const playerName = member ? member.displayName : `User ID: ${player.player_id}`;
+                    if (player.team_id && player.team_id > 0 && player.team_id <= gameDetails.num_teams) {
+                        teamPlayers[player.team_id - 1].push(playerName);
+                    } else {
+                        unassignedPlayers.push({ id: player.player_id, name: playerName, game_player_id: player.game_player_id });
+                        unassignedPlayersDescription += `${playerName}\n`;
+                    }
+                }
+                if (unassignedPlayers.length === 0) {
+                    unassignedPlayersDescription = "**All players are currently assigned to a team.**\n";
+                }
+                embed.addField("Lobby Status", unassignedPlayersDescription);
+
+                for (let i = 0; i < gameDetails.num_teams; i++) {
+                    let teamDescription = `**Team ${i + 1} Players:**\n`;
+                    if (teamPlayers[i].length > 0) {
+                        teamPlayers[i].forEach(name => teamDescription += `${name}\n`);
+                    } else {
+                        teamDescription += "No players assigned yet.\n";
+                    }
+                    embed.addField(`Team ${i + 1}`, teamDescription, true);
+                }
+
+                const components = [];
+                if (unassignedPlayers.length > 0 && gameDetails.num_teams > 0) {
+                    const assignPlayerRow = new MessageActionRow();
+                    assignPlayerRow.addComponents(
+                        new MessageButton()
+                            .setCustomId(`GAME_HOST_ASSIGN_PLAYER_MODAL-${gameIdString}`)
+                            .setLabel('Assign/Move Player')
+                            .setStyle('PRIMARY')
+                    );
+                    components.push(assignPlayerRow);
+                }
+
+                await buttonInteraction.editReply({ embeds: [embed], components: components.length > 0 ? components : [] });
+                logger.info(`[GAME_BTN] Host ${userId} accessed manage players for game ${gameId}`);
+
+            } catch (error) {
+                logger.error(`[GAME_BTN] Error managing players for game ${gameId}: ${error.message || error}`);
+                if (!buttonInteraction.replied && !buttonInteraction.deferred) {
+                    await buttonInteraction.reply({ content: "Error loading player management.", ephemeral: true });
+                } else {
+                    await buttonInteraction.editReply({ content: "Error loading player management." });
+                }
+            }
+            break;
+
+        case "HOST_VOICE_DEPLOY_TEAMS":
+             if (!isHost) {
+                await buttonInteraction.reply({ content: "Only the host can do this.", ephemeral: true });
+                return;
+            }
+            await buttonInteraction.deferReply({ephemeral: true});
+
+            if (gameDetails.status !== 'lobby_configured' || !gameDetails.num_teams || gameDetails.num_teams === 0) {
+                await buttonInteraction.editReply({ content: "Teams must be configured and players assigned before deploying to voice channels." });
+                return;
+            }
+
+            try {
+                const playersResp = await localApi.get("game_joining_player", { game_id: gameId, _filter: "team_id IS NOT NULL AND team_id > 0", _limit: 100 });
+                const playersToMove = playersResp.game_joining_players || [];
+
+                if (playersToMove.length === 0) {
+                    await buttonInteraction.editReply({ content: "No players assigned to teams to move." });
+                    return;
+                }
+
+                let movedCount = 0;
+                let failedCount = 0;
+                let channelsNotFound = new Set();
+
+                const teamVoiceChannelIds = []; 
+                for (let i = 1; i <= gameDetails.num_teams; i++) {
+                    const channelName = `Team ${i}`;
+                    const voiceChannel = buttonInteraction.guild.channels.cache.find(ch => ch.name === channelName && ch.type === 'GUILD_VOICE');
+                    if (voiceChannel) {
+                        teamVoiceChannelIds[i-1] = voiceChannel.id;
+                    } else {
+                        channelsNotFound.add(channelName);
+                        teamVoiceChannelIds[i-1] = null; // Mark as not found
+                    }
+                }
+
+                if (channelsNotFound.size > 0) {
+                    await buttonInteraction.editReply({ content: `Could not find voice channels for: ${[...channelsNotFound].join(', ')}. Please create them or configure them.` });
+                    return;
+                }
+
+                for (const player of playersToMove) {
+                    if (!player.team_id || player.team_id <= 0 || player.team_id > gameDetails.num_teams) {
+                        logger.warn(`[GAME_VOICE_DEPLOY] Player ${player.player_id} has invalid team_id ${player.team_id}`);
+                        failedCount++;
+                        continue;
+                    }
+                    const targetChannelId = teamVoiceChannelIds[player.team_id - 1];
+                    if (!targetChannelId) {
+                        logger.warn(`[GAME_VOICE_DEPLOY] No channel configured for Team ${player.team_id} for player ${player.player_id}`);
+                        failedCount++; 
+                        continue;
+                    }
+
+                    try {
+                        const member = await buttonInteraction.guild.members.fetch(player.player_id);
+                        if (member && member.voice && member.voice.channelId && member.voice.channelId !== targetChannelId) {
+                            await member.voice.setChannel(targetChannelId);
+                            movedCount++;
+                        } else if (member && member.voice && member.voice.channelId === targetChannelId) {
+                            movedCount++; 
+                        } else if (member && !member.voice.channelId){
+                            logger.info(`[GAME_VOICE_DEPLOY] Player ${player.player_id} not in a voice channel.`);
+                            failedCount++;
+                        }
+                    } catch (moveError) {
+                        failedCount++;
+                        logger.warn(`[GAME_VOICE_DEPLOY] Failed to move player ${player.player_id} to channel for Team ${player.team_id}: ${moveError.message}`);
+                    }
+                }
+                await buttonInteraction.editReply({ content: `Attempted to move players to team channels. Moved: ${movedCount}, Failed/Skipped: ${failedCount}.`});
+                logger.info(`[GAME_VOICE_DEPLOY] Host ${userId} deployed teams for game ${gameId}. Moved: ${movedCount}, Failed: ${failedCount}`);
+            } catch (error) {
+                logger.error(`[GAME_VOICE_DEPLOY] Error deploying teams for game ${gameId}: ${error.message || error}`);
+                await buttonInteraction.editReply({ content: "An error occurred while trying to move players to team channels."});
+            }
+            break;
+
         case "HOST_END":
             if (!isHost) {
                 await buttonInteraction.reply({ content: "Only the host can end the game.", ephemeral: true });
@@ -394,6 +551,56 @@ async function handleGameSetupTeamsModal(modalInteraction, logger, localApi) {
     }
 }
 
+// NEW: Placeholder for Assign Player Modal Handler
+async function handleAssignPlayerModal(modalInteraction, logger, localApi) {
+    const customId = modalInteraction.customId; // GAME_MODAL_ASSIGN_PLAYER-<gameId>
+    const gameIdString = customId.split('-')[1];
+    const gameId = Number(gameIdString);
+    const hostId = modalInteraction.user.id;
+
+    try {
+        await modalInteraction.deferReply({ ephemeral: true });
+
+        const playerIdToAssign = modalInteraction.fields.getTextInputValue('playerId');
+        const teamIdToAssignTo = parseInt(modalInteraction.fields.getTextInputValue('teamId'), 10);
+
+        if (!playerIdToAssign || isNaN(teamIdToAssignTo) || teamIdToAssignTo <= 0) {
+            await modalInteraction.editReply({ content: "Invalid player ID or team ID provided." });
+            return;
+        }
+
+        const gameResp = await localApi.get("game_joining_master", { game_id: gameId });
+        if (!gameResp || !gameResp.game_joining_masters || !gameResp.game_joining_masters[0] || gameResp.game_joining_masters[0].host_id !== hostId) {
+            await modalInteraction.editReply({ content: "You are not authorized to perform this action or game not found." });
+            return;
+        }
+        const gameDetails = gameResp.game_joining_masters[0];
+        if (teamIdToAssignTo > gameDetails.num_teams) {
+             await modalInteraction.editReply({ content: `Invalid Team ID. This game only has ${gameDetails.num_teams} teams.` });
+            return;
+        }
+
+        const playerResp = await localApi.get("game_joining_player", { game_id: gameId, player_id: playerIdToAssign, _limit: 1 });
+        if (!playerResp || !playerResp.game_joining_players || !playerResp.game_joining_players[0]) {
+            await modalInteraction.editReply({ content: `Player ${playerIdToAssign} not found in this game lobby.` });
+            return;
+        }
+        const gamePlayerId = playerResp.game_joining_players[0].game_player_id;
+
+        await localApi.put("game_joining_player", { 
+            game_player_id: Number(gamePlayerId),
+            team_id: teamIdToAssignTo
+        });
+
+        logger.info(`[GAME_ASSIGN_MODAL] Host ${hostId} assigned player ${playerIdToAssign} (gp_id: ${gamePlayerId}) to team ${teamIdToAssignTo} in game ${gameId}.`);
+        await modalInteraction.editReply({ content: `Successfully assigned player to Team ${teamIdToAssignTo}. Click 'Manage Players' again to see updates.` });
+
+    } catch (error) {
+        logger.error(`[GAME_ASSIGN_MODAL] Error assigning player in game ${gameId}: ${error.message || error}`);
+        await modalInteraction.editReply({ content: "An error occurred while assigning the player." });
+    }
+}
+
 // Modified to handle different interaction types (buttons, modals)
 async function onInteractionCreate(interaction) {
     if (interaction.isButton()) {
@@ -522,6 +729,8 @@ async function onInteractionCreate(interaction) {
         const modalInteraction = interaction;
         if (modalInteraction.customId.startsWith("GAME_MODAL_SETUP_TEAMS-")) {
             await handleGameSetupTeamsModal(modalInteraction, logger, api);
+        } else if (modalInteraction.customId.startsWith("GAME_MODAL_ASSIGN_PLAYER-")) {
+            await handleAssignPlayerModal(modalInteraction, logger, api);
         }
     }
 }
