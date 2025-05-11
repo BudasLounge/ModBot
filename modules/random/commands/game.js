@@ -83,13 +83,17 @@ module.exports = {
         // Create new game
         var newGameResponse;
         try {
-            newGameResponse = await api.post("game_joining_master", {
+            const newGameData = {
                 host_id: message.member.id,
                 starting_channel_id: voiceChannelId,
                 status: 'setup', // Initial status: 'setup', 'lobby_configured', 'running', 'ended'
                 num_teams: 0,
-                max_players_per_team: 0
-            });
+                max_players: 0 // Default to 0 (unlimited), host needs to configure
+            };
+
+            this.logger.info(`Attempting to create game with data: ${JSON.stringify(newGameData)}`);
+
+            newGameResponse = await api.post("game_joining_master", newGameData);
         } catch (error) {
             this.logger.error(`Game creation API call failed: ${error.message || error}`);
             message.channel.send({ content: "Sorry, I couldn't create the game due to an API error." });

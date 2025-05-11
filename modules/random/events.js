@@ -181,7 +181,7 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
         return;
     }
 
-    logger.info(`[GAME_BTN] Processing action '${actionKey}' for game ${gameId}. Host: ${userId}. Game Details: Status='${gameDetails.status}', NumTeams='${gameDetails.num_teams}', MaxPlayers='${gameDetails.max_players_per_team}'`);
+    logger.info(`[GAME_BTN] Processing action '${actionKey}' for game ${gameId}. Host: ${userId}. Game Details: Status='${gameDetails.status}', NumTeams='${gameDetails.num_teams}', MaxPlayers='${gameDetails.max_players}'`);
 
     const isHost = (gameDetails.host_id === userId);
 
@@ -257,7 +257,7 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
                 .setLabel("Max Players Per Team (0 for unlimited)")
                 .setStyle('SHORT')
                 .setRequired(true)
-                .setValue(gameDetails.max_players_per_team !== undefined ? String(gameDetails.max_players_per_team) : '0')
+                .setValue(gameDetails.max_players !== undefined ? String(gameDetails.max_players) : '0')
                 .setPlaceholder("Enter a number >= 0");
             
             const currentNumTeams = gameDetails.num_teams !== undefined ? String(gameDetails.num_teams) : '2';
@@ -559,81 +559,97 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
 async function handleGameSetupTeamsModal(modalInteraction, logger, localApi) {
     const customId = modalInteraction.customId;
     const gameIdString = customId.split('-')[1];
-    const gameId = Number(gameIdString); // Convert to number
+    const gameId = Number(gameIdString);
     if (isNaN(gameId)) {
-        logger.warn(`[GAME_MODAL] Invalid gameId (not a number): ${gameIdString}`);
-        await modalInteraction.followUp({ content: "Invalid game ID in modal.", ephemeral: true });
+        logger.warn(`[GAME_MODAL_SETUP] Invalid gameId (not a number): ${gameIdString}`);
+        await modalInteraction.reply({ content: "Invalid game ID in modal submission.", ephemeral: true });
         return;
     }
     const userId = modalInteraction.user.id;
 
     try {
-        await modalInteraction.deferUpdate();
+        await modalInteraction.deferReply({ ephemeral: true });
 
-        const numTeamsStr = modalInteraction.fields.getTextInputValue('numTeams');
-        const playersPerTeamStr = modalInteraction.fields.getTextInputValue('playersPerTeam');
-
-        const numTeams = parseInt(numTeamsStr, 10);
-        const playersPerTeam = parseInt(playersPerTeamStr, 10);
-
-        if (isNaN(numTeams) || numTeams <= 0) {
-            await modalInteraction.followUp({ content: "Invalid number of teams. Must be a number greater than 0.", ephemeral: true });
+        const gameMasterResp = await localApi.get("game_joining_master", { game_id: gameId, _limit: 1 });
+        if (!gameMasterResp || !gameMasterResp.game_joining_masters || !gameMasterResp.game_joining_masters[0]) {
+            await modalInteraction.editReply({ content: "Original game not found. Cannot update settings." });
             return;
         }
-        if (isNaN(playersPerTeam) || playersPerTeam < 0) {
-            await modalInteraction.followUp({ content: "Invalid max players per team. Must be a number (0 for unlimited).", ephemeral: true });
+        const gameMasterDetails = gameMasterResp.game_joining_masters[0];
+
+        if (gameMasterDetails.host_id !== userId) {
+            await modalInteraction.editReply({ content: "Only the host can modify game settings." });
             return;
         }
 
-        const gameResp = await localApi.get("game_joining_master", { game_id: gameId });
-        if (!gameResp || !gameResp.game_joining_masters || !gameResp.game_joining_masters[0]) {
-            logger.warn(`[GAME_MODAL] Game ${gameId} not found during modal submission.`);
-            await modalInteraction.followUp({ content: "Game not found. Cannot update team settings.", ephemeral: true});
+        const numTeams = modalInteraction.fields.getTextInputValue('numTeams');
+        const maxPlayers = modalInteraction.fields.getTextInputValue('playersPerTeam'); // Field ID is 'playersPerTeam'
+
+        const parsedNumTeams = parseInt(numTeams, 10);
+        const parsedMaxPlayers = parseInt(maxPlayers, 10);
+
+        if (isNaN(parsedNumTeams) || parsedNumTeams <= 1) {
+            await modalInteraction.editReply({ content: "Number of teams must be a number greater than 1." });
             return;
         }
-        const gameDetails = gameResp.game_joining_masters[0];
-
-        if (gameDetails.host_id !== userId) {
-            logger.warn(`[GAME_MODAL] Non-host ${userId} tried to submit team setup for game ${gameId}`);
-            await modalInteraction.followUp({ content: "You are not the host of this game.", ephemeral: true });
+        if (isNaN(parsedMaxPlayers) || parsedMaxPlayers < 0) {
+            await modalInteraction.editReply({ content: "Max players per team must be a number (0 for unlimited)." });
             return;
         }
 
-        await localApi.put("game_joining_master", { 
-            game_id: gameId,
-            num_teams: numTeams,
-            max_players_per_team: playersPerTeam,
+        const updatePayload = {
+            num_teams: parsedNumTeams,
+            max_players: parsedMaxPlayers,
             status: 'lobby_configured'
-        });
-        logger.info(`[GAME_MODAL] Host ${userId} configured teams for game ${gameId}: ${numTeams} teams, ${playersPerTeam} players/team.`);
+        };
 
-        const originalMessage = modalInteraction.message;
+        await localApi.put("game_joining_master", gameId, updatePayload);
+        logger.info(`[GAME_MODAL_SETUP] Game ${gameId} updated by host ${userId}. New settings: Teams=${parsedNumTeams}, MaxPlayers=${parsedMaxPlayers}, Status=lobby_configured`);
+
+        // Fetch the original game message to update it
+        const originalMessage = modalInteraction.message; // This should be the message with the buttons
+
         if (originalMessage) {
-            const updatedEmbed = new MessageEmbed(originalMessage.embeds[0])
-                .spliceFields(1, 1, { name: "Host Actions", value: `Teams: ${numTeams}, Max Players/Team: ${playersPerTeam === 0 ? 'Unlimited' : playersPerTeam}. Use 'Manage Players' to assign.`})
-                .setFooter({ text: "Team setup complete. 'Manage Players' is now available."});
-            
-            const currentComponents = originalMessage.components.map(row => new MessageActionRow(row));
+            const gameDetailsForUpdate = await localApi.get("game_joining_master", { game_id: gameId });
+            if (gameDetailsForUpdate && gameDetailsForUpdate.game_joining_masters && gameDetailsForUpdate.game_joining_masters[0]) {
+                const updatedGameData = gameDetailsForUpdate.game_joining_masters[0];
+                const newEmbed = new MessageEmbed(originalMessage.embeds[0]); // Clone existing embed
+                
+                let teamsConfigured = updatedGameData.status === 'lobby_configured' && updatedGameData.num_teams > 0;
+                
+                newEmbed.fields = []; // Clear existing fields to re-add them with potentially new info
+                newEmbed.addField("Status", updatedGameData.status === 'setup' ? '⚙️ Setup (Waiting for Host)' : (updatedGameData.status === 'lobby_configured' ? '✅ Lobby Configured' : updatedGameData.status), true);
+                newEmbed.addField("Teams", teamsConfigured ? `${updatedGameData.num_teams}` : "Not Set", true);
+                newEmbed.addField("Players/Team", teamsConfigured ? (updatedGameData.max_players === 0 ? "Unlimited" : `${updatedGameData.max_players}`) : "N/A", true);
 
-            currentComponents.forEach(row => {
-                row.components.forEach(comp => {
-                    if (comp.customId === `GAME_HOST_MANAGE_PLAYERS-${gameIdString}`) {
-                        comp.setDisabled(false);
-                    }
-                    if (comp.customId === `GAME_HOST_SETUP_TEAMS-${gameIdString}`) {
-                        comp.setLabel('Reconfigure Teams');
-                    }
-                    if (comp.customId === `GAME_HOST_VOICE_CONTROL-${gameIdString}`) {
-                        comp.setDisabled(false);
-                    }
+
+                const newComponents = originalMessage.components.map(row => {
+                    const newRow = new MessageActionRow();
+                    row.components.forEach(comp => {
+                        const button = new MessageButton(comp); // Create new button from old one's data
+                        if (button.customId.startsWith("GAME_HOST_SETUP_TEAMS-")) {
+                            button.setLabel(teamsConfigured ? "Reconfigure Teams" : "Setup Teams");
+                        }
+                        if (button.customId.startsWith("GAME_HOST_MANAGE_PLAYERS-") || button.customId.startsWith("GAME_HOST_VOICE_CONTROL-")) {
+                            button.setDisabled(!teamsConfigured);
+                        }
+                        newRow.addComponents(button);
+                    });
+                    return newRow;
                 });
-            });
-            await originalMessage.edit({ embeds: [updatedEmbed], components: currentComponents });
+                await originalMessage.edit({ embeds: [newEmbed], components: newComponents });
+                logger.info(`[GAME_MODAL_SETUP] Original game message for game ${gameId} updated after team setup.`);
+            }
         }
+        await modalInteraction.editReply({ content: `Game settings updated! Teams: ${parsedNumTeams}, Max Players/Team: ${parsedMaxPlayers === 0 ? "Unlimited" : parsedMaxPlayers}. You can now manage players and voice controls.` });
 
     } catch (error) {
-        logger.error(`[GAME_MODAL] Error processing team setup for game ${gameId} by ${userId}: ${error.message || error}`);
-        await modalInteraction.followUp({ content: "An error occurred while setting up teams. Please try again.", ephemeral: true });
+        logger.error(`[GAME_MODAL_SETUP] Error processing team setup for game ${gameId}: ${error.message || error}`);
+        if (!modalInteraction.replied && !modalInteraction.deferred) {
+            await modalInteraction.reply({ content: "An error occurred while updating game settings.", ephemeral: true });
+        } else {
+            await modalInteraction.editReply({ content: "An error occurred while updating game settings." });
+        }
     }
 }
 
