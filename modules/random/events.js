@@ -574,7 +574,7 @@ async function userJoinsVoice(oldState, newState) {
             disconnect_time: 0, // Only fetch currently open sessions
         });
 
-        if (openSessionsResp && openSessionsResp.voice_trackings) {
+        if (openSessionsResp && openSessionsResp.voice_trackings && openSessionsResp.voice_trackings.length > 0) {
             // First pass: identify if there's an existing session that exactly matches the new state.
             // This session, if found, is the one we might keep. All others must be closed.
             if (newChannelId && !isNewChannelAfk) { // Only look for a session to keep if the new state is valid & active
@@ -597,19 +597,27 @@ async function userJoinsVoice(oldState, newState) {
                 }
 
                 // If we are here, this session is NOT the one to keep (if one was identified).
-                if (!newChannelId || isNewChannelAfk) {
+                if (!newChannelId || isNewChannelAfk) { // User is leaving voice or joining AFK
                     closeReason = "User left all voice channels or went AFK";
-                } else {
-                    // User is in a new valid channel, and this session is not the one matching the new state.
-                    // So, this session is an old/orphaned one for a different channel/state or a duplicate.
+                } else { // User is in a new valid channel, and this session is an old/orphaned one.
                     closeReason = `User in new state (ch: ${newChannelId}, mute: ${newMuteState}), this session (id: ${session.voice_state_id}, ch: ${session.channel_id}, mute: ${session.selfmute}) is outdated/duplicate.`;
                 }
                 
                 if (closeReason) {
-                    logger.info(`[VSU] Closing session ${session.voice_state_id} for ${username} (${userId}). Reason: ${closeReason}.`);
+                    const originalConnectTime = parseInt(session.connect_time, 10);
+                    let calculatedDisconnectTime = currentTime; // Default to current time
+
+                    if (!isNaN(originalConnectTime)) {
+                        const oneHourAfterConnect = originalConnectTime + 3600;
+                        calculatedDisconnectTime = Math.min(oneHourAfterConnect, currentTime);
+                    } else {
+                        logger.warn(`[VSU] Session ${session.voice_state_id} for user ${userId} had an invalid connect_time: ${session.connect_time}. Using current time for disconnect.`);
+                    }
+                    
+                    logger.info(`[VSU] Closing session ${session.voice_state_id} for ${username} (${userId}). Reason: ${closeReason}. Setting disconnect_time to ${calculatedDisconnectTime}.`);
                     await api.put("voice_tracking", {
                         voice_state_id: parseInt(session.voice_state_id, 10),
-                        disconnect_time: currentTime,
+                        disconnect_time: calculatedDisconnectTime,
                     });
                 }
             }
