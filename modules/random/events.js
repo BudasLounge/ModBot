@@ -359,88 +359,86 @@ async function userJoinsVoice(oldState, newState) {
     const member = newState.member;
 
     if (!member) {
-        logger.warn(`Member not found for user ID ${userId} in guild ${guildId}. Skipping voice state update.`);
+        logger.warn(`[VSU] Member not found for user ID ${userId} in guild ${guildId}. Skipping voice state update.`);
         return;
     }
-    const username = member.user.username; // Use GuildMember.user.username
-    const oldChannelId = oldState.channelId;
+    const username = member.user.username;
     const newChannelId = newState.channelId;
     const currentTime = Math.floor(Date.now() / 1000);
     const isNewChannelAfk = newChannelId === newState.guild.afkChannelId;
+    const newMuteState = String(newState.selfMute); // Ensure consistent string comparison
 
-    // Attempt to close any existing open session for this user in this guild
-    // This handles: leaving, moving, going AFK, or mute state change (session will be reopened with new state)
-    let previousSessionClosed = false;
+    let sessionToPotentiallyKeepId = null;
+
     try {
         const openSessionsResp = await api.get("voice_tracking", {
             user_id: userId,
             discord_server_id: guildId,
-            disconnect_time: 0,
+            disconnect_time: 0, // Only fetch currently open sessions
         });
 
         if (openSessionsResp && openSessionsResp.voice_trackings) {
+            // First pass: identify if there's an existing session that exactly matches the new state.
+            // This session, if found, is the one we might keep. All others must be closed.
+            if (newChannelId && !isNewChannelAfk) { // Only look for a session to keep if the new state is valid & active
+                for (const session of openSessionsResp.voice_trackings) {
+                    if (session.channel_id === newChannelId && String(session.selfmute) === newMuteState) {
+                        sessionToPotentiallyKeepId = session.voice_state_id;
+                        logger.info(`[VSU] Identified session ${session.voice_state_id} for ${username} (${userId}) in ch ${newChannelId} (mute: ${newMuteState}) as potentially current.`);
+                        break; // Found the one to keep
+                    }
+                }
+            }
+
+            // Second pass: close sessions that are not the one to keep, or all if user is leaving/AFK.
             for (const session of openSessionsResp.voice_trackings) {
-                // Close if:
-                // 1. User is leaving all VCs (newChannelId is null)
-                // 2. User is moving to AFK (isNewChannelAfk is true)
-                // 3. User is moving to a different channel (session.channel_id !== newChannelId)
-                // 4. User's mute state changed in the same channel (session will be reopened)
-                if (!newChannelId || isNewChannelAfk || 
-                    (newChannelId && session.channel_id !== newChannelId) ||
-                    (newChannelId && session.channel_id === newChannelId && String(newState.selfMute) !== String(session.selfmute))) {
-                    
-                    logger.info(`Closing session ${session.voice_state_id} for ${username} (${userId}). Reason: Left/AFK/Moved/MuteChange. Old ch: ${session.channel_id}, New ch: ${newChannelId}, New Mute: ${newState.selfMute}`);
+                let closeReason = null;
+
+                if (session.voice_state_id === sessionToPotentiallyKeepId) {
+                    logger.info(`[VSU] Session ${session.voice_state_id} for ${username} (${userId}) matches new state, will not be closed by this pass.`);
+                    continue; // This is the session we identified as matching the new state. Don't close it here.
+                }
+
+                // If we are here, this session is NOT the one to keep (if one was identified).
+                if (!newChannelId || isNewChannelAfk) {
+                    closeReason = "User left all voice channels or went AFK";
+                } else {
+                    // User is in a new valid channel, and this session is not the one matching the new state.
+                    // So, this session is an old/orphaned one for a different channel/state or a duplicate.
+                    closeReason = `User in new state (ch: ${newChannelId}, mute: ${newMuteState}), this session (id: ${session.voice_state_id}, ch: ${session.channel_id}, mute: ${session.selfmute}) is outdated/duplicate.`;
+                }
+                
+                if (closeReason) {
+                    logger.info(`[VSU] Closing session ${session.voice_state_id} for ${username} (${userId}). Reason: ${closeReason}.`);
                     await api.put("voice_tracking", {
                         voice_state_id: parseInt(session.voice_state_id, 10),
                         disconnect_time: currentTime,
                     });
-                    previousSessionClosed = true;
                 }
             }
         }
     } catch (error) {
-        logger.error(`Error during cleanup of old voice sessions for ${username} (${userId}): ${error.message || error}`);
+        logger.error(`[VSU] Error during cleanup/processing of old voice sessions for ${username} (${userId}): ${error.message || error}`);
     }
 
-    // If user is joining a valid (non-AFK) channel, create a new session record.
-    // This also handles re-creating a session if mute state changed (old one was closed above).
+    // If user is joining a valid (non-AFK) channel, AND we didn't identify an existing session to keep, create a new one.
     if (newChannelId && !isNewChannelAfk) {
-        // Before creating, double-check if an identical open session already exists (e.g., from a missed leave/bot restart)
-        // This is a safeguard. The logic above should ideally handle closing outdated sessions.
-        let createNew = true;
-        try {
-            const checkResp = await api.get("voice_tracking", {
-                user_id: userId,
-                discord_server_id: guildId,
-                channel_id: newChannelId,
-                selfmute: String(newState.selfMute), // Check with current mute state
-                disconnect_time: 0
-            });
-            if (checkResp && checkResp.voice_trackings && checkResp.voice_trackings.length > 0) {
-                // An identical open session already exists. Don't create another.
-                // This might happen if the previous "close" operation failed or if this event is redundant.
-                logger.info(`User ${username} (${userId}) already has an identical active session in channel ${newChannelId}. No new session needed.`);
-                createNew = false;
-            }
-        } catch(e){
-            logger.error(`Error checking for existing exact session for ${username} (${userId}): ${e.message || e}`);
-            // Proceed to create, assuming no identical session exists if check failed.
-        }
-
-        if (createNew) {
-            logger.info(`Creating new voice session for ${username} (${userId}) in channel ${newChannelId}. Muted: ${newState.selfMute}`);
+        if (sessionToPotentiallyKeepId) {
+            logger.info(`[VSU] User ${username} (${userId}) already has an active session ${sessionToPotentiallyKeepId} matching new state in ch ${newChannelId}. No new session needed.`);
+        } else {
+            logger.info(`[VSU] Creating new voice session for ${username} (${userId}) in channel ${newChannelId}. Muted: ${newMuteState}`);
             try {
                 await api.post("voice_tracking", {
                     user_id: userId,
                     username: username,
                     discord_server_id: guildId,
                     connect_time: currentTime,
-                    selfmute: String(newState.selfMute),
+                    selfmute: newMuteState, // Use the consistently stringified mute state
                     channel_id: newChannelId,
-                    disconnect_time: 0,
+                    disconnect_time: 0, // Mark as active
                 });
             } catch (error) {
-                logger.error(`Error creating new voice_tracking session for ${username} (${userId}): ${error.message || error}`);
+                logger.error(`[VSU] Error creating new voice_tracking session for ${username} (${userId}): ${error.message || error}`);
             }
         }
     }
