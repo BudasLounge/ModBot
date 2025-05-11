@@ -229,7 +229,8 @@ async function onButtonClick(interaction) {
 
                         logger.info(`[BTN_FIX_ALL] Closing ghost session ${sessionToClose.voice_state_id} for user ${userId} (connected at ${originalConnectTime}). Setting disconnect_time to ${newDisconnectTime}.`);
                         try {
-                            await api.put(`voice_tracking/${sessionToClose.voice_state_id}`, {
+                            await api.put(`voice_tracking`, {
+                                voice_state_id: parseInt(sessionToClose.voice_state_id, 10),
                                 disconnect_time: newDisconnectTime,
                                 user_id: sessionToClose.user_id,
                                 discord_server_id: sessionToClose.discord_server_id,
