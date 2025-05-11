@@ -148,7 +148,13 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
     }
 
     const fullAction = parts[0]; 
-    const gameId = parts[1];     
+    const gameIdString = parts[1]; // gameId is a string initially    
+    const gameId = Number(gameIdString); // Convert to number
+    if (isNaN(gameId)) {
+        logger.warn(`[GAME_BTN] Invalid gameId (not a number): ${gameIdString}`);
+        await buttonInteraction.reply({ content: "Invalid game ID in button.", ephemeral: true });
+        return;
+    }
     const userId = buttonInteraction.user.id;
 
     const actionPrefix = "GAME_";
@@ -226,8 +232,8 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
                 return;
             }
             const modal = new Modal()
-                .setCustomId(`GAME_MODAL_SETUP_TEAMS-${gameId}`)
-                .setTitle(`Team Setup for Game ID: ${gameId}`);
+                .setCustomId(`GAME_MODAL_SETUP_TEAMS-${gameIdString}`)
+                .setTitle(`Team Setup for Game ID: ${gameIdString}`);
             
             const numTeamsInput = new TextInputComponent()
                 .setCustomId('numTeams')
@@ -312,7 +318,13 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
 // NEW: Handler for GAME_MODAL_SETUP_TEAMS modal submission
 async function handleGameSetupTeamsModal(modalInteraction, logger, localApi) {
     const customId = modalInteraction.customId;
-    const gameId = customId.split('-')[1];
+    const gameIdString = customId.split('-')[1];
+    const gameId = Number(gameIdString); // Convert to number
+    if (isNaN(gameId)) {
+        logger.warn(`[GAME_MODAL] Invalid gameId (not a number): ${gameIdString}`);
+        await modalInteraction.followUp({ content: "Invalid game ID in modal.", ephemeral: true });
+        return;
+    }
     const userId = modalInteraction.user.id;
 
     try {
@@ -365,10 +377,10 @@ async function handleGameSetupTeamsModal(modalInteraction, logger, localApi) {
 
             currentComponents.forEach(row => {
                 row.components.forEach(comp => {
-                    if (comp.customId === `GAME_HOST_MANAGE_PLAYERS-${gameId}`) {
+                    if (comp.customId === `GAME_HOST_MANAGE_PLAYERS-${gameIdString}`) {
                         comp.setDisabled(false);
                     }
-                    if (comp.customId === `GAME_HOST_SETUP_TEAMS-${gameId}`) {
+                    if (comp.customId === `GAME_HOST_SETUP_TEAMS-${gameIdString}`) {
                         comp.setLabel('Reconfigure Teams');
                     }
                 });
