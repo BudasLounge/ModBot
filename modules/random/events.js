@@ -181,16 +181,26 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
         return;
     }
 
+    logger.info(`[GAME_BTN] Processing action '${actionKey}' for game ${gameId}. Host: ${userId}. Game Details: Status='${gameDetails.status}', NumTeams='${gameDetails.num_teams}', MaxPlayers='${gameDetails.max_players_per_team}'`);
+
     const isHost = (gameDetails.host_id === userId);
 
     switch (actionKey) {
         case "JOIN":
             try {
                 await buttonInteraction.deferReply({ ephemeral: true });
-                if (gameDetails.status !== 'setup' && gameDetails.status !== 'lobby_configured') {
+                const currentLobbyState = await localApi.get("game_joining_master", { game_id: gameId });
+                if (!currentLobbyState || !currentLobbyState.game_joining_masters || !currentLobbyState.game_joining_masters[0]) {
+                    await buttonInteraction.editReply({ content: "Game not found." });
+                    return;
+                }
+                const freshGameDetails = currentLobbyState.game_joining_masters[0];
+
+                if (freshGameDetails.status !== 'setup' && freshGameDetails.status !== 'lobby_configured') {
                     await buttonInteraction.editReply({ content: "This game is not currently accepting new players." });
                     return;
                 }
+
                 await localApi.post("game_joining_player", { game_id: gameId, player_id: userId });
                 await buttonInteraction.editReply({ content: `You have joined game ${gameId}!` });
                 logger.info(`[GAME_BTN] Player ${userId} joined game ${gameId}`);
@@ -268,6 +278,9 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
                 await buttonInteraction.reply({ content: "Only the host can manage players.", ephemeral: true });
                 return;
             }
+            // Add this log:
+            logger.info(`[GAME_BTN_MANAGE_PLAYERS] Game ${gameId} details on entry: Status='${gameDetails.status}', NumTeams=${gameDetails.num_teams}`);
+
             if (gameDetails.status === 'setup' || !gameDetails.num_teams || gameDetails.num_teams === 0) {
                  await buttonInteraction.reply({ content: "Teams need to be configured first. Use 'Setup Teams' / 'Reconfigure Teams'.", ephemeral: true });
                  return;
@@ -317,7 +330,7 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
                 }
 
                 const components = [];
-                if (unassignedPlayers.length > 0 && gameDetails.num_teams > 0) {
+                if (unassignedPlayers.length > 0 || playersInLobby.length > 0) {
                     const assignPlayerRow = new MessageActionRow();
                     assignPlayerRow.addComponents(
                         new MessageButton()
@@ -341,8 +354,78 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
             }
             break;
 
+        case "HOST_VOICE_CONTROL":
+            if (!isHost) {
+                await buttonInteraction.reply({ content: "Only the host can control voice channels.", ephemeral: true });
+                return;
+            }
+
+            const deployDisabled = gameDetails.status !== 'lobby_configured' || !gameDetails.num_teams || gameDetails.num_teams === 0;
+            let deployButtonLabel = "Move Teams to VCs";
+            if (deployDisabled) {
+                deployButtonLabel += " (Setup Teams First)";
+            }
+            
+            const voiceControlRow = new MessageActionRow()
+                .addComponents(
+                    new MessageButton()
+                        .setCustomId(`GAME_HOST_VOICE_PULL_ALL-${gameIdString}`)
+                        .setLabel("Pull All to Start VC")
+                        .setStyle("SECONDARY"),
+                    new MessageButton()
+                        .setCustomId(`GAME_HOST_VOICE_DEPLOY_TEAMS-${gameIdString}`)
+                        .setLabel(deployButtonLabel)
+                        .setStyle("SUCCESS")
+                        .setDisabled(deployDisabled)
+                );
+            
+            await buttonInteraction.reply({
+                content: `Voice Controls for Game ${gameId}:`,
+                components: [voiceControlRow],
+                ephemeral: true
+            });
+            logger.info(`[GAME_BTN] Host ${userId} accessed voice controls for game ${gameId}`);
+            break;
+
+        case "HOST_ASSIGN_PLAYER_MODAL":
+            if (!isHost) {
+                await buttonInteraction.reply({ content: "Only the host can assign players.", ephemeral: true });
+                return;
+            }
+            if (gameDetails.status === 'setup' || !gameDetails.num_teams || gameDetails.num_teams === 0) {
+                await buttonInteraction.reply({ content: "Teams need to be configured first before assigning players. Use 'Setup Teams'.", ephemeral: true });
+                return;
+            }
+
+            const assignModal = new Modal()
+                .setCustomId(`GAME_MODAL_SUBMIT_ASSIGN_PLAYER-${gameIdString}`)
+                .setTitle(`Assign Player - Game ${gameId}`);
+
+            const playerInput = new TextInputComponent()
+                .setCustomId('playerToAssign')
+                .setLabel("User ID or @Mention of Player")
+                .setPlaceholder("Enter User ID or mention the player")
+                .setStyle('SHORT')
+                .setRequired(true);
+
+            const teamInput = new TextInputComponent()
+                .setCustomId('teamIdToAssign')
+                .setLabel(`Team Number (1-${gameDetails.num_teams}, or 0 to unassign)`)
+                .setPlaceholder(`Enter a team number, or 0`)
+                .setStyle('SHORT')
+                .setRequired(true);
+            
+            assignModal.addComponents(
+                new MessageActionRow().addComponents(playerInput),
+                new MessageActionRow().addComponents(teamInput)
+            );
+
+            await buttonInteraction.showModal(assignModal);
+            logger.info(`[GAME_BTN] Host ${userId} opened assign player modal for game ${gameId}`);
+            break;
+
         case "HOST_VOICE_DEPLOY_TEAMS":
-             if (!isHost) {
+            if (!isHost) {
                 await buttonInteraction.reply({ content: "Only the host can do this.", ephemeral: true });
                 return;
             }
@@ -516,7 +599,7 @@ async function handleGameSetupTeamsModal(modalInteraction, logger, localApi) {
             return;
         }
 
-        await localApi.put("game_joining_master", { // Changed from patch to put
+        await localApi.put("game_joining_master", { 
             game_id: gameId,
             num_teams: numTeams,
             max_players_per_team: playersPerTeam,
@@ -540,6 +623,9 @@ async function handleGameSetupTeamsModal(modalInteraction, logger, localApi) {
                     if (comp.customId === `GAME_HOST_SETUP_TEAMS-${gameIdString}`) {
                         comp.setLabel('Reconfigure Teams');
                     }
+                    if (comp.customId === `GAME_HOST_VOICE_CONTROL-${gameIdString}`) {
+                        comp.setDisabled(false);
+                    }
                 });
             });
             await originalMessage.edit({ embeds: [updatedEmbed], components: currentComponents });
@@ -553,7 +639,7 @@ async function handleGameSetupTeamsModal(modalInteraction, logger, localApi) {
 
 // NEW: Placeholder for Assign Player Modal Handler
 async function handleAssignPlayerModal(modalInteraction, logger, localApi) {
-    const customId = modalInteraction.customId; // GAME_MODAL_ASSIGN_PLAYER-<gameId>
+    const customId = modalInteraction.customId; // GAME_MODAL_SUBMIT_ASSIGN_PLAYER-<gameId>
     const gameIdString = customId.split('-')[1];
     const gameId = Number(gameIdString);
     const hostId = modalInteraction.user.id;
@@ -561,8 +647,8 @@ async function handleAssignPlayerModal(modalInteraction, logger, localApi) {
     try {
         await modalInteraction.deferReply({ ephemeral: true });
 
-        const playerIdToAssign = modalInteraction.fields.getTextInputValue('playerId');
-        const teamIdToAssignTo = parseInt(modalInteraction.fields.getTextInputValue('teamId'), 10);
+        const playerIdToAssign = modalInteraction.fields.getTextInputValue('playerToAssign');
+        const teamIdToAssignTo = parseInt(modalInteraction.fields.getTextInputValue('teamIdToAssign'), 10);
 
         if (!playerIdToAssign || isNaN(teamIdToAssignTo) || teamIdToAssignTo <= 0) {
             await modalInteraction.editReply({ content: "Invalid player ID or team ID provided." });
