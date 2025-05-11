@@ -226,12 +226,18 @@ async function onButtonClick(interaction) {
                         const sessionToClose = sessions[i];
                         logger.info(`[BTN_FIX_ALL] Closing ghost session ${sessionToClose.voice_state_id} for user ${userId} (connected at ${sessionToClose.connect_time}). Setting disconnect_time to ${currentTime}.`);
                         try {
-                            await api.patch(`voice_tracking/${sessionToClose.voice_state_id}`, {
-                                disconnect_time: currentTime
+                            await api.put(`voice_tracking/${sessionToClose.voice_state_id}`, {
+                                disconnect_time: currentTime,
+                                user_id: sessionToClose.user_id,
+                                discord_server_id: sessionToClose.discord_server_id,
+                                channel_id: sessionToClose.channel_id,
+                                connect_time: sessionToClose.connect_time,
+                                selfmute: sessionToClose.selfmute,
+                                selfdeaf: sessionToClose.selfdeaf,
                             });
                             fixedSessionsCount++;
-                        } catch (patchError) {
-                            logger.error(`[BTN_FIX_ALL] Error patching session ${sessionToClose.voice_state_id} for user ${userId}: ${patchError.message || patchError}`);
+                        } catch (putError) {
+                            logger.error(`[BTN_FIX_ALL] Error PUTTING session ${sessionToClose.voice_state_id} for user ${userId}: ${putError.message || putError}`);
                         }
                     }
                 }
