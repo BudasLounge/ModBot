@@ -86,6 +86,20 @@ async function generateVoiceLeaderboard(button, title, options) {
         }
         
         const duration = Math.max(0, Math.floor(effectiveDisconnectTime - effectiveConnectTime));
+
+        // ADDED LOGGING BLOCK START
+        if (timeFilterDays === 30 && duration > 0 && track.user_id) { // Log only for 30-day filter and when duration is positive
+            const currentTotalForUser = totalTimeByUser.get(track.user_id) || 0;
+            logger.info(`[GVL_30D_TRACE] User ${track.user_id} segment:`);
+            logger.info(`  Raw: conn=${track.connect_time}, disc=${track.disconnect_time}`);
+            logger.info(`  Parsed: connectTime=${connectTime}, disconnectTime=${disconnectTime}`);
+            logger.info(`  FilterWin: filterStartDate=${filterStartDate}, currentTime=${currentTime}`);
+            logger.info(`  EffectiveSeg: effConn=${effectiveConnectTime}, effDisc=${effectiveDisconnectTime}`);
+            logger.info(`  SegmentDur: ${duration}`);
+            logger.info(`  UserTotal: old=${currentTotalForUser}, new=${currentTotalForUser + duration}`);
+        }
+        // ADDED LOGGING BLOCK END
+
         if (duration > 0 && track.user_id) {
             totalTimeByUser.set(track.user_id, (totalTimeByUser.get(track.user_id) || 0) + duration);
         }
