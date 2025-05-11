@@ -39,17 +39,23 @@ module.exports = {
             const rawDisconnectTime = parseInt(disconnect_time, 10);
             
             if (isNaN(connectTime)) {
-                this.logger.warn(`Invalid connect_time for track: ${JSON.stringify(track)}`);
+                this.logger.warn(`[voicetime command] Invalid connect_time for track: ${JSON.stringify(track)}`);
                 continue;
             }
 
             const effectiveDisconnectTime = (rawDisconnectTime === 0 || isNaN(rawDisconnectTime)) ? currentTime : rawDisconnectTime;
             const duration = Math.max(0, Math.floor(effectiveDisconnectTime - connectTime));
 
+            if (user_id && duration > 0) {
+                // Added detailed logging for each track segment contributing to a user's total time
+                const currentTotalForUser = totalTime.get(user_id) || 0;
+                this.logger.info(`[voicetime cmd] User ${user_id} segment: raw_conn=${track.connect_time}, raw_disc=${track.disconnect_time} | parsed_conn=${connectTime}, eff_disc=${effectiveDisconnectTime} | seg_dur=${duration} | old_total=${currentTotalForUser} | new_total=${currentTotalForUser + duration}`);
+            }
+
             if (user_id) {
                 totalTime.set(user_id, (totalTime.get(user_id) || 0) + duration);
             } else {
-                this.logger.warn(`Voice tracking entry missing user_id: ${JSON.stringify(track)}`);
+                this.logger.warn(`[voicetime command] Voice tracking entry missing user_id: ${JSON.stringify(track)}`);
             }
         }
         
