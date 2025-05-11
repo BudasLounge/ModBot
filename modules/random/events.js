@@ -1,6 +1,6 @@
 var ApiClient = require("../../core/js/APIClient.js");
 var api = new ApiClient(); // Module-scoped API client
-const { MessageActionRow, MessageButton, MessageEmbed } = require('discord.js');
+const { MessageActionRow, MessageButton, MessageEmbed, Modal, TextInputComponent } = require('discord.js'); // Added Modal, TextInputComponent
 
 // Module-scoped logger, initialized in register_handlers
 var logger;
@@ -87,19 +87,6 @@ async function generateVoiceLeaderboard(button, title, options) {
         
         const duration = Math.max(0, Math.floor(effectiveDisconnectTime - effectiveConnectTime));
 
-        // ADDED LOGGING BLOCK START
-        if (timeFilterDays === 30 && duration > 0 && track.user_id) { // Log only for 30-day filter and when duration is positive
-            const currentTotalForUser = totalTimeByUser.get(track.user_id) || 0;
-            logger.info(`[GVL_30D_TRACE] User ${track.user_id} segment:`);
-            logger.info(`  Raw: conn=${track.connect_time}, disc=${track.disconnect_time}`);
-            logger.info(`  Parsed: connectTime=${connectTime}, disconnectTime=${disconnectTime}`);
-            logger.info(`  FilterWin: filterStartDate=${filterStartDate}, currentTime=${currentTime}`);
-            logger.info(`  EffectiveSeg: effConn=${effectiveConnectTime}, effDisc=${effectiveDisconnectTime}`);
-            logger.info(`  SegmentDur: ${duration}`);
-            logger.info(`  UserTotal: old=${currentTotalForUser}, new=${currentTotalForUser + duration}`);
-        }
-        // ADDED LOGGING BLOCK END
-
         if (duration > 0 && track.user_id) {
             totalTimeByUser.set(track.user_id, (totalTimeByUser.get(track.user_id) || 0) + duration);
         }
@@ -150,403 +137,380 @@ async function generateVoiceLeaderboard(button, title, options) {
     logger.info(`Sent Voice Leaderboard: ${title}`);
 }
 
-
-async function onButtonClick(interaction) {
-    if (!interaction.isButton()) return;
-    const button = interaction; // Alias for clarity, as original code uses 'button'
-    const guildId = button.guild.id; // Extract guildId early for new handlers
-
-    // Handle new dynamic custom IDs first
-    if (button.customId.startsWith("VOICE_CLEANUP_CONFIRM_")) {
-        await button.deferUpdate();
-        const targetGuildId = button.customId.split('_').pop();
-        if (targetGuildId !== guildId) {
-            logger.warn(`[BTN_CLEANUP_CONFIRM] Guild ID mismatch: button.customId=${button.customId}, interaction.guild.id=${guildId}`);
-            await button.editReply({ content: "Error: Guild ID mismatch. Cannot perform cleanup.", components: [] });
-            return;
-        }
-        try {
-            logger.info(`[BTN_CLEANUP_CONFIRM] Attempting to delete all voice data for guild ${targetGuildId}. Fetching records...`);
-            
-            const recordsToDeleteResp = await api.get("voice_tracking", {
-                discord_server_id: targetGuildId,
-                _limit: 10000000 // Fetch all records for the server
-            });
-
-            const records = recordsToDeleteResp.voice_trackings || [];
-            const recordsWithId = records.filter(session => session.voice_state_id);
-            const recordsWithoutIdCount = records.length - recordsWithId.length;
-
-            logger.info(`[BTN_CLEANUP_CONFIRM] Found ${records.length} total voice tracking records for guild ${targetGuildId}.`);
-            logger.info(`[BTN_CLEANUP_CONFIRM] ${recordsWithId.length} records have a voice_state_id and will be targeted for deletion.`);
-            if (recordsWithoutIdCount > 0) {
-                logger.warn(`[BTN_CLEANUP_CONFIRM] ${recordsWithoutIdCount} records were found without a voice_state_id and will be skipped.`);
-            }
-
-            if (recordsWithId.length === 0) {
-                let noRecordsMessage = "No voice tracking data with a deletable ID found for this server.";
-                if (recordsWithoutIdCount > 0) {
-                    noRecordsMessage += ` ${recordsWithoutIdCount} record(s) were found but lacked a voice_state_id.`;
-                }
-                await button.editReply({ content: noRecordsMessage, components: [] });
-                return;
-            }
-
-            // Inform user before starting deletions
-            await button.editReply({ content: `Found ${recordsWithId.length} voice session record(s) for guild ${targetGuildId}. Attempting to delete them in batches... (this may take a moment)`, components: [] });
-
-            let deletedCount = 0;
-            let failedCount = 0;
-            const chunkSize = 100;
-
-            for (let i = 0; i < recordsWithId.length; i += chunkSize) {
-                const chunk = recordsWithId.slice(i, i + chunkSize);
-                logger.info(`[BTN_CLEANUP_CONFIRM] Processing chunk ${Math.floor(i / chunkSize) + 1}/${Math.ceil(recordsWithId.length / chunkSize)} with ${chunk.length} records for guild ${targetGuildId}.`);
-
-                const deletionPromises = chunk.map(session => {
-                    logger.info(`[BTN_CLEANUP_CONFIRM] Preparing to delete session ${session.voice_state_id} for guild ${targetGuildId}`);
-                    return api.delete(`voice_tracking`, {
-                        voice_state_id: parseInt(session.voice_state_id, 10),
-                        discord_server_id: targetGuildId,
-                    }).then(response => ({
-                        status: 'fulfilled',
-                        voice_state_id: session.voice_state_id,
-                        response: response
-                    })).catch(error => ({
-                        status: 'rejected',
-                        voice_state_id: session.voice_state_id,
-                        reason: error
-                    }));
-                });
-
-                const results = await Promise.allSettled(deletionPromises);
-
-                results.forEach(result => {
-                    if (result.status === 'fulfilled') {
-                        logger.info(`[BTN_CLEANUP_CONFIRM] Successfully deleted session ${result.value.voice_state_id} for guild ${targetGuildId}. Response: ${JSON.stringify(result.value.response)}`);
-                        deletedCount++;
-                    } else {
-                        failedCount++;
-                        logger.error(`[BTN_CLEANUP_CONFIRM] Failed to delete session ${result.reason.voice_state_id || 'unknown ID'} for guild ${targetGuildId}: ${result.reason.reason ? (result.reason.reason.message || result.reason.reason) : result.reason}`);
-                    }
-                });
-            }
-
-
-            let replyMessage = `Voice data cleanup for guild ${targetGuildId} process finished. `;
-            if (deletedCount > 0) {
-                replyMessage += `Successfully deleted ${deletedCount} record(s). `;
-            }
-            if (failedCount > 0) {
-                replyMessage += `Failed to delete ${failedCount} record(s). `;
-            }
-            if (deletedCount === 0 && failedCount === 0 && recordsWithId.length > 0) {
-                replyMessage = `Attempted to delete ${recordsWithId.length} record(s), but none were confirmed deleted and no errors were reported. This is an unusual state. `;
-            }
-            if (recordsWithoutIdCount > 0) {
-                replyMessage += `${recordsWithoutIdCount} record(s) were skipped due to missing voice_state_id. `;
-            }
-            if (deletedCount === 0 && failedCount === 0 && recordsWithId.length === 0 && recordsWithoutIdCount === 0) {
-                 replyMessage = "No voice tracking data found for this server to delete.";
-            }
-            replyMessage += "Please check logs for more details if needed.";
-
-            logger.info(`[BTN_CLEANUP_CONFIRM] ${replyMessage}`);
-            await button.editReply({ content: replyMessage, components: [] });
-
-        } catch (error) {
-            logger.error(`[BTN_CLEANUP_CONFIRM] API error during voice data cleanup for guild ${targetGuildId}: ${error.message || error}`);
-            let errorMessage = "An error occurred while trying to delete voice data. ";
-            if (error.response && error.response.data) {
-                errorMessage += `Server responded with: ${JSON.stringify(error.response.data)}. `;
-            }
-            errorMessage += "Please check the logs.";
-            await button.editReply({ content: errorMessage, components: [] });
-        }
-        return;
-    } else if (button.customId.startsWith("VOICE_CLEANUP_CANCEL_")) {
-        await button.deferUpdate();
-        logger.info(`[BTN_CLEANUP_CANCEL] Voice data cleanup cancelled for guild ${guildId}`);
-        await button.editReply({ content: "Voice data cleanup has been cancelled.", components: [] });
-        return;
-    } else if (button.customId.startsWith("VOICE_FIX_ALL_")) {
-        await button.deferUpdate();
-        const targetGuildId = button.customId.split('_').pop();
-        if (targetGuildId !== guildId) {
-            logger.warn(`[BTN_FIX_ALL] Guild ID mismatch: button.customId=${button.customId}, interaction.guild.id=${guildId}`);
-            await button.editReply({ content: "Error: Guild ID mismatch. Cannot perform fix.", components: [] });
-            return;
-        }
-        logger.info(`[BTN_FIX_ALL] Attempting to fix ghost sessions for guild ${targetGuildId}`);
-        try {
-            const activeSessionsResp = await api.get("voice_tracking", {
-                discord_server_id: targetGuildId,
-                disconnect_time: 0,
-                _limit: 500 // Fetch a large number to ensure all active sessions are retrieved
-            });
-
-            if (!activeSessionsResp || !activeSessionsResp.voice_trackings || activeSessionsResp.voice_trackings.length === 0) {
-                await button.editReply({ content: "No active voice sessions found to diagnose or fix.", components: [] });
-                return;
-            }
-
-            const sessionsByUser = new Map();
-            for (const session of activeSessionsResp.voice_trackings) {
-                if (!sessionsByUser.has(session.user_id)) {
-                    sessionsByUser.set(session.user_id, []);
-                }
-                sessionsByUser.get(session.user_id).push(session);
-            }
-
-            let fixedSessionsCount = 0;
-            let usersAffectedCount = 0;
-            const currentTime = Math.floor(Date.now() / 1000);
-
-            for (const [userId, sessions] of sessionsByUser.entries()) {
-                if (sessions.length > 1) {
-                    usersAffectedCount++;
-                    // Sort sessions by connect_time descending (most recent first)
-                    sessions.sort((a, b) => parseInt(b.connect_time, 10) - parseInt(a.connect_time, 10));
-                    
-                    const sessionToKeep = sessions[0]; // Keep the most recent one
-                    logger.info(`[BTN_FIX_ALL] User ${userId} has ${sessions.length} active sessions. Keeping ${sessionToKeep.voice_state_id} (connected at ${sessionToKeep.connect_time}).`);
-
-                    for (let i = 1; i < sessions.length; i++) {
-                        const sessionToClose = sessions[i];
-                        const originalConnectTime = parseInt(sessionToClose.connect_time, 10);
-                        const newDisconnectTime = originalConnectTime + 3600; // Add 1 hour
-
-                        logger.info(`[BTN_FIX_ALL] Closing ghost session ${sessionToClose.voice_state_id} for user ${userId} (connected at ${originalConnectTime}). Setting disconnect_time to ${newDisconnectTime}.`);
-                        try {
-                            await api.put(`voice_tracking`, {
-                                voice_state_id: parseInt(sessionToClose.voice_state_id, 10),
-                                disconnect_time: newDisconnectTime,
-                                user_id: sessionToClose.user_id,
-                                discord_server_id: sessionToClose.discord_server_id,
-                                channel_id: sessionToClose.channel_id,
-                                connect_time: originalConnectTime, // Keep original connect_time
-                                selfmute: sessionToClose.selfmute,
-                                selfdeaf: sessionToClose.selfdeaf,
-                            });
-                            fixedSessionsCount++;
-                        } catch (putError) {
-                            logger.error(`[BTN_FIX_ALL] Error PUTTING session ${sessionToClose.voice_state_id} for user ${userId}: ${putError.message || putError}`);
-                        }
-                    }
-                }
-            }
-
-            if (fixedSessionsCount > 0) {
-                await button.editReply({ content: `Attempted to fix ${fixedSessionsCount} ghost session(s) for ${usersAffectedCount} user(s). Please run the diagnose command again to verify.`, components: [] });
-            } else if (usersAffectedCount > 0 && fixedSessionsCount === 0) {
-                await button.editReply({ content: `Found ${usersAffectedCount} user(s) with multiple sessions, but no sessions were fixed. This might indicate an issue with the patching process or the sessions were already fixed. Check logs.`, components: [] });
-            } else {
-                await button.editReply({ content: "No users with multiple active sessions found. Everything seems to be in order.", components: [] });
-            }
-
-        } catch (error) {
-            logger.error(`[BTN_FIX_ALL] Error fixing ghost sessions for guild ${targetGuildId}: ${error.message || error}`);
-            await button.editReply({ content: "An error occurred while trying to fix ghost sessions. Please check the logs.", components: [] });
-        }
+// NEW: Handler for GAME_ button interactions
+async function handleGameButton(buttonInteraction, logger, localApi) {
+    const customId = buttonInteraction.customId;
+    const parts = customId.split('-'); 
+    if (parts.length < 2) {
+        logger.warn(`[GAME_BTN] Invalid customId format: ${customId}`);
+        await buttonInteraction.reply({ content: "Invalid button action.", ephemeral: true });
         return;
     }
 
+    const fullAction = parts[0]; 
+    const gameId = parts[1];     
+    const userId = buttonInteraction.user.id;
 
-    if ((button.customId.substr(0, 5) === "VOICE")) {
-        const commandName = button.customId.substr(5);
-        switch (commandName) {
-            case "bottom":
-                await generateVoiceLeaderboard(button, "Voice Channel Leaderboard (Bottom 10)", { sortOrder: 'bottom' });
-                break;
-            case "top":
-                await generateVoiceLeaderboard(button, "Voice Channel Leaderboard (Top 10)", { sortOrder: 'top' });
-                break;
-            case "muted":
-                await generateVoiceLeaderboard(button, "Voice Channel Leaderboard (Top 10 Muted)", { sortOrder: 'top', mutedFilter: true });
-                break;
-            case "non-muted":
-                await generateVoiceLeaderboard(button, "Voice Channel Leaderboard (Top 10 Non-Muted)", { sortOrder: 'top', mutedFilter: false });
-                break;
-            case "30days":
-                await generateVoiceLeaderboard(button, "Voice Channel Leaderboard (Top Talkers - Last 30 Days)", { sortOrder: 'top', timeFilterDays: 30 });
-                break;
-            case "7days":
-                await generateVoiceLeaderboard(button, "Voice Channel Leaderboard (Top Talkers - Last 7 Days)", { sortOrder: 'top', timeFilterDays: 7 });
-                break;
-            case "channel": // Top Talkers - By Channel
-                await button.deferUpdate();
-                logger.info("Handling VOICEchannel: Top Talkers by Channel");
-                try {
-                    const respVoice = await api.get("voice_tracking", {
-                        discord_server_id: button.guild.id,
-                    });
+    const actionPrefix = "GAME_";
+    if (!fullAction.startsWith(actionPrefix)) {
+        logger.warn(`[GAME_BTN] Invalid action prefix: ${fullAction}`);
+        await buttonInteraction.reply({ content: "Invalid button action.", ephemeral: true });
+        return;
+    }
+    const actionKey = fullAction.substring(actionPrefix.length);
 
-                    if (!respVoice.voice_trackings || respVoice.voice_trackings.length === 0) {
-                        await button.editReply({ content: "There is no voice data available yet.", embeds: [], components: [] });
-                        return;
-                    }
-
-                    const totalTime = new Map(); // Key: "username, channel: channelName", Value: seconds
-                    const currentTime = Math.floor(Date.now() / 1000);
-
-                    for (const track of respVoice.voice_trackings) {
-                        const channel = button.guild.channels.cache.get(track.channel_id);
-                        if (!channel) continue;
-
-                        let member;
-                        try {
-                            member = await button.guild.members.fetch(track.user_id);
-                        } catch (err) {
-                            logger.warn(`Could not fetch member ${track.user_id} for VOICEchannel: ${err.message}`);
-                            continue; 
-                        }
-                        if(!member) continue;
-
-                        const usernameChannelKey = `${member.displayName}, channel: ${channel.name}`;
-                        const connectTime = parseInt(track.connect_time, 10);
-                        let disconnectTime = parseInt(track.disconnect_time, 10);
-                        if (disconnectTime === 0 || isNaN(disconnectTime)) {
-                            disconnectTime = currentTime;
-                        }
-                        if (isNaN(connectTime)) continue;
-
-                        const duration = Math.max(0, Math.floor(disconnectTime - connectTime));
-                        if (duration > 0) {
-                            totalTime.set(usernameChannelKey, (totalTime.get(usernameChannelKey) || 0) + duration);
-                        }
-                    }
-
-                    if (totalTime.size === 0) {
-                         await button.editReply({ content: "No processed voice data for users by channel.", embeds: [], components:[] });
-                        return;
-                    }
-                    
-                    const sortedTotalTime = [...totalTime.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10);
-                    const listEmbed = new MessageEmbed()
-                        .setColor("#c586b6")
-                        .setTitle("Voice Channel Leaderboard (Top 10 User by Channel)");
-
-                    for (let i = 0; i < sortedTotalTime.length; i++) {
-                        const [userChannelKey, time] = sortedTotalTime[i];
-                        listEmbed.addField(`${i + 1}. ${userChannelKey}`, formatDuration(time));
-                    }
-                    
-                    const updatedComponents = button.message.components.map(row => {
-                        const newRow = new MessageActionRow();
-                        row.components.forEach(comp => {
-                            const newComp = new MessageButton(comp);
-                            newComp.setDisabled(comp.customId === button.customId);
-                            newRow.addComponents(newComp);
-                        });
-                        return newRow;
-                    });
-
-                    await button.editReply({ embeds: [listEmbed], components: updatedComponents });
-                    logger.info("Sent Voice Leaderboard (User by Channel)!");
-                } catch (error) {
-                    logger.error(`Error in VOICEchannel handler: ${error.message || error}`);
-                    await button.editReply({ content: "An error occurred while processing channel data.", embeds: [], components: [] });
-                }
-                break;
-
-            case "channelUse": // Top Channels by use
-                await button.deferUpdate();
-                logger.info("Handling VOICEchannelUse: Top Channels by Use");
-                try {
-                    const respVoice = await api.get("voice_tracking", {
-                        discord_server_id: button.guild.id,
-                    });
-
-                    if (!respVoice.voice_trackings || respVoice.voice_trackings.length === 0) {
-                        await button.editReply({ content: "There is no voice data available yet.", embeds: [], components: [] });
-                        return;
-                    }
-
-                    const totalTimeByChannel = new Map(); // Key: channelName, Value: seconds
-                    const currentTime = Math.floor(Date.now() / 1000);
-
-                    for (const track of respVoice.voice_trackings) {
-                        const channel = button.guild.channels.cache.get(track.channel_id);
-                        if (!channel) continue;
-
-                        const connectTime = parseInt(track.connect_time, 10);
-                        let disconnectTime = parseInt(track.disconnect_time, 10);
-                        if (disconnectTime === 0 || isNaN(disconnectTime)) {
-                            disconnectTime = currentTime;
-                        }
-                        if (isNaN(connectTime)) continue;
-                        
-                        const duration = Math.max(0, Math.floor(disconnectTime - connectTime));
-                        if (duration > 0) {
-                            totalTimeByChannel.set(channel.name, (totalTimeByChannel.get(channel.name) || 0) + duration);
-                        }
-                    }
-                    
-                    if (totalTimeByChannel.size === 0) {
-                        await button.editReply({ content: "No processed voice data for channel usage.", embeds: [], components: [] });
-                        return;
-                    }
-
-                    const sortedTotalTime = [...totalTimeByChannel.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10);
-                    const listEmbed = new MessageEmbed()
-                        .setColor("#c586b6")
-                        .setTitle("Voice Channel Leaderboard (Top 10 Channels by Use)");
-
-                    for (let i = 0; i < sortedTotalTime.length; i++) {
-                        const [channelName, time] = sortedTotalTime[i];
-                        listEmbed.addField(`${i + 1}. ${channelName}`, formatDuration(time));
-                    }
-
-                    const updatedComponents = button.message.components.map(row => {
-                        const newRow = new MessageActionRow();
-                        row.components.forEach(comp => {
-                            const newComp = new MessageButton(comp);
-                            newComp.setDisabled(comp.customId === button.customId);
-                            newRow.addComponents(newComp);
-                        });
-                        return newRow;
-                    });
-                    await button.editReply({ embeds: [listEmbed], components: updatedComponents });
-                    logger.info("Sent Voice Leaderboard (Channels by Use)!");
-                } catch (error) {
-                    logger.error(`Error in VOICEchannelUse handler: ${error.message || error}`);
-                    await button.editReply({ content: "An error occurred while processing channel usage data.", embeds: [], components: [] });
-                }
-                break;
-            default:
-                logger.warn(`Unknown VOICE command: ${commandName}`);
-                await button.reply({ content: "Unknown action.", ephemeral: true });
-                break;
+    let gameDetails;
+    try {
+        const resp = await localApi.get("game_joining_master", { game_id: gameId });
+        if (resp && resp.game_joining_masters && resp.game_joining_masters[0]) {
+            gameDetails = resp.game_joining_masters[0];
+        } else {
+            logger.warn(`[GAME_BTN] Game not found: ${gameId} for action ${actionKey}. Button message will be updated.`);
+            await buttonInteraction.update({ content: "This game session no longer exists or could not be found.", embeds: [], components: [] });
+            return;
         }
-    } else if ((button.customId.substr(0, 4) === "GAME")) {
-        // ... existing GAME logic from the file ...
-        // This section is long and assumed to be mostly functional as per original prompt focus on voicetime
-        // For brevity, I'm not reproducing the entire GAME block here but it should be preserved.
-        // Ensure logger and api are used correctly if they were not before.
-        // Example:
-        button.customId = button.customId.substr(4);
-        var operation = button.customId.substr(0,button.customId.indexOf('-'));
-        var hostId = button.customId.substr(button.customId.indexOf('-')+1);
-        // ... rest of GAME logic
-        // Make sure to call await button.deferUpdate() or await button.deferReply() as appropriate
-        // And use await button.editReply() or await button.reply()
-        // Example of a small part of GAME logic to show it's preserved:
-        switch(operation){
-            case "join":
-                await button.deferReply({ ephemeral: true });
-                var respGame;
-                try{
-                    respGame = await api.get("game_joining_master", { host_id:hostId });
-                } catch(error){
-                    logger.error(`Error fetching game master for host ${hostId} on JOIN: ${error.message || error}`);
-                    await button.editReply({ content: "Could not find an active game to join." });
+    } catch (error) {
+        logger.error(`[GAME_BTN] API error fetching game ${gameId}: ${error.message || error}`);
+        await buttonInteraction.reply({ content: "Error fetching game details. Please try again.", ephemeral: true });
+        return;
+    }
+
+    const isHost = (gameDetails.host_id === userId);
+
+    switch (actionKey) {
+        case "JOIN":
+            try {
+                await buttonInteraction.deferReply({ ephemeral: true });
+                if (gameDetails.status !== 'setup' && gameDetails.status !== 'lobby_configured') {
+                    await buttonInteraction.editReply({ content: "This game is not currently accepting new players." });
                     return;
                 }
-                // ... rest of join logic ...
-                break;
-            // ... other GAME cases ...
+                await localApi.post("game_joining_player", { game_id: gameId, player_id: userId });
+                await buttonInteraction.editReply({ content: `You have joined game ${gameId}!` });
+                logger.info(`[GAME_BTN] Player ${userId} joined game ${gameId}`);
+            } catch (error) {
+                logger.error(`[GAME_BTN] Error joining game ${gameId} for ${userId}: ${error.message || error}`);
+                if (!buttonInteraction.replied && !buttonInteraction.deferred) {
+                    await buttonInteraction.reply({ content: "Could not join the game due to an error.", ephemeral: true });
+                } else {
+                    await buttonInteraction.editReply({ content: "Could not join the game due to an error." });
+                }
+            }
+            break;
+
+        case "LEAVE":
+            try {
+                await buttonInteraction.deferReply({ ephemeral: true });
+                const playerResp = await localApi.get("game_joining_player", { game_id: gameId, player_id: userId, _limit: 1 });
+                if (playerResp && playerResp.game_joining_players && playerResp.game_joining_players[0]) {
+                    const gamePlayerId = playerResp.game_joining_players[0].game_player_id;
+                    await localApi.delete("game_joining_player", { game_player_id: Number(gamePlayerId) });
+                    await buttonInteraction.editReply({ content: `You have left game ${gameId}.` });
+                    logger.info(`[GAME_BTN] Player ${userId} left game ${gameId}`);
+                } else {
+                    await buttonInteraction.editReply({ content: "You are not currently in this game or could not be removed." });
+                }
+            } catch (error) {
+                logger.error(`[GAME_BTN] Error leaving game ${gameId} for ${userId}: ${error.message || error}`);
+                if (!buttonInteraction.replied && !buttonInteraction.deferred) {
+                    await buttonInteraction.reply({ content: "Could not leave the game due to an error.", ephemeral: true });
+                } else {
+                    await buttonInteraction.editReply({ content: "Could not leave the game due to an error." });
+                }
+            }
+            break;
+
+        case "HOST_SETUP_TEAMS":
+            if (!isHost) {
+                await buttonInteraction.reply({ content: "Only the host can set up teams.", ephemeral: true });
+                return;
+            }
+            const modal = new Modal()
+                .setCustomId(`GAME_MODAL_SETUP_TEAMS-${gameId}`)
+                .setTitle(`Team Setup for Game ID: ${gameId}`);
+            
+            const numTeamsInput = new TextInputComponent()
+                .setCustomId('numTeams')
+                .setLabel("Number of Teams (e.g., 2, 3)")
+                .setStyle('SHORT')
+                .setRequired(true)
+                .setPlaceholder("Enter a number > 1");
+
+            const playersPerTeamInput = new TextInputComponent()
+                .setCustomId('playersPerTeam')
+                .setLabel("Max Players Per Team (0 for unlimited)")
+                .setStyle('SHORT')
+                .setRequired(true)
+                .setValue(gameDetails.max_players_per_team !== undefined ? String(gameDetails.max_players_per_team) : '0')
+                .setPlaceholder("Enter a number >= 0");
+            
+            const currentNumTeams = gameDetails.num_teams !== undefined ? String(gameDetails.num_teams) : '2';
+            if (currentNumTeams !== '0') {
+                 numTeamsInput.setValue(currentNumTeams);
+            }
+
+            modal.addComponents(
+                new MessageActionRow().addComponents(numTeamsInput),
+                new MessageActionRow().addComponents(playersPerTeamInput)
+            );
+            await buttonInteraction.showModal(modal);
+            logger.info(`[GAME_BTN] Host ${userId} initiated team setup for game ${gameId}`);
+            break;
+
+        case "HOST_END":
+            if (!isHost) {
+                await buttonInteraction.reply({ content: "Only the host can end the game.", ephemeral: true });
+                return;
+            }
+            try {
+                await buttonInteraction.deferUpdate();
+                const playersListResp = await localApi.get("game_joining_player", {
+                    game_id: gameId,
+                    _limit: 500
+                });
+
+                let deletedPlayersCount = 0;
+                if (playersListResp && playersListResp.game_joining_players) {
+                    for (const player of playersListResp.game_joining_players) {
+                        try {
+                            if (player.game_player_id) {
+                                await localApi.delete("game_joining_player", {
+                                    game_player_id: Number(player.game_player_id)
+                                });
+                                deletedPlayersCount++;
+                            }
+                        } catch (playerDeleteError) {
+                            logger.error(`[GAME_BTN_END] Failed to delete player ${player.player_id} (game_player_id: ${player.game_player_id}) from game ${gameId}: ${playerDeleteError.message || playerDeleteError}`);
+                        }
+                    }
+                }
+                logger.info(`[GAME_BTN_END] Deleted ${deletedPlayersCount} players from game ${gameId}.`);
+
+                await localApi.delete("game_joining_master", { game_id: gameId });
+                logger.info(`[GAME_BTN_END] Deleted game master record for game ${gameId}.`);
+
+                const endedEmbed = new MessageEmbed()
+                    .setColor("#c586b6")
+                    .setTitle(`Game ID: ${gameId} - Ended`)
+                    .setDescription(`This game session was ended by the host (${buttonInteraction.user.tag}).`)
+                    .setTimestamp();
+                await buttonInteraction.editReply({ content: `Game ${gameId} has been ended.`, embeds: [endedEmbed], components: [] });
+                logger.info(`[GAME_BTN] Host ${userId} ended game ${gameId}. Players deleted: ${deletedPlayersCount}.`);
+
+            } catch (error) {
+                logger.error(`[GAME_BTN_END] Error ending game ${gameId} for host ${userId}: ${error.message || error}`);
+                await buttonInteraction.editReply({ content: "An error occurred while trying to end the game. Some cleanup may have failed. Please check logs.", components: [] });
+            }
+            break;
+
+        default:
+            logger.warn(`[GAME_BTN] Unknown game actionKey: ${actionKey} for game ${gameId}`);
+            await buttonInteraction.reply({ content: "Unknown game action.", ephemeral: true });
+    }
+}
+
+// NEW: Handler for GAME_MODAL_SETUP_TEAMS modal submission
+async function handleGameSetupTeamsModal(modalInteraction, logger, localApi) {
+    const customId = modalInteraction.customId;
+    const gameId = customId.split('-')[1];
+    const userId = modalInteraction.user.id;
+
+    try {
+        await modalInteraction.deferUpdate();
+
+        const numTeamsStr = modalInteraction.fields.getTextInputValue('numTeams');
+        const playersPerTeamStr = modalInteraction.fields.getTextInputValue('playersPerTeam');
+
+        const numTeams = parseInt(numTeamsStr, 10);
+        const playersPerTeam = parseInt(playersPerTeamStr, 10);
+
+        if (isNaN(numTeams) || numTeams <= 0) {
+            await modalInteraction.followUp({ content: "Invalid number of teams. Must be a number greater than 0.", ephemeral: true });
+            return;
         }
-        // End of GAME logic placeholder
+        if (isNaN(playersPerTeam) || playersPerTeam < 0) {
+            await modalInteraction.followUp({ content: "Invalid max players per team. Must be a number (0 for unlimited).", ephemeral: true });
+            return;
+        }
+
+        const gameResp = await localApi.get("game_joining_master", { game_id: gameId });
+        if (!gameResp || !gameResp.game_joining_masters || !gameResp.game_joining_masters[0]) {
+            logger.warn(`[GAME_MODAL] Game ${gameId} not found during modal submission.`);
+            await modalInteraction.followUp({ content: "Game not found. Cannot update team settings.", ephemeral: true});
+            return;
+        }
+        const gameDetails = gameResp.game_joining_masters[0];
+
+        if (gameDetails.host_id !== userId) {
+            logger.warn(`[GAME_MODAL] Non-host ${userId} tried to submit team setup for game ${gameId}`);
+            await modalInteraction.followUp({ content: "You are not the host of this game.", ephemeral: true });
+            return;
+        }
+
+        await localApi.put("game_joining_master", { // Changed from patch to put
+            game_id: gameId,
+            num_teams: numTeams,
+            max_players_per_team: playersPerTeam,
+            status: 'lobby_configured'
+        });
+        logger.info(`[GAME_MODAL] Host ${userId} configured teams for game ${gameId}: ${numTeams} teams, ${playersPerTeam} players/team.`);
+
+        const originalMessage = modalInteraction.message;
+        if (originalMessage) {
+            const updatedEmbed = new MessageEmbed(originalMessage.embeds[0])
+                .spliceFields(1, 1, { name: "Host Actions", value: `Teams: ${numTeams}, Max Players/Team: ${playersPerTeam === 0 ? 'Unlimited' : playersPerTeam}. Use 'Manage Players' to assign.`})
+                .setFooter({ text: "Team setup complete. 'Manage Players' is now available."});
+            
+            const currentComponents = originalMessage.components.map(row => new MessageActionRow(row));
+
+            currentComponents.forEach(row => {
+                row.components.forEach(comp => {
+                    if (comp.customId === `GAME_HOST_MANAGE_PLAYERS-${gameId}`) {
+                        comp.setDisabled(false);
+                    }
+                    if (comp.customId === `GAME_HOST_SETUP_TEAMS-${gameId}`) {
+                        comp.setLabel('Reconfigure Teams');
+                    }
+                });
+            });
+            await originalMessage.edit({ embeds: [updatedEmbed], components: currentComponents });
+        }
+
+    } catch (error) {
+        logger.error(`[GAME_MODAL] Error processing team setup for game ${gameId} by ${userId}: ${error.message || error}`);
+        await modalInteraction.followUp({ content: "An error occurred while setting up teams. Please try again.", ephemeral: true });
+    }
+}
+
+// Modified to handle different interaction types (buttons, modals)
+async function onInteractionCreate(interaction) {
+    if (interaction.isButton()) {
+        const buttonInteraction = interaction;
+        const guildId = buttonInteraction.guild ? buttonInteraction.guild.id : null; 
+
+        if (buttonInteraction.customId.startsWith("VOICE_CLEANUP_CONFIRM_")) {
+            await buttonInteraction.deferUpdate();
+            const targetGuildId = buttonInteraction.customId.split('_').pop();
+            if (targetGuildId !== guildId) {
+                logger.warn(`[BTN_CLEANUP_CONFIRM] Guild ID mismatch: button.customId=${buttonInteraction.customId}, interaction.guild.id=${guildId}`);
+                await buttonInteraction.editReply({ content: "Error: Guild ID mismatch. Cannot perform cleanup.", components: [] });
+                return;
+            }
+            try {
+                logger.info(`[BTN_CLEANUP_CONFIRM] Attempting to delete all voice data for guild ${targetGuildId}. Fetching records...`);
+                
+                const recordsToDeleteResp = await api.get("voice_tracking", {
+                    discord_server_id: targetGuildId,
+                    _limit: 10000000
+                });
+
+                const records = recordsToDeleteResp.voice_trackings || [];
+                const recordsWithId = records.filter(session => session.voice_state_id);
+                const recordsWithoutIdCount = records.length - recordsWithId.length;
+
+                logger.info(`[BTN_CLEANUP_CONFIRM] Found ${records.length} total voice tracking records for guild ${targetGuildId}.`);
+                logger.info(`[BTN_CLEANUP_CONFIRM] ${recordsWithId.length} records have a voice_state_id and will be targeted for deletion.`);
+                if (recordsWithoutIdCount > 0) { logger.warn(`[BTN_CLEANUP_CONFIRM] ${recordsWithoutIdCount} records are missing a voice_state_id and cannot be deleted by this process.`); }
+
+                if (recordsWithId.length === 0) {
+                    let noRecordsMessage = `No voice session records with an ID found to delete for guild ${targetGuildId}.`;
+                    if (recordsWithoutIdCount > 0) noRecordsMessage += ` ${recordsWithoutIdCount} records were found without an ID.`;
+                    await buttonInteraction.editReply({ content: noRecordsMessage, components: [] });
+                    return;
+                }
+                await buttonInteraction.editReply({ content: `Found ${recordsWithId.length} voice session record(s) for guild ${targetGuildId}. Attempting to delete them in batches... (this may take a moment)`, components: [] });
+
+                let deletedCount = 0;
+                let failedCount = 0;
+                const chunkSize = 100; 
+
+                for (let i = 0; i < recordsWithId.length; i += chunkSize) {
+                    const chunk = recordsWithId.slice(i, i + chunkSize);
+                    for (const record of chunk) {
+                        try {
+                            await api.delete("voice_tracking", { voice_state_id: record.voice_state_id });
+                            deletedCount++;
+                        } catch (delError) {
+                            failedCount++;
+                            logger.error(`[BTN_CLEANUP_CONFIRM] Failed to delete voice_state_id ${record.voice_state_id}: ${delError.message || delError}`);
+                        }
+                    }
+                }
+                let replyMessage = `Voice data cleanup for guild ${targetGuildId} process finished. `;
+                if (deletedCount > 0) replyMessage += `Successfully deleted ${deletedCount} record(s). `;
+                if (failedCount > 0) replyMessage += `${failedCount} record(s) failed to delete. `;
+                if (deletedCount === 0 && failedCount === 0 && recordsWithId.length > 0) replyMessage += "No records were deleted, though some were targeted. This might indicate an issue. ";
+                if (recordsWithoutIdCount > 0) replyMessage += `${recordsWithoutIdCount} record(s) were skipped as they lacked an ID. `;
+                if (deletedCount === 0 && failedCount === 0 && recordsWithId.length === 0 && recordsWithoutIdCount === 0) replyMessage = "No voice data found to cleanup. ";
+                replyMessage += "Please check logs for more details if needed.";
+
+                logger.info(`[BTN_CLEANUP_CONFIRM] ${replyMessage}`);
+                await buttonInteraction.editReply({ content: replyMessage, components: [] });
+
+            } catch (error) {
+                logger.error(`[BTN_CLEANUP_CONFIRM] API error during voice data cleanup for guild ${targetGuildId}: ${error.message || error}`);
+                let errorMessage = "An error occurred while trying to delete voice data. ";
+                if (error.response && error.response.data && typeof error.response.data === 'string') {
+                    errorMessage += `API Response: ${error.response.data.substring(0, 1000)}. `;
+                } else if (error.response && error.response.data) {
+                     errorMessage += "Check logs for API response details. ";
+                }
+                errorMessage += "Please check the logs.";
+                await buttonInteraction.editReply({ content: errorMessage, components: [] });
+            }
+            return;
+
+        } else if (buttonInteraction.customId.startsWith("VOICE_CLEANUP_CANCEL_")) {
+            await buttonInteraction.deferUpdate();
+            logger.info(`[BTN_CLEANUP_CANCEL] Voice data cleanup cancelled for guild ${guildId}`);
+            await buttonInteraction.editReply({ content: "Voice data cleanup has been cancelled.", components: [] });
+            return;
+
+        } else if (buttonInteraction.customId.startsWith("VOICE_FIX_ALL_")) {
+            logger.warn(`[BTN_FIX_ALL] VOICE_FIX_ALL button pressed by ${buttonInteraction.user.tag} in guild ${guildId} - Not Implemented.`);
+            await buttonInteraction.reply({ content: "This feature is not yet implemented.", ephemeral: true});
+            return;
+
+        } else if (buttonInteraction.customId.startsWith("GAME_")) {
+            await handleGameButton(buttonInteraction, logger, api);
+            return;
+
+        } else if (buttonInteraction.customId.startsWith("VOICE")) {
+            const commandName = buttonInteraction.customId.substring("VOICE".length);
+            switch (commandName) {
+                case "bottom":
+                    await generateVoiceLeaderboard(buttonInteraction, 'Least Voice Users (All Time)', { sortOrder: 'bottom' });
+                    break;
+                case "top":
+                    await generateVoiceLeaderboard(buttonInteraction, 'Top Voice Users (All Time)', { sortOrder: 'top' });
+                    break;
+                case "muted":
+                    await generateVoiceLeaderboard(buttonInteraction, 'Top Muted Voice Users (All Time)', { mutedFilter: true, sortOrder: 'top' });
+                    break;
+                case "non-muted":
+                    await generateVoiceLeaderboard(buttonInteraction, 'Top Non-Muted Voice Users (All Time)', { mutedFilter: false, sortOrder: 'top' });
+                    break;
+                case "30days":
+                    await generateVoiceLeaderboard(buttonInteraction, 'Top Voice Users (Last 30 Days)', { timeFilterDays: 30, sortOrder: 'top' });
+                    break;
+                case "7days":
+                    await generateVoiceLeaderboard(buttonInteraction, 'Top Voice Users (Last 7 Days)', { timeFilterDays: 7, sortOrder: 'top' });
+                    break;
+                default:
+                    logger.warn(`Unknown VOICE leaderboard command: ${commandName}`);
+                    if (!buttonInteraction.replied && !buttonInteraction.deferred) {
+                        await buttonInteraction.reply({ content: "Unknown voice leaderboard action.", ephemeral: true });
+                    }
+                    break;
+            }
+            return;
+        }
+
+    } else if (interaction.isModalSubmit()) {
+        const modalInteraction = interaction;
+        if (modalInteraction.customId.startsWith("GAME_MODAL_SETUP_TEAMS-")) {
+            await handleGameSetupTeamsModal(modalInteraction, logger, api);
+        }
     }
 }
 
@@ -563,7 +527,7 @@ async function userJoinsVoice(oldState, newState) {
     const newChannelId = newState.channelId;
     const currentTime = Math.floor(Date.now() / 1000);
     const isNewChannelAfk = newChannelId === newState.guild.afkChannelId;
-    const newMuteState = String(newState.selfMute); // Ensure consistent string comparison
+    const newMuteState = String(newState.selfMute);
 
     let sessionToPotentiallyKeepId = null;
 
@@ -571,41 +535,37 @@ async function userJoinsVoice(oldState, newState) {
         const openSessionsResp = await api.get("voice_tracking", {
             user_id: userId,
             discord_server_id: guildId,
-            disconnect_time: 0, // Only fetch currently open sessions
+            disconnect_time: 0,
         });
 
         if (openSessionsResp && openSessionsResp.voice_trackings && openSessionsResp.voice_trackings.length > 0) {
-            // First pass: identify if there's an existing session that exactly matches the new state.
-            // This session, if found, is the one we might keep. All others must be closed.
-            if (newChannelId && !isNewChannelAfk) { // Only look for a session to keep if the new state is valid & active
+            if (newChannelId && !isNewChannelAfk) {
                 for (const session of openSessionsResp.voice_trackings) {
                     if (session.channel_id === newChannelId && String(session.selfmute) === newMuteState) {
                         sessionToPotentiallyKeepId = session.voice_state_id;
                         logger.info(`[VSU] Identified session ${session.voice_state_id} for ${username} (${userId}) in ch ${newChannelId} (mute: ${newMuteState}) as potentially current.`);
-                        break; // Found the one to keep
+                        break;
                     }
                 }
             }
 
-            // Second pass: close sessions that are not the one to keep, or all if user is leaving/AFK.
             for (const session of openSessionsResp.voice_trackings) {
                 let closeReason = null;
 
                 if (session.voice_state_id === sessionToPotentiallyKeepId) {
                     logger.info(`[VSU] Session ${session.voice_state_id} for ${username} (${userId}) matches new state, will not be closed by this pass.`);
-                    continue; // This is the session we identified as matching the new state. Don't close it here.
+                    continue;
                 }
 
-                // If we are here, this session is NOT the one to keep (if one was identified).
-                if (!newChannelId || isNewChannelAfk) { // User is leaving voice or joining AFK
+                if (!newChannelId || isNewChannelAfk) {
                     closeReason = "User left all voice channels or went AFK";
-                } else { // User is in a new valid channel, and this session is an old/orphaned one.
+                } else {
                     closeReason = `User in new state (ch: ${newChannelId}, mute: ${newMuteState}), this session (id: ${session.voice_state_id}, ch: ${session.channel_id}, mute: ${session.selfmute}) is outdated/duplicate.`;
                 }
                 
                 if (closeReason) {
                     const originalConnectTime = parseInt(session.connect_time, 10);
-                    let calculatedDisconnectTime = currentTime; // Default to current time
+                    let calculatedDisconnectTime = currentTime;
 
                     if (!isNaN(originalConnectTime)) {
                         const oneHourAfterConnect = originalConnectTime + 3600;
@@ -626,7 +586,6 @@ async function userJoinsVoice(oldState, newState) {
         logger.error(`[VSU] Error during cleanup/processing of old voice sessions for ${username} (${userId}): ${error.message || error}`);
     }
 
-    // If user is joining a valid (non-AFK) channel, AND we didn't identify an existing session to keep, create a new one.
     if (newChannelId && !isNewChannelAfk) {
         if (sessionToPotentiallyKeepId) {
             logger.info(`[VSU] User ${username} (${userId}) already has an active session ${sessionToPotentiallyKeepId} matching new state in ch ${newChannelId}. No new session needed.`);
@@ -638,9 +597,9 @@ async function userJoinsVoice(oldState, newState) {
                     username: username,
                     discord_server_id: guildId,
                     connect_time: currentTime,
-                    selfmute: newMuteState, // Use the consistently stringified mute state
+                    selfmute: newMuteState,
                     channel_id: newChannelId,
-                    disconnect_time: 0, // Mark as active
+                    disconnect_time: 0,
                 });
             } catch (error) {
                 logger.error(`[VSU] Error creating new voice_tracking session for ${username} (${userId}): ${error.message || error}`);
@@ -649,24 +608,11 @@ async function userJoinsVoice(oldState, newState) {
     }
 }
 
-
 function register_handlers(event_registry) {
-    logger = event_registry.logger; // Initialize module-scoped logger
-    // api is already module-scoped and initialized
+    logger = event_registry.logger;
 
     event_registry.register('voiceStateUpdate', userJoinsVoice);
-    event_registry.register('interactionCreate', onButtonClick); // Handles button interactions
+    event_registry.register('interactionCreate', onInteractionCreate);
 }
 
 module.exports = register_handlers;
-
-// Helper comparison functions (if still needed by any part of the code, e.g. GAME logic if it uses them)
-// The new leaderboard helper sorts internally.
-function compareSecondColumnReverse(a, b) {
-    if (a[1] === b[1]) return 0;
-    return (a[1] < b[1]) ? -1 : 1;
-}
-function compareSecondColumn(a, b) {
-    if (a[1] === b[1]) return 0;
-    return (a[1] > b[1]) ? -1 : 1;
-}
