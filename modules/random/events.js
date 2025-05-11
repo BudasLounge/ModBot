@@ -166,13 +166,67 @@ async function onButtonClick(interaction) {
             return;
         }
         try {
-            logger.info(`[BTN_CLEANUP_CONFIRM] Attempting to delete all voice data for guild ${targetGuildId}`);
-            const mockApiResponse = await api.post("voice_tracking_bulk_delete", { discord_server_id: targetGuildId }); 
-            logger.info(`[BTN_CLEANUP_CONFIRM] Successfully deleted voice data for guild ${targetGuildId}. Response: ${JSON.stringify(mockApiResponse)}`);
-            await button.editReply({ content: "All voice tracking data for this server has been successfully deleted.", components: [] });
+            logger.info(`[BTN_CLEANUP_CONFIRM] Attempting to delete all voice data for guild ${targetGuildId}. Fetching records...`);
+            
+            const recordsToDeleteResp = await api.get("voice_tracking", {
+                discord_server_id: targetGuildId,
+                _limit: 10000000 // Fetch all records for the server
+            });
+
+            const records = recordsToDeleteResp.voice_trackings || [];
+            logger.info(`[BTN_CLEANUP_CONFIRM] Found ${records.length} voice tracking records for guild ${targetGuildId}.`);
+
+            if (records.length === 0) {
+                await button.editReply({ content: "No voice tracking data found for this server to delete.", components: [] });
+                return;
+            }
+
+            let deletedCount = 0;
+            let failedCount = 0;
+
+            for (const session of records) {
+                if (session.voice_state_id) {
+                    try {
+                        logger.info(`[BTN_CLEANUP_CONFIRM] Deleting session ${session.voice_state_id} for guild ${targetGuildId}`);
+                        await api.delete(`voice_tracking`, {
+                            voice_state_id: parseInt(session.voice_state_id, 10),
+                            discord_server_id: targetGuildId,
+                        });
+                        logger.info(`[BTN_CLEANUP_CONFIRM] Successfully deleted session ${session.voice_state_id} for guild ${targetGuildId}`);
+                        deletedCount++;
+                    } catch (deleteError) {
+                        failedCount++;
+                        logger.error(`[BTN_CLEANUP_CONFIRM] Failed to delete session ${session.voice_state_id} for guild ${targetGuildId}: ${deleteError.message || deleteError}`);
+                        // Optionally, collect failed IDs to report or retry
+                    }
+                } else {
+                    logger.warn(`[BTN_CLEANUP_CONFIRM] Record found without a voice_state_id for guild ${targetGuildId}: ${JSON.stringify(session)}`);
+                }
+            }
+
+            let replyMessage = `Voice data cleanup for guild ${targetGuildId} complete. `;
+            if (deletedCount > 0) {
+                replyMessage += `Successfully deleted ${deletedCount} record(s). `;
+            }
+            if (failedCount > 0) {
+                replyMessage += `Failed to delete ${failedCount} record(s). Please check logs for details.`;
+            } else if (deletedCount === 0 && records.length > 0) {
+                 replyMessage = `Found ${records.length} record(s) but could not delete any. Check logs and record structure (e.g., missing voice_state_id).`;
+            } else if (deletedCount === 0 && records.length === 0) {
+                 replyMessage = "No voice tracking data found for this server to delete.";
+            }
+
+            logger.info(`[BTN_CLEANUP_CONFIRM] ${replyMessage}`);
+            await button.editReply({ content: replyMessage, components: [] });
+
         } catch (error) {
-            logger.error(`[BTN_CLEANUP_CONFIRM] API error deleting voice data for guild ${targetGuildId}: ${error.message || error}`);
-            await button.editReply({ content: "An error occurred while trying to delete voice data. Please check the logs.", components: [] });
+            logger.error(`[BTN_CLEANUP_CONFIRM] API error during voice data cleanup for guild ${targetGuildId}: ${error.message || error}`);
+            let errorMessage = "An error occurred while trying to delete voice data. ";
+            if (error.response && error.response.data) {
+                errorMessage += `Server responded with: ${JSON.stringify(error.response.data)}. `;
+            }
+            errorMessage += "Please check the logs.";
+            await button.editReply({ content: errorMessage, components: [] });
         }
         return;
     } else if (button.customId.startsWith("VOICE_CLEANUP_CANCEL_")) {
