@@ -101,7 +101,7 @@ module.exports = {
             await reply.edit({ content: report, components });
             return;
 
-        } else if (subCommand === null) {
+        } else if (subCommand === "") {
             // Original leaderboard logic
             this.logger.info(`[voicetime] Initial leaderboard request by ${message.author.tag} for guild ${message.guild.id}`);
             let respVoice;
