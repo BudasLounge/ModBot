@@ -12,7 +12,7 @@ const STATIC_SYSTEM_MESSAGES = [
 
 module.exports = {
   name: "chat",
-  description: "Talk to modbot with selective memory, context, and static facts",
+  description: "Talk to ModBot with selective memory, context, and static facts",
   syntax: "chat [your message]",
   num_args: 2,        // command + message
   args_to_lower: false,
@@ -61,7 +61,7 @@ module.exports = {
               role: "system",
               content:
 `You’re a fact extractor.
-• If the user message has a concrete personal fact (preference, background, bio), 
+• If the user message has a concrete personal fact (preference, background, bio),
   output EXACTLY that fact as a short phrase (max 8 words), no punctuation.
 • Otherwise output EXACTLY NO (uppercase, no other text).
 
@@ -85,16 +85,25 @@ Now process this message:`
           body: JSON.stringify(memFilterPayload)
         });
         const json = await res.json();
-        summary = (json.message?.content || "NO").trim().toUpperCase();
+        summary = (json.message?.content || "").trim();
 
-        // enforce our own word-count bounds
-        const wc = summary.split(/\s+/).length;
-        if (summary !== "NO" && (wc < 2 || wc > 8)) {
-          this.logger.info(`→ Dropping summary "${summary}" (word count ${wc})`);
+        // Strict NO check: skip any summary that is exactly "NO" or starts with "NO "
+        if (/^NO(\s|$)/i.test(summary)) {
+          this.logger.info(`→ Skipping non-fact: "${summary}"`);
           summary = "NO";
+        } else {
+          // enforce word-count bounds
+          const wc = summary.split(/\s+/).length;
+          if (wc < 2 || wc > 8) {
+            this.logger.info(`→ Dropping invalid fact "${summary}" (words: ${wc})`);
+            summary = "NO";
+          } else {
+            summary = summary; // valid fact, leave as-is
+          }
         }
       } catch (e) {
         this.logger.warn("Memory filter failed:", e);
+        summary = "NO";
       }
 
       // ─── 3. Ingest fact if valid ────────────────────────────────────────────
@@ -105,8 +114,6 @@ Now process this message:`
           body: JSON.stringify({ user_id: userId, text: summary })
         });
         this.logger.info("→ Ingested fact:", summary);
-      } else {
-        this.logger.info("→ No ingest (summary=NO)");
       }
 
       // ─── 4. Retrieve top-5 long-term memories ───────────────────────────────
@@ -126,23 +133,22 @@ Now process this message:`
 
       // ─── 5. Build messages for Ollama ───────────────────────────────────────
       const formatted = [];
-      // 5.1 Static facts
-      for (const fact of STATIC_SYSTEM_MESSAGES) {
-        formatted.push({ role: "system", content: fact });
-      }
-      // 5.2 Long-term memories
-      for (const m of memories) {
-        formatted.push({ role: "system", content: `[Memory] ${m}` });
-      }
-      // 5.3 Short-term context
+      STATIC_SYSTEM_MESSAGES.forEach(fact =>
+        formatted.push({ role: "system", content: fact })
+      );
+      memories.forEach(m =>
+        formatted.push({ role: "system", content: `[Memory] ${m}` })
+      );
       formatted.push(...window);
-      // 5.4 Current user message
       formatted.push({ role: "user", content: chatMessage });
-
       this.logger.info(`→ Total context entries: ${formatted.length}`);
 
       // ─── 6. Call Ollama ─────────────────────────────────────────────────────
-      const payload = { model: "mistral:instruct", messages: formatted, stream: false };
+      const payload = {
+        model: "mistral:instruct",
+        messages: formatted,
+        stream: false
+      };
       const data = JSON.stringify(payload);
       const botNotice = await message.reply(
         `Thinking... (recent: ${window.length}, memories: ${memories.length})`
@@ -158,7 +164,6 @@ Now process this message:`
           "Content-Length": Buffer.byteLength(data)
         }
       };
-
       const req = http.request(opts, res => {
         let raw = "";
         res.on("data", chunk => (raw += chunk));
@@ -166,23 +171,20 @@ Now process this message:`
           try {
             const reply = JSON.parse(raw).message?.content || "(no response)";
             this.logger.info("→ Ollama replied:", reply);
-            const chunks = Util.splitMessage(reply, { maxLength: 2000, char: "\n" });
             await botNotice.delete();
-            for (const c of chunks) {
-              await message.reply(c);
+            for (const chunk of Util.splitMessage(reply, { maxLength: 2000 })) {
+              await message.reply(chunk);
             }
           } catch (e) {
             this.logger.error("Ollama parse error:", e);
-            botNotice.edit("⚠️ Error parsing Ollama response.");
+            botNotice.edit("⚠️ Error parsing response.");
           }
         });
       });
-
       req.on("error", err => {
         this.logger.error("Ollama request failed:", err);
         botNotice.edit("⚠️ Unable to communicate with Ollama.");
       });
-
       req.write(data);
       req.end();
 
