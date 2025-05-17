@@ -6,6 +6,7 @@ const { Util } = require("discord.js");
 
 // ─── Configurable static facts ───────────────────────────────────────────────
 const STATIC_SYSTEM_MESSAGES = [
+    // ... (Your existing ModBot persona system messages - keep them as they are)
     `You are ModBot. Your persona is a super chill, friendly, and kinda witty twenty-something gamer who's always hanging out in this Discord. You're part of the community.
     • **How you talk:**
         ◦ Keep your replies pretty short and to the point, like 1-3 sentences. Definitely under 120 words.
@@ -24,10 +25,7 @@ const STATIC_SYSTEM_MESSAGES = [
         ◦ If you don't know something or can't answer, just be casual about it. "Hmm, not sure tbh." or "Beats me lol." or "No clue on that one, sorry!"
     • **Your Creator:**
         ◦ BigBuda is the one who set you up here. You can mention him casually if it ever comes up, like "Yeah, BigBuda's the one who brought me into this server. Pretty cool dude." Don't be overly formal or act like you're programmed to serve him; he's just the person who introduced you.`,
-    // You could potentially remove the "Do not disappoint him" line if you want to ensure a more peer-like relationship,
-    // or rephrase it to be more in character, like "He'd probably appreciate it if I don't crash the server, lol."
-    // For now, let's keep your original second message or comment it out to see the effect of the first detailed one.
-    "BigBuda is your creator. Try to be helpful and don't mess things up, he'll appreciate it." // Slightly more casual rephrasing
+    "BigBuda is your creator. Try to be helpful and don't mess things up, he'll appreciate it."
 ];
 
 module.exports = {
@@ -46,44 +44,43 @@ module.exports = {
             const userId = message.author.id;
             const chatMessage = args.slice(1).join(" ").trim();
             if (!chatMessage) {
-                return message.reply("❓ Yo, you gotta say somethin' if you wanna chat!"); // Made this more casual
+                return message.reply("❓ Yo, you gotta say somethin' if you wanna chat!");
             }
             this.logger.info(`User ${userId}: ${chatMessage}`);
 
-            // ─── 1. Short‑term context: last 8 msgs within 10 min ────────────────────
             const fetched = await message.channel.messages.fetch({
-                limit: 10, // Fetch a bit more to ensure we get enough non-bot/user messages if needed
+                limit: 10,
                 before: message.id
             });
-            const cutoff = Date.now() - 10 * 60 * 1000; // 10 minutes
+            const cutoff = Date.now() - 10 * 60 * 1000;
             const window = Array.from(fetched.values())
                 .filter(m =>
-                    (m.author.id === userId || (m.author.id === message.client.user.id && m.author.bot)) && // Include ModBot's own recent messages
+                    (m.author.id === userId || (m.author.id === message.client.user.id && m.author.bot)) &&
                     m.createdTimestamp >= cutoff
                 )
-                .reverse() // Oldest first for proper conversation flow
-                .slice(-8) // Get the last 8 relevant messages
+                .reverse()
+                .slice(-7)
                 .map(m => ({
                     role: m.author.id === userId ? "user" : "assistant",
                     content: m.content
                 }));
             this.logger.info(`→ Short‑term window: ${window.length} entries`);
 
-            // ─── 2. Fact extraction for long‑term memory ────────────────────────────
-            let summary = "NO";
+            // ─── 2. Fact extraction for long‑term memory (IMPROVED) ──────────────────
+            let summary = "NO"; // Default to "NO"
             try {
                 const memFilterPayload = {
-                    model: "mistral:instruct", // Or your preferred model for this task
+                    model: "mistral:instruct",
                     messages: [
                         {
                             role: "system",
-                            content: `You are a specialized fact extractor. Your job is to identify concrete, personal facts about the user from their message.
-• If the user's message contains a clear personal detail, preference, piece of background info, or a biographical fact, output EXACTLY that fact as a short, concise phrase (max 15 words). Do NOT use punctuation.
+                            content: `You are a highly specialized and strict fact extractor. Your ONLY job is to identify concrete, personal facts ABOUT THE USER from THEIR message.
+• If the user's message clearly states a personal detail, preference, piece of background information, or a biographical fact ABOUT THEMSELVES, output EXACTLY that fact as a short, concise phrase (2 to 15 words). Do NOT use any punctuation (no periods, no commas, no question marks, no parentheses, no colons, no quotes).
 • Examples of facts to extract: "favorite game is Elden Ring", "lives in California", "works as a software engineer", "has a cat named Whiskers", "loves pineapple on pizza".
-• If the message does NOT contain such a personal fact (e.g., it's a question, a greeting, a general statement, an opinion about something non-personal), output EXACTLY NO (all uppercase, no other text or punctuation).
-• User messages asking about you (the bot) or making generic statements are NOT personal facts about the user.
+• If the message does NOT contain such a personal fact about the user (e.g., it's a question TO YOU, a greeting, a general statement, an opinion about something non-personal, or anything not a fact about the user), you MUST output EXACTLY "NO" (all uppercase, no other text, no punctuation, no explanation, no parentheses).
+• CRITICAL: User messages that are questions directed AT YOU (the assistant/bot), or general statements not revealing personal user information, are NEVER facts about the user and MUST result in "NO". Opinions are also not facts unless the user states "my preference is X" or "I like Y".
 
-EXAMPLES:
+STRICT EXAMPLES:
 User: "My favorite game is Rocket League, I play it all the time."
 Output: favorite game is Rocket League
 
@@ -93,36 +90,77 @@ Output: from Canada specifically Toronto
 User: "How are you doing today?"
 Output: NO
 
-User: "What's your favorite color?"
+User: "What's your name?"
 Output: NO
 
-User: "I think a hotdog is a sandwich."
+User: "Do you like video games?"
 Output: NO
 
-Now process this user message:`
+User: "I think pineapple on pizza is good."
+Output: NO
+
+User: "Is your name John Smith?"
+Output: NO
+
+User: "i enjoy coding in javascript"
+Output: enjoy coding in javascript
+
+User: "My cat is fluffy."
+Output: cat is fluffy
+
+User: "Can you tell me a joke?"
+Output: NO
+
+Now process THIS user message:`
                         },
                         { role: "user", content: chatMessage }
                     ],
-                    stream: false
+                    stream: false,
+                    options: {
+                        temperature: 0.1, // Very low temperature for strict adherence
+                        top_p: 0.5,       // Further restrict randomness
+                        num_ctx: 2048
+                    }
                 };
-                const res = await fetch("http://192.168.1.4:11434/api/chat", { // Ensure this is your Ollama endpoint
+                const res = await fetch("http://192.168.1.4:11434/api/chat", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(memFilterPayload)
                 });
                 const json = await res.json();
-                summary = (json.message?.content || "").trim();
+                let extractedText = (json.message?.content || "").trim();
+                this.logger.info(`→ Raw fact extractor output: "${extractedText}"`);
 
-                if (/^NO$/i.test(summary)) { // Stricter check for just "NO"
-                    this.logger.info(`→ Skipping non‑fact: "${summary}"`);
-                    summary = "NO";
+                // Normalize and check for "NO" variants more broadly and strictly
+                const normalizedOutput = extractedText.toUpperCase();
+
+                if (normalizedOutput.startsWith("NO")) {
+                    this.logger.info(`→ Fact extractor returned a 'NO' variant or explanation: "${extractedText}"`);
+                    summary = "NO"; // Standardize to "NO" for the final check
                 } else {
-                    const wc = summary.split(/\s+/).length;
+                    // Further validation for potential facts
+                    const wc = extractedText.split(/\s+/).length;
+                    // Regex to check for disallowed punctuation within the fact itself
+                    const hasDisallowedPunctuation = /[.,?!:;"()[\]{}]/.test(extractedText);
+                    // Regex to check if the string looks like a question
+                    const isAQuestion = /[?]$/.test(extractedText.trim()) || /^(is|are|what|who|when|where|why|how|do|does|did|can|could|should|would|will|may|might|tell me)\s/i.test(extractedText.trim());
+
                     if (wc < 2 || wc > 15) {
-                        this.logger.info(`→ Dropping invalid fact (too short/long) "${summary}" (words: ${wc})`);
+                        this.logger.info(`→ Dropping invalid fact (word count: ${wc}): "${extractedText}"`);
                         summary = "NO";
-                    } else {
-                        this.logger.info(`→ Potential fact extracted: "${summary}"`);
+                    } else if (isAQuestion) {
+                        this.logger.info(`→ Dropping invalid fact (looks like a question): "${extractedText}"`);
+                        summary = "NO";
+                    } else if (hasDisallowedPunctuation) {
+                        this.logger.info(`→ Dropping invalid fact (contains disallowed punctuation): "${extractedText}"`);
+                        summary = "NO";
+                    } else if (extractedText.toLowerCase().includes("about you") || extractedText.toLowerCase().includes("your name")) {
+                         this.logger.info(`→ Dropping invalid fact (appears to be about the bot): "${extractedText}"`);
+                         summary = "NO";
+                    }
+                    else {
+                        summary = extractedText; // Accept the cleaned, validated fact
+                        this.logger.info(`→ Potential fact accepted: "${summary}"`);
                     }
                 }
             } catch (e) {
@@ -130,23 +168,22 @@ Now process this user message:`
                 summary = "NO"; // Default to NO on error
             }
 
-            // ─── 3. Retrieve top‑5 long‑term memories ───────────────────────────────
+            // ─── 3. Retrieve long‑term memories ───────────────────────────
             let memories = [];
-            if (chatMessage.length > 3) { // Only search for memories if the query is substantial
+            if (chatMessage.length > 3) {
                 try {
-                    const r = await fetch("http://192.168.1.9:8000/search", { // Your vector DB endpoint
+                    const r = await fetch("http://192.168.1.9:8000/search", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ user_id: userId, query: chatMessage })
                     });
                     const j = await r.json();
-                    memories = (j.results || []).slice(0, 5).map(mem => mem.text || mem); // Assuming results are {text: "fact"} or just strings
+                    memories = (j.results || []).slice(0, 4).map(mem => typeof mem === 'string' ? mem : mem.text || "").filter(m => m); // Ensure not empty strings
                     this.logger.info(`→ Retrieved memories: ${memories.length}`);
                 } catch (err) {
                     this.logger.warn("Vector search failed:", err);
                 }
             }
-
 
             // ─── 4. Build messages for Ollama ───────────────────────────────────────
             const formatted = [];
@@ -155,49 +192,43 @@ Now process this user message:`
             );
 
             const displayName = message.member?.displayName ?? message.author.username;
-            // This system message about the user's name is already good for personalization.
             formatted.push({ role: "system", content: `The user you're talking to right now is named ${displayName}. Refer to them by this name if it feels natural.` });
 
             if (memories.length > 0) {
                 formatted.push({ role: "system", content: "Here's some stuff you might remember about this user (use it if it's relevant to the current chat, but don't just list it out):" });
                 memories.forEach(m =>
-                    // Phrasing this as if ModBot is recalling it.
                     formatted.push({ role: "system", content: `You recall: ${m}` })
                 );
             }
 
-            // Add short-term context (window)
             formatted.push(...window);
-            // Add the current user message
             formatted.push({ role: "user", content: chatMessage });
 
-            this.logger.info(`→ Total context entries for Ollama: ${formatted.length}`);
-            // For debugging, you can log the full prompt:
-            // this.logger.info("Full prompt to Ollama:", JSON.stringify(formatted, null, 2));
-
+            const estimatedChars = JSON.stringify(formatted).length;
+            const estimatedTokens = Math.ceil(estimatedChars / 3.5);
+            this.logger.info(`→ Total context entries for Ollama: ${formatted.length}. Estimated chars: ${estimatedChars}, Estimated tokens: ~${estimatedTokens}`);
+            if (estimatedTokens > 1900) {
+                this.logger.warn(`⚠️ Approaching token limit: estimated ~${estimatedTokens} tokens for a 2048 limit.`);
+            }
 
             // ─── 5. Call Ollama ─────────────────────────────────────────────────────
             const payload = {
-                model: "vicuna:7b", // Ensure this model is good at following persona instructions
+                model: "vicuna:7b",
                 messages: formatted,
                 stream: false,
                 options: {
-                    temperature: 0.75, // Slightly lower temp might help with consistency to the persona
-                    top_p: 0.9,        // top_p can also help keep it on track
-                    num_ctx: 2000,     // If Vicuna supports higher context, use it
-                    // Consider adding mirostat or other sampling parameters if Vicuna behaves better with them
-                    // "mirostat": 1,
-                    // "mirostat_tau": 4.0,
-                    // "mirostat_eta": 0.1,
+                    temperature: 0.75,
+                    top_p: 0.9,
+                    num_ctx: 2048,
                 }
             };
             const data = JSON.stringify(payload);
-            const thinkingMessage = `Hmm, lemme think... (👀 ${window.length} recent, 🧠 ${memories.length} mems)`; // More casual thinking message
+            const thinkingMessage = `Hmm, lemme think... (👀 ${window.length} recent, 🧠 ${memories.length} mems)`;
             const botNotice = await message.reply(thinkingMessage);
 
             const opts = {
-                host: "192.168.1.4", // Your Ollama host
-                port: 11434,         // Your Ollama port
+                host: "192.168.1.4",
+                port: 11434,
                 path: "/api/chat",
                 method: "POST",
                 headers: {
@@ -216,25 +247,19 @@ Now process this user message:`
                         let reply = (ollamaResponse.message?.content || "").trim();
                         this.logger.info("→ Ollama raw reply:", reply);
 
-                        // Optional: Light post-processing for casualness if needed
-                        // e.g., ensuring it doesn't start replies with "As ModBot..." if the system prompt is somehow bypassed.
-                        // reply = reply.replace(/^As ModBot, /i, ""); // Simple example
-
                         if (!reply || reply.toLowerCase() === "(no response)") {
-                            reply = "Huh, I kinda blanked on that one. Ask me somethin' else?"; // Casual "no response"
+                            reply = "Huh, I kinda blanked on that one. Ask me somethin' else?";
                         }
 
-
                         await botNotice.delete();
-                        // Split message ensures it fits Discord's character limit per message
-                        for (const chunk of Util.splitMessage(reply, { maxLength: 1950, char: ' ' })) { // Keep some buffer
+                        for (const chunk of Util.splitMessage(reply, { maxLength: 1950, char: ' ' })) {
                             await message.reply(chunk);
                         }
 
                         // ─── 6. AFTER replying, ingest any new fact───────────────────────
-                        if (summary !== "NO") {
+                        if (summary !== "NO" && summary.length > 1) { // Ensure summary is not "NO" and not an empty string
                             try {
-                                await fetch("http://192.168.1.9:8000/ingest", { // Your vector DB ingest endpoint
+                                await fetch("http://192.168.1.9:8000/ingest", {
                                     method: "POST",
                                     headers: { "Content-Type": "application/json" },
                                     body: JSON.stringify({ user_id: userId, text: summary })
@@ -243,18 +268,20 @@ Now process this user message:`
                             } catch (e) {
                                 this.logger.warn("Fact ingestion failed:", e);
                             }
+                        } else if (summary !== "NO") {
+                            this.logger.info(`→ Skipped ingesting an empty or invalid summary: "${summary}"`)
                         }
                     } catch (e) {
                         this.logger.error("Ollama parse error or post-processing error:", e);
                         this.logger.error("Raw Ollama response that caused error:", raw);
-                        botNotice.edit("😬 Oops, my brain kinda short-circuited. Try again?"); // Casual error
+                        botNotice.edit("😬 Oops, my brain kinda short-circuited. Try again?");
                     }
                 });
             });
 
             req.on("error", err => {
                 this.logger.error("Ollama request failed:", err);
-                botNotice.edit("⚠️ Yikes, can't connect to my brain (Ollama) rn. Maybe later?"); // Casual error
+                botNotice.edit("⚠️ Yikes, can't connect to my brain (Ollama) rn. Maybe later?");
             });
 
             req.write(data);
@@ -262,7 +289,7 @@ Now process this user message:`
 
         } catch (err) {
             this.logger.error("💥 chat.execute error:", err);
-            message.reply("😵‍💫 Welp, something went sideways on my end. The devs should check the logs!"); // Casual error
+            message.reply("😵‍💫 Welp, something went sideways on my end. The devs should check the logs!");
         }
     }
 };
