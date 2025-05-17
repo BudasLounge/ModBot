@@ -5,8 +5,9 @@ const { Util } = require("discord.js");
 
 // ─── Configurable static facts ───────────────────────────────────────────────
 const STATIC_SYSTEM_MESSAGES = [
-  "BigBuda(185223223892377611) is the bot's creator",
-  "Don't disappoint the creator"
+  "BigBuda(185223223892377611) is the your creator",
+  "Don't disappoint your creator",
+  "You are a friendly, casual assistant. Speak in a relaxed, conversational tone."
 ];
 
 module.exports = {
@@ -52,33 +53,54 @@ module.exports = {
         }));
       this.logger.info(`→ Short-term window entries: ${window.length}`);
 
-      // ─── 2. Memory Filter ───────────────────────────────────────────────────
-      let summary = "NO";
-      try {
+      // 2. Memory Filter
+        let summary = "NO";
+        try {
         const memFilterPayload = {
-          model: "mistral:instruct",
-          messages: [
-            {
-              role: "system",
-              content:
-                "You are a memory curator. Decide if this user message is worthy of long-term memory. " +
-                "If yes, reply with a one-sentence summary. Otherwise reply exactly NO.",
+            model: "mistral:instruct",
+            messages: [
+            { role: "system", content:
+                `You’re a “fact extractor” for long‐term memory.  
+                • If the user’s message contains a concrete fact about them (e.g., a preference, background, profile detail),  
+                    output exactly that fact as a short phrase (max 8 words), with no extra words, commentary, or punctuation.  
+                • Otherwise output NO.  
+
+                EXAMPLE:
+                Input: "My favorite food is sushi and I grew up in Tokyo."
+                Output: favorite food is sushi  
+
+                Now analyze this message:`  
             },
-            { role: "user", content: chatMessage },
-          ],
-          stream: false,
+            { role: "user", content: chatMessage }
+            ],
+            stream: false,
         };
-        const memResp = await fetch("http://192.168.1.4:11434/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(memFilterPayload),
+
+        const res = await fetch("http://192.168.1.4:11434/api/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(memFilterPayload),
         });
-        const memJson = await memResp.json();
-        summary = (memJson.message?.content || "NO").trim();
-        this.logger.info("→ Memory filter result:", summary);
-      } catch (err) {
-        this.logger.warn("Memory filter failed:", err);
-      }
+        const json = await res.json();
+        summary = (json.message?.content || "NO").trim();
+
+        // enforce our own length filter
+        const wc = summary.split(/\s+/).length;
+        if (summary === "NO" || wc > 8 || wc < 2) summary = "NO";
+        } catch (e) {
+        this.logger.warn("Memory filter failed:", e);
+        }
+
+        // only ingest if we got a crisp fact
+        if (summary !== "NO") {
+        await fetch("http://192.168.1.9:8000/ingest", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ user_id, text: summary }),
+        });
+        this.logger.info("Ingested mem-fact:", summary);
+        }
+
 
       // ─── 3. Ingest summary if needed ────────────────────────────────────────
       if (summary.toUpperCase() !== "NO") {
