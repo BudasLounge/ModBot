@@ -21,6 +21,9 @@ var LogHandler = require('./core/js/log_handler.js');
 
 var logger = LogHandler.build_logger(__dirname + "/" + config.log_folder);
 
+// Define the list of channels for auto-chat
+const autoChatChannels = ['1373188051760709752']; // Replace with actual channel IDs
+
 var state_manager = new StateManager(logger);
 
 var modules = new ModuleHandler(__dirname, state_manager, logger);
@@ -127,5 +130,36 @@ function authClient() {
 client.on('messageCreate', (message) => {
     logger.info("Got message!");
     //Add ability to check first time someone sends a message (not command) and grant them points
+
+    // Check if the message is from a bot
+    if (message.author.bot) return;
+
+    // Check if the message is in an auto-chat channel and is not a command
+    if (autoChatChannels.includes(message.channel.id) && !message.content.startsWith(config.prefix)) {
+        const chatCommand = modules.get_command_by_name('chat');
+        if (chatCommand) {
+            // Construct args for the chat command
+            // The chat command expects args as an array of words in the message
+            const args = message.content.split(' ');
+            // The 'extra' object might be used by other commands, but chat.js doesn't seem to use it.
+            // We'll pass an empty object for now.
+            const extra = {}; 
+            
+            // It's good practice to ensure the command has an execute function
+            if (typeof chatCommand.execute === 'function') {
+                chatCommand.execute(message, args, extra)
+                    .catch(err => {
+                        logger.error(`Error executing auto-chat command: ${err}`);
+                        message.reply("Sorry, I encountered an error trying to chat.");
+                    });
+            } else {
+                logger.error(`Chat command does not have an execute function.`);
+            }
+        } else {
+            logger.error(`Chat command not found for auto-chat.`);
+        }
+        return; // Don't process as a regular command if it was handled by auto-chat
+    }
+
     modules.handle_command(message);
 });
