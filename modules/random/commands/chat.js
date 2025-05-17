@@ -55,7 +55,7 @@ module.exports = {
       let summary = "NO";
       try {
         const memFilterPayload = {
-          model: "mistral:instruct",
+          model: "vicuna:7b",
           messages: [
             {
               role: "system",
