@@ -96,7 +96,7 @@ module.exports = {
         await fetch("http://192.168.1.9:8000/ingest", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ user_id, text: summary }),
+            body: JSON.stringify({ userId, text: summary }),
         });
         this.logger.info("Ingested mem-fact:", summary);
         }
