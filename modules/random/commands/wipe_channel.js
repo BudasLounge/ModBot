@@ -20,7 +20,7 @@ module.exports = {
       return message.reply('Could not find that channel. Please check the ID.');
     }
 
-    if (!channel.isTextBased()) {
+    if (channel.type !== 'GUILD_TEXT') {
       return message.reply('This command can only be used on text channels.');
     }
 
