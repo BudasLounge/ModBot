@@ -136,7 +136,15 @@ client.on('messageCreate', (message) => {
 
     // Check if the message is in an auto-chat channel and is not a command
     if (autoChatChannels.includes(message.channel.id) && !message.content.startsWith(config.prefix)) {
-        const chatCommand = modules.get_command_by_name('chat');
+        let chatCommand;
+        // Iterate over all loaded modules to find the 'chat' command
+        for (const module of modules.modules.values()) {
+            if (module.commands && module.commands.has('chat')) {
+                chatCommand = module.commands.get('chat');
+                break; // Command found, no need to check other modules
+            }
+        }
+
         if (chatCommand) {
             // Construct args for the chat command
             // The chat command expects args as an array of words in the message
