@@ -141,7 +141,7 @@ Now process THIS user message:`
                     // Further validation for potential facts
                     const wc = extractedText.split(/\s+/).length;
                     // Regex to check for disallowed punctuation within the fact itself
-                    const hasDisallowedPunctuation = /[.,?!:;"()[\]{}]/.test(extractedText);
+                    const hasDisallowedPunctuation = /[,?!:;"()[\]{}]/.test(extractedText);
                     // Regex to check if the string looks like a question
                     const isAQuestion = /[?]$/.test(extractedText.trim()) || /^(is|are|what|who|when|where|why|how|do|does|did|can|could|should|would|will|may|might|tell me)\s/i.test(extractedText.trim());
 
