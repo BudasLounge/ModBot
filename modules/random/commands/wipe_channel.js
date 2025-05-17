@@ -9,7 +9,7 @@ module.exports = {
   async execute(message, args, extra) {
     if (message.author.bot) return;
 
-    const channelId = args[0];
+    const channelId = args[1];
     if (!channelId) {
       return message.reply('Please provide a channel ID.');
     }
