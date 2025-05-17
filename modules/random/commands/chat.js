@@ -62,7 +62,7 @@ module.exports = {
               content:
 `You’re a fact extractor.
 • If the user message has a concrete personal fact (preference, background, bio),
-  output EXACTLY that fact as a short phrase (max 8 words), no punctuation.
+  output EXACTLY that fact as a short phrase (max 15 words), no punctuation.
 • Otherwise output EXACTLY NO (uppercase, no other text).
 
 EXAMPLES:
@@ -94,7 +94,7 @@ Now process this message:`
         } else {
           // enforce word-count bounds
           const wc = summary.split(/\s+/).length;
-          if (wc < 2 || wc > 8) {
+          if (wc < 2 || wc > 15) {
             this.logger.info(`→ Dropping invalid fact "${summary}" (words: ${wc})`);
             summary = "NO";
           } else {
