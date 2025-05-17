@@ -1,116 +1,172 @@
+// chat.js
+const fetch = require("node-fetch");
+const http = require("http");
+const { Util } = require("discord.js");
+
 module.exports = {
-    name: 'chat',
-    description: 'Talk to modbot!',
-    syntax: 'chat [{model_name}] [your message to the bot]',
-    num_args: 2,//minimum amount of arguments to accept
-    args_to_lower: false,//if the arguments should be lower case
-    needs_api: false,//if this command needs access to the api
-    has_state: false,//if this command uses the state engine
-    async execute(message, args, extra) {
-        if (message.author.bot) return;
-        var fs = require('fs');
-        var http = require('http');
-        const {Util} = require('discord.js');
-        args.shift()
-        chatMessage = args.join(" ")
-        this.logger.info("chatMessage: " , chatMessage)
-        try {
-            const fetchedMessages = await message.channel.messages.fetch({ 
-                limit: 10,
-                before: message.id,
-            }).then(messages => messages.filter(msg => msg.author.id === message.author.id || msg.author.bot));
-            this.logger.info("fetchedMessages: " , fetchedMessages)
-            const messageArray = Array.from(fetchedMessages.values()).reverse(); // Ensure chronological order
-            this.logger.info("messageArray: " , messageArray)
-            // Create an array of formatted messages for the API
-            const formattedMessages = messageArray.map(msg => {
-                this.logger.info("msg: " , msg)
-                return {
-                    role: msg.author.id === message.author.id ? 'user' : 'assistant',
-                    content: msg.content
-                };
-            });
-            
-            var data;
-            if(args[0].includes("{")){
-                //modelName = args[0].split("{")[1].split("}")[0]
-                modelName = "mixtral"
-                this.logger.info("modelName: " , modelName)
-                data = JSON.stringify({
-                    model: modelName,
-                    messages: formattedMessages,
-                    options: {
-                        num_ctx: 32000,
-                    },
-                    stream: false
-                });
-                args.shift()
-            }else{
-                data = JSON.stringify({
-                    model: "mistral",
-                    messages: formattedMessages,
-                    stream: false
-                });
-            }
-            // Add the current message
-            formattedMessages.push({
-                role: 'user',
-                content: args.join(" ")
-            });
-            
-            this.logger.info("formattedMessages: " , formattedMessages)
-            const botMessage = await message.reply({content: `Generating response...\nTaking ${formattedMessages.length} messages into account.`})
+  name: "chat",
+  description: "Talk to modbot with selective memory, context, and static facts",
+  syntax: "chat [your message]",
+  num_args: 1,
+  args_to_lower: false,
+  needs_api: false,
+  has_state: false,
 
-            const options = {
-                host: 'localhost',
-                port: 11434,
-                path: '/api/chat',
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Content-Length': data.length
-                }
-            };
-            const req = http.request(options, (res) => {
-                let rawData = '';
-                res.on('data', (chunk) => {
-                    rawData += chunk;
-                });
-                res.on('end', () => {
-                    try {
-                        const parsedData = JSON.parse(rawData);
-                        this.logger.info("parsedData: " , parsedData.message)
-                        const responseText = parsedData.message.content; // Extracting the response field
-            
-                        const messageChunks = Util.splitMessage(responseText, {
-                            maxLength: 2000,
-                            char: '\n'
-                        });
-                        botMessage.delete();
-                        messageChunks.forEach(async chunk => {
-                            await message.reply(chunk);
-                        });
-                    } catch (e) {
-                        this.logger.error("Error parsing JSON: " + e.message);
-                        message.reply("An error occurred while processing the response.\n" + e.message);
-                    }
-                });
-            });
+  // ─── Configurable static facts ───────────────────────────────────────────────
+  staticSystemMessages: [
+    "BigBuda(185223223892377611) is your creator",
+    "Don't disappoint the creator"
+  ],
 
-            req.on('error', (error) => {
-                this.logger.error("Request error: " + error.message);
-                botMessage.edit("An error occurred while making the request.\n" + error.message);
-            });
+  async execute(message, args, extra) {
+    if (message.author.bot) return;
 
-            req.write(data);
-            req.end();
-            //return message.reply(content);
-            return
-          } catch (err) {
-            this.logger.error("top level error: " + err);
-            botMessage.edit(
-              "An error has occured while trying to talk to the bot...\n"+err
-            );
-          }
-        }
+    const userId = message.author.id;
+    const chatMessage = args.join(" ").trim();
+    this.logger.info(`User ${userId}: ${chatMessage}`);
+
+    // ─── 1. Fetch & filter recent conversation (last 10 mins, max 8 utterances) ───
+    const fetched = await message.channel.messages.fetch({
+      limit: 10,
+      before: message.id,
+    });
+    const cutoff = Date.now() - 10 * 60 * 1000; // 10 minutes ago
+    const window = Array.from(fetched.values())
+      .filter(
+        (m) =>
+          (m.author.id === userId || m.author.bot) &&
+          m.createdTimestamp >= cutoff
+      )
+      .reverse()
+      .slice(-8)
+      .map((m) => ({
+        role: m.author.id === userId ? "user" : "assistant",
+        content: m.content,
+      }));
+
+    // ─── 2. Memory Filter: ask Ollama if the new message is long-term worthy ───
+    let summary = "NO";
+    try {
+      const memFilterPayload = {
+        model: "mistral:instruct",
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are a memory curator. Decide if the following user message is worthy of long-term memory. " +
+              "If yes, reply with a concise one-sentence summary. Otherwise reply exactly NO.",
+          },
+          { role: "user", content: chatMessage },
+        ],
+        stream: false,
+      };
+      const memResp = await fetch("http://192.168.1.4:11434/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(memFilterPayload),
+      });
+      const memJson = await memResp.json();
+      summary = (memJson.message?.content || "NO").trim();
+    } catch (err) {
+      this.logger.warn("Memory filter failed:", err);
     }
+
+    // ─── 3. Ingest into vector store if summary is not "NO" ───
+    if (summary.toUpperCase() !== "NO") {
+      fetch("http://192.168.1.9:8000/ingest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: userId,
+          text: summary,
+        }),
+      }).catch((err) => this.logger.warn("Vector ingest failed:", err));
+      this.logger.info(`Ingested summary: ${summary}`);
+    }
+
+    // ─── 4. Retrieve top-5 long-term memories ───
+    let memories = [];
+    try {
+      const r = await fetch("http://192.168.1.9:8000/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: userId, query: chatMessage }),
+      });
+      const j = await r.json();
+      memories = (j.results || []).slice(0, 5);
+    } catch (err) {
+      this.logger.warn("Vector search failed:", err);
+    }
+
+    // ─── 5. Build final messages for Ollama ───
+    const formatted = [];
+
+    // ─ Static, hardcoded facts (editable) ─
+    for (const fact of this.staticSystemMessages) {
+      formatted.push({ role: "system", content: fact });
+    }
+
+    // ─ Retrieved long-term memories ─
+    for (const m of memories) {
+      formatted.push({ role: "system", content: `[Memory] ${m}` });
+    }
+
+    // ─ Short-term convo window ─
+    formatted.push(...window);
+
+    // ─ Current user message ─
+    formatted.push({ role: "user", content: chatMessage });
+
+    // ─── 6. Send to Ollama ───
+    const payload = {
+      model: "mistral:instruct",
+      messages: formatted,
+      stream: false,
+    };
+    const data = JSON.stringify(payload);
+
+    const botNotice = await message.reply(
+      `Thinking... (context: ${window.length} recent + ${memories.length} memories)`
+    );
+
+    const opts = {
+      host: "192.168.1.4",
+      port: 11434,
+      path: "/api/chat",
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Content-Length": Buffer.byteLength(data),
+      },
+    };
+
+    const req = http.request(opts, (res) => {
+      let raw = "";
+      res.on("data", (chunk) => (raw += chunk));
+      res.on("end", async () => {
+        try {
+          const reply = JSON.parse(raw).message?.content || "(no response)";
+          const chunks = Util.splitMessage(reply, {
+            maxLength: 2000,
+            char: "\n",
+          });
+          await botNotice.delete();
+          for (const c of chunks) {
+            await message.reply(c);
+          }
+        } catch (e) {
+          this.logger.error("Ollama parse error:", e);
+          botNotice.edit("⚠️ Error parsing Ollama response.");
+        }
+      });
+    });
+
+    req.on("error", (err) => {
+      this.logger.error("Ollama request failed:", err);
+      botNotice.edit("⚠️ Unable to communicate with Ollama.");
+    });
+
+    req.write(data);
+    req.end();
+  },
+};
