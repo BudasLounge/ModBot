@@ -1,7 +1,7 @@
 const axios = require('axios');
 const fs = require('fs').promises;
 const path = require('path');
-const { MessageEmbed } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 require('dotenv').config();
 var ApiClient = require("../../../core/js/APIClient.js");
 var api = new ApiClient();
@@ -205,25 +205,23 @@ async function getLastMatches(username, numberOfGames, logger, userId) {
 }
 
 async function sendEmbeds(message, queueType, data) {
-  let embed = new MessageEmbed()
+  let embed = new EmbedBuilder()
     .setTitle(`${data.games} games in ${queueType}`)
     .setColor('#0099ff')
     .setTimestamp();
 
   let fieldCount = 0;
 
-  for (const [champion, { wins, losses }] of Object.entries(data.champions)) {
-    if (fieldCount === 25) {
+  for (const [champion, { wins, losses }] of Object.entries(data.champions)) {    if (fieldCount === 25) {
       // Send the current embed and create a new one
       await message.channel.send({ embeds: [embed] });
-      embed = new MessageEmbed()
+      embed = new EmbedBuilder()
         .setTitle(`Continued: ${queueType}`)
         .setColor('#0099ff')
-        .setTimestamp();
-      fieldCount = 0;
+        .setTimestamp();      fieldCount = 0;
     }
 
-    embed.addField(champion, `Wins: ${wins} | Losses: ${losses}`, true);
+    embed.addFields({ name: champion, value: `Wins: ${wins} | Losses: ${losses}`, inline: true });
     fieldCount++;
   }
 
@@ -294,12 +292,10 @@ async execute(message, args) {
         const totalWins = Object.values(champions).reduce((acc, { wins }) => acc + wins, 0);
         const totalLosses = Object.values(champions).reduce((acc, { losses }) => acc + losses, 0);
         const winPercentage = (totalWins / totalGames * 100).toFixed(2);
-        const championCount = Object.keys(champions).length;
-  
-        let embed = new MessageEmbed()
+        const championCount = Object.keys(champions).length;        let embed = new EmbedBuilder()
           .setTitle(`${totalGames} games in ${queueType} (${championCount} champions)`)
           .setColor('#0099ff')
-          .addField('Total', `Wins: ${totalWins} | Losses: ${totalLosses} (${winPercentage}%)\n---------------------`, false)
+          .addFields({ name: 'Total', value: `Wins: ${totalWins} | Losses: ${totalLosses} (${winPercentage}%)\n---------------------`, inline: false })
           .setTimestamp();
   
         let fieldCount = 0;
@@ -315,7 +311,7 @@ async execute(message, args) {
             fieldCount = 0;
           }
   
-          embed.addField(champion, `Wins: ${wins} | Losses: ${losses}`, true);
+          embed.addFields({ name: champion, value: `Wins: ${wins} | Losses: ${losses}`, inline: true });
           fieldCount++;
         }*/
   

@@ -1,7 +1,7 @@
 const axios = require('axios');
 const fs = require('fs').promises;
 const path = require('path');
-const { MessageEmbed } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 require('dotenv').config();
 var ApiClient = require("../../../core/js/APIClient.js");
 var api = new ApiClient();
@@ -227,11 +227,9 @@ module.exports = {
         }
 
         var summonerName = args.join(' ');
-        message.channel.send(`Analyzing matches for ${summonerName}, please wait...`);
-
-        try {
+        message.channel.send(`Analyzing matches for ${summonerName}, please wait...`);        try {
             const queueStats = await getLastMatches(summonerName, gameCount, this.logger, message.author.id);
-            let embed = new MessageEmbed()
+            let embed = new EmbedBuilder()
                 .setTitle(`Side Counts and Winrates for ${summonerName}`)
                 .setColor('#0099ff');
         
@@ -243,10 +241,8 @@ module.exports = {
         
               const queueName = queueTypeMapping[queueId] || `Queue ${queueId}`;
               const blueSideWinrate = ((stats.blueSideWins / (stats.blueSideWins + stats.blueSideLosses)) * 100).toFixed(2);
-              const redSideWinrate = ((stats.redSideWins / (stats.redSideWins + stats.redSideLosses)) * 100).toFixed(2);
-        
-              let queueFieldText = `Blue Side: ${stats.blueSideCount} (${blueSideWinrate}%) | Red Side: ${stats.redSideCount} (${redSideWinrate}%)`;
-              embed.addField(queueName, queueFieldText, false);
+              const redSideWinrate = ((stats.redSideWins / (stats.redSideWins + stats.redSideLosses)) * 100).toFixed(2);              let queueFieldText = `Blue Side: ${stats.blueSideCount} (${blueSideWinrate}%) | Red Side: ${stats.redSideCount} (${redSideWinrate}%)`;
+              embed.addFields({ name: queueName, value: queueFieldText, inline: false });
             }
         
             embed.setTimestamp();

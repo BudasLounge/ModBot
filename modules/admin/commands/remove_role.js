@@ -60,7 +60,7 @@ module.exports = {
             message.channel.send({ content: "Role removing failed!"});
             return;
         }
-        const ListEmbed = new Discord.MessageEmbed()
+        const ListEmbed = new Discord.EmbedBuilder()
         .setTitle(`Made this edit to ${member.user.username}:`)
         .setDescription("Removed role: "+role.name);
         message.channel.send({ embeds: [ListEmbed]});

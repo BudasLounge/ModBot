@@ -25,7 +25,7 @@ module.exports = {
                 data[args[2]] = args[3];
                 var respUpdate = await api.put("league_champion" , data);
                 if(respUpdate.ok == true){
-                    const ListEmbed = new Discord.MessageEmbed()
+                    const ListEmbed = new Discord.EmbedBuilder()
                         .setColor("#f92f03")
                         .setTitle("Here's what changed: ");
                     this.logger.info("created ListEmbed");
@@ -38,7 +38,7 @@ module.exports = {
                     changedInfo += "role_primary: " + respUpdate.league_champion.role_primary + "\n";
                     changedInfo += "role_secondary: " + respUpdate.league_champion.role_secondary + "\n";
                     this.logger.info("filled changedInfo variable");
-                    ListEmbed.addField("A post function update: ", changedInfo);
+                    ListEmbed.addFields({ name: "A post function update: ", value: changedInfo, inline: false });
                     message.channel.send({ embeds: [ListEmbed]});
                 }
             }catch(error2){

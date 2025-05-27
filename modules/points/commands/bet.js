@@ -8,7 +8,7 @@ module.exports = {
     has_state: false,//if this command uses the state engine
     async execute(message, args, extra) {
         const moment = require('moment');
-        const { EmbedBuilder, SelectMenuBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+        const { EmbedBuilder, StringSelectMenuBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
         var api = extra.api;
         var init_id = message.member.user.id;
         var respCheckServer;
@@ -179,7 +179,7 @@ module.exports = {
                 )
                 const SelectMenu = new ActionRowBuilder()
 			    .addComponents(
-				    new SelectMenuBuilder()
+				    new StringSelectMenuBuilder()
                         .setCustomId("BETS-"+'select')
                         .setPlaceholder('Select a bet amount')
                         .setDisabled(true)

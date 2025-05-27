@@ -1,6 +1,6 @@
 var ApiClient = require("../../core/js/APIClient.js");
 var api = new ApiClient();
-const { ActionRowBuilder, ButtonBuilder, EmbedBuilder, SelectMenuBuilder, PermissionsBitField, ButtonStyle } = require('discord.js');
+const { ActionRowBuilder, ButtonBuilder, EmbedBuilder, StringSelectMenuBuilder, PermissionsBitField, ButtonStyle } = require('discord.js');
 //todo: add a way to track how many times a user streams and for how long
 async function onButtonClick(button){
     //if (!button.isButton()){return}
@@ -524,15 +524,14 @@ async function onButtonClick(button){
                     { d: 24, l: "hours" },
                     { d: 365, l: "days" }
                 ];
-            
-                var s = '';
-                for (var i = 0; i < units.length; ++i) {
-                s = (diff % units[i].d) + " " + units[i].l + " " + s;
-                diff = Math.floor(diff / units[i].d);
-                }
-                ListEmbed.addField((k+1).toString() + ". " + totalTime[k][0], s.toString());
+                  var s = '';
+            for (var i = 0; i < units.length; ++i) {
+            s = (diff % units[i].d) + " " + units[i].l + " " + s;
+            diff = Math.floor(diff / units[i].d);
             }
-            var timingFilters = new ActionRowBuilder()
+            ListEmbed.addFields({ name: (k+1).toString() + ". " + totalTime[k][0], value: s.toString(), inline: false });
+        }
+        var timingFilters = new ActionRowBuilder()
                 .addComponents(
             new ButtonBuilder()
                 .setCustomId("VOICEnon-muted")
@@ -753,14 +752,13 @@ async function onButtonClick(button){
 
             var s = '';
             for (var i = 0; i < units.length; ++i) {
-            s = (diff % units[i].d) + " " + units[i].l + " " + s;
-            diff = Math.floor(diff / units[i].d);
-            }
-            ListEmbed.addField((k+1).toString() + ". " + totalTime[k][0], s.toString());
+            s = (diff % units[i].d) + " " + units[i].l + " " + s;        diff = Math.floor(diff / units[i].d);
         }
-        
+        ListEmbed.addFields({ name: (k+1).toString() + ". " + totalTime[k][0], value: s.toString(), inline: false });
+    }
+    
 
-        var timingFilters = new ActionRowBuilder()
+    var timingFilters = new ActionRowBuilder()
         .addComponents(
             new ButtonBuilder()
                 .setCustomId("VOICEnon-muted")
@@ -1221,7 +1219,7 @@ async function onButtonClick(button){
                     }catch(error){
                         logger.error(error.message);
                     }
-                    var kickableList = new SelectMenuBuilder()
+                    var kickableList = new StringSelectMenuBuilder()
                         .setCustomId('GAMEkick-'+hostId)
                         .setPlaceholder('Select someone to remove');
                     var playersList = "";
@@ -1322,7 +1320,7 @@ async function onButtonClick(button){
                     if(playersList === ""){
                         playersList = "No players currently in the game...";
                     }
-                    var kickableList = new SelectMenuBuilder()
+                    var kickableList = new StringSelectMenuBuilder()
                     .setCustomId('GAMEkick-'+hostId)
                     .setPlaceholder('Select someone to remove');
                     var playersList = "";
@@ -1616,7 +1614,7 @@ async function onButtonClick(button){
                                 captain:"no"
                             })
                         }
-                        const kickableList = new SelectMenuBuilder()
+                        const kickableList = new StringSelectMenuBuilder()
                             .setCustomId('GAMEkick-'+hostId)
                             .setPlaceholder('Select someone to remove');
                         var playersList = "";
@@ -1732,7 +1730,7 @@ async function onButtonClick(button){
                             });
 
                         });
-                        const channelListTeam1 = new SelectMenuBuilder()
+                        const channelListTeam1 = new StringSelectMenuBuilder()
                             .setCustomId('GAMEchannelTeam1-'+hostId)
                             .setPlaceholder('Select a voice channel to send Team 1 to');
                         voiceChannels.forEach((channel) => {
@@ -1743,7 +1741,7 @@ async function onButtonClick(button){
                                 },
                             ]);
                         });
-                        const channelListTeam2 = new SelectMenuBuilder()
+                        const channelListTeam2 = new StringSelectMenuBuilder()
                             .setCustomId('GAMEchannelTeam2-'+hostId)
                             .setPlaceholder('Select a voice channel to send Team 2 to');
                         voiceChannels.forEach((channel) => {
@@ -1871,7 +1869,7 @@ async function onButtonClick(button){
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
                         playersList += ("<@" + respPlayersList.game_joining_players[i].player_id + ">\n");
                     }
-                    var chooseCaptain1 = new SelectMenuBuilder()
+                    var chooseCaptain1 = new StringSelectMenuBuilder()
                         .setCustomId('GAMEcaptain1-'+hostId)
                         .setPlaceholder('Select a player to make into the captain for Team 1');
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
@@ -1976,7 +1974,7 @@ async function onButtonClick(button){
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
                         playersList += ("<@" + respPlayersList.game_joining_players[i].player_id + ">\n");
                     }
-                    var chooseCaptain2 = new SelectMenuBuilder()
+                    var chooseCaptain2 = new StringSelectMenuBuilder()
                         .setCustomId('GAMEcaptain2-'+hostId)
                         .setPlaceholder('Select a player to make into the captain for Team 2');
                     for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
@@ -2080,7 +2078,7 @@ async function onButtonClick(button){
                         logger.error(error.message);
                     }
 
-                    var captain1pick = new SelectMenuBuilder()
+                    var captain1pick = new StringSelectMenuBuilder()
                         .setCustomId('GAMEcaptain1pick-'+hostId)
                         .setPlaceholder('Select someone to add to team 1');
                         captain1pick.addOptions({
@@ -2100,7 +2098,7 @@ async function onButtonClick(button){
                             emoji: '1️⃣',
                         })
                     }
-                    var captain2pick = new SelectMenuBuilder()
+                    var captain2pick = new StringSelectMenuBuilder()
                         .setCustomId('GAMEcaptain2pick-'+hostId)
                         .setPlaceholder('Select someone to add to team 2');
                         captain2pick.addOptions({
@@ -2250,7 +2248,7 @@ async function onButtonClick(button){
                             logger.error(error.message);
                         }
                     }
-                    var captain1pick = new SelectMenuBuilder()
+                    var captain1pick = new StringSelectMenuBuilder()
                         .setCustomId('GAMEcaptain1pick-'+hostId)
                         .setPlaceholder('Select someone to add to team 1');
                         captain1pick.addOptions({
@@ -2270,7 +2268,7 @@ async function onButtonClick(button){
                             emoji: '1️⃣',
                         })
                     }
-                    var captain2pick = new SelectMenuBuilder()
+                    var captain2pick = new StringSelectMenuBuilder()
                         .setCustomId('GAMEcaptain2pick-'+hostId)
                         .setPlaceholder('Select someone to add to team 2');
                         captain2pick.addOptions({
@@ -2335,7 +2333,7 @@ async function onButtonClick(button){
                         });
 
                     });
-                    const channelListTeam1pick1 = new SelectMenuBuilder()
+                    const channelListTeam1pick1 = new StringSelectMenuBuilder()
                         .setCustomId('GAMEchannelTeam1-'+hostId)
                         .setPlaceholder('Select a voice channel to send Team 1 to');
                     voiceChannelspick1.forEach((channel) => {
@@ -2346,7 +2344,7 @@ async function onButtonClick(button){
                             },
                         ]);
                     });
-                    const channelListTeam2pick1 = new SelectMenuBuilder()
+                    const channelListTeam2pick1 = new StringSelectMenuBuilder()
                         .setCustomId('GAMEchannelTeam2-'+hostId)
                         .setPlaceholder('Select a voice channel to send Team 2 to');
                     voiceChannelspick1.forEach((channel) => {
@@ -2495,7 +2493,7 @@ async function onButtonClick(button){
                             logger.error(error.message);
                         }
                     }
-                    var captain1pick = new SelectMenuBuilder()
+                    var captain1pick = new StringSelectMenuBuilder()
                         .setCustomId('GAMEcaptain1pick-'+hostId)
                         .setPlaceholder('Select someone to add to team 1');
                         captain1pick.addOptions({
@@ -2515,7 +2513,7 @@ async function onButtonClick(button){
                             emoji: '1️⃣',
                         })
                     }
-                    var captain2pick = new SelectMenuBuilder()
+                    var captain2pick = new StringSelectMenuBuilder()
                         .setCustomId('GAMEcaptain2pick-'+hostId)
                         .setPlaceholder('Select someone to add to team 2');
                         captain2pick.addOptions({
@@ -2580,7 +2578,7 @@ async function onButtonClick(button){
                         });
 
                     });
-                    const channelListTeam1pick2 = new SelectMenuBuilder()
+                    const channelListTeam1pick2 = new StringSelectMenuBuilder()
                         .setCustomId('GAMEchannelTeam1-'+hostId)
                         .setPlaceholder('Select a voice channel to send Team 1 to');
                     voiceChannelspick2.forEach((channel) => {
@@ -2591,7 +2589,7 @@ async function onButtonClick(button){
                             },
                         ]);
                     });
-                    const channelListTeam2pick2 = new SelectMenuBuilder()
+                    const channelListTeam2pick2 = new StringSelectMenuBuilder()
                         .setCustomId('GAMEchannelTeam2-'+hostId)
                         .setPlaceholder('Select a voice channel to send Team 2 to');
                     voiceChannelspick2.forEach((channel) => {
@@ -2833,7 +2831,7 @@ async function onButtonClick(button){
                     if(playersList === ""){
                         playersList = "No players currently in the game...";
                     }
-                    var kickableList = new SelectMenuBuilder()
+                    var kickableList = new StringSelectMenuBuilder()
                     .setCustomId('GAMEkick-'+hostId)
                     .setPlaceholder('Select someone to remove');
                     var playersList = "";
@@ -3073,13 +3071,12 @@ async function userJoinsVoice(oldMember, newMember){
 /*async function parseRaw(packet) {
     // We don't want this to run on unrelated packets
     if (!['MESSAGE_REACTION_ADD', 'MESSAGE_REACTION_REMOVE'].includes(packet.t)) return;
-    console.log(packet);
-    // Grab the channel to check the message from
-    const channel = client.channels.get(packet.d.channel_id);
+    console.log(packet);    // Grab the channel to check the message from
+    const channel = client.channels.cache.get(packet.d.channel_id);
     // There's no need to emit if the message is cached, because the event will fire anyway for that
-    if (channel.messages.has(packet.d.message_id)) return;
+    if (channel.messages.cache.has(packet.d.message_id)) return;
     // Since we have confirmed the message is not cached, let's fetch it
-    channel.fetchMessage(packet.d.message_id).then(message => {
+    channel.messages.fetch(packet.d.message_id).then(message => {
         // Emojis can have identifiers of name:id format, so we have to account for that case as well
         const emoji = packet.d.emoji.id ? `${packet.d.emoji.name}:${packet.d.emoji.id}` : packet.d.emoji.name;
         // This gives us the reaction we need to emit the event properly, in top of the message object

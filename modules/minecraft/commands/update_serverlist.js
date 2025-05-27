@@ -1,4 +1,4 @@
-const { MessageEmbed } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 
 module.exports = {
   name: 'updatesl',
@@ -56,13 +56,11 @@ module.exports = {
 • **MC Version**: ${updatedServer.mc_version}
 • **Pack Version**: ${updatedServer.pack_version}
 • **Pack Version**: ${updatedServer.url}
-`;
-
-        const embed = new MessageEmbed()
+`;        const embed = new EmbedBuilder()
           .setColor('#f92f03')
           .setTitle(`Field Updated: ${fieldToUpdate}`)
           .setDescription(changedInfo)
-          .setFooter('Minecraft Server List Update');
+          .setFooter({ text: 'Minecraft Server List Update' });
 
         return message.channel.send({ embeds: [embed] });
       }

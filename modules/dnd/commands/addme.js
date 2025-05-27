@@ -59,11 +59,10 @@ module.exports = {
             try{
                 respFound = await api.get("dnd_player", {
                     discord_id: message.member.id
-                });
-            }catch(error){
+                });            }catch(error){
                 this.logger.error(error);
             }
-            let dmRole = message.guild.cache.find(role => role.id === "735644461627080765");
+            let dmRole = message.guild.roles.cache.find(role => role.id === "735644461627080765");
             message.member.roles.add(dmRole);
             if(respFound.dnd_players[0].is_dm){
                 message.channel.send({ content: "You're listed as a dm now"});

@@ -64,11 +64,10 @@ module.exports = {
                     await message.channel.send({ content: "Game creation failed..."});
                 }else{
                     await message.channel.send({ content: "Created a game! Let me pull up the menu for you..."});
-                }
-                const ListEmbed = new EmbedBuilder()
+                }                const ListEmbed = new EmbedBuilder()
                 .setColor("#c586b6")
                 .setTitle(`${message.member.displayName}'s game menu.`);
-                ListEmbed.addField("Info about the buttons:", "Host is not added to their own game by default, but can join if they want to.\n\nBlurple buttons = anyone can interact\nGray buttons = only host can interact");
+                ListEmbed.addFields({ name: "Info about the buttons:", value: "Host is not added to their own game by default, but can join if they want to.\n\nBlurple buttons = anyone can interact\nGray buttons = only host can interact", inline: false });
                 const row = new ActionRowBuilder()
                 .addComponents(
                     new ButtonBuilder()
