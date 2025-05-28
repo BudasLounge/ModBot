@@ -1,6 +1,7 @@
 var ApiClient = require("../../core/js/APIClient.js");
 var api = new ApiClient();
-const { ActionRowBuilder, ButtonBuilder, EmbedBuilder, StringSelectMenuBuilder, PermissionsBitField, ButtonStyle, Modal, TextInputComponent, MessageActionRow, MessageButton, MessageEmbed } = require('discord.js'); // Consolidated imports
+const { ActionRowBuilder, ButtonBuilder, EmbedBuilder, StringSelectMenuBuilder, PermissionsBitField, ButtonStyle, Modal, TextInputComponent } = require('discord.js'); // Consolidated imports, removed old ones
+
 //todo: add a way to track how many times a user streams and for how long
 
 // Module-scoped logger, initialized in register_handlers
@@ -32,7 +33,7 @@ function formatDuration(totalSeconds) {
 // Helper function for generating standard voice leaderboards
 async function generateVoiceLeaderboard(button, title, options) {
     await button.deferUpdate();
-    const { timeFilterDays, mutedFilter, sortOrder } = options; // sortOrder: 'top' or 'bottom'
+    const { timeFilterDays, mutedFilter, sortOrder, originalCustomId } = options; // sortOrder: 'top' or 'bottom'
     const guildId = button.guild.id;
     const currentTime = Math.floor(Date.now() / 1000);
 
@@ -124,28 +125,19 @@ async function generateVoiceLeaderboard(button, title, options) {
         }
     }
     
-    const updatedComponents = [];
-    if (button.message && button.message.components) {
-        button.message.components.forEach(actionRow => {
-            const newRow = new ActionRowBuilder();
-            actionRow.components.forEach(comp => {
-                // Ensure comp is a button before trying to create ButtonBuilder from it
-                if (comp.type === 2 /* BUTTON */) {
-                    const newComp = ButtonBuilder.from(comp);
-                    if (comp.customId === button.customId) {
-                        newComp.setDisabled(true);
-                    } else {
-                        newComp.setDisabled(false); // Re-enable others
-                    }
-                    newRow.addComponents(newComp);
-                } else {
-                     // If it's not a button (e.g. select menu), just add it back as is or handle appropriately
-                    newRow.addComponents(comp);
-                }
-            });
-            updatedComponents.push(newRow);
+    const updatedComponents = button.message.components.map(row => {
+        const newRow = new ActionRowBuilder();
+        row.components.forEach(comp => {
+            if (comp.type === 2 /* BUTTON */) {
+                const newComp = ButtonBuilder.from(comp);
+                newComp.setDisabled(comp.customId === originalCustomId);
+                newRow.addComponents(newComp);
+            } else {
+                newRow.addComponents(comp); // Add other component types as is
+            }
         });
-    }
+        return newRow;
+    });
 
     await button.editReply({ embeds: [listEmbed], components: updatedComponents });
     logger.info(`Sent Voice Leaderboard: ${title}`);
@@ -155,21 +147,22 @@ async function generateVoiceLeaderboard(button, title, options) {
 async function onButtonClick(button){ // 'button' is actually an interaction object
     if((button.customId.substr(0,5)==="VOICE")){
         const originalCustomId = button.customId; // Keep original for disabling button
-        button.customId = button.customId.substr(5); // Modify for switch case
+        //button.customId = button.customId.substr(5); // Modify for switch case //This line is removed as it's handled in generateVoiceLeaderboard now for clarity
 
-        switch(button.customId){
+        // Pass the full customId to generateVoiceLeaderboard and let it parse
+        switch(button.customId.substr(5)){ // Keep substr here for the switch routing
             case "bottom":
-                return generateVoiceLeaderboard(button, "Voice Channel Leaderboard (Bottom 10)", { sortOrder: 'bottom' });
+                return generateVoiceLeaderboard(button, "Voice Channel Leaderboard (Bottom 10)", { sortOrder: 'bottom', originalCustomId });
             case "top":
-                return generateVoiceLeaderboard(button, "Voice Channel Leaderboard (Top 10)", { sortOrder: 'top' });
+                return generateVoiceLeaderboard(button, "Voice Channel Leaderboard (Top 10)", { sortOrder: 'top', originalCustomId });
             case "muted":
-                return generateVoiceLeaderboard(button, "Voice Channel Leaderboard (Top 10 Muters)", { mutedFilter: true, sortOrder: 'top' });
+                return generateVoiceLeaderboard(button, "Voice Channel Leaderboard (Top 10 Muters)", { mutedFilter: true, sortOrder: 'top', originalCustomId });
             case "non-muted":
-                return generateVoiceLeaderboard(button, "Voice Channel Leaderboard (Top 10 Non-Muters)", { mutedFilter: false, sortOrder: 'top' });
+                return generateVoiceLeaderboard(button, "Voice Channel Leaderboard (Top 10 Non-Muters)", { mutedFilter: false, sortOrder: 'top', originalCustomId });
             case "30days":
-                return generateVoiceLeaderboard(button, "Voice Channel Leaderboard (Top Talkers - Last 30 days)", { timeFilterDays: 30, sortOrder: 'top' });
+                return generateVoiceLeaderboard(button, "Voice Channel Leaderboard (Top Talkers - Last 30 days)", { timeFilterDays: 30, sortOrder: 'top', originalCustomId });
             case "7days":
-                return generateVoiceLeaderboard(button, "Voice Channel Leaderboard (Top Talkers - Last 7 days)", { timeFilterDays: 7, sortOrder: 'top' });
+                return generateVoiceLeaderboard(button, "Voice Channel Leaderboard (Top Talkers - Last 7 days)", { timeFilterDays: 7, sortOrder: 'top', originalCustomId });
             case "channel":
                 logger.info("Gathering all voice timings for 'channel' specific leaderboard");
                 await button.deferUpdate();
@@ -222,9 +215,19 @@ async function onButtonClick(button){ // 'button' is actually an interaction obj
                         });
                     }
                     
-                    const updatedComponents = button.message.components.map(row => ActionRowBuilder.from(row).setComponents(
-                        row.components.map(comp => ButtonBuilder.from(comp).setDisabled(comp.customId === originalCustomId))
-                    ));
+                    const updatedComponents = button.message.components.map(row => {
+                        const newRow = new ActionRowBuilder();
+                        row.components.forEach(comp => {
+                            if (comp.type === 2 /* BUTTON */) {
+                                const newComp = ButtonBuilder.from(comp);
+                                newComp.setDisabled(comp.customId === originalCustomId);
+                                newRow.addComponents(newComp);
+                            } else {
+                                newRow.addComponents(comp); // Add other component types as is
+                            }
+                        });
+                        return newRow;
+                    });
                     await button.editReply({ embeds: [listEmbed], components: updatedComponents });
                     logger.info("Sent Voice Leaderboard (User/Channel)!");
                 } catch (error) {
@@ -274,9 +277,19 @@ async function onButtonClick(button){ // 'button' is actually an interaction obj
                         });
                     }
 
-                    const updatedComponents = button.message.components.map(row => ActionRowBuilder.from(row).setComponents(
-                        row.components.map(comp => ButtonBuilder.from(comp).setDisabled(comp.customId === originalCustomId))
-                    ));
+                    const updatedComponents = button.message.components.map(row => {
+                        const newRow = new ActionRowBuilder();
+                        row.components.forEach(comp => {
+                            if (comp.type === 2 /* BUTTON */) {
+                                const newComp = ButtonBuilder.from(comp);
+                                newComp.setDisabled(comp.customId === originalCustomId);
+                                newRow.addComponents(newComp);
+                            } else {
+                                newRow.addComponents(comp); // Add other component types as is
+                            }
+                        });
+                        return newRow;
+                    });
           
                     await button.editReply({ embeds: [listEmbed], components: updatedComponents });
                     logger.info("Sent Voice Leaderboard (Channel Use)!");

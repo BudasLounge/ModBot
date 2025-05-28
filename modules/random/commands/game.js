@@ -108,49 +108,51 @@ module.exports = {
         const newGameId = newGameResponse.game_joining_master.game_id;
 
         message.channel.send({ content: `Created a new game (ID: ${newGameId})! Configure it using the menu below.` });
-        const gameMenuEmbed = new MessageEmbed()
+        const gameMenuEmbed = new EmbedBuilder()
             .setColor("#c586b6")
             .setTitle(`Game Menu for ${message.member.displayName}'s Game (ID: ${newGameId})`)
             .setDescription("Use the buttons below to manage your game.")
-            .addField("Player Actions", "Players can join or leave the game lobby.")
-            .addField("Host Actions", "As the host, you can configure teams, manage players, control voice channels, and end the game.")
+            .addFields(
+                { name: "Player Actions", value: "Players can join or leave the game lobby." },
+                { name: "Host Actions", value: "As the host, you can configure teams, manage players, control voice channels, and end the game." }
+            )
             .setFooter({ text: "Some host actions are disabled until prerequisites are met (e.g., team setup)." });
 
-        const playerActionRow = new MessageActionRow()
+        const playerActionRow = new ActionRowBuilder()
             .addComponents(
-                new MessageButton()
+                new ButtonBuilder()
                     .setCustomId(`GAME_JOIN-${newGameId}`)
                     .setLabel('Join Game Lobby')
-                    .setStyle('SUCCESS'),
-                new MessageButton()
+                    .setStyle(ButtonStyle.Success),
+                new ButtonBuilder()
                     .setCustomId(`GAME_LEAVE-${newGameId}`)
                     .setLabel('Leave Game Lobby')
-                    .setStyle('DANGER'),
+                    .setStyle(ButtonStyle.Danger),
             );
 
-        const hostSetupRow = new MessageActionRow()
+        const hostSetupRow = new ActionRowBuilder()
             .addComponents(
-                new MessageButton()
+                new ButtonBuilder()
                     .setCustomId(`GAME_HOST_SETUP_TEAMS-${newGameId}`)
                     .setLabel('Setup Teams')
-                    .setStyle('PRIMARY'),
-                new MessageButton()
+                    .setStyle(ButtonStyle.Primary),
+                new ButtonBuilder()
                     .setCustomId(`GAME_HOST_MANAGE_PLAYERS-${newGameId}`)
                     .setLabel('Manage Players')
-                    .setStyle('SECONDARY')
+                    .setStyle(ButtonStyle.Secondary)
                     .setDisabled(true), // Disabled until teams are configured
             );
 
-        const hostControlRow = new MessageActionRow()
+        const hostControlRow = new ActionRowBuilder()
             .addComponents(
-                new MessageButton()
+                new ButtonBuilder()
                     .setCustomId(`GAME_HOST_VOICE_CONTROL-${newGameId}`)
                     .setLabel('Voice Controls')
-                    .setStyle('SECONDARY'),
-                new MessageButton()
+                    .setStyle(ButtonStyle.Secondary),
+                new ButtonBuilder()
                     .setCustomId(`GAME_HOST_END-${newGameId}`)
                     .setLabel('End Game')
-                    .setStyle('DANGER'),
+                    .setStyle(ButtonStyle.Danger),
             );
         message.channel.send({ embeds: [gameMenuEmbed], components: [playerActionRow, hostSetupRow, hostControlRow] });
     }

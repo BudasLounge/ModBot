@@ -44,14 +44,12 @@ module.exports = {
                         return (a[1] > b[1]) ? -1 : 1;
                     }
                 }
-                //var outputTitle = "Let's see who is in the lead:\n";
+                //var outputTitle = "Let\'s see who is in the lead:\n";
                 var output = "";
                 const ListEmbed2 = new Discord.EmbedBuilder()
                 .setColor("#f92f03")
-                .setTitle("Let's see who is in the lead: ");
-                /*const ListEmbed = new Discord.MessageEmbed()
-                .setColor("#f92f03")
-                .setTitle("Let's see who is in the lead: ");*/
+                .setTitle("Let\'s see who is in the lead: ");
+
                 if(respCheckServer.bet_configs[0].point_name.charAt(respCheckServer.bet_configs[0].point_name.length-1) === "s"){
                     respCheckServer.bet_configs[0].point_name = respCheckServer.bet_configs[0].point_name.substring(0, respCheckServer.bet_configs[0].point_name.length-1);
                 }
@@ -64,14 +62,11 @@ module.exports = {
                 for(var j=0; j<stop; j++){
                     output += (j+1) + ". " + pointUsers[j][0] + ": " + pointUsers[j][1] + " " + respCheckServer.bet_configs[0].point_name + "s\n";
                 }
-                /*for(var k = 0;k<stop;k++){
-                    ListEmbed.addField(pointUsers[k][0] + ": " + pointUsers[k][1] + " " + respCheckServer.bet_configs[0].point_name + "s", "...........................................................................");
-                }*/
-                //ListEmbed.addField("The list: ", output);
+
                 ListEmbed2.addFields({ name: "Placements:", value: output, inline: false });
-                //message.channel.send({ content: ListEmbed);
+
                 message.channel.send({ embeds: [ListEmbed2]});
-                //message.channel.send({ content: outputTitle + output);
+
             }else{
                 message.channel.send({ content: "Hit an error"});
                 return;
