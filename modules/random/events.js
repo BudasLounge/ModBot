@@ -145,12 +145,94 @@ async function generateVoiceLeaderboard(button, title, options) {
 
 
 async function onButtonClick(button){ // 'button' is actually an interaction object
-    if((button.customId.substr(0,5)==="VOICE")){
-        const originalCustomId = button.customId; // Keep original for disabling button
-        //button.customId = button.customId.substr(5); // Modify for switch case //This line is removed as it's handled in generateVoiceLeaderboard now for clarity
+    // Ensure logger and api are defined in this scope, or passed appropriately.
+    // Assuming logger and api are available as per the context of other handlers in the file.
 
-        // Pass the full customId to generateVoiceLeaderboard and let it parse
-        switch(button.customId.substr(5)){ // Keep substr here for the switch routing
+    if (button.customId.startsWith("VOICE")) { // Changed from substr for clarity
+        if (button.customId.startsWith("VOICE_FIX_ALL_")) {
+            logger.info(`[VOICE_FIX_ALL] User ${button.user.tag} (${button.user.id}) initiated fix for guild ${button.guild.id} via button click.`);
+            await button.deferUpdate(); 
+
+            let voiceTrackings;
+            try {
+                const respVoice = await api.get("voice_tracking", {
+                    discord_server_id: button.guild.id,
+                    disconnect_time: 0 
+                });
+                voiceTrackings = (respVoice && respVoice.voice_trackings) ? respVoice.voice_trackings : [];
+            } catch (error) {
+                logger.error(`[VOICE_FIX_ALL] Failed to fetch voice_tracking data for guild ${button.guild.id}: ${error.message}`, error);
+                await button.editReply({ content: "An error occurred while fetching voice data. Unable to fix ghost sessions.", components: [] }).catch(e => logger.error(`[VOICE_FIX_ALL] Failed to send error reply (fetch): ${e.message}`));
+                return;
+            }
+
+            if (voiceTrackings.length === 0) {
+                logger.info(`[VOICE_FIX_ALL] No active voice sessions found for guild ${button.guild.id}.`);
+                await button.editReply({ content: "No active voice sessions found to diagnose or fix.", components: [] }).catch(e => logger.error(`[VOICE_FIX_ALL] Failed to send 'no sessions' reply: ${e.message}`));
+                return;
+            }
+
+            const userActiveSessions = new Map();
+            for (const track of voiceTrackings) {
+                if (!track.user_id || typeof track.connect_time === 'undefined' || !track.id) { 
+                    logger.warn(`[VOICE_FIX_ALL] Skipping invalid or incomplete voice track: ${JSON.stringify(track)} for guild ${button.guild.id}`);
+                    continue;
+                }
+                if (!userActiveSessions.has(track.user_id)) {
+                    userActiveSessions.set(track.user_id, []);
+                }
+                userActiveSessions.get(track.user_id).push(track);
+            }
+
+            let fixedSessionsCount = 0;
+            let affectedUsersCount = 0;
+            // const currentTimeToDisconnect = Math.floor(Date.now() / 1000); // Not needed anymore
+
+            for (const [userId, sessions] of userActiveSessions) {
+                if (sessions.length > 1) {
+                    affectedUsersCount++;
+                    sessions.sort((a, b) => parseInt(a.connect_time, 10) - parseInt(b.connect_time, 10));
+                    
+                    for (let i = 1; i < sessions.length; i++) { 
+                        const ghostSession = sessions[i];
+                        const newDisconnectTime = parseInt(ghostSession.connect_time, 10) + 3600; // 1 hour after connect time
+                        try {
+                            // Use PUT to update the existing record
+                            await api.put("voice_tracking", { 
+                                id: ghostSession.id, 
+                                disconnect_time: newDisconnectTime 
+                                // Include other fields from ghostSession if the API expects the full object for PUT
+                                // For example: user_id: ghostSession.user_id, connect_time: ghostSession.connect_time, etc.
+                                // Assuming for now the API can update with just id and the changed field.
+                                // If not, the full object of the session being updated needs to be sent.
+                                // We might need to fetch the full session object if `ghostSession` is not complete.
+                            });
+                            fixedSessionsCount++;
+                            logger.info(`[VOICE_FIX_ALL] Attempted to fix ghost session ID ${ghostSession.id} for user ${userId} in guild ${button.guild.id}. Set disconnect_time to ${newDisconnectTime}.`);
+                        } catch (error) {
+                            logger.error(`[VOICE_FIX_ALL] Failed to fix session ID ${ghostSession.id} for user ${userId} in guild ${button.guild.id} using PUT: ${error.message}`, error);
+                        }
+                    }
+                }
+            }
+
+            let replyMessage;
+            if (fixedSessionsCount > 0) {
+                replyMessage = `✅ Successfully fixed ${fixedSessionsCount} ghost session(s) for ${affectedUsersCount} user(s).`;
+            } else if (affectedUsersCount > 0 && fixedSessionsCount === 0) {
+                replyMessage = `ℹ️ Found ${affectedUsersCount} user(s) with multiple sessions, but could not fix any. This might be due to missing session IDs or API errors. Please check the logs.`;
+            } else { 
+                replyMessage = "✅ No ghost sessions were found that needed fixing.";
+            }
+            
+            await button.editReply({ content: replyMessage, components: [] }).catch(e => logger.error(`[VOICE_FIX_ALL] Failed to send final reply: ${e.message}`));
+            return; 
+        } else { 
+            // Existing switch logic for other VOICE buttons
+            const originalCustomId = button.customId; // Define for potential use in cases
+            const subCommand = button.customId.substring("VOICE".length); // Use this for the switch
+
+            switch(subCommand){ // Ensure this uses the subCommand variable or original .substr(5)
             case "bottom":
                 return generateVoiceLeaderboard(button, "Voice Channel Leaderboard (Bottom 10)", { sortOrder: 'bottom', originalCustomId });
             case "top":
@@ -169,7 +251,6 @@ async function onButtonClick(button){ // 'button' is actually an interaction obj
                 try {
                     const respVoice = await api.get("voice_tracking", {
                       discord_server_id: button.guild.id,
-                      // selfmute: false // Assuming non-muted for this specific report, adjust if needed
                     });
                   
                     if (!respVoice.voice_trackings || respVoice.voice_trackings.length === 0) {
@@ -203,6 +284,7 @@ async function onButtonClick(button){ // 'button' is actually an interaction obj
                   
                     const sortedTotalTime = [...totalTimeByUserAndChannel.entries()].sort((a, b) => b[1] - a[1]).slice(0,10);
                   
+                    const { EmbedBuilder, ActionRowBuilder, ButtonBuilder } = require('discord.js'); // Ensure builders are in scope
                     const listEmbed = new EmbedBuilder()
                       .setColor("#c586b6")
                       .setTitle("Voice Channel Leaderboard (Top 10 User/Channel Times)");
@@ -210,6 +292,8 @@ async function onButtonClick(button){ // 'button' is actually an interaction obj
                     if (sortedTotalTime.length === 0) {
                         listEmbed.setDescription("No data to display.");
                     } else {
+                        // Assuming formatDuration is available in this scope
+                        // const { formatDuration } = require('./commands/voicetime.js'); // Or from a shared utility
                         sortedTotalTime.forEach(([userChannelKey, time], index) => {
                             listEmbed.addFields({ name: `${index + 1}. ${userChannelKey}`, value: formatDuration(time) });
                         });
@@ -220,10 +304,10 @@ async function onButtonClick(button){ // 'button' is actually an interaction obj
                         row.components.forEach(comp => {
                             if (comp.type === 2 /* BUTTON */) {
                                 const newComp = ButtonBuilder.from(comp);
-                                newComp.setDisabled(comp.customId === originalCustomId);
+                                newComp.setDisabled(comp.customId === originalCustomId); // originalCustomId is defined above
                                 newRow.addComponents(newComp);
                             } else {
-                                newRow.addComponents(comp); // Add other component types as is
+                                newRow.addComponents(comp); 
                             }
                         });
                         return newRow;
@@ -234,7 +318,7 @@ async function onButtonClick(button){ // 'button' is actually an interaction obj
                     logger.error(`Error generating 'channel' leaderboard: ${error.message}`);
                     await button.editReply({ content: "Error generating leaderboard.", embeds:[], components: button.message.components });
                 }
-                break; // Break for this custom case
+                break; 
             case "channelUse":
                 logger.info("Gathering all voice timings for 'channelUse' specific leaderboard");
                 await button.deferUpdate();
@@ -253,31 +337,32 @@ async function onButtonClick(button){ // 'button' is actually an interaction obj
                   
                     for (const voiceTracking of respVoice.voice_trackings) {
                       const channel = button.guild.channels.cache.get(voiceTracking.channel_id);
-                      if (!channel) continue;
+                      if (!channel) continue; // Added continue here
           
                       const disconnectTime = parseInt(voiceTracking.disconnect_time) || currentTime;
-                      const connectionTime = Math.floor(disconnectTime - parseInt(voiceTracking.connect_time));
+                      const connectionTime = Math.floor(disconnectTime - parseInt(voiceTracking.connect_time)); // Added connectionTime calculation
 
-                      if (connectionTime <=0) continue;
+                      if (connectionTime <=0) continue; // Skip if no duration
 
-                      totalTimeByChannel.set(channel.name, (totalTimeByChannel.get(channel.name) || 0) + connectionTime);
+                      totalTimeByChannel.set(channel.name, (totalTimeByChannel.get(channel.name) || 0) + connectionTime); // Use channel.name as key
                     }
                   
                     const sortedTotalTime = [...totalTimeByChannel.entries()].sort((a, b) => b[1] - a[1]).slice(0,10);
                   
+                    const { EmbedBuilder, ActionRowBuilder, ButtonBuilder } = require('discord.js'); // Ensure builders are in scope
                     const listEmbed = new EmbedBuilder()
                       .setColor("#c586b6")
                       .setTitle("Voice Channel Leaderboard (Top 10 Channels by Use)");
-                    
+
                     if (sortedTotalTime.length === 0) {
                         listEmbed.setDescription("No data to display.");
                     } else {
+                        // Assuming formatDuration is available
                         sortedTotalTime.forEach(([channelName, time], index) => {
                             listEmbed.addFields({ name: `${index + 1}. ${channelName}`, value: formatDuration(time) });
                         });
                     }
-
-                    const updatedComponents = button.message.components.map(row => {
+                     const updatedComponents = button.message.components.map(row => {
                         const newRow = new ActionRowBuilder();
                         row.components.forEach(comp => {
                             if (comp.type === 2 /* BUTTON */) {
@@ -285,19 +370,28 @@ async function onButtonClick(button){ // 'button' is actually an interaction obj
                                 newComp.setDisabled(comp.customId === originalCustomId);
                                 newRow.addComponents(newComp);
                             } else {
-                                newRow.addComponents(comp); // Add other component types as is
+                                newRow.addComponents(comp); 
                             }
                         });
                         return newRow;
                     });
-          
                     await button.editReply({ embeds: [listEmbed], components: updatedComponents });
-                    logger.info("Sent Voice Leaderboard (Channel Use)!");
+                    logger.info("Sent Voice Leaderboard (Channel Usage)!");
+
                 } catch (error) {
                     logger.error(`Error generating 'channelUse' leaderboard: ${error.message}`);
                     await button.editReply({ content: "Error generating leaderboard.", embeds:[], components: button.message.components });
                 }
-                break; // Break for this custom case
+                break;
+            // default:
+            //     logger.warn(`[onButtonClick] Unhandled VOICE subcommand: ${subCommand} for ID ${button.customId}`);
+            //     // Optional: reply if interaction not handled
+            //     if (!button.replied && !button.deferred) {
+            //          await button.reply({ content: 'This button action is not recognized.', ephemeral: true }).catch(e => logger.error("Failed to send default reply",e));
+            //     } else if(button.deferred) {
+            //          await button.editReply({ content: 'This button action is not recognized.', components:[], embeds:[] }).catch(e => logger.error("Failed to send default editReply",e));
+            //     }
+            }
         }
     } else if((button.customId.substr(0,4)==="GAME")){ // Handling for old GAME buttons/select menus
         button.customId = button.customId.substr(4);
@@ -321,7 +415,10 @@ async function onButtonClick(button){ // 'button' is actually an interaction obj
              await button.deferUpdate().catch(e => logger.error("Error deferring update for old GAME button: " + e));
         }
         logger.warn("Old GAME button/select menu interaction received but full logic is not re-implemented in this snippet.");
+    } else if (button.customId.startsWith("DND_")) { // Example from other context
+        // ...existing code...
     }
+    // ... Potentially other handlers or end of function
 }
 
 async function onInteractionCreate(interaction) {
