@@ -60,7 +60,7 @@ module.exports = {
                                 }
                                 playersList += `- ${escapedName}\n`;
                             }
-                            
+                           
                             ListEmbed.addFields({ name: "Players Online:", value: playersList || "No player information available" });
                         } else if (response.players.online > 0) {
                             ListEmbed.addFields({ name: "Players Online:", value: "Players are online, but names couldn't be retrieved" });

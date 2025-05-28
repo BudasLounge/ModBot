@@ -24,7 +24,7 @@ module.exports = {
             await message.channel.send({ content: "This will cause an error, try with different numbers. Down."});
         }else{
             var output = "";
-            for(var i = start;i<end;i+=interval){
+            for(var i = start;i<=end;i+=interval){
                 if(separator == '\\n'){
                     output+= i + "\n";
                 }else{

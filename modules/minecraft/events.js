@@ -85,54 +85,74 @@ async function onButtonClick(button){
         await button.reply({content: "An option was selected!"})
     }
     else if(button.isModalSubmit() && button.customId==="MCSERVERCREATORMODAL"){
-        if((button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && button.customId==="MCSERVERCREATORMODAL"){
-            
-            var display_name = button.fields.getTextInputValue('display_name');
-            var short_name = button.fields.getTextInputValue('short_name');
-            var port = button.fields.getTextInputValue('port');
-            var mc_version = button.fields.getTextInputValue('mc_version');
-            var pack_version = button.fields.getTextInputValue('pack_version');
-            try{
-                logger.info("in try");
-                var respServer = await api.get("minecraft_server", {
-                    server_ip: short_name+".budaslounge.com"
+        logger.info(">>MCSERVERCREATORMODAL()");
+        if (
+            (button.member.roles.cache.some(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") 
+            && button.customId === "MCSERVERCREATORMODAL"
+        ) {
+            logger.info("User has permission to use the button");
+            const display_name = button.fields.getTextInputValue('display_name');
+            const short_name = button.fields.getTextInputValue('short_name');
+            const port = button.fields.getTextInputValue('port');
+            const mc_version = button.fields.getTextInputValue('mc_version');
+            const pack_version = button.fields.getTextInputValue('pack_version');
+            logger.info(`Display Name: ${display_name}, Short Name: ${short_name}, Port: ${port}, MC Version: ${mc_version}, Pack Version: ${pack_version}`);
+        
+            let respServer;
+        
+            try {
+                logger.info("Attempting to retrieve server info...");
+                respServer = await api.get("minecraft_server", {
+                    server_ip: `${short_name}.budaslounge.com`
                 });
-            } catch(error){
-                logger.error(error.message);
+            } catch (error) {
+                logger.error("Error fetching server:", error.message);
+                button.channel.send({ content: "I hit a snag... " + error.message });
+                return;
             }
-            if(respServer.minecraft_servers.length<1){
-                //var date = (new Date()).toISOString().split('T')[0];
-                //button.channel.send({content: date})
-            try{
-                var currentIP = "0.0.0.0";
-                await axios.get('https://api.ipify.org?format=json')
-                    .then(response => {
-                        console.log('My public IP address is:', response.data.ip);
-                        currentIP = response.data.ip;
-                    })
-                    .catch(error => {
-                        console.error('Error fetching IP:', error);
-                    });
-                await api.post("minecraft_server", {
+            logger.info("Server info fetched");
+        
+            // If a server with that IP exists, inform the user and exit
+            if (respServer?.minecraft_servers?.length > 0) {
+                return button.channel.send({ 
+                    content: "I found a server with that server_ip already, try again" 
+                });
+            }
+        
+            try {
+                // Attempt to create a new Minecraft server record
+                const respServerPost =  await api.post("minecraft_server", {
                     display_name: display_name,
                     short_name: short_name,
                     server_ip: short_name+".budaslounge.com",
                     port: port.toString(),
                     status_api_port: "none",
-                    numeric_ip: currentIP,
+                    numeric_ip: "PROXIED",
                     mc_version: mc_version,
                     pack_version: pack_version,
                     rcon_port: (parseInt(port)+1).toString()
                 });
-            }catch(err){
-                logger.error(err.message);
-                button.channel.send({ content: "I hit a snag..." + err});
+            
+                logger.info("Response from API POST:", respServerPost);
+                // Check if the response indicates success. Adjust based on your API's conventions.
+                if (!respServerPost || !respServerPost.ok) {
+                    logger.error("API did not confirm the creation of the server:", respServerPost);
+                    await button.channel.send({ content: "Failed to create server due to API response." });
+                    return;
+                }
+            
+                // Notify the user of successful creation
+                await button.reply({ 
+                    content: `Added a new server with Display Name: ${display_name}` 
+                });
+            } catch (err) {
+                logger.error("Error creating server:", err.message);
+                await button.channel.send({ content: "I hit a snag... " + err.message });
                 return;
             }
-            }else{
-                button.channel.send({ content: "I found a server with that server_ip already, try again"});
-                return;
-            }
+            
+        } else {
+            button.channel.send({ content: "You don't have permission to use that button!" });
         }
         //else if((button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && button.customId==="MCSERVERDELETORMODAL"){
         //}
@@ -140,6 +160,7 @@ async function onButtonClick(button){
             button.channel.send({ content: "You don't have permission to use that button!"});
         }
         await button.reply({content:"Added a new server with Display Name: " +display_name});
+        logger.info("<<MCSERVERCREATORMODAL() SUCCESS");     
     }
 }
 
