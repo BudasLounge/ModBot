@@ -196,17 +196,19 @@ async function onButtonClick(button){ // 'button' is actually an interaction obj
                     for (let i = 1; i < sessions.length; i++) { 
                         const ghostSession = sessions[i];
                         const newDisconnectTime = parseInt(ghostSession.connect_time, 10) + 3600; // 1 hour after connect time
+                        
+                        // Prepare the full object for PUT, ensuring we update a copy
+                        const sessionUpdatePayload = { ...ghostSession }; // Create a shallow copy
+                        sessionUpdatePayload.disconnect_time = newDisconnectTime;
+
+                        // Note: If your API's PUT method for 'voice_tracking' 
+                        // expects only specific fields for an update rather than the full object,
+                        // this payload might need further adjustment by removing unchanged fields.
+                        // However, typically PUT implies replacing the resource with the given payload.
+
                         try {
-                            // Use PUT to update the existing record
-                            await api.put("voice_tracking", { 
-                                id: ghostSession.id, 
-                                disconnect_time: newDisconnectTime 
-                                // Include other fields from ghostSession if the API expects the full object for PUT
-                                // For example: user_id: ghostSession.user_id, connect_time: ghostSession.connect_time, etc.
-                                // Assuming for now the API can update with just id and the changed field.
-                                // If not, the full object of the session being updated needs to be sent.
-                                // We might need to fetch the full session object if `ghostSession` is not complete.
-                            });
+                            // Use PUT to update the existing record with the modified full session data
+                            await api.put("voice_tracking", sessionUpdatePayload);
                             fixedSessionsCount++;
                             logger.info(`[VOICE_FIX_ALL] Attempted to fix ghost session ID ${ghostSession.id} for user ${userId} in guild ${button.guild.id}. Set disconnect_time to ${newDisconnectTime}.`);
                         } catch (error) {
