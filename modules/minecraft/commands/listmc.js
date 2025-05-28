@@ -33,7 +33,7 @@ module.exports = {
 **Minecraft Version**: ${server.mc_version}
 **Pack Version**: ${server.pack_version}
 **Date Created**: ${dateCreated}
-**URL**: ${server.url || 'N/A'
+**URL**: ${server.url || 'N/A'}
 **Join Type**: ${server.whitelist}
                 `;
 

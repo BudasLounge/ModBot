@@ -61,7 +61,7 @@ module.exports = {
                                     game_player_id: Number(respTemp.game_joining_players[0].game_player_id)
                                 });
                             }
-                        
+                        }
                     } catch (playerDeleteError) {
                         this.logger.error(`Failed to delete player ${respPlayersList.game_joining_players[i].player_id} from old game ${oldGameId}: ${playerDeleteError.message || playerDeleteError}`);
                     }
