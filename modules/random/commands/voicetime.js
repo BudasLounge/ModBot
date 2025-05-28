@@ -14,18 +14,18 @@ module.exports = {
         if (subCommand === 'cleanup') {
             this.logger.info(`[voicetime cleanup] User ${message.author.tag} initiated cleanup request for guild ${message.guild.id}`);
             const confirmId = `VOICE_CLEANUP_CONFIRM_${message.guild.id}`;
-            const cancelId = `VOICE_CLEANUP_CANCEL_${message.guild.id}`; // Unique cancel ID per guild/interaction
+            const cancelId = `VOICE_CLEANUP_CANCEL_${message.guild.id}`;
             
-            const row = new MessageActionRow()
+            const row = new ActionRowBuilder()
                 .addComponents(
-                    new MessageButton()
+                    new ButtonBuilder()
                         .setCustomId(confirmId)
                         .setLabel('Confirm: Delete ALL Voice Data')
-                        .setStyle('DANGER'),
-                    new MessageButton()
+                        .setStyle(ButtonStyle.Danger),
+                    new ButtonBuilder()
                         .setCustomId(cancelId)
                         .setLabel('Cancel')
-                        .setStyle('SECONDARY')
+                        .setStyle(ButtonStyle.Secondary)
                 );
 
             await message.reply({
@@ -71,11 +71,6 @@ module.exports = {
                 }
             }
 
-        const voiceTrackings = respVoice.voice_trackings;
-        if (!voiceTrackings[0]) {
-        await message.channel.send({ content: "There is no data available yet..." });
-        return;
-        }
             if (ghostSessionUsers.length === 0) {
                 await reply.edit({ content: "✅ No ghost sessions found. All users have at most one active session." });
                 return;
@@ -92,16 +87,15 @@ module.exports = {
             }
             if (report.length > 1900) report = report.substring(0, 1900) + "... (list truncated)";
 
-            const components = [];
             const fixAllId = `VOICE_FIX_ALL_${message.guild.id}`;
-            components.push(
-                new MessageActionRow().addComponents(
-                    new MessageButton()
+            const components = [
+                new ActionRowBuilder().addComponents(
+                    new ButtonBuilder()
                         .setCustomId(fixAllId)
                         .setLabel('Attempt to Fix All Listed Ghost Sessions')
-                        .setStyle('DANGER')
+                        .setStyle(ButtonStyle.Danger)
                 )
-            );
+            ];
             
             await reply.edit({ content: report, components });
             return;
@@ -122,26 +116,6 @@ module.exports = {
 
             const voiceTrackings = respVoice && respVoice.voice_trackings ? respVoice.voice_trackings : [];
 
-        const ListEmbed = new EmbedBuilder()
-        .setColor("#c586b6")
-        .setTitle(`Voice Channel Leaderboard (Top 10) (Start Date: ${formattedDate})`);
-        for (let i = 0; i < sortedTotalTime.length; i++) {
-        const [user_id, duration] = sortedTotalTime[i];
-        try{
-            const userId = user_id;
-            const user = await message.guild.members.fetch(userId);
-            var mention = user.displayName;
-        }catch(error){
-            logger.error(error.message);
-        }
-        let diff = duration;
-        const units = [
-            { d: 60, l: "seconds" },
-            { d: 60, l: "minutes" },
-            { d: 24, l: "hours" },
-            // change 365 to a higher number if someone hits 365 days of cumulative voice timings
-            { d: 1000, l: "days" },
-        ];
             if (voiceTrackings.length === 0) {
                 message.channel.send({ content: "There is no voice tracking data available yet." });
                 return;
@@ -160,65 +134,8 @@ module.exports = {
                     continue;
                 }
 
-        const timingFilters = new ActionRowBuilder()
-        .addComponents(
-            new ButtonBuilder()
-            .setCustomId("VOICEnon-muted")
-            .setLabel("Non-muted times only")
-            .setStyle(ButtonStyle.Primary)
-            .setDisabled(false),
-            new ButtonBuilder()
-            .setCustomId("VOICEmuted")
-            .setLabel("Muted times only")
-            .setStyle(ButtonStyle.Primary)
-            .setDisabled(false),
-            new ButtonBuilder()
-            .setCustomId("VOICElonely")
-            .setLabel("Alone times only")
-            .setStyle(ButtonStyle.Primary)
-            .setDisabled(true),
-            new ButtonBuilder()
-            .setCustomId("VOICEbottom")
-            .setLabel("Bottom Talkers")
-            .setStyle(ButtonStyle.Primary)
-            .setDisabled(false),
-        );
-
-        const timingFilters2 = new ActionRowBuilder()
-        .addComponents(
-            new ButtonBuilder()
-            .setCustomId("VOICE30days")
-            .setLabel("Top - Last 30 Days")
-            .setStyle(ButtonStyle.Primary)
-            .setDisabled(false),
-            new ButtonBuilder()
-            .setCustomId("VOICE7days")
-            .setLabel("Top - Last 7 Days")
-            .setStyle(ButtonStyle.Primary)
-            .setDisabled(false),
-            new ButtonBuilder()
-            .setCustomId("VOICEchannel")
-            .setLabel("Top Talkers - By Channel")
-            .setStyle(ButtonStyle.Primary)
-            .setDisabled(false),
-            new ButtonBuilder()
-            .setCustomId("VOICEchannelUse")
-            .setLabel("Top Channels by use")
-            .setStyle(ButtonStyle.Primary)
-            .setDisabled(false),
-        );
-
-        await message.channel.send({ components: [timingFilters, timingFilters2], embeds: [ListEmbed] });
-        this.logger.info("Sent Voice Leaderboard!");
-    }
-}
                 const effectiveDisconnectTime = (rawDisconnectTime === 0 || isNaN(rawDisconnectTime)) ? currentTime : rawDisconnectTime;
                 const duration = Math.max(0, Math.floor(effectiveDisconnectTime - connectTime));
-
-                if (user_id && duration > 0) {
-                    const currentTotalForUser = totalTime.get(user_id) || 0;
-                    // this.logger.info(`[voicetime cmd] User ${user_id} segment: raw_conn=${track.connect_time}, raw_disc=${track.disconnect_time} | parsed_conn=${connectTime}, eff_disc=${effectiveDisconnectTime} | seg_dur=${duration} | old_total=${currentTotalForUser} | new_total=${currentTotalForUser + duration}`);
-                }
 
                 if (user_id) {
                     totalTime.set(user_id, (totalTime.get(user_id) || 0) + duration);
@@ -245,7 +162,7 @@ module.exports = {
                 .sort((a, b) => b[1] - a[1])
                 .slice(0, 10);
 
-            const listEmbed = new MessageEmbed()
+            const listEmbed = new EmbedBuilder()
                 .setColor("#c586b6")
                 .setTitle(`Voice Channel Leaderboard (Top 10) (Since: ${formattedDate})`);
 
@@ -261,32 +178,31 @@ module.exports = {
                     } catch (error) {
                         // this.logger.error(`[voicetime] Failed to fetch member for user ID ${userId}: ${error.message}. Using ID as fallback.`);
                     }
-                    listEmbed.addField(`${i + 1}. ${mention}`, this.formatDuration(duration));
+                    listEmbed.addFields({ name: `${i + 1}. ${mention}`, value: this.formatDuration(duration) });
                 }
             }
 
-            const timingFilters = new MessageActionRow()
+            const timingFilters = new ActionRowBuilder()
                 .addComponents(
-                    new MessageButton().setCustomId("VOICEnon-muted").setLabel("Non-muted times only").setStyle('PRIMARY').setDisabled(false),
-                    new MessageButton().setCustomId("VOICEmuted").setLabel("Muted times only").setStyle('PRIMARY').setDisabled(false),
-                    new MessageButton().setCustomId("VOICElonely").setLabel("Alone times only").setStyle('PRIMARY').setDisabled(true), // Assuming this is still intended to be disabled
-                    new MessageButton().setCustomId("VOICEbottom").setLabel("Bottom Talkers").setStyle('PRIMARY').setDisabled(false)
+                    new ButtonBuilder().setCustomId("VOICEnon-muted").setLabel("Non-muted times only").setStyle(ButtonStyle.Primary).setDisabled(false),
+                    new ButtonBuilder().setCustomId("VOICEmuted").setLabel("Muted times only").setStyle(ButtonStyle.Primary).setDisabled(false),
+                    new ButtonBuilder().setCustomId("VOICElonely").setLabel("Alone times only").setStyle(ButtonStyle.Primary).setDisabled(true),
+                    new ButtonBuilder().setCustomId("VOICEbottom").setLabel("Bottom Talkers").setStyle(ButtonStyle.Primary).setDisabled(false)
                 );
 
-            const timingFilters2 = new MessageActionRow()
+            const timingFilters2 = new ActionRowBuilder()
                 .addComponents(
-                    new MessageButton().setCustomId("VOICE30days").setLabel("Top - Last 30 Days").setStyle('PRIMARY').setDisabled(false),
-                    new MessageButton().setCustomId("VOICE7days").setLabel("Top - Last 7 Days").setStyle('PRIMARY').setDisabled(false),
-                    new MessageButton().setCustomId("VOICEchannel").setLabel("User by Channel").setStyle('PRIMARY').setDisabled(false),
-                    new MessageButton().setCustomId("VOICEchannelUse").setLabel("Channel Usage").setStyle('PRIMARY').setDisabled(false)
+                    new ButtonBuilder().setCustomId("VOICE30days").setLabel("Top - Last 30 Days").setStyle(ButtonStyle.Primary).setDisabled(false),
+                    new ButtonBuilder().setCustomId("VOICE7days").setLabel("Top - Last 7 Days").setStyle(ButtonStyle.Primary).setDisabled(false),
+                    new ButtonBuilder().setCustomId("VOICEchannel").setLabel("User by Channel").setStyle(ButtonStyle.Primary).setDisabled(false),
+                    new ButtonBuilder().setCustomId("VOICEchannelUse").setLabel("Channel Usage").setStyle(ButtonStyle.Primary).setDisabled(false)
                 );
 
             message.channel.send({ components: [timingFilters, timingFilters2], embeds: [listEmbed] });
             this.logger.info("[voicetime] Sent initial Voice Leaderboard!");
-
         } 
     },
-    formatDuration(totalSeconds) { // Moved formatDuration to be part of the exported module
+    formatDuration(totalSeconds) {
         if (totalSeconds <= 0) return "0 seconds";
 
         const days = Math.floor(totalSeconds / (24 * 60 * 60));
@@ -303,7 +219,7 @@ module.exports = {
         if (seconds > 0) parts.push(seconds + " " + (seconds === 1 ? "second" : "seconds"));
         
         if (parts.length === 0) {
-            return "0 seconds"; // Should ideally not happen if totalSeconds > 0 initially
+            return "0 seconds";
         }
         return parts.join(" ");
     }
