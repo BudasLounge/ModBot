@@ -1,6 +1,7 @@
 /**
  * Entry point for the bot. Sets up the discord client,
  * loads all the internal systems, then discovers modules and commands.
+ * CURRENTLY IN THE DEVELOP djs14 BRANCH!
  */
 
 var fs = require('fs');
@@ -9,9 +10,8 @@ var request = require('request');
 var shell = require('shelljs');
 require('dotenv/config')
 
-const {Intents} = require('discord.js');
-const Discord = require('discord.js');
-const client = new Discord.Client({ intents: [Intents.FLAGS.GUILD_MEMBERS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.DIRECT_MESSAGES, Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_BANS, Intents.FLAGS.GUILD_INVITES, Intents.FLAGS.GUILD_VOICE_STATES] });
+const {Client, GatewayIntentBits, Discord, ActivityType} = require('discord.js');
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages, GatewayIntentBits.DirectMessages, GatewayIntentBits.GuildBans, GatewayIntentBits.GuildInvites, GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.MessageContent] });
 var config = JSON.parse(fs.readFileSync('modbot.json'));
 
 var ModuleHandler = require('./core/js/module_handler.js');
@@ -48,9 +48,8 @@ async function botInit () {
         channel.send({ content: config.startup_messages.update});
         fs.unlinkSync("updated.txt");
     } else {
-        channel.send({ content: config.startup_messages.restart});
-    }
-    client.user.setActivity(config.bot_activity.name, { type: config.bot_activity.type });
+        channel.send({ content: config.startup_messages.restart});    }
+    client.user.setActivity(config.bot_activity.name, { type: ActivityType.Playing });
 
     logger.info("Initialization of DnD scheduling messages starting...");
     const schedule = require('node-schedule');

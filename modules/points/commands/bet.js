@@ -8,8 +8,8 @@ module.exports = {
     has_state: false,//if this command uses the state engine
     async execute(message, args, extra) {
         const moment = require('moment');
+        const { EmbedBuilder, StringSelectMenuBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
         var api = extra.api;
-        const {MessageEmbed, MessageSelectMenu} = require('discord.js');
         var init_id = message.member.user.id;
         var respCheckServer;
         try{
@@ -123,67 +123,66 @@ module.exports = {
             }
             this.logger.info(respUploadInteraction);
 
-            const {MessageButton,MessageActionRow} = require('discord.js');
-            const ForBet = new MessageActionRow()
+            const ForBet = new ActionRowBuilder()
                 .addComponents(
-                    new MessageButton()
+                    new ButtonBuilder()
                         .setCustomId("BETS-"+serial+"-fh"+Math.ceil(bet_amount/2))
                         .setLabel('Bet Half ('+Math.ceil(bet_amount/2)+")")
-                        .setStyle('SUCCESS')
-                        .setDisabled("true"),
-                    new MessageButton()
+                        .setStyle(ButtonStyle.Success)
+                        .setDisabled(true),
+                    new ButtonBuilder()
                         .setCustomId("BETS-"+serial+"-fe"+Math.floor(bet_amount))
                         .setLabel('Bet Equal ('+Math.floor(bet_amount)+")")
-                        .setStyle('SUCCESS'),
-                    new MessageButton()
+                        .setStyle(ButtonStyle.Success),
+                    new ButtonBuilder()
                         .setCustomId("BETS-"+serial+"-fd"+Math.floor(bet_amount*2))
                         .setLabel('Bet Double ('+Math.floor(bet_amount*2)+")")
-                        .setStyle('SUCCESS'),
+                        .setStyle(ButtonStyle.Success),
                 );
-                const AgainstBet = new MessageActionRow()
+                const AgainstBet = new ActionRowBuilder()
                 .addComponents(
-                    new MessageButton()
+                    new ButtonBuilder()
                         .setCustomId("BETS-"+serial+"-lh"+Math.ceil(bet_amount/2))
                         .setLabel('Bet Half ('+Math.ceil(bet_amount/2)+")")
-                        .setStyle('DANGER')
-                        .setDisabled("true"),
-                    new MessageButton()
+                        .setStyle(ButtonStyle.Danger)
+                        .setDisabled(true),
+                    new ButtonBuilder()
                         .setCustomId("BETS-"+serial+"-le"+Math.floor(bet_amount))
                         .setLabel('Bet Equal ('+Math.floor(bet_amount)+")")
-                        .setStyle('DANGER'),
-                    new MessageButton()
+                        .setStyle(ButtonStyle.Danger),
+                    new ButtonBuilder()
                         .setCustomId("BETS-"+serial+"-ld"+Math.floor(bet_amount*2))
                         .setLabel('Bet Double ('+Math.floor(bet_amount*2)+")")
-                        .setStyle('DANGER'),
+                        .setStyle(ButtonStyle.Danger),
                 );
-                const BetWin = new MessageActionRow()
+                const BetWin = new ActionRowBuilder()
                 .addComponents(
-                    new MessageButton()
+                    new ButtonBuilder()
                         .setCustomId("BETS-"+serial+"-fw")
                         .setLabel('Creator Won')
-                        .setStyle('SUCCESS'),
-                        new MessageButton()
+                        .setStyle(ButtonStyle.Success),
+                        new ButtonBuilder()
                         .setCustomId("BETS-"+serial+"-al")
                         .setLabel('Creator Lost')
-                        .setStyle('DANGER'),
+                        .setStyle(ButtonStyle.Danger),
                 );
-                const BetUtils = new MessageActionRow()
+                const BetUtils = new ActionRowBuilder()
                 .addComponents(
-                    new MessageButton()
+                    new ButtonBuilder()
                         .setCustomId("BETS-"+serial+"-bl")
                         .setLabel("Who's in this bet?")
-                        .setStyle('SECONDARY'),
-                    new MessageButton()
+                        .setStyle(ButtonStyle.Secondary),
+                    new ButtonBuilder()
                         .setCustomId("BETS-"+serial+"-bd")
                         .setLabel("Delete Bet")
-                        .setStyle('SECONDARY'),
+                        .setStyle(ButtonStyle.Secondary),
                 )
-                const SelectMenu = new MessageActionRow()
+                const SelectMenu = new ActionRowBuilder()
 			    .addComponents(
-				    new MessageSelectMenu()
+				    new StringSelectMenuBuilder()
                         .setCustomId("BETS-"+'select')
                         .setPlaceholder('Select a bet amount')
-                        .setDisabled("true")
+                        .setDisabled(true)
                         .addOptions([
 						{
 							label: Math.floor(bet_amount*1.25).toString(),
@@ -230,10 +229,10 @@ module.exports = {
                 if(respCheckServer.bet_configs[0].point_name.charAt(respCheckServer.bet_configs[0].point_name.length-1) === "s"){
                     respCheckServer.bet_configs[0].point_name = respCheckServer.bet_configs[0].point_name.substring(0, respCheckServer.bet_configs[0].point_name.length-1);
                 }
-                const outputEmbed = new MessageEmbed()
+                const outputEmbed = new EmbedBuilder()
                 .setTitle("New bet created")
-                .addField(init_name.toString() + " has placed a bet for: " + bet_amount.toString() + " " + respCheckServer.bet_configs[0].point_name + "s", "The subject of the bet is: \n" + reason)
-                .addField("Use the buttons below to partake in the bet!", "Green means you agree, red means you disagree")
+                .addFields({ name: init_name.toString() + " has placed a bet for: " + bet_amount.toString() + " " + respCheckServer.bet_configs[0].point_name + "s", value: "The subject of the bet is: \n" + reason})
+                .addFields({ name: "Use the buttons below to partake in the bet!", value: "Green means you agree, red means you disagree"})
                 await message.reply({embeds: [outputEmbed], components: [BetWin, ForBet, AgainstBet, BetUtils, SelectMenu], content: "Reference number: " + serial + "\nThe bet will close: <t:"+ closing_time.unix().toString()+":R>"});
         }
     }

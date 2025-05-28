@@ -1,4 +1,123 @@
 var ApiClient = require("../../core/js/APIClient.js");
+var api = new ApiClient();
+const { ActionRowBuilder, ButtonBuilder, EmbedBuilder, StringSelectMenuBuilder, PermissionsBitField, ButtonStyle } = require('discord.js');
+//todo: add a way to track how many times a user streams and for how long
+async function onButtonClick(button){
+    //if (!button.isButton()){return}
+        if((button.customId.substr(0,5)==="VOICE")){
+        button.customId = button.customId.substr(5)
+        switch(button.customId){
+        case "bottom":
+            logger.info("Gathering all voice timings");
+            try{
+                var respVoice = await api.get("voice_tracking",{
+                    discord_server_id:button.guild.id
+                })
+            }catch(error){
+                logger.error(error);
+            }
+
+            logger.info("Starting the additive loop");
+            var totalTime = [];
+            logger.info(respVoice.voice_trackings.length);
+            logger.info(totalTime.length);
+            for(var i = 0;i<respVoice.voice_trackings.length;i++){
+                if(parseInt(respVoice.voice_trackings[i].disconnect_time) === 0){
+                    respVoice.voice_trackings[i].disconnect_time = Math.floor(new Date().getTime() / 1000)
+                }
+                var flag = false;
+                for(var j = 0;j<totalTime.length;j++){
+                    if(totalTime[j][0] == respVoice.voice_trackings[i].user_id){
+                        //logger\.info\("Adding to existing row\."\)
+                        totalTime[j][1] += Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))
+                        flag = true;
+                        break;
+                    }
+                }
+                if(!flag){
+                    logger.info("Creating a new row.")
+                    totalTime.push([respVoice.voice_trackings[i].user_id, Math.floor(parseInt(respVoice.voice_trackings[i].disconnect_time) - parseInt(respVoice.voice_trackings[i].connect_time))])
+                }
+            }
+            logger.info("Printing array to a table, will only show up in live console, not logs...")
+            console.table(totalTime);
+            var output = "";
+
+            totalTime.sort(compareSecondColumnReverse);
+            logger.info("Printing array to a table after sorting...")
+            console.table(totalTime);
+            var output = "";
+            var ListEmbed = new EmbedBuilder()
+            .setColor("#c586b6")
+            .setTitle("Voice Channel Leaderboard (Bottom 10)");
+            var count = 10;
+            if(totalTime.length<count) {count = totalTime.length;} 
+            await button.deferUpdate();
+            for(var k = 0;k<count;k++){
+                try{
+                    const userId = totalTime[k][0];
+                    const user = await button.guild.members.fetch(userId);
+                    var mention = user.displayName;
+                }catch(error){
+                    logger.error(error.message);
+                }
+                var diff = Math.floor(totalTime[k][1]), units = [
+                    { d: 60, l: "seconds" },
+                    { d: 60, l: "minutes" },
+                    { d: 24, l: "hours" },
+                    { d: 365, l: "days" }
+                ];
+            
+                var s = '';
+                for (var i = 0; i < units.length; ++i) {
+                s = (diff % units[i].d) + " " + units[i].l + " " + s;
+                diff = Math.floor(diff / units[i].d);
+                }
+                ListEmbed.addFields({ name: (k+1).toString() + ". " + mention, value: s.toString() });
+            }
+            
+
+            var timingFilters = new ActionRowBuilder()
+            .addComponents(
+                new ButtonBuilder()
+                    .setCustomId("VOICEnon-muted")
+                    .setLabel("Non-muted times only")
+                    .setStyle(ButtonStyle.Primary)
+                    .setDisabled(false),
+                new ButtonBuilder()
+                    .setCustomId("VOICEmuted")
+                    .setLabel("Muted times only")
+                    .setStyle(ButtonStyle.Primary)
+                    .setDisabled(false),
+                new ButtonBuilder()
+                    .setCustomId("VOICEtop")
+                    .setLabel("Top Talkers")
+                    .setStyle(ButtonStyle.Primary)
+                    .setDisabled(false),
+            );
+            var timingFilters2 = new ActionRowBuilder()
+            .addComponents(
+                new ButtonBuilder()
+                    .setCustomId("VOICE30days")
+                    .setLabel("Top - Last 30 Days")
+                    .setStyle(ButtonStyle.Primary)
+                    .setDisabled(false),
+                new ButtonBuilder()
+                    .setCustomId("VOICE7days")
+                    .setLabel("Top - Last 7 Days")
+                    .setStyle(ButtonStyle.Primary)
+                    .setDisabled(false),
+                    new ButtonBuilder()
+                    .setCustomId("VOICEchannel")
+                    .setLabel("Top Talkers - By Channel")
+                    .setStyle(ButtonStyle.Primary)
+                    .setDisabled(false),
+                    new ButtonBuilder()
+                .setCustomId("VOICEchannelUse")
+                .setLabel("Top Channels by use")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            );
 var api = new ApiClient(); // Module-scoped API client
 const { MessageActionRow, MessageButton, MessageEmbed, Modal, TextInputComponent } = require('discord.js'); // Added Modal, TextInputComponent
 
@@ -84,6 +203,41 @@ async function generateVoiceLeaderboard(button, title, options) {
                 continue;
             }
         }
+        logger.info("Printing array to a table, will only show up in live console, not logs...")
+        console.table(totalTime);
+        var output = "";
+
+        totalTime.sort(compareSecondColumn);
+        logger.info("Printing array to a table after sorting...")
+            console.table(totalTime);
+        var ListEmbed = new EmbedBuilder()
+        .setColor("#c586b6")
+        .setTitle("Voice Channel Leaderboard (Top 10)");
+        var count = 10;
+        if(totalTime.length<count) {count = totalTime.length;}
+        await button.deferUpdate();
+        for(var k = 0;k<count;k++){
+            try{
+                const userId = totalTime[k][0];
+                const user = await button.guild.members.fetch(userId);
+                var mention = user.displayName;
+            }catch(error){
+                logger.error(error.message);
+            }
+            logger.info(mention);
+            var diff = Math.floor(totalTime[k][1]), units = [
+                { d: 60, l: "seconds" },
+                { d: 60, l: "minutes" },
+                { d: 24, l: "hours" },
+                { d: 365, l: "days" }
+            ];
+        
+            var s = '';
+            for (var i = 0; i < units.length; ++i) {
+            s = (diff % units[i].d) + " " + units[i].l + " " + s;
+            diff = Math.floor(diff / units[i].d);
+            }
+            ListEmbed.addFields({ name: (k+1).toString() + ". " + mention, value: s.toString() });
         
         const duration = Math.max(0, Math.floor(effectiveDisconnectTime - effectiveConnectTime));
 
@@ -97,6 +251,60 @@ async function generateVoiceLeaderboard(button, title, options) {
         return;
     }
 
+        var timingFilters = new ActionRowBuilder()
+        .addComponents(
+            new ButtonBuilder()
+                .setCustomId("VOICEnon-muted")
+                .setLabel("Non-muted times only")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            new ButtonBuilder()
+                .setCustomId("VOICEmuted")
+                .setLabel("Muted times only")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            new ButtonBuilder()
+                .setCustomId("VOICEbottom")
+                .setLabel("Bottom Talkers")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+        );
+        var timingFilters2 = new ActionRowBuilder()
+        .addComponents(
+            new ButtonBuilder()
+                .setCustomId("VOICE30days")
+                .setLabel("Top - Last 30 Days")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            new ButtonBuilder()
+                .setCustomId("VOICE7days")
+                .setLabel("Top - Last 7 Days")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+                new ButtonBuilder()
+                .setCustomId("VOICEchannel")
+                .setLabel("Top Talkers - By Channel")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+                new ButtonBuilder()
+                .setCustomId("VOICEchannelUse")
+                .setLabel("Top Channels by use")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+        );
+    await button.editReply({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
+    logger.info("Sent Voice Leaderboard!")
+    break;
+        case "muted":
+            button.deferUpdate();
+        logger.info("Gathering all voice timings");
+        try{
+            var respVoice = await api.get("voice_tracking",{
+                discord_server_id:button.guild.id,
+                selfmute:"true"
+            })
+        }catch(error){
+            logger.error(error);
     let sortedUsers = [...totalTimeByUser.entries()];
     if (sortOrder === 'top') {
         sortedUsers.sort((a, b) => b[1] - a[1]);
@@ -241,6 +449,24 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
                 await buttonInteraction.reply({ content: "Only the host can set up teams.", ephemeral: true });
                 return;
             }
+        }
+        logger.info("Printing array to a table, will only show up in live console, not logs...")
+        console.table(totalTime);
+        var output = "";
+
+        totalTime.sort(compareSecondColumn);
+        var ListEmbed = new EmbedBuilder()
+        .setColor("#c586b6")
+        .setTitle("Voice Channel Leaderboard (Top 10 muters)");
+        var count = 10;
+        if(totalTime.length<count) {count = totalTime.length;}
+        for(var k = 0;k<count;k++){
+            try{
+                const userId = totalTime[k][0];
+                const user = await button.guild.members.fetch(userId);
+                var mention = user.displayName;
+            }catch(error){
+                logger.error(error.message);
             const modal = new Modal()
                 .setCustomId(`GAME_MODAL_SETUP_TEAMS-${gameIdString}`)
                 .setTitle(`Team Setup for Game ID: ${gameIdString}`);
@@ -278,6 +504,75 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
                 await buttonInteraction.reply({ content: "Only the host can manage players.", ephemeral: true });
                 return;
             }
+            ListEmbed.addFields({ name: (k+1).toString() + ". " + mention, value: s.toString() });
+        }
+        
+
+        var timingFilters = new ActionRowBuilder()
+        .addComponents(
+            new ButtonBuilder()
+                .setCustomId("VOICEnon-muted")
+                .setLabel("Non-muted times only")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            new ButtonBuilder()
+                .setCustomId("VOICEmuted")
+                .setLabel("Muted times only")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(true),
+            new ButtonBuilder()
+                .setCustomId("VOICEtop")
+                .setLabel("Top Talkers")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+        );
+        var timingFilters2 = new ActionRowBuilder()
+        .addComponents(
+            new ButtonBuilder()
+                .setCustomId("VOICE30days")
+                .setLabel("Top - Last 30 Days")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            new ButtonBuilder()
+                .setCustomId("VOICE7days")
+                .setLabel("Top - Last 7 Days")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+                new ButtonBuilder()
+                .setCustomId("VOICEchannel")
+                .setLabel("Top Talkers - By Channel")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+                new ButtonBuilder()
+                .setCustomId("VOICEchannelUse")
+                .setLabel("Top Channels by use")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+        );
+        await button.editReply({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
+        logger.info("Sent Voice Leaderboard!")
+        break;
+    case "non-muted":
+        logger.info("Gathering all voice timings");
+        try{
+            var respVoice = await api.get("voice_tracking",{
+                discord_server_id:button.guild.id,
+                selfmute:false
+            })
+        }catch(error){
+            logger.error(error);
+        }
+        if(!respVoice.voice_trackings[0]){
+            button.channel.send({ content: "There is no data available yet..."}) 
+            return;
+        }
+        logger.info("Starting the additive loop");
+        var totalTime = [];
+        logger.info(respVoice.voice_trackings.length);
+        logger.info(totalTime.length);
+        for(var i = 0;i<respVoice.voice_trackings.length;i++){
+            if(parseInt(respVoice.voice_trackings[i].disconnect_time) === 0){
+                respVoice.voice_trackings[i].disconnect_time = Math.floor(new Date().getTime() / 1000)
             // Add this log:
             logger.info(`[GAME_BTN_MANAGE_PLAYERS] Game ${gameId} details on entry: Status='${gameDetails.status}', NumTeams=${gameDetails.num_teams}`);
 
@@ -358,7 +653,26 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
             if (!isHost) {
                 await buttonInteraction.reply({ content: "Only the host can control voice channels.", ephemeral: true });
                 return;
-            }
+            
+        }
+        logger.info("Printing array to a table, will only show up in live console, not logs...")
+        console.table(totalTime);
+        var output = "";
+
+        totalTime.sort(compareSecondColumn);
+        var ListEmbed = new EmbedBuilder()
+        .setColor("#c586b6")
+        .setTitle("Voice Channel Leaderboard (Top 10 non-muters)");
+        var count = 10;
+        if(totalTime.length<count) {count = totalTime.length;}
+        await button.deferUpdate();
+        for(var k = 0;k<count;k++){
+            try{
+                const userId = totalTime[k][0];
+                const user = await button.guild.members.fetch(userId);
+                var mention = user.displayName;
+            }catch(error){
+                logger.error(error.message);
 
             const deployDisabled = gameDetails.status !== 'lobby_configured' || !gameDetails.num_teams || gameDetails.num_teams === 0;
             let deployButtonLabel = "Move Teams to VCs";
@@ -392,6 +706,67 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
                 await buttonInteraction.reply({ content: "Only the host can assign players.", ephemeral: true });
                 return;
             }
+            ListEmbed.addFields({ name: (k+1).toString() + ". " + mention, value: s.toString() });
+        }
+        
+
+        var timingFilters = new ActionRowBuilder()
+        .addComponents(
+            new ButtonBuilder()
+                .setCustomId("VOICEnon-muted")
+                .setLabel("Non-muted times only")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(true),
+            new ButtonBuilder()
+                .setCustomId("VOICEmuted")
+                .setLabel("Muted times only")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            new ButtonBuilder()
+                .setCustomId("VOICEtop")
+                .setLabel("Top Talkers")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+        );
+        var timingFilters2 = new ActionRowBuilder()
+        .addComponents(
+            new ButtonBuilder()
+                .setCustomId("VOICE30days")
+                .setLabel("Top - Last 30 Days")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            new ButtonBuilder()
+                .setCustomId("VOICE7days")
+                .setLabel("Top - Last 7 Days")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+                new ButtonBuilder()
+                .setCustomId("VOICEchannel")
+                .setLabel("Top Talkers - By Channel")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+                new ButtonBuilder()
+                .setCustomId("VOICEchannelUse")
+                .setLabel("Top Channels by use")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+        );
+        await button.editReply({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
+        logger.info("Sent Voice Leaderboard!")
+        break;
+
+
+        case "channel":
+
+
+            logger.info("Gathering all voice timings");
+            /*try{
+                var respVoice = await api.get("voice_tracking",{
+                    discord_server_id:button.guild.id,
+                    selfmute:false
+                })
+            }catch(error){
+                logger.error(error);
             if (gameDetails.status === 'setup' || !gameDetails.num_teams || gameDetails.num_teams === 0) {
                 await buttonInteraction.reply({ content: "Teams need to be configured first before assigning players. Use 'Setup Teams'.", ephemeral: true });
                 return;
@@ -465,6 +840,216 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
                     await buttonInteraction.editReply({ content: `Could not find voice channels for: ${[...channelsNotFound].join(', ')}. Please create them or configure them.` });
                     return;
                 }
+            }
+            logger.info("Printing array to a table, will only show up in live console, not logs...")
+            console.table(totalTime);
+            var output = "";
+    
+            totalTime.sort(compareSecondColumn);
+            var ListEmbed = new EmbedBuilder()
+            .setColor("#c586b6")
+            .setTitle("Voice Channel Leaderboard (Top 10 channel times)");
+            var count = 10;
+            if(totalTime.length<count) {count = totalTime.length;}
+            for(var k = 0;k<count;k++){
+                var diff = Math.floor(totalTime[k][1]), units = [
+                    { d: 60, l: "seconds" },
+                    { d: 60, l: "minutes" },
+                    { d: 24, l: "hours" },
+                    { d: 365, l: "days" }
+                ];
+                  var s = '';
+            for (var i = 0; i < units.length; ++i) {
+            s = (diff % units[i].d) + " " + units[i].l + " " + s;
+            diff = Math.floor(diff / units[i].d);
+            }
+            ListEmbed.addFields({ name: (k+1).toString() + ". " + totalTime[k][0], value: s.toString(), inline: false });
+        }
+        var timingFilters = new ActionRowBuilder()
+                .addComponents(
+            new ButtonBuilder()
+                .setCustomId("VOICEnon-muted")
+                .setLabel("Non-muted times only")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            new ButtonBuilder()
+                .setCustomId("VOICEmuted")
+                .setLabel("Muted times only")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            new ButtonBuilder()
+                .setCustomId("VOICEtop")
+                .setLabel("Top Talkers")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+        );
+        var timingFilters2 = new ActionRowBuilder()
+        .addComponents(
+            new ButtonBuilder()
+                .setCustomId("VOICE30days")
+                .setLabel("Top - Last 30 Days")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            new ButtonBuilder()
+                .setCustomId("VOICE7days")
+                .setLabel("Top - Last 7 Days")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            new ButtonBuilder()
+                .setCustomId("VOICEchannel")
+                .setLabel("Top Talkers - By Channel")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            new ButtonBuilder()
+                .setCustomId("VOICEchannelUse")
+                .setLabel("Top Channels by use")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+        );
+        await button.update({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
+        logger.info("Sent Voice Leaderboard!")*/
+        try {
+            const respVoice = await api.get("voice_tracking", {
+              discord_server_id: button.guild.id,
+              selfmute: false
+            });
+          
+            if (!respVoice.voice_trackings[0]) {
+              await button.channel.send({ content: "There is no data available yet..." });
+              return;
+            }
+          
+            const totalTime = new Map();
+            const currentTime = Math.floor(new Date().getTime() / 1000);
+            await button.deferUpdate();
+            for (const voiceTracking of respVoice.voice_trackings) {
+              const channelName = button.guild.channels.cache.get(voiceTracking.channel_id);
+              if (!channelName) {
+                // Skip if the channel doesn't exist
+                continue;
+              }
+              const disconnectTime = parseInt(voiceTracking.disconnect_time) || currentTime;
+              //if (!button.guild.members.cache.has(voiceTracking.user_id)) {
+              //  logger.error("User not found in the guild. ID: " + voiceTracking.user_id + " Username: " + voiceTracking.username);
+              //  continue;
+              //}
+              let user;
+              try{
+                //logger.info("Fetching user  " + voiceTracking.user_id + " with username " + voiceTracking.username)
+                user = await button.guild.members.fetch(voiceTracking.user_id)
+              }catch(error){
+                logger.error(error.message +  " ID: " + voiceTracking.user_id+ " Username: " + voiceTracking.username);
+                continue;
+              }
+              const usernameChannel = `${user.displayName}, channel: ${channelName.name}`;
+              const connectionTime = Math.floor(disconnectTime - parseInt(voiceTracking.connect_time));
+          
+              if (totalTime.has(usernameChannel)) {
+                totalTime.set(usernameChannel, totalTime.get(usernameChannel) + connectionTime);
+              } else {
+                totalTime.set(usernameChannel, connectionTime);
+              }
+            }
+          
+            console.table([...totalTime]);
+          
+            const sortedTotalTime = [...totalTime].sort((a, b) => b[1] - a[1]);
+          
+            const ListEmbed = new EmbedBuilder()
+              .setColor("#c586b6")
+              .setTitle("Voice Channel Leaderboard (Top 10 channel times)");
+          
+            const count = Math.min(10, sortedTotalTime.length);
+            for (let i = 0; i < count; i++) {
+              const [usernameChannel, time] = sortedTotalTime[i];
+              let diff = time;
+              const units = [
+                { d: 60, l: "seconds" },
+                { d: 60, l: "minutes" },
+                { d: 24, l: "hours" },
+                { d: 365, l: "days" }
+              ];
+          
+              let s = "";
+              for (let i = 0; i < units.length; ++i) {
+                s = `${diff % units[i].d} ${units[i].l} ${s}`;
+                diff = Math.floor(diff / units[i].d);
+              }
+          
+              ListEmbed.addFields({ name: `${i + 1}. ${usernameChannel}`, value: s });
+            }
+          
+            const timingFilters = new ActionRowBuilder().addComponents(
+              new ButtonBuilder()
+                .setCustomId("VOICEnon-muted")
+                .setLabel("Non-muted times only")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+              new ButtonBuilder()
+                .setCustomId("VOICEmuted")
+                .setLabel("Muted times only")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+              new ButtonBuilder()
+                .setCustomId("VOICEtop")
+                .setLabel("Top Talkers")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false)
+            );
+          
+            const timingFilters2 = new ActionRowBuilder().addComponents(
+              new ButtonBuilder()
+                .setCustomId("VOICE30days")
+                .setLabel("Top - Last 30 Days")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+              new ButtonBuilder()
+                .setCustomId("VOICE7days")
+                .setLabel("Top - Last 7 Days")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+              new ButtonBuilder()
+                .setCustomId("VOICEchannel")
+                .setLabel("Top Talkers - By Channel")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+              new ButtonBuilder()
+                .setCustomId("VOICEchannelUse")
+                .setLabel("Top Channels by use")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false)
+            );
+          
+            await button.editReply({ components: [timingFilters, timingFilters2], embeds: [ListEmbed] });
+            console.info("Sent Voice Leaderboard!");
+          } catch (error) {
+            console.error(error);
+          }
+        break;
+       
+       
+        case "channelUse":
+            logger.info("Gathering all voice timings");
+        /*try{
+            var respVoice = await api.get("voice_tracking",{
+                discord_server_id:button.guild.id,
+                selfmute:false
+            })
+        }catch(error){
+            logger.error(error);
+        }
+        if(!respVoice.voice_trackings[0]){
+            button.channel.send({ content: "There is no data available yet..."}) 
+            return;
+        }
+        logger.info("Starting the additive loop");
+        var totalTime = [];
+        logger.info(respVoice.voice_trackings.length);
+        logger.info(totalTime.length);
+        for(var i = 0;i<respVoice.voice_trackings.length;i++){
+            var channelNameUse = button.guild.channels.cache.get(respVoice.voice_trackings[i].channel_id)
+            if(parseInt(respVoice.voice_trackings[i].disconnect_time) === 0){
+                respVoice.voice_trackings[i].disconnect_time = Math.floor(new Date().getTime() / 1000)
 
                 for (const player of playersToMove) {
                     if (!player.team_id || player.team_id <= 0 || player.team_id > gameDetails.num_teams) {
@@ -575,6 +1160,197 @@ async function handleGameSetupTeamsModal(modalInteraction, logger, localApi) {
             await modalInteraction.editReply({ content: "Original game not found. Cannot update settings." });
             return;
         }
+        logger.info("Printing array to a table, will only show up in live console, not logs...")
+        console.table(totalTime);
+        var output = "";
+
+        totalTime.sort(compareSecondColumn);
+        var ListEmbed = new EmbedBuilder()
+        .setColor("#c586b6")
+        .setTitle("Voice Channel Leaderboard (Top 10 Channels by use)");
+        var count = 10;
+        if(totalTime.length<count) {count = totalTime.length;}
+        for(var k = 0;k<count;k++){
+            var diff = Math.floor(totalTime[k][1]), units = [
+                { d: 60, l: "seconds" },
+                { d: 60, l: "minutes" },
+                { d: 24, l: "hours" },
+                { d: 1000, l: "days" }
+            ];
+
+            var s = '';
+            for (var i = 0; i < units.length; ++i) {
+            s = (diff % units[i].d) + " " + units[i].l + " " + s;        diff = Math.floor(diff / units[i].d);
+        }
+        ListEmbed.addFields({ name: (k+1).toString() + ". " + totalTime[k][0], value: s.toString(), inline: false });
+    }
+    
+
+    var timingFilters = new ActionRowBuilder()
+        .addComponents(
+            new ButtonBuilder()
+                .setCustomId("VOICEnon-muted")
+                .setLabel("Non-muted times only")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            new ButtonBuilder()
+                .setCustomId("VOICEmuted")
+                .setLabel("Muted times only")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            new ButtonBuilder()
+                .setCustomId("VOICEtop")
+                .setLabel("Top Talkers")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+        );
+        var timingFilters2 = new ActionRowBuilder()
+        .addComponents(
+            new ButtonBuilder()
+                .setCustomId("VOICE30days")
+                .setLabel("Top - Last 30 Days")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            new ButtonBuilder()
+                .setCustomId("VOICE7days")
+                .setLabel("Top - Last 7 Days")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+                new ButtonBuilder()
+                .setCustomId("VOICEchannel")
+                .setLabel("Top Talkers - By Channel")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+                new ButtonBuilder()
+                .setCustomId("VOICEchannelUse")
+                .setLabel("Top Channels by use")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(true),
+        );
+        await button.update({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
+        logger.info("Sent Voice Leaderboard!")*/
+        try {
+            const respVoice = await api.get("voice_tracking", {
+              discord_server_id: button.guild.id,
+              selfmute: false
+            });
+          
+            if (!respVoice.voice_trackings[0]) {
+              await button.channel.send({ content: "There is no data available yet..." });
+              return;
+            }
+          
+            const totalTime = new Map();
+            const currentTime = Math.floor(new Date().getTime() / 1000);
+          
+            for (const voiceTracking of respVoice.voice_trackings) {
+              let channelNameUse = button.guild.channels.cache.get(voiceTracking.channel_id);
+          
+              if (!channelNameUse) {
+                // Skip if the channel doesn't exist
+                continue;
+              }
+          
+              const disconnectTime = parseInt(voiceTracking.disconnect_time) || currentTime;
+              const connectionTime = Math.floor(disconnectTime - parseInt(voiceTracking.connect_time));
+          
+              const channelName = channelNameUse.name;
+              if (totalTime.has(channelName)) {
+                totalTime.set(channelName, totalTime.get(channelName) + connectionTime);
+              } else {
+                totalTime.set(channelName, connectionTime);
+              }
+            }
+          
+            console.table([...totalTime]);
+          
+            const sortedTotalTime = [...totalTime].sort((a, b) => b[1] - a[1]);
+          
+            const ListEmbed = new EmbedBuilder()
+              .setColor("#c586b6")
+              .setTitle("Voice Channel Leaderboard (Top 10 Channels by use)");
+          
+            const count = Math.min(10, sortedTotalTime.length);
+          
+            for (let i = 0; i < count; i++) {
+              const [channelName, time] = sortedTotalTime[i];
+              let diff = time;
+              const units = [
+                { d: 60, l: "seconds" },
+                { d: 60, l: "minutes" },
+                { d: 24, l: "hours" },
+                { d: 1000, l: "days" }
+              ];
+          
+              let s = "";
+              for (let i = 0; i < units.length; ++i) {
+                s = `${diff % units[i].d} ${units[i].l} ${s}`;
+                diff = Math.floor(diff / units[i].d);
+              }
+          
+              ListEmbed.addFields({ name: `${i + 1}. ${channelName}`, value: s });
+            }
+          
+            const timingFilters = new ActionRowBuilder().addComponents(
+              new ButtonBuilder()
+                .setCustomId("VOICEnon-muted")
+                .setLabel("Non-muted times only")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+              new ButtonBuilder()
+                .setCustomId("VOICEmuted")
+                .setLabel("Muted times only")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+              new ButtonBuilder()
+                .setCustomId("VOICEtop")
+                .setLabel("Top Talkers")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false)
+            );
+          
+            const timingFilters2 = new ActionRowBuilder().addComponents(
+              new ButtonBuilder()
+                .setCustomId("VOICE30days")
+                .setLabel("Top - Last 30 Days")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+              new ButtonBuilder()
+                .setCustomId("VOICE7days")
+                .setLabel("Top - Last 7 Days")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+              new ButtonBuilder()
+                .setCustomId("VOICEchannel")
+                .setLabel("Top Talkers - By Channel")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+              new ButtonBuilder()
+                .setCustomId("VOICEchannelUse")
+                .setLabel("Top Channels by use")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(true)
+            );
+          
+            await button.update({ components: [timingFilters, timingFilters2], embeds: [ListEmbed] });
+            console.info("Sent Voice Leaderboard!");
+          } catch (error) {
+            console.error(error);
+          }
+        break;
+        
+        
+        case "30days":
+            logger.info("Gathering all voice timings");
+            var today = Math.floor(new Date().getTime() / 1000);
+            var startDate = (today - (30*24*60*60));
+        try{
+            var respVoice = await api.get("voice_tracking",{
+                discord_server_id:button.guild.id,
+                _filter: "disconnect_time > " + startDate
+            })
+        }catch(error){
+            logger.error(error);
         const gameMasterDetails = gameMasterResp.game_joining_masters[0];
 
         if (gameMasterDetails.host_id !== userId) {
@@ -642,6 +1418,38 @@ async function handleGameSetupTeamsModal(modalInteraction, logger, localApi) {
                 logger.info(`[GAME_MODAL_SETUP] Original game message for game ${gameId} updated after team setup.`);
             }
         }
+        logger.info("Printing array to a table, will only show up in live console, not logs...")
+        console.table(totalTime);
+        var output = "";
+
+        totalTime.sort(compareSecondColumn);
+        var ListEmbed = new EmbedBuilder()
+        .setColor("#c586b6")
+        .setTitle("Voice Channel Leaderboard (Top talkers - Last 30 days)");
+        var count = 10;
+        if(totalTime.length<count) {count = totalTime.length;}
+        await button.deferUpdate();
+        for(var k = 0;k<count;k++){
+            try{
+                const userId = totalTime[k][0];
+                const user = await button.guild.members.fetch(userId);
+                var mention = user.displayName;
+            }catch(error){
+                logger.error(error.message);
+            }
+            var diff = Math.floor(totalTime[k][1]), units = [
+                { d: 60, l: "seconds" },
+                { d: 60, l: "minutes" },
+                { d: 24, l: "hours" },
+                { d: 1000, l: "days" }
+            ];
+        
+            var s = '';
+            for (var i = 0; i < units.length; ++i) {
+            s = (diff % units[i].d) + " " + units[i].l + " " + s;
+            diff = Math.floor(diff / units[i].d);
+            }
+            ListEmbed.addFields({ name: (k+1).toString() + ". " + mention, value: s.toString() });
         await modalInteraction.editReply({ content: `Game settings updated! Teams: ${parsedNumTeams}, Max Players/Team: ${parsedMaxPlayers === 0 ? "Unlimited" : parsedMaxPlayers}. You can now manage players and voice controls.` });
 
     } catch (error) {
@@ -653,7 +1461,68 @@ async function handleGameSetupTeamsModal(modalInteraction, logger, localApi) {
         }
     }
 }
+        var timingFilters = new ActionRowBuilder()
+        .addComponents(
+            new ButtonBuilder()
+                .setCustomId("VOICEnon-muted")
+                .setLabel("Non-muted times only")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            new ButtonBuilder()
+                .setCustomId("VOICEmuted")
+                .setLabel("Muted times only")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            new ButtonBuilder()
+                .setCustomId("VOICEtop")
+                .setLabel("Top Talkers")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+        );
+        var timingFilters2 = new ActionRowBuilder()
+        .addComponents(
+            new ButtonBuilder()
+                .setCustomId("VOICE30days")
+                .setLabel("Top - Last 30 Days")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(true),
+            new ButtonBuilder()
+                .setCustomId("VOICE7days")
+                .setLabel("Top - Last 7 Days")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+                new ButtonBuilder()
+                .setCustomId("VOICEchannel")
+                .setLabel("Top Talkers - By Channel")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+                new ButtonBuilder()
+                .setCustomId("VOICEchannelUse")
+                .setLabel("Top Channels by use")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+        );
+        await button.editReply({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
+        logger.info("Sent Voice Leaderboard!")
+        break;
 
+
+        case "7days":
+            logger.info("Gathering all voice timings");
+            var today = Math.floor(new Date().getTime() / 1000);
+            var startDate = (today - (7*24*60*60));
+            logger.info("Start Date: " + startDate);
+        try{
+            var respVoice = await api.get("voice_tracking",{
+                discord_server_id:button.guild.id,
+                _filter: "disconnect_time > " + startDate
+            });
+        }catch(error){
+            logger.error(error);
+        }
+        logger.info(respVoice)
+        if(!respVoice.voice_trackings[0]){
+            button.channel.send({ content: "There is no data available yet..."}) 
 // NEW: Placeholder for Assign Player Modal Handler
 async function handleAssignPlayerModal(modalInteraction, logger, localApi) {
     const customId = modalInteraction.customId; // GAME_MODAL_SUBMIT_ASSIGN_PLAYER-<gameId>
@@ -677,6 +1546,1216 @@ async function handleAssignPlayerModal(modalInteraction, logger, localApi) {
             await modalInteraction.editReply({ content: "You are not authorized to perform this action or game not found." });
             return;
         }
+        logger.info("Printing array to a table, will only show up in live console, not logs...")
+        console.table(totalTime);
+        var output = "";
+
+        totalTime.sort(compareSecondColumn);
+        var ListEmbed = new EmbedBuilder()
+        .setColor("#c586b6")
+        .setTitle("Voice Channel Leaderboard (Top talkers - Last 7 days)");
+        var count = 10;
+        if(totalTime.length<count) {count = totalTime.length;}
+        await button.deferUpdate();
+        for(var k = 0;k<count;k++){
+            try{
+                const userId = totalTime[k][0];
+                const user = await button.guild.members.fetch(userId);
+                var mention = user.displayName;
+            }catch(error){
+                logger.error(error.message);
+            }
+            var diff = Math.floor(totalTime[k][1]), units = [
+                { d: 60, l: "seconds" },
+                { d: 60, l: "minutes" },
+                { d: 24, l: "hours" },
+                { d: 1000, l: "days" }
+            ];
+        
+            var s = '';
+            for (var i = 0; i < units.length; ++i) {
+            s = (diff % units[i].d) + " " + units[i].l + " " + s;
+            diff = Math.floor(diff / units[i].d);
+            }
+            ListEmbed.addFields({ name: (k+1).toString() + ". " + mention, value: s.toString() });
+        }
+        
+
+        var timingFilters = new ActionRowBuilder()
+        .addComponents(
+            new ButtonBuilder()
+                .setCustomId("VOICEnon-muted")
+                .setLabel("Non-muted times only")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            new ButtonBuilder()
+                .setCustomId("VOICEmuted")
+                .setLabel("Muted times only")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            new ButtonBuilder()
+                .setCustomId("VOICEtop")
+                .setLabel("Top Talkers")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+        );
+        var timingFilters2 = new ActionRowBuilder()
+        .addComponents(
+            new ButtonBuilder()
+                .setCustomId("VOICE30days")
+                .setLabel("Top - Last 30 Days")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+            new ButtonBuilder()
+                .setCustomId("VOICE7days")
+                .setLabel("Top - Last 7 Days")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(true),
+                new ButtonBuilder()
+                .setCustomId("VOICEchannel")
+                .setLabel("Top Talkers - By Channel")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+                new ButtonBuilder()
+                .setCustomId("VOICEchannelUse")
+                .setLabel("Top Channels by use")
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
+        );
+        await button.editReply({components: [timingFilters, timingFilters2], embeds: [ListEmbed]});
+        logger.info("Sent Voice Leaderboard!")
+        break;
+    }
+        }else if((button.customId.substr(0,4)==="GAME")){
+            button.customId = button.customId.substr(4);
+            var operation = button.customId.substr(0,button.customId.indexOf('-'));
+            var hostId = button.customId.substr(button.customId.indexOf('-')+1);
+            //button.channel.send("Operation: " + operation + ", Host ID: " + hostId);
+            switch(operation){
+                case "join":
+                    await button.deferUpdate();
+                    const voiceChannel = button.member.voice.channel;
+                    if (!voiceChannel) {
+                        button.reply({ content: "You need to be in a voice channel to join a game.", ephemeral: true})
+                        return;
+                    }
+                    logger.info("Adding " + button.member.displayName + " to " + hostId + "'s game");
+                    var respGame;
+                    try{
+                        respGame = await api.get("game_joining_master", {
+                            host_id:hostId
+                        })
+                    }catch(error){
+                        logger.error(error.message);
+                    }
+                    if(!respGame.game_joining_masters[0]){
+                        button.reply({ content: "There is no game currently available...", ephemeral: true}) 
+                        return;
+                    }
+                    if(!respGame.game_joining_masters[0].status === "open"){
+                        button.reply({ content: "That game is not currently open...", ephemeral: true}) 
+                        return;
+                    }
+                    var respGamePlayer;
+                    try{
+                        respGamePlayer = await api.get("game_joining_player", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id),
+                            player_id:button.member.id
+                        })
+                    }catch(error){
+                        logger.error(error.message);
+                    }
+                    if(respGamePlayer.game_joining_players[0]){
+                        button.reply({ content: "You are already in this game...", ephemeral: true})
+                        return;
+                    }
+                    var respGameJoin;
+                    try{
+                        respGameJoin = await api.post("game_joining_player", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id),
+                            player_id:button.member.id
+                        })
+                    }catch(error){
+                        logger.error(error.message);
+                        button.reply({ content: "There was an error adding you to the game...", ephemeral: true})
+                    }
+                    var respPlayersList;
+                    try{
+                        respPlayersList = await api.get("game_joining_player", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id)
+                        })
+                    }catch(error){
+                        logger.error(error.message);
+                    }
+                    var kickableList = new StringSelectMenuBuilder()
+                        .setCustomId('GAMEkick-'+hostId)
+                        .setPlaceholder('Select someone to remove');
+                    var playersList = "";
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        playersList += "<@" + respPlayersList.game_joining_players[i].player_id + ">\n";
+                        var player = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
+                        kickableList.addOptions({
+                            label: player.displayName,
+                            value: respPlayersList.game_joining_players[i].player_id,
+                            description: "Kick from the game",
+                            emoji: '👢',
+                        })
+                    }
+                            
+                    var guild = button.guild;
+                    var host = await guild.members.fetch(hostId);
+                    var ListEmbed = new EmbedBuilder()
+                        .setColor("#c586b6")
+                        .setTitle(`${host.displayName}'s game menu.`);
+                        ListEmbed.addFields({ name: "Info about the buttons:", value: "Host is not added to their own game by default, but can join if they want to.\n\nBlurple buttons = anyone can interact\nGray buttons = only host can interact" });
+                        ListEmbed.addFields({ name: "Current Players:", value: playersList });
+                        var row = new ActionRowBuilder()
+                        .addComponents(
+                            new ButtonBuilder()
+                                .setCustomId('GAMEjoin-'+hostId)
+                                .setLabel('Join')
+                                .setStyle(ButtonStyle.Primary),
+                            new ButtonBuilder()
+                                .setCustomId('GAMEleave-'+hostId)
+                                .setLabel('Leave')
+                                .setStyle(ButtonStyle.Primary),
+                        );
+                        var row2 = new ActionRowBuilder()
+                        .addComponents(
+                            new ButtonBuilder()
+                                .setCustomId('GAMEstart-'+hostId)
+                                .setLabel('Start')
+                                .setStyle(ButtonStyle.Secondary),
+                            new ButtonBuilder()
+                                .setCustomId('GAMEend-'+hostId)
+                                .setLabel('End')
+                                .setStyle(ButtonStyle.Secondary),
+                        );
+                        var row3 = new ActionRowBuilder()
+                            .addComponents(kickableList);
+
+                    button.editReply({ embeds: [ListEmbed], components: [row, row2, row3] })
+                    break;
+                case "leave":
+                    await button.deferUpdate();
+                    logger.info("Removing " + button.member.displayName + " from " + hostId + "'s game");
+                    var respGame;
+                    try{
+                        respGame = await api.get("game_joining_master", {
+                            host_id:hostId
+                        })
+                    }catch(error){
+                        logger.error(error);
+                    }
+                    if(!respGame.game_joining_masters[0]){
+                        button.reply({ content: "There is no game currently available...", ephemeral: true}) 
+                        return;
+                    }
+                    var respGamePlayer;
+                    try{
+                        respGamePlayer = await api.get("game_joining_player", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id),
+                            player_id:button.member.id
+                        })
+                    }catch(error){
+                        logger.error(error);
+                    }
+                    if(!respGamePlayer.game_joining_players[0]){
+                        button.reply({ content: "You are not currently in this game...", ephemeral: true})
+                        return;
+                    }
+                    var respGameLeave;
+                    try{
+                        respGameLeave = await api.delete("game_joining_player", {
+                            game_player_id:parseInt(respGamePlayer.game_joining_players[0].game_player_id)
+                        })
+                    }catch(error){
+                        logger.error(error);
+                        button.reply({ content: "There was an error removing you from the game...", ephemeral: true})
+                    }
+                    var respPlayersList;
+                    try{
+                        respPlayersList = await api.get("game_joining_player", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id)
+                        })
+                    }catch(error){
+                        logger.error(error);
+                    }
+                    var playersList = "";
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        playersList += "<@" + respPlayersList.game_joining_players[i].player_id + ">\n";
+                    }
+                    if(playersList === ""){
+                        playersList = "No players currently in the game...";
+                    }
+                    var kickableList = new StringSelectMenuBuilder()
+                    .setCustomId('GAMEkick-'+hostId)
+                    .setPlaceholder('Select someone to remove');
+                    var playersList = "";
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        playersList += "<@" + respPlayersList.game_joining_players[i].player_id + ">\n";
+                        var player = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
+                        kickableList.addOptions({
+                            label: player.displayName,
+                            value: respPlayersList.game_joining_players[i].player_id,
+                            description: "Kick from the game",
+                            emoji: '👢',
+                        })
+                    }
+
+                    var guild = button.guild;
+                    var host = await guild.members.fetch(hostId);
+                    var ListEmbed = new EmbedBuilder()
+                        .setColor("#c586b6")
+                        .setTitle(`${host.displayName}'s game menu.`);
+                        ListEmbed.addFields({ name: "Info about the buttons:", value: "Host is not added to their own game by default, but can join if they want to.\n\nBlurple buttons = anyone can interact\nGray buttons = only host can interact" });
+                        ListEmbed.addFields({ name: "Current Players:", value: playersList });
+                        var row = new ActionRowBuilder()
+                        .addComponents(
+                            new ButtonBuilder()
+                                .setCustomId('GAMEjoin-'+hostId)
+                                .setLabel('Join')
+                                .setStyle(ButtonStyle.Primary),
+                            new ButtonBuilder()
+                                .setCustomId('GAMEleave-'+hostId)
+                                .setLabel('Leave')
+                                .setStyle(ButtonStyle.Primary),
+                        );
+                        var row2 = new ActionRowBuilder()
+                        .addComponents(
+                            new ButtonBuilder()
+                                .setCustomId('GAMEstart-'+hostId)
+                                .setLabel('Start')
+                                .setStyle(ButtonStyle.Secondary),
+                            new ButtonBuilder()
+                                .setCustomId('GAMEend-'+hostId)
+                                .setLabel('End')
+                                .setStyle(ButtonStyle.Secondary),
+                        );
+                        var row3 = new ActionRowBuilder()
+                            .addComponents(kickableList);
+                    button.editReply({ embeds: [ListEmbed], components: [row, row2, row3] })
+                    break;
+                case "start":
+                    if(button.member.id != hostId){
+                        button.reply({ content: "Only the host can start the game...", ephemeral: true})
+                        return;
+                    }
+                    await button.deferUpdate();
+                    logger.info("Starting " + hostId + "'s game");
+                    var respGame;
+                    try{
+                        respGame = await api.get("game_joining_master", {
+                            host_id:hostId
+                        })
+                    }catch(error){
+                        logger.error(error);
+                    }
+                    if(!respGame.game_joining_masters[0]){
+                        button.reply({ content: "There is no game currently available...", ephemeral: true}) 
+                        return;
+                    }
+                    if(!respGame.game_joining_masters[0].status === "open"){
+                        button.reply({ content: "This game has already started...", ephemeral: true}) 
+                        return;
+                    }
+                    var respGameStart;
+                    try{
+                        respGameStart = await api.put("game_joining_master", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id),
+                            status:"started"
+                        })
+                    }catch(error){
+                        logger.error(error);
+                        button.reply({ content: "There was an error starting the game...", ephemeral: true})
+                    }
+                    var respPlayersList;
+                    try{
+                        respPlayersList = await api.get("game_joining_player", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id)
+                        })
+                    }catch(error){
+                        logger.error(error);
+                    }
+                    if(respPlayersList.game_joining_players.length<2){
+                        button.reply({ content: "You need at least 2 players to start the game...", ephemeral: true})
+                        return;
+                    }
+                    var playersList = "";
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        playersList += "<@" + respPlayersList.game_joining_players[i].player_id + ">\n";
+                    }
+                    //button.reply({ content: `The game has been started, new people cannot join!`, ephemeral: true})
+                    
+                    var guild = button.guild;
+                    var host = await guild.members.fetch(hostId);
+                    var ListEmbed = new EmbedBuilder()
+                        .setColor("#c586b6")
+                        .setTitle(`${host.displayName}'s game menu.`);
+                    ListEmbed.addFields({ name: "Game is starting...", value: "Only the host can interact with the menu now" });
+                    ListEmbed.addFields({ name: "Current Players:", value: playersList });
+                    var row = new ActionRowBuilder()
+                        .addComponents(
+                            new ButtonBuilder()
+                                .setCustomId('GAMEgamemodes-'+hostId)
+                                .setLabel('See gamemodes')
+                                .setStyle(ButtonStyle.Secondary),
+                            new ButtonBuilder()
+                                .setCustomId('GAMEreturn-'+hostId)
+                                .setLabel('Return players to starting channel')
+                                .setStyle(ButtonStyle.Secondary),
+                        );
+                    var row2 = new ActionRowBuilder()
+                        .addComponents(
+                            new ButtonBuilder()
+                                .setCustomId('GAMEend-'+hostId)
+                                .setLabel('End game')
+                                .setStyle(ButtonStyle.Secondary),
+                            new ButtonBuilder()
+                                .setCustomId('GAMEreopen-'+hostId)
+                                .setLabel('Re-open game')
+                                .setStyle(ButtonStyle.Secondary),
+                        );
+                    
+                    button.editReply({ embeds: [ListEmbed], components: [row, row2] })
+                    break;
+                case "gamemodes":
+                    if(button.member.id != hostId){
+                        button.reply({ content: "Only the host can start the game...", ephemeral: true})
+                        return;
+                    }
+                    await button.deferUpdate();
+                    var respGame;
+                    try{
+                        respGame = await api.get("game_joining_master", {
+                            host_id:hostId
+                        })
+                    }catch(error){
+                        logger.error(error);
+                    }
+                    if(!respGame.game_joining_masters[0]){
+                        button.reply({ content: "There is no game currently available...", ephemeral: true}) 
+                        return;
+                    }
+                    var respPlayersList;
+                    try{
+                        respPlayersList = await api.get("game_joining_player", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id)
+                        })
+                    }catch(error){
+                        logger.error(error);
+                    }
+                    var playersList = "";
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        playersList += "<@" + respPlayersList.game_joining_players[i].player_id + ">\n";
+                    }
+
+                    var guild = button.guild;
+                    var host = await guild.members.fetch(hostId);
+                    var ListEmbed = new EmbedBuilder()
+                        .setColor("#c586b6")
+                        .setTitle(`${host.displayName}'s game menu.`);
+                    ListEmbed.addFields({ name: "Host is choosing gamemode...", value: "Only the host can interact with the menu now" });
+                    ListEmbed.addFields({ name: "Current Players:", value: playersList });
+                    var row = new ActionRowBuilder()
+                        .addComponents(
+                            new ButtonBuilder()
+                                .setCustomId('GAMErandomize-'+hostId)
+                                .setLabel('Random Teams')
+                                .setStyle(ButtonStyle.Secondary),
+                            new ButtonBuilder()
+                                .setCustomId('GAMEcaptains-'+hostId)
+                                .setLabel('Captains pick')
+                                .setStyle(ButtonStyle.Secondary),
+                        );
+                    var row2 = new ActionRowBuilder()
+                        .addComponents(
+                            new ButtonBuilder()
+                                .setCustomId('GAMEend-'+hostId)
+                                .setLabel('End game')
+                                .setStyle(ButtonStyle.Secondary),
+                            new ButtonBuilder()
+                                .setCustomId('GAMEstart-'+hostId)
+                                .setLabel('Go back')
+                                .setStyle(ButtonStyle.Secondary),
+                        );
+                    
+                    button.editReply({ embeds: [ListEmbed], components: [row, row2] })
+                    break;
+                case "end":
+                    if(button.member.id != hostId){
+                        button.reply({ content: "Only the host can end the game...", ephemeral: true})
+                        return;
+                    }
+                    await button.deferUpdate();
+                    logger.info("Ending " + hostId + "'s game");
+                    var respGame;
+                    try{
+                        respGame = await api.get("game_joining_master", {
+                            host_id:hostId
+                        })
+                    }catch(error){
+                        logger.error(error);
+                    }   
+                    if(!respGame.game_joining_masters[0]){
+                        button.reply({ content: "There is no game currently available...", ephemeral: true}) 
+                        return;
+                    }
+                    if(respGame.game_joining_masters[0].status === "open" || respGame.game_joining_masters[0].status === "started"){
+                        var respPlayersList;
+                        try{
+                            respPlayersList = await api.get("game_joining_player", {
+                                game_id:parseInt(respGame.game_joining_masters[0].game_id)
+                            })
+                        }catch(error){
+                            logger.error(error);
+                        }
+                        for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                            var respTemp = await api.get("game_joining_player",{
+                                game_id:Number(respGame.game_joining_masters[0].game_id),
+                                player_id:respPlayersList.game_joining_players[i].player_id
+                            })
+                            respPlayers = await api.delete("game_joining_player",{
+                                game_player_id:Number(respTemp.game_joining_players[0].game_player_id)
+                            });
+                        }
+                        var respGameEnd;
+                        try{
+                            respGameEnd = await api.delete("game_joining_master", {
+                                game_id:parseInt(respGame.game_joining_masters[0].game_id)
+                            })
+                        }catch(error){
+                            logger.error(error);
+                            button.reply({ content: "There was an error ending the game...", ephemeral: true})
+                        }
+                        var guild = button.guild;
+                        var host = await guild.members.fetch(hostId);
+                        var ListEmbed = new EmbedBuilder()
+                            .setColor("#c586b6")
+                            .setTitle(`${host.displayName}'s game has ended.`);
+                        button.editReply({ embeds: [ListEmbed], components: []})
+                        button.channel.send({ content: `The game has been ended and everyone was removed from the party!`})
+                    }
+                    break;
+                case "reopen":
+                    if(button.member.id != hostId){
+                        button.reply({ content: "Only the host can re-open the game...", ephemeral: true})
+                        return;
+                    }
+                    await button.deferUpdate();
+                    logger.info("Re-opening " + hostId + "'s game");
+                    var respGame;
+                    try{
+                        respGame = await api.get("game_joining_master", {
+                            host_id:hostId
+                        })
+                    }catch(error){
+                        logger.error(error);
+                    }
+                    if(!respGame.game_joining_masters[0]){
+                        button.reply({ content: "There is no game currently available...", ephemeral: true}) 
+                        return;
+                    }
+                    if(respGame.game_joining_masters[0].status === "started"){
+                        var respGameStart;
+                        try{
+                            respGameStart = await api.put("game_joining_master", {
+                                game_id:parseInt(respGame.game_joining_masters[0].game_id),
+                                status:"open"
+                            })
+                        }catch(error){
+                            logger.error(error);
+                            button.reply({ content: "There was an error re-opening the game...", ephemeral: true})
+                        }
+                        var respPlayersList;
+                        try{
+                            respPlayersList = await api.get("game_joining_player", {
+                                game_id:parseInt(respGame.game_joining_masters[0].game_id)
+                            })
+                        }catch(error){
+                            logger.error(error);
+                        }
+                        for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                            var respTemp = await api.put("game_joining_player",{
+                                game_player_id:Number(respPlayersList.game_joining_players[i].game_player_id),
+                                team:"none",
+                                captain:"no"
+                            })
+                        }
+                        const kickableList = new StringSelectMenuBuilder()
+                            .setCustomId('GAMEkick-'+hostId)
+                            .setPlaceholder('Select someone to remove');
+                        var playersList = "";
+                        for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                            playersList += "<@" + respPlayersList.game_joining_players[i].player_id + ">\n";
+                            var player = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
+                            kickableList.addOptions({
+                                label: player.displayName,
+                                value: respPlayersList.game_joining_players[i].player_id,
+                                description: "Kick from the game",
+                                emoji: '👢',
+                            })
+                        }
+                        var playersList = "";
+                        for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                            playersList += "<@" + respPlayersList.game_joining_players[i].player_id + ">\n";
+                        }
+                        button.channel.send({ content: `The game has been re-opened, new people can join!`})
+                        var guild = button.guild;
+                        var host = await guild.members.fetch(hostId);
+                        var ListEmbed = new EmbedBuilder()
+                            .setColor("#c586b6")
+                            .setTitle(`${host.displayName}'s game menu.`);
+                        ListEmbed.addFields({ name: "Info about the buttons:", value: "Host is not added to their own game by default, but can join if they want to.\n\nBlurple buttons = anyone can interact\nGray buttons = only host can interact" });
+                        ListEmbed.addFields({ name: "Current Players:", value: playersList });
+                        var row = new ActionRowBuilder()
+                            .addComponents(
+                                new ButtonBuilder()
+                                    .setCustomId('GAMEjoin-'+hostId)
+                                    .setLabel('Join')
+                                    .setStyle(ButtonStyle.Primary),
+                                new ButtonBuilder()
+                                    .setCustomId('GAMEleave-'+hostId)
+                                    .setLabel('Leave')
+                                    .setStyle(ButtonStyle.Primary),
+                            );
+                        var row2 = new ActionRowBuilder()
+                            .addComponents(
+                                new ButtonBuilder()
+                                    .setCustomId('GAMEstart-'+hostId)
+                                    .setLabel('Start')
+                                    .setStyle(ButtonStyle.Secondary),
+                                new ButtonBuilder()
+                                    .setCustomId('GAMEend-'+hostId)
+                                    .setLabel('End')
+                                    .setStyle(ButtonStyle.Secondary),
+                            );
+                        var row3 = new ActionRowBuilder()
+                            .addComponents(kickableList);
+                        button.editReply({ embeds: [ListEmbed], components: [row, row2, row3] })
+                    }
+                    break;
+                case "randomize":
+                    if(button.member.id != hostId){
+                        button.reply({ content: "Only the host can choose the gamemode...", ephemeral: true})
+                        return;
+                    }
+                    await button.deferUpdate();
+                    logger.info("Randomizing " + hostId + "'s game");
+                    var respGame;
+                    try{
+                        respGame = await api.get("game_joining_master", {
+                            host_id:hostId
+                        })
+                    }catch(error){
+                        logger.error(error);
+                    }
+                    if(!respGame.game_joining_masters[0]){
+                        button.reply({ content: "There is no game currently available...", ephemeral: true}) 
+                        return;
+                    }
+                    if(respGame.game_joining_masters[0].status === "started"){
+                        var respPlayersList;
+                        try{
+                            respPlayersList = await api.get("game_joining_player", {
+                                game_id:parseInt(respGame.game_joining_masters[0].game_id)
+                            })
+                        }catch(error){
+                            logger.error(error);
+                        }
+                        if(respPlayersList.game_joining_players.length<2){
+                            button.channel.send({ content: "There are not enough players to randomize teams..."})
+                            return;
+                        }
+                        var playersList = [];
+                        for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                            playersList.push("<@" + respPlayersList.game_joining_players[i].player_id + ">");
+                        }
+                        var team2 = [];
+                        
+                        logger.info("PlayerList: " + playersList)
+                        var maxTeamSize = Math.floor(playersList.length/2);
+                        for(var i = 0;i<maxTeamSize;i++){
+                            var random = Math.floor(Math.random() * playersList.length);
+                            team2.push(playersList[random]);
+                            playersList.splice(random,1);
+                        }
+                        logger.info("Team 1: " + playersList);
+                        logger.info("Team 2: " + team2);
+                        //const voiceChannels = button.guild.channels.cache.filter((channel) => channel.type === 'GUILD_VOICE');
+                        const roleNames = ['League of Legends', 'programmer', 'Gamer']; // Replace with the name of your role
+
+                        // Fetch the role by name
+                        const roles = roleNames.map(roleName => button.guild.roles.cache.find(r => r.name === roleName));
+                        const voiceChannels = button.guild.channels.cache.filter(channel => {
+                            // Check if the channel is a voice channel
+                            if (channel.type !== 'GUILD_VOICE') return false;
+                        
+                            // Check if any of the roles has VIEW_CHANNEL permission in the channel
+                            return roles.some(role => {
+                                if(!role) return false; // Skip if the role is undefined or null
+                                return channel.permissionsFor(role).has(PermissionsBitField.Flags.ViewChannel);
+                            });
+
+                        });
+                        const channelListTeam1 = new StringSelectMenuBuilder()
+                            .setCustomId('GAMEchannelTeam1-'+hostId)
+                            .setPlaceholder('Select a voice channel to send Team 1 to');
+                        voiceChannels.forEach((channel) => {
+                            channelListTeam1.addOptions([
+                                {
+                                label: channel.name,
+                                value: channel.id,
+                                },
+                            ]);
+                        });
+                        const channelListTeam2 = new StringSelectMenuBuilder()
+                            .setCustomId('GAMEchannelTeam2-'+hostId)
+                            .setPlaceholder('Select a voice channel to send Team 2 to');
+                        voiceChannels.forEach((channel) => {
+                            channelListTeam2.addOptions([
+                                {
+                                label: channel.name,
+                                value: channel.id,
+                                },
+                            ]);
+                        });
+                        for(var i = 0;i<playersList.length;i++){
+                            var respGamePlayer;
+                            try{
+                                respGamePlayer = await api.get("game_joining_player", {
+                                    game_id:parseInt(respGame.game_joining_masters[0].game_id),
+                                    player_id:playersList[i].substr(2,playersList[i].length-3)
+                                })
+                            }catch(error){
+                                logger.error(error.message);
+                            }
+                            var respGamePlayerUpdate;
+                            try{
+                                respGamePlayerUpdate = await api.put("game_joining_player", {
+                                    game_player_id:parseInt(respGamePlayer.game_joining_players[0].game_player_id),
+                                    team:"1"
+                                })
+                            }catch(error){
+                                logger.error(error.message);
+                            }
+                        }
+                        for(var i = 0;i<team2.length;i++){
+                            var respGamePlayer;
+                            try{
+                                respGamePlayer = await api.get("game_joining_player", {
+                                    game_id:parseInt(respGame.game_joining_masters[0].game_id),
+                                    player_id:team2[i].substr(2,team2[i].length-3)
+                                })
+                            }catch(error){
+                                logger.error(error.message);
+                            }
+                            var respGamePlayerUpdate;
+                            try{
+                                respGamePlayerUpdate = await api.put("game_joining_player", {
+                                    game_player_id:parseInt(respGamePlayer.game_joining_players[0].game_player_id),
+                                    team:"2"
+                                })
+                            }catch(error){
+                                logger.error(error.message);
+                            }
+                        }
+                        var guild = button.guild;
+                        var host = await guild.members.fetch(hostId);
+                        var ListEmbed = new EmbedBuilder()
+                            .setColor("#c586b6")
+                            .setTitle(`${host.displayName}'s game menu.`);
+                        ListEmbed.addFields({ name: "Game is randomized!", value: "Only the host can interact with the menu now" });
+                        ListEmbed.addFields({ name: "Team 1:", value: playersList.join("\n") });
+                        ListEmbed.addFields({ name: "Team 2:", value: team2.join("\n") });
+                        var row = new ActionRowBuilder()
+                            .addComponents(
+                                new ButtonBuilder()
+                                    .setCustomId('GAMErandomize-'+hostId)
+                                    .setLabel('Randomize Teams')
+                                    .setStyle(ButtonStyle.Secondary),
+                                new ButtonBuilder()
+                                    .setCustomId('GAMEreturn-'+hostId)
+                                    .setLabel('Return players to starting channel')
+                                    .setStyle(ButtonStyle.Secondary),
+                            );
+                        var row2 = new ActionRowBuilder()
+                            .addComponents(
+                                new ButtonBuilder()
+                                    .setCustomId('GAMEend-'+hostId)
+                                    .setLabel('End')
+                                    .setStyle(ButtonStyle.Secondary),
+                                new ButtonBuilder()
+                                    .setCustomId('GAMEreopen-'+hostId)
+                                    .setLabel('Re-open game')
+                                    .setStyle(ButtonStyle.Secondary),
+                            );
+                        var row3 = new ActionRowBuilder()
+                            .addComponents(channelListTeam1);
+                        var row4 = new ActionRowBuilder()
+                            .addComponents(channelListTeam2);
+                        button.editReply({ embeds: [ListEmbed], components: [row, row2, row3, row4] })
+                    }
+                    break;
+                case "captains":
+                    if(button.member.id != hostId){
+                        button.reply({ content: "Only the host can choose the game mode...", ephemeral: true})
+                        return;
+                    }
+                    var respGame;
+                    try{
+                        respGame = await api.get("game_joining_master", {
+                            host_id:hostId
+                        })
+                    }catch(error){
+                        logger.error(error);
+                    }
+                    var respPlayersList;
+                    try{
+                        respPlayersList = await api.get("game_joining_player", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id)
+                        })
+                    }catch(error){
+                        logger.error(error.message);
+                    }
+                    logger.info("respPlayers exist?: + " + respPlayersList)
+                    if(respPlayersList.game_joining_players.length<2){
+                        button.channel.send({ content: "There are not enough players to do a captain pick..."})
+                        return;
+                    }
+                    await button.deferUpdate();
+                    logger.info(hostId + " chose captain pick");
+                    if(!respGame.game_joining_masters[0]){
+                        await button.followUp({ content: "There is no game currently available...", ephemeral: true})
+                        return;
+                    }
+                    if(!respGame.game_joining_masters[0].status === "started"){
+                        await button.followUp({ content: "The game has not started yet...this is definitely an error. Report it to the creator.", ephemeral: true})
+                        return;
+                    }
+                    var playersList = "";
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        playersList += ("<@" + respPlayersList.game_joining_players[i].player_id + ">\n");
+                    }
+                    var chooseCaptain1 = new StringSelectMenuBuilder()
+                        .setCustomId('GAMEcaptain1-'+hostId)
+                        .setPlaceholder('Select a player to make into the captain for Team 1');
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        var player = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
+                        chooseCaptain1.addOptions([
+                            {
+                                label: player.displayName,
+                                value: respPlayersList.game_joining_players[i].player_id,
+                                description: "Make Team 1 captain",
+                            },
+                        ]);
+                    };
+                    
+                    var guild = button.guild;
+                    var host = await guild.members.fetch(hostId);
+                    var ListEmbed = new EmbedBuilder()
+                        .setColor("#c586b6")
+                        .setTitle(`${host.displayName}'s game menu.`);
+                    ListEmbed.addFields({ name: "Choosing Captains!", value: "Only the host can interact with the menu now" });
+                    ListEmbed.addFields({ name: "Current Players:", value: playersList });
+                    var row = new ActionRowBuilder()
+                        .addComponents(
+                            new ButtonBuilder()
+                                .setCustomId('GAMEreturn-'+hostId)
+                                .setLabel('Return players to starting channel')
+                                .setStyle(ButtonStyle.Secondary),
+                        );
+                    var row2 = new ActionRowBuilder()
+                        .addComponents(
+                            new ButtonBuilder()
+                                .setCustomId('GAMEend-'+hostId)
+                                .setLabel('End')
+                                .setStyle(ButtonStyle.Secondary),
+                            new ButtonBuilder()
+                                .setCustomId('GAMEreopen-'+hostId)
+                                .setLabel('Re-open game')
+                                .setStyle(ButtonStyle.Secondary),
+                        );
+                    var row3 = new ActionRowBuilder()
+                        .addComponents(chooseCaptain1);
+                    button.editReply({ embeds: [ListEmbed], components: [row, row2, row3] })
+                    break;
+                case "captain1":
+                    if(button.member.id != hostId){
+                        button.reply({ content: "Only the host can choose the captain...", ephemeral: true})
+                        return;
+                    }
+                    await button.deferUpdate();
+                    logger.info("Setting captain 1");
+                    var respGame;
+                    try{
+                        respGame = await api.get("game_joining_master", {
+                            host_id:hostId
+                        })
+                    }catch(error){
+                        logger.error(error.message);
+                    }
+                    if(!respGame.game_joining_masters[0]){
+                        await button.followUp({ content: "There is no game currently available...", ephemeral: true})
+                        return;
+                    }
+                    if(!(respGame.game_joining_masters[0].status === "started")){
+                        await button.followUp({ content: "The game has not started yet...", ephemeral: true})
+                        return;
+                    }
+                    const captain1 = button.values[0];
+                    logger.info("captain1: " + captain1);
+                    var respPlayersList;
+                    try{
+                        respPlayersList = await api.get("game_joining_player", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id)
+                        })
+                    }catch(error){
+                        logger.error(error.message);
+                    }
+                    if(!respPlayersList.game_joining_players[0]){
+                        await button.followUp({ content: "There are no players in the game...", ephemeral: true})
+                        return;
+                    }
+                    var newCaptain1 = "";
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        if(respPlayersList.game_joining_players[i].player_id === captain1){
+                            newCaptain1 = respPlayersList.game_joining_players[i].game_player_id;
+                            break;
+                        }
+                    }
+                    logger.info("captain1 " + captain1)
+                    var respGamePlayer;
+                    try{
+                        respGamePlayer = await api.put("game_joining_player", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id),
+                            player_id:captain1,
+                            captain:"yes",
+                            game_player_id:parseInt(newCaptain1),
+                            team:"1"
+                        })
+                    }catch(error){
+                        logger.error(error.message);
+                    }
+                    logger.info("respGamePlayer: " + respGamePlayer);
+                    var playersList = "";
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        playersList += ("<@" + respPlayersList.game_joining_players[i].player_id + ">\n");
+                    }
+                    var chooseCaptain2 = new StringSelectMenuBuilder()
+                        .setCustomId('GAMEcaptain2-'+hostId)
+                        .setPlaceholder('Select a player to make into the captain for Team 2');
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        if(respPlayersList.game_joining_players[i].player_id === captain1){
+                            continue;
+                        }
+                        var player = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
+                        chooseCaptain2.addOptions([
+                            {
+                                label: player.displayName,
+                                value: respPlayersList.game_joining_players[i].player_id,
+                                description: "Make Team 2 captain",
+                            },
+                        ]);
+                    };
+                    
+                    var guild = button.guild;
+                    var host = await guild.members.fetch(hostId);
+                    var ListEmbed = new EmbedBuilder()
+                        .setColor("#c586b6")
+                        .setTitle(`${host.displayName}'s game menu.`);
+                    ListEmbed.addFields({ name: "Choosing Captains!", value: "Only the host can interact with the menu now" });
+                    ListEmbed.addFields({ name: "Current Players:", value: playersList });
+                    var row = new ActionRowBuilder()
+                        .addComponents(
+                            new ButtonBuilder()
+                                .setCustomId('GAMEreturn-'+hostId)
+                                .setLabel('Return players to starting channel')
+                                .setStyle(ButtonStyle.Secondary),
+                        );
+                    var row2 = new ActionRowBuilder()
+                        .addComponents(
+                            new ButtonBuilder()
+                                .setCustomId('GAMEend-'+hostId)
+                                .setLabel('End')
+                                .setStyle(ButtonStyle.Secondary),
+                            new ButtonBuilder()
+                                .setCustomId('GAMEreopen-'+hostId)
+                                .setLabel('Re-open game')
+                                .setStyle(ButtonStyle.Secondary),
+                        );
+                    var row3 = new ActionRowBuilder()
+                        .addComponents(chooseCaptain2);
+                    button.editReply({ embeds: [ListEmbed], components: [row, row2, row3] })
+                    break;
+                case "captain2":
+                    if(button.member.id != hostId){
+                        button.reply({ content: "Only the host can choose the captain...", ephemeral: true})
+                        return;
+                    }
+                    await button.deferUpdate();
+                    logger.info("Setting captain 2");
+                    var respGame;
+                    try{
+                        respGame = await api.get("game_joining_master", {
+                            host_id:hostId
+                        })
+                    }catch(error){
+                        logger.error(error.message);
+                    }
+                    if(!respGame.game_joining_masters[0]){
+                        await button.followUp({ content: "There is no game currently available...", ephemeral: true})
+                        return;
+                    }
+                    if(!(respGame.game_joining_masters[0].status === "started")){
+                        await button.followUp({ content: "The game has not started yet...", ephemeral: true})
+                        return;
+                    }
+                    const captain2 = button.values[0];
+                    var respPlayersList;
+                    try{
+                        respPlayersList = await api.get("game_joining_player", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id)
+                        })
+                    }catch(error){
+                        logger.error(error.message);
+                    }
+                    if(!respPlayersList.game_joining_players[0]){
+                        await button.followUp({ content: "There are no players in the game...", ephemeral: true})
+                        return;
+                    }
+                    var newCaptain2 = "";
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        if(respPlayersList.game_joining_players[i].player_id === captain2){
+                            newCaptain2 = respPlayersList.game_joining_players[i].game_player_id;
+                            respPlayersList.game_joining_players[i].team = "2";
+                            break;
+                        }
+                    }
+                    logger.info("captain2 " + captain2)
+                    var respGamePlayer;
+                    try{
+                        respGamePlayer = await api.put("game_joining_player", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id),
+                            player_id:captain2,
+                            captain:"yes",
+                            game_player_id:parseInt(newCaptain2),
+                            team:"2"
+                        })
+                    }catch(error){
+                        logger.error(error.message);
+                    }
+
+                    var captain1pick = new StringSelectMenuBuilder()
+                        .setCustomId('GAMEcaptain1pick-'+hostId)
+                        .setPlaceholder('Select someone to add to team 1');
+                        captain1pick.addOptions({
+                            label: "Blank Placeholder",
+                            value: "none",
+                            description: "Prevents the dropdown from disappearing",
+                        })
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        if(!(respPlayersList.game_joining_players[i].team === "none")){
+                            continue;
+                        }
+                        var player = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
+                        captain1pick.addOptions({
+                            label: player.displayName,
+                            value: respPlayersList.game_joining_players[i].player_id,
+                            description: "Add to team 1",
+                            emoji: '1️⃣',
+                        })
+                    }
+                    var captain2pick = new StringSelectMenuBuilder()
+                        .setCustomId('GAMEcaptain2pick-'+hostId)
+                        .setPlaceholder('Select someone to add to team 2');
+                        captain2pick.addOptions({
+                            label: "Blank Placeholder",
+                            value: "none",
+                            description: "Prevents the dropdown from disappearing",
+                        })
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        if(!(respPlayersList.game_joining_players[i].team === "none")){
+                            continue;
+                        }
+                        var player = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
+                        captain2pick.addOptions({
+                            label: player.displayName,
+                            value: respPlayersList.game_joining_players[i].player_id,
+                            description: "Add to team 2",
+                            emoji: '2️⃣',
+                        })
+                    }
+
+                    var playersListNoTeam = "";
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        if(!(respPlayersList.game_joining_players[i].team === "none")){
+                            continue;
+                        }
+                        logger.info("Player: " + respPlayersList.game_joining_players[i].player_id + " " + respPlayersList.game_joining_players[i].team)
+                        playersListNoTeam += ("<@" + respPlayersList.game_joining_players[i].player_id + ">\n");
+                    }
+                    if(playersListNoTeam === ""){
+                        playersListNoTeam = "No players left to pick!"
+                    }
+                    var playersListTeam1 = "";
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        if(!(respPlayersList.game_joining_players[i].team === "1")){
+                            continue;
+                        }
+                        logger.info("Player: " + respPlayersList.game_joining_players[i].player_id + " " + respPlayersList.game_joining_players[i].team)
+                        playersListTeam1 += ("<@" + respPlayersList.game_joining_players[i].player_id + ">\n");
+                    }
+                    var playersListTeam2 = "";
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        if(!(respPlayersList.game_joining_players[i].team === "2")){
+                            continue;
+                        }
+                        logger.info("Player: " + respPlayersList.game_joining_players[i].player_id + " " + respPlayersList.game_joining_players[i].team)
+                        playersListTeam2 += ("<@" + respPlayersList.game_joining_players[i].player_id + ">\n");
+                    }
+                    var guild = button.guild;
+                    var host = await guild.members.fetch(hostId);
+                    var ListEmbed = new EmbedBuilder()
+                        .setColor("#c586b6")
+                        .setTitle(`${host.displayName}'s game menu.`);
+                        ListEmbed.addFields({ name: "Captains are choosing!", value: "Choose a player from the corresponding drop down to add them to your team!\nGrey buttons are for the host" });
+                        ListEmbed.addFields({ name: "No team:", value: playersListNoTeam });
+                        ListEmbed.addFields({ name: "Team 1:", value: playersListTeam1 });
+                        ListEmbed.addFields({ name: "Team 2:", value: playersListTeam2 });
+                    var row = new ActionRowBuilder()
+                        .addComponents(
+                            captain1pick
+                        );
+                    var row2 = new ActionRowBuilder()
+                        .addComponents(
+                            captain2pick
+                        );
+                    var row3 = new ActionRowBuilder()
+                        .addComponents(
+                            new ButtonBuilder()
+                                .setCustomId('GAMEend-'+hostId)
+                                .setLabel('End')
+                                .setStyle(ButtonStyle.Secondary),
+                            new ButtonBuilder()
+                                .setCustomId('GAMEreopen-'+hostId)
+                                .setLabel('Re-open game')
+                                .setStyle(ButtonStyle.Secondary),
+                        );
+                    button.editReply({ embeds: [ListEmbed], components: [row, row2, row3] })
+
+                    break;
+                case "captain1pick":                    
+                    var respGame;
+                    try{
+                        respGame = await api.get("game_joining_master", {
+                            host_id:hostId
+                        })
+                    }catch(error){
+                        logger.error(error.message);
+                    }
+                    if(!respGame.game_joining_masters[0]){
+                        button.reply({ content: "There is no game currently available...", ephemeral: true})
+                        return;
+                    }
+                    var respCaptain1;
+                    try{
+                        respCaptain1 = await api.get("game_joining_player", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id),
+                            team:"1",
+                            captain:"yes"
+                        })
+                    }catch(error){
+                        logger.error(error.message);
+                    }
+                    if(!respCaptain1.game_joining_players[0]){
+                        button.reply({ content: "Found no captain for team 1. Something broke..."})
+                        return;
+                    }
+                    await button.deferUpdate();
+                    if(button.member.id !=respCaptain1.game_joining_players[0].player_id){
+                        await button.followUp({ content: "Only the captain for team 1 can choose the player...", ephemeral: true})
+                        return;
+                    }
+                    logger.info("Setting captain 1 pick");
+
+                    var respPlayersList;
+                    try{
+                        respPlayersList = await api.get("game_joining_player", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id)
+                        })
+                    }catch(error){
+                        logger.error(error.message);
+                    }
+                    if(!respPlayersList.game_joining_players[0]){
+                        await button.followUp({ content: "There are no players in the game...", ephemeral: true})
+                        return;
+                    }
+                    const player1 = button.values[0];
+                    logger.info("player1: " + player1);
+                    if(player1 === "none"){
+                        await button.followUp({ content: "You must select a player...", ephemeral: true})
+                        return;
+                    }else{
+                        var captain1player = "";
+                        for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                            if(respPlayersList.game_joining_players[i].player_id === player1){
+                                captain1player = respPlayersList.game_joining_players[i].game_player_id;
+                                respPlayersList.game_joining_players[i].team = "1";
+                                break;
+                            }
+                        }
+                        var respCaptain1pick;
+                        try{
+                            respCaptain1pick = await api.put("game_joining_player", {
+                                game_id:parseInt(respGame.game_joining_masters[0].game_id),
+                                game_player_id:parseInt(captain1player),
+                                team:"1"
+                            })
+                        }catch(error){
+                            logger.error(error.message);
+                        }
+                    }
+                    var captain1pick = new StringSelectMenuBuilder()
+                        .setCustomId('GAMEcaptain1pick-'+hostId)
+                        .setPlaceholder('Select someone to add to team 1');
+                        captain1pick.addOptions({
+                            label: "Blank Placeholder",
+                            value: "none",
+                            description: "Prevents the dropdown from disappearing",
+                        })
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        if(!(respPlayersList.game_joining_players[i].team === "none")){
+                            continue;
+                        }
+                        var player = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
+                        captain1pick.addOptions({
+                            label: player.displayName,
+                            value: respPlayersList.game_joining_players[i].player_id,
+                            description: "Add to team 1",
+                            emoji: '1️⃣',
+                        })
+                    }
+                    var captain2pick = new StringSelectMenuBuilder()
+                        .setCustomId('GAMEcaptain2pick-'+hostId)
+                        .setPlaceholder('Select someone to add to team 2');
+                        captain2pick.addOptions({
+                            label: "Blank Placeholder",
+                            value: "none",
+                            description: "Prevents the dropdown from disappearing",
+                        })
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        if(!(respPlayersList.game_joining_players[i].team === "none")){
+                            continue;
+                        }
+                        var player = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
+                        captain2pick.addOptions({
+                            label: player.displayName,
+                            value: respPlayersList.game_joining_players[i].player_id,
+                            description: "Add to team 2",
+                            emoji: '2️⃣',
+                        })
+                    }
         const gameDetails = gameResp.game_joining_masters[0];
         if (teamIdToAssignTo > gameDetails.num_teams) {
              await modalInteraction.editReply({ content: `Invalid Team ID. This game only has ${gameDetails.num_teams} teams.` });
@@ -730,6 +2809,219 @@ async function onInteractionCreate(interaction) {
                 const recordsWithId = records.filter(session => session.voice_state_id);
                 const recordsWithoutIdCount = records.length - recordsWithId.length;
 
+                        // Fetch the role by name
+                    var roles = roleNames.map(roleName => button.guild.roles.cache.find(r => r.name === roleName));
+                    const voiceChannelspick1 = button.guild.channels.cache.filter(channel => {
+                        // Check if the channel is a voice channel
+                        if (channel.type !== 'GUILD_VOICE') return false;
+                    
+                        // Check if any of the roles has VIEW_CHANNEL permission in the channel
+                        return roles.some(role => {
+                            if(!role) return false; // Skip if the role is undefined or null
+                            return channel.permissionsFor(role).has(PermissionsBitField.Flags.ViewChannel);
+                        });
+
+                    });
+                    const channelListTeam1pick1 = new StringSelectMenuBuilder()
+                        .setCustomId('GAMEchannelTeam1-'+hostId)
+                        .setPlaceholder('Select a voice channel to send Team 1 to');
+                    voiceChannelspick1.forEach((channel) => {
+                        channelListTeam1pick1.addOptions([
+                            {
+                            label: channel.name,
+                            value: channel.id,
+                            },
+                        ]);
+                    });
+                    const channelListTeam2pick1 = new StringSelectMenuBuilder()
+                        .setCustomId('GAMEchannelTeam2-'+hostId)
+                        .setPlaceholder('Select a voice channel to send Team 2 to');
+                    voiceChannelspick1.forEach((channel) => {
+                        channelListTeam2pick1.addOptions([
+                            {
+                            label: channel.name,
+                            value: channel.id,
+                            },
+                        ]);
+                    });
+
+                    var playersListNoTeam = "";
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        if(!(respPlayersList.game_joining_players[i].team === "none")){
+                            continue;
+                        }
+                        logger.info("Player: " + respPlayersList.game_joining_players[i].player_id + " " + respPlayersList.game_joining_players[i].team)
+                        playersListNoTeam += ("<@" + respPlayersList.game_joining_players[i].player_id + ">\n");
+                    }
+                    if(playersListNoTeam === ""){
+                        playersListNoTeam = "No players left to pick!"
+                    }
+                    var playersListTeam1 = "";
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        if(!(respPlayersList.game_joining_players[i].team === "1")){
+                            continue;
+                        }
+                        logger.info("Player: " + respPlayersList.game_joining_players[i].player_id + " " + respPlayersList.game_joining_players[i].team)
+                        playersListTeam1 += ("<@" + respPlayersList.game_joining_players[i].player_id + ">\n");
+                    }
+                    var playersListTeam2 = "";
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        if(!(respPlayersList.game_joining_players[i].team === "2")){
+                            continue;
+                        }
+                        logger.info("Player: " + respPlayersList.game_joining_players[i].player_id + " " + respPlayersList.game_joining_players[i].team)
+                        playersListTeam2 += ("<@" + respPlayersList.game_joining_players[i].player_id + ">\n");
+                    }
+
+                    var guild = button.guild;
+                    var host = await guild.members.fetch(hostId);
+                    var ListEmbed = new EmbedBuilder()
+                        .setColor("#c586b6")
+                        .setTitle(`${host.displayName}'s game menu.`);
+                    ListEmbed.addFields({ name: "Captains are choosing!", value: "Choose a player from the corresponding drop down to add them to your team!\nGrey buttons are for the host" });
+                    ListEmbed.addFields({ name: "No team:", value: playersListNoTeam });
+                    ListEmbed.addFields({ name: "Team 1:", value: playersListTeam1 });
+                    ListEmbed.addFields({ name: "Team 2:", value: playersListTeam2 });
+                    var row = new ActionRowBuilder()
+                        .addComponents(
+                            captain1pick
+                        );
+                    var row2 = new ActionRowBuilder()
+                        .addComponents(
+                            captain2pick
+                        );
+                    var row3 = new ActionRowBuilder()
+                        .addComponents(channelListTeam1pick1);
+                    var row4 = new ActionRowBuilder()
+                        .addComponents(channelListTeam2pick1);
+                    var row5 = new ActionRowBuilder()
+                        .addComponents(
+                            new ButtonBuilder()
+                                .setCustomId('GAMEend-'+hostId)
+                                .setLabel('End')
+                                .setStyle(ButtonStyle.Secondary),
+                            new ButtonBuilder()
+                                .setCustomId('GAMEreopen-'+hostId)
+                                .setLabel('Re-open game')
+                                .setStyle(ButtonStyle.Secondary),
+                            new ButtonBuilder()
+                                .setCustomId('GAMEreturn-'+hostId)
+                                .setLabel('Return players to starting channel')
+                                .setStyle(ButtonStyle.Secondary),
+                        );
+                    button.editReply({ embeds: [ListEmbed], components: [row, row2, row3, row4, row5] })
+                    break;
+                case "captain2pick":
+                    var respGame;
+                    try{
+                        respGame = await api.get("game_joining_master", {
+                            host_id:hostId
+                        })
+                    }catch(error){
+                        logger.error(error.message);
+                    }
+                    if(!respGame.game_joining_masters[0]){
+                        button.reply({ content: "There is no game currently available...", ephemeral: true})
+                        return;
+                    }
+                    var respCaptain2;
+                    try{
+                        respCaptain2 = await api.get("game_joining_player", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id),
+                            team:"2",
+                            captain:"yes"
+                        })
+                    }catch(error){
+                        logger.error(error.message);
+                    }
+                    if(!respCaptain2.game_joining_players[0]){
+                        button.reply({ content: "Found no captain for team 2. Something broke..."})
+                        return;
+                    }
+                    await button.deferUpdate();
+                    if(button.member.id !=respCaptain2.game_joining_players[0].player_id){
+                        await button.followUp({ content: "Only the captain for team 2 can choose the player...", ephemeral: true})
+                        return;
+                    }
+                    logger.info("Setting captain 2 pick");
+
+                    var respPlayersList;
+                    try{
+                        respPlayersList = await api.get("game_joining_player", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id)
+                        })
+                    }catch(error){
+                        logger.error(error.message);
+                    }
+                    if(!respPlayersList.game_joining_players[0]){
+                        await button.followUp({ content: "There are no players in the game...", ephemeral: true})
+                        return;
+                    }
+                    const player2 = button.values[0];
+                    logger.info("player2: " + player2);
+                    if(player2 === "none"){
+                        await button.followUp({ content: "You must select a player...", ephemeral: true})
+                        return;
+                    }else{
+                        var captain2player = "";
+                        for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                            if(respPlayersList.game_joining_players[i].player_id === player2){
+                                captain2player = respPlayersList.game_joining_players[i].game_player_id;
+                                respPlayersList.game_joining_players[i].team = "2";
+                                break;
+                            }
+                        }
+                        var respCaptain2pick;
+                        try{
+                            respCaptain2pick = await api.put("game_joining_player", {
+                                game_id:parseInt(respGame.game_joining_masters[0].game_id),
+                                game_player_id:parseInt(captain2player),
+                                team:"2"
+                            })
+                        }catch(error){
+                            logger.error(error.message);
+                        }
+                    }
+                    var captain1pick = new StringSelectMenuBuilder()
+                        .setCustomId('GAMEcaptain1pick-'+hostId)
+                        .setPlaceholder('Select someone to add to team 1');
+                        captain1pick.addOptions({
+                            label: "Blank Placeholder",
+                            value: "none",
+                            description: "Prevents the dropdown from disappearing",
+                        })
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        if(!(respPlayersList.game_joining_players[i].team === "none")){
+                            continue;
+                        }
+                        var player = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
+                        captain1pick.addOptions({
+                            label: player.displayName,
+                            value: respPlayersList.game_joining_players[i].player_id,
+                            description: "Add to team 1",
+                            emoji: '1️⃣',
+                        })
+                    }
+                    var captain2pick = new StringSelectMenuBuilder()
+                        .setCustomId('GAMEcaptain2pick-'+hostId)
+                        .setPlaceholder('Select someone to add to team 2');
+                        captain2pick.addOptions({
+                            label: "Blank Placeholder",
+                            value: "none",
+                            description: "Prevents the dropdown from disappearing",
+                        })
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        if(!(respPlayersList.game_joining_players[i].team === "none")){
+                            continue;
+                        }
+                        var player = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
+                        captain2pick.addOptions({
+                            label: player.displayName,
+                            value: respPlayersList.game_joining_players[i].player_id,
+                            description: "Add to team 2",
+                            emoji: '2️⃣',
+                        })
+                    }
                 logger.info(`[BTN_CLEANUP_CONFIRM] Found ${records.length} total voice tracking records for guild ${targetGuildId}.`);
                 logger.info(`[BTN_CLEANUP_CONFIRM] ${recordsWithId.length} records have a voice_state_id and will be targeted for deletion.`);
                 if (recordsWithoutIdCount > 0) { logger.warn(`[BTN_CLEANUP_CONFIRM] ${recordsWithoutIdCount} records are missing a voice_state_id and cannot be deleted by this process.`); }
@@ -787,7 +3079,79 @@ async function onInteractionCreate(interaction) {
             logger.info(`[BTN_CLEANUP_CANCEL] Voice data cleanup cancelled for guild ${guildId}`);
             await buttonInteraction.editReply({ content: "Voice data cleanup has been cancelled.", components: [] });
             return;
+                        // Fetch the role by name
+                    var roles = roleNames.map(roleName => button.guild.roles.cache.find(r => r.name === roleName));
+                    const voiceChannelspick2 = button.guild.channels.cache.filter(channel => {
+                        // Check if the channel is a voice channel
+                        if (channel.type !== 'GUILD_VOICE') return false;
+                    
+                        // Check if any of the roles has VIEW_CHANNEL permission in the channel
+                        return roles.some(role => {
+                            if(!role) return false; // Skip if the role is undefined or null
+                            return channel.permissionsFor(role).has(PermissionsBitField.Flags.ViewChannel);
+                        });
 
+                    });
+                    const channelListTeam1pick2 = new StringSelectMenuBuilder()
+                        .setCustomId('GAMEchannelTeam1-'+hostId)
+                        .setPlaceholder('Select a voice channel to send Team 1 to');
+                    voiceChannelspick2.forEach((channel) => {
+                        channelListTeam1pick2.addOptions([
+                            {
+                            label: channel.name,
+                            value: channel.id,
+                            },
+                        ]);
+                    });
+                    const channelListTeam2pick2 = new StringSelectMenuBuilder()
+                        .setCustomId('GAMEchannelTeam2-'+hostId)
+                        .setPlaceholder('Select a voice channel to send Team 2 to');
+                    voiceChannelspick2.forEach((channel) => {
+                        channelListTeam2pick2.addOptions([
+                            {
+                            label: channel.name,
+                            value: channel.id,
+                            },
+                        ]);
+                    });
+
+                    var guild = button.guild;
+                    var host = await guild.members.fetch(hostId);
+                    var ListEmbed = new EmbedBuilder()
+                        .setColor("#c586b6")
+                        .setTitle(`${host.displayName}'s game menu.`);
+                    ListEmbed.addFields({ name: "Captains are choosing!", value: "Choose a player from the corresponding drop down to add them to your team!\nGrey buttons are for the host" });
+                    ListEmbed.addFields({ name: "No team:", value: playersListNoTeam });
+                    ListEmbed.addFields({ name: "Team 1:", value: playersListTeam1 });
+                    ListEmbed.addFields({ name: "Team 2:", value: playersListTeam2 });
+                    var row = new ActionRowBuilder()
+                        .addComponents(
+                            captain1pick
+                        );
+                    var row2 = new ActionRowBuilder()
+                        .addComponents(
+                            captain2pick
+                        );
+                    var row3 = new ActionRowBuilder()
+                        .addComponents(channelListTeam1pick2);
+                    var row4 = new ActionRowBuilder()
+                        .addComponents(channelListTeam2pick2);
+                    var row5 = new ActionRowBuilder()
+                        .addComponents(
+                            new ButtonBuilder()
+                                .setCustomId('GAMEend-'+hostId)
+                                .setLabel('End')
+                                .setStyle(ButtonStyle.Secondary),
+                            new ButtonBuilder()
+                                .setCustomId('GAMEreopen-'+hostId)
+                                .setLabel('Re-open game')
+                                .setStyle(ButtonStyle.Secondary),
+                            new ButtonBuilder()
+                                .setCustomId('GAMEreturn-'+hostId)
+                                .setLabel('Return players to starting channel')
+                                .setStyle(ButtonStyle.Secondary),
+                        );
+                    button.editReply({ embeds: [ListEmbed], components: [row, row2, row3, row4, row5] })
         } else if (buttonInteraction.customId.startsWith("VOICE_FIX_ALL_")) {
             logger.warn(`[BTN_FIX_ALL] VOICE_FIX_ALL button pressed by ${buttonInteraction.user.tag} in guild ${guildId} - Not Implemented.`);
             await buttonInteraction.reply({ content: "This feature is not yet implemented.", ephemeral: true});
@@ -812,6 +3176,113 @@ async function onInteractionCreate(interaction) {
                 case "non-muted":
                     await generateVoiceLeaderboard(buttonInteraction, 'Top Non-Muted Voice Users (All Time)', { mutedFilter: false, sortOrder: 'top' });
                     break;
+                case "kick":
+                    if(button.member.id != hostId){
+                        button.reply({ content: "Only the host can kick players...", ephemeral: true})
+                        return;
+                    }
+                    await button.deferUpdate();
+                    if(button.values[0] === hostId){
+                        button.reply({ content: "You cannot kick yourself from your own game...", ephemeral: true})
+                        return;
+                    }
+                    logger.info("Kicking " + button.values[0] + " from " + hostId + "'s game");
+                    var respGame;
+                    try{
+                        respGame = await api.get("game_joining_master", {
+                            host_id:hostId
+                        })
+                    }catch(error){
+                        logger.error(error);
+                    }
+                    if(!respGame.game_joining_masters[0]){
+                        button.reply({ content: "There is no game currently available...", ephemeral: true}) 
+                        return;
+                    }
+                    var respGamePlayer;
+                    try{
+                        respGamePlayer = await api.get("game_joining_player", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id),
+                            player_id:button.values[0]
+                        })
+                    }catch(error){
+                        logger.error(error);
+                    }
+                    if(!respGamePlayer.game_joining_players[0]){
+                        button.reply({ content: "You are not currently in this game...", ephemeral: true})
+                        return;
+                    }
+                    var respGameLeave;
+                    try{
+                        respGameLeave = await api.delete("game_joining_player", {
+                            game_player_id:parseInt(respGamePlayer.game_joining_players[0].game_player_id)
+                        })
+                    }catch(error){
+                        logger.error(error);
+                        button.reply({ content: "There was an error removing you from the game...", ephemeral: true})
+                    }
+                    var respPlayersList;
+                    try{
+                        respPlayersList = await api.get("game_joining_player", {
+                            game_id:parseInt(respGame.game_joining_masters[0].game_id)
+                        })
+                    }catch(error){
+                        logger.error(error);
+                    }
+                    var playersList = "";
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        playersList += "<@" + respPlayersList.game_joining_players[i].player_id + ">\n";
+                    }
+                    if(playersList === ""){
+                        playersList = "No players currently in the game...";
+                    }
+                    var kickableList = new StringSelectMenuBuilder()
+                    .setCustomId('GAMEkick-'+hostId)
+                    .setPlaceholder('Select someone to remove');
+                    var playersList = "";
+                    for(var i = 0;i<respPlayersList.game_joining_players.length;i++){
+                        playersList += "<@" + respPlayersList.game_joining_players[i].player_id + ">\n";
+                        var player = await button.guild.members.fetch(respPlayersList.game_joining_players[i].player_id);
+                        kickableList.addOptions({
+                            label: player.displayName,
+                            value: respPlayersList.game_joining_players[i].player_id,
+                            description: "Kick from the game",
+                            emoji: '👢',
+                        })
+                    }
+
+                    var guild = button.guild;
+                    var host = await guild.members.fetch(hostId);
+                    var ListEmbed = new EmbedBuilder()
+                        .setColor("#c586b6")
+                        .setTitle(`${host.displayName}'s game menu.`);
+                        ListEmbed.addFields({ name: "Info about the buttons:", value: "Host is not added to their own game by default, but can join if they want to.\n\nBlurple buttons = anyone can interact\nGray buttons = only host can interact" });
+                        ListEmbed.addFields({ name: "Current Players:", value: playersList });
+                        var row = new ActionRowBuilder()
+                        .addComponents(
+                            new ButtonBuilder()
+                                .setCustomId('GAMEjoin-'+hostId)
+                                .setLabel('Join')
+                                .setStyle(ButtonStyle.Primary),
+                            new ButtonBuilder()
+                                .setCustomId('GAMEleave-'+hostId)
+                                .setLabel('Leave')
+                                .setStyle(ButtonStyle.Primary),
+                        );
+                        var row2 = new ActionRowBuilder()
+                        .addComponents(
+                            new ButtonBuilder()
+                                .setCustomId('GAMEstart-'+hostId)
+                                .setLabel('Start')
+                                .setStyle(ButtonStyle.Secondary),
+                            new ButtonBuilder()
+                                .setCustomId('GAMEend-'+hostId)
+                                .setLabel('End')
+                                .setStyle(ButtonStyle.Secondary),
+                        );
+                        var row3 = new ActionRowBuilder()
+                            .addComponents(kickableList);
+                    button.editReply({ embeds: [ListEmbed], components: [row, row2, row3] })
                 case "30days":
                     await generateVoiceLeaderboard(buttonInteraction, 'Top Voice Users (Last 30 Days)', { timeFilterDays: 30, sortOrder: 'top' });
                     break;

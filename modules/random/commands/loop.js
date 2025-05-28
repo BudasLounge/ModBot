@@ -18,10 +18,10 @@ module.exports = {
             separator = " ";
         }
         if(interval>0 && start>end){
-            message.channel.send({ content: "This will cause an error, try with different numbers. Up."});
+            await message.channel.send({ content: "This will cause an error, try with different numbers. Up."});
         }
         else if(interval<0 && start<end){
-            message.channel.send({ content: "This will cause an error, try with different numbers. Down."});
+            await message.channel.send({ content: "This will cause an error, try with different numbers. Down."});
         }else{
             var output = "";
             for(var i = start;i<=end;i+=interval){
@@ -31,7 +31,7 @@ module.exports = {
                     output+= i + " " + separator;
                 }
             }
-            message.channel.send({ content: output});
+            await message.channel.send({ content: output});
         }
     }
 };

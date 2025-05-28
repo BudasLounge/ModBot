@@ -8,18 +8,18 @@ module.exports = {
     has_state: false,
     async execute(message, args, extra) {
         var api = extra.api;
-        const {MessageActionRow, MessageButton, MessageEmbed, MessageSelectMenu} = require('discord.js');
-        const modalStarter = new MessageActionRow()
+        const {ActionRowBuilder, ButtonBuilder, EmbedBuilder, ButtonStyle} = require('discord.js');
+        const modalStarter = new ActionRowBuilder()
         .addComponents(
-            new MessageButton()
+            new ButtonBuilder()
                 .setCustomId("CAMPAIGNCREATOR")
                 .setLabel("Click here to start the Campaign Creator tool!")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
+                .setStyle(ButtonStyle.Primary)
+                .setDisabled(false),
         );
-        const outputEmbed = new MessageEmbed()
+        const outputEmbed = new EmbedBuilder()
         .setTitle("Campaign Creator tool!")
-        .addField("Click the button below","Use the button below to start up the campaign creator tool! This will send a campaign request to the admins.\nUpon approval, a category and rooms will be create and a DM role assigned, you can then send invites in the Game-Invites channel.\n\nPlease an admin if you have any questions.")
+        .addFields({ name: "Click the button below", value: "Use the button below to start up the campaign creator tool! This will send a campaign request to the admins.\nUpon approval, a category and rooms will be create and a DM role assigned, you can then send invites in the Game-Invites channel.\n\nPlease an admin if you have any questions."});
         message.channel.send({embeds: [outputEmbed],components: [modalStarter]});
 
     }

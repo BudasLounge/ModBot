@@ -10,12 +10,12 @@ module.exports = {
       if (message.author.bot) return;
       var fs = require('fs');
       var http = require('http');
-      const {Util} = require('discord.js');
       args.shift()
       chatMessage = args.join(" ")
+      let botMessage; // Define botMessage here to be accessible in catch blocks
       try {
           
-          const botMessage = await message.reply({content: "Generating response..."})
+          botMessage = await message.reply({content: "Generating response..."})
           const data = JSON.stringify({
               model: "mixtral",
               prompt: chatMessage,
@@ -36,30 +36,45 @@ module.exports = {
               res.on('data', (chunk) => {
                   rawData += chunk;
               });
-              res.on('end', () => {
+              res.on('end', async () => {
                   try {
                       const parsedData = JSON.parse(rawData);
                       this.logger.info("parsedData from llm: " , parsedData)
                       const responseText = parsedData.response; // Extracting the response field
           
-                      const messageChunks = Util.splitMessage(responseText, {
-                          maxLength: 2000,
-                          char: '\n'
-                      });
-                      botMessage.delete();
-                      messageChunks.forEach(async chunk => {
-                          await message.reply(chunk);
-                      });
+                      await botMessage.delete(); // Use await for delete
+                      // Manual message splitting
+                      const maxLength = 2000;
+                      let currentChunk = '';
+                      for (const char of responseText) {
+                          if (currentChunk.length + char.length <= maxLength) {
+                              currentChunk += char;
+                          } else {
+                              await message.reply({ content: currentChunk });
+                              currentChunk = char;
+                          }
+                      }
+                      if (currentChunk.length > 0) {
+                          await message.reply({ content: currentChunk });
+                      }
                   } catch (e) {
                       this.logger.error("Error parsing JSON: " + e.message);
-                      message.reply("An error occurred while processing the response.\n" + e.message);
+                      if (botMessage) { // Check if botMessage was initialized
+                        await botMessage.edit({ content: "An error occurred while processing the response.\n" + e.message});
+                      } else {
+                        await message.reply({ content: "An error occurred while processing the response.\n" + e.message});
+                      }
                   }
               });
           });
 
-          req.on('error', (error) => {
+          req.on('error', async (error) => { // Added async here
               this.logger.error("Request error: " + error.message);
-              botMessage.edit("An error occurred while making the request.\n" + error.message);
+              if (botMessage) { // Check if botMessage was initialized
+                await botMessage.edit({ content: "An error occurred while making the request.\n" + error.message});
+              } else {
+                await message.reply({ content: "An error occurred while making the request.\n" + error.message});
+              }
           });
 
           req.write(data);
@@ -68,9 +83,15 @@ module.exports = {
           return
         } catch (err) {
           this.logger.error("top level error: " + err);
-          botMessage.edit(
-            "An error has occured while trying to talk to the bot...\n"+err
-          );
+          if (botMessage) { // Check if botMessage was initialized
+            await botMessage.edit({ // Use await and object syntax
+              content: "An error has occured while trying to talk to the bot...\n"+err
+            });
+          } else {
+            await message.reply({ // Use await and object syntax
+              content: "An error has occured while trying to talk to the bot...\n"+err
+            });
+          }
         }
       }
   }

@@ -1,12 +1,12 @@
 {
-    "token_file": "../token.txt",
+    "token_file": "../token-dev.txt",
     "default_channel": "880900861692358696",
     "startup_messages": {
         "update": "I have been updated!",
         "restart": "I have restarted!"
     },
     "bot_activity": {
-        "name": "in the matrix",
+        "name": "in devland",
         "type": "PLAYING"
     },
     "modules_folder": "modules",

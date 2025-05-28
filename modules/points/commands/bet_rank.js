@@ -1,6 +1,6 @@
 module.exports = {
     name: 'bet_rank',
-    description: 'Returns the leaderboard for this server',
+    description: 'Return                    ListEmbed.addFields({ name: pointUsers[k][0] + ": " + pointUsers[k][1] + " " + respCheckServer.bet_configs[0].point_name + "s", value: "...........................................................................", inline: false }); the leaderboard for this server',
     syntax: 'bet_rank',
     num_args: 0,//minimum amount of arguments to accept
     args_to_lower: false,//if the arguments should be lower case
@@ -46,7 +46,7 @@ module.exports = {
                 }
                 //var outputTitle = "Let's see who is in the lead:\n";
                 var output = "";
-                const ListEmbed2 = new Discord.MessageEmbed()
+                const ListEmbed2 = new Discord.EmbedBuilder()
                 .setColor("#f92f03")
                 .setTitle("Let's see who is in the lead: ");
                 /*const ListEmbed = new Discord.MessageEmbed()
@@ -68,7 +68,7 @@ module.exports = {
                     ListEmbed.addField(pointUsers[k][0] + ": " + pointUsers[k][1] + " " + respCheckServer.bet_configs[0].point_name + "s", "...........................................................................");
                 }*/
                 //ListEmbed.addField("The list: ", output);
-                ListEmbed2.addField("Placements:",output);
+                ListEmbed2.addFields({ name: "Placements:", value: output, inline: false });
                 //message.channel.send({ content: ListEmbed);
                 message.channel.send({ embeds: [ListEmbed2]});
                 //message.channel.send({ content: outputTitle + output);

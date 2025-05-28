@@ -13,7 +13,7 @@ module.exports = {
             return;
         }
         var api = extra.api;
-        const { MessageActionRow, MessageButton, MessageEmbed } = require('discord.js');
+        const { ActionRowBuilder, ButtonBuilder, EmbedBuilder, ButtonStyle } = require('discord.js');
 
         var respFoundPlayer;
         var respFoundCampaign;
@@ -69,16 +69,16 @@ module.exports = {
         }
 
 
-        const row = new MessageActionRow()
+        const row = new ActionRowBuilder()
             .addComponents(
-                new MessageButton()
+                new ButtonBuilder()
                     .setCustomId("DNDID-"+invitedPlayer+"_A"+respFoundCampaign.dnd_campaigns[0].campaign_id)
                     .setLabel('Accept')
-                    .setStyle('SUCCESS'),
-                new MessageButton()
+                    .setStyle(ButtonStyle.Success),
+                new ButtonBuilder()
                     .setCustomId("DNDID-"+invitedPlayer+"_D"+respFoundCampaign.dnd_campaigns[0].campaign_id)
                     .setLabel('Deny')
-                    .setStyle('DANGER'),
+                    .setStyle(ButtonStyle.Danger),
             )
        // try {
         //const fetched = await message.channel.messages.fetch({ limit: 100 });
@@ -88,9 +88,9 @@ module.exports = {
         //} catch(err) {
         //this.logger.error(err.message);
         //}
-        const outputEmbed = new MessageEmbed()
+        const outputEmbed = new EmbedBuilder()
         .setTitle(message.member.user.username + " has invited you to play in their campaign: " + respFoundCampaign.dnd_campaigns[0].module)
-        .addField("You have been invited to play!", "Please choose to accept or deny this request from the buttons below.")
+        .addFields({ name: "You have been invited to play!", value: "Please choose to accept or deny this request from the buttons below."});
         message.guild.channels.cache.get("1005137919662629004").send({embeds: [outputEmbed], content: "<@" + invitedPlayer + ">", components: [row]});
         message.delete()
     }

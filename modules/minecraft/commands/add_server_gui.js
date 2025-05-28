@@ -11,21 +11,21 @@ module.exports = {
 
         this.logger.info(">>add_server_gui");
         if(message.member.roles.cache.find(r => r.id === "586313447965327365") || message.author.id === "185223223892377611" || message.author.id === "195677170432081920"){
-            const {MessageActionRow, MessageButton, MessageEmbed, MessageSelectMenu} = require('discord.js');
-            const modalStarter = new MessageActionRow()
+            const { ActionRowBuilder, ButtonBuilder, EmbedBuilder, SelectMenuBuilder, ButtonStyle } = require('discord.js'); // Updated imports
+            const modalStarter = new ActionRowBuilder() // Updated to ActionRowBuilder
             .addComponents(
-                new MessageButton()
+                new ButtonBuilder() // Updated to ButtonBuilder
                 .setCustomId("MINE-SERVERCREATOR")
                 .setLabel("Click here to start the Server Adding tool!")
-                .setStyle('PRIMARY')
-                .setDisabled("false"),
+                .setStyle(ButtonStyle.Primary) // Updated to ButtonStyle.Primary
+                .setDisabled(false), // setDisabled takes a boolean
             );
-            const outputEmbed = new MessageEmbed()
+            const outputEmbed = new EmbedBuilder() // Updated to EmbedBuilder
             .setTitle("Server Adding Tool!")
-            .addField("Click the button below","Use the button below to start up the server adding tool!")
-            message.channel.send({embeds: [outputEmbed],components: [modalStarter]});
+            .addFields({ name: "Click the button below", value: "Use the button below to start up the server adding tool!"}); // Updated to addFields with object
+            await message.channel.send({embeds: [outputEmbed],components: [modalStarter]});
         }else{
-            message.channel.send({ content: "You don't have permission to use that command!"});
+            await message.channel.send({ content: "You don't have permission to use that command!"});
         }
         this.logger.info("<<add_server_gui");
     }

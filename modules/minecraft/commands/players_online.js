@@ -10,7 +10,7 @@ module.exports = {
         var api = extra.api;
 
         const axios = require('axios');
-        const Discord = require('discord.js');
+        const { EmbedBuilder } = require('discord.js'); // Updated to EmbedBuilder
         const {getStatus} = require("mc-server-status");
         console.log(">>players_online");
 	try {
@@ -27,7 +27,7 @@ module.exports = {
             var status;
             var flag = false;
             try{
-                status = await getStatus(respServer.minecraft_servers[i].server_ip);
+                status = await getStatus(respServer.minecraft_servers[0].server_ip); // Corrected index from i to 0
             }catch(status_error){
                 this.logger.error(status_error + ", setting flag to true");
                 status = respServer.minecraft_servers[0].display_name + " is currently offline!\n\n";
@@ -35,7 +35,7 @@ module.exports = {
             }
             if(!flag){
                 console.log("Making listEmbed now!");
-                const ListEmbed = new Discord.MessageEmbed()
+                const ListEmbed = new EmbedBuilder() // Updated to EmbedBuilder
                 .setColor("#f92f03")
                 .setTitle("List of all players on " + respServer.minecraft_servers[0].display_name + ": ");
                 var msg = "Players: ";
@@ -50,13 +50,13 @@ module.exports = {
                         msg += "\n" + player.username;
                     }
                 }
-                ListEmbed.addField(num_players, msg);
-                message.channel.send({ embeds: [ListEmbed]});
+                ListEmbed.addFields({ name: num_players, value: msg }); // Updated to addFields with object
+                await message.channel.send({ embeds: [ListEmbed]}); // Added await
             }else{
-                message.channel.send({ content: "That server doesn't appear to be online right now!"});
+                await message.channel.send({ content: "That server doesn't appear to be online right now!"}); // Added await
             }
         }else{
-            message.channel.send({ content: "That server doesn't appear to have status_api mod installed!"});
+            await message.channel.send({ content: "That server doesn't appear to have status_api mod installed!"}); // Added await
         }
 	} catch (error) {
 		console.error(error);

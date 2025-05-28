@@ -10,7 +10,7 @@ module.exports = {
 
     const { performance } = require('perf_hooks');
     const perfStart = performance.now();
-    const Discord = require('discord.js');
+    const { EmbedBuilder } = require('discord.js');
     const axios = require('axios');
     const pinger = require('minecraft-ping-js');
     const fs = require('fs');
@@ -37,7 +37,7 @@ module.exports = {
       this.logger.info(`- ${server.display_name}`);
     });
 
-    const ListEmbed = new Discord.MessageEmbed()
+    const ListEmbed = new EmbedBuilder()
       .setColor('#f92f03')
       .setTitle('Minecraft Servers Status')
       .setDescription('If a server crashed, it should auto restart in 5 minutes or less.\nContact a server admin if it should be online but remains offline.');
@@ -93,17 +93,17 @@ module.exports = {
     // Add fields in correct order
     serverFields.forEach(field => {
       if (field) { // Check if field exists
-        ListEmbed.addField(field.name, field.value, field.inline);
+        ListEmbed.addFields({ name: field.name, value: field.value, inline: field.inline });
       }
     });
     
-    message.channel.send({embeds: [ListEmbed]})
+    message.channel.send({ embeds: [ListEmbed] });
     
     // Send a separate message to better separate the different game statuses
     const palworldMsg = await message.channel.send({ content: `Now getting Palworld status...` });
     
     // Create Palworld embed
-    const PalworldEmbed = new Discord.MessageEmbed()
+    const PalworldEmbed = new EmbedBuilder()
       .setColor('#0a74da')
       .setTitle('Palworld Server Status');
 
@@ -144,7 +144,7 @@ module.exports = {
           // Map each player as "name" ("accountName")
           const playerNames = playersResp.data.players.map(p => `• ${p.name} (${p.accountName})`).join('\n');
           if (playerNames) {
-            PalworldEmbed.addField('Players Online', playerNames);
+            PalworldEmbed.addFields({ name: 'Players Online', value: playerNames });
           }
         } catch (playerError) {
           // Silent error - already showing player count in status

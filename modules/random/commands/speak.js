@@ -34,12 +34,12 @@ module.exports = {
                 this.audioQueue.shift();
             }
 
-            message.channel.send({ content: "Cleared " + counter + " lines from the queue!" });
+            await message.channel.send({ content: "Cleared " + counter + " lines from the queue!" });
             this.logger.info("TTS Queue cleared");
             return;
         } else if(args.length > 1 && args[1] === "<shutup>") {
             this.audioPlayer.state = { status: AudioPlayerStatus.Idle };
-            message.channel.send({content: "Jeez, fine. I'll stop talking."});
+            await message.channel.send({ content: "Jeez, fine. I'll stop talking." });
             this.logger.info("I shut up now");
             return;
         }
@@ -80,7 +80,7 @@ module.exports = {
         }
         this.audioPlayer.state = { status: AudioPlayerStatus.Idle };
         if(sayMessage.length>200){
-            message.channel.send({ content: "That message is too long, no more than 200 characters per message!"});
+            await message.channel.send({ content: "That message is too long, no more than 200 characters per message!" });
             return;
         }
 
@@ -95,8 +95,8 @@ module.exports = {
 
                 this.audioPlayer.on(AudioPlayerStatus.Idle, this.tryPlayNextAudio.bind(this));
 
-                this.audioPlayer.on('error', error => {
-                    message.channel.send({ content: "Hit an error!" });
+                this.audioPlayer.on('error', async error => {
+                    await message.channel.send({ content: "Hit an error!" });
                     this.logger.error(error);
                 });
 

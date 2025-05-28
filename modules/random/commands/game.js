@@ -8,14 +8,13 @@ module.exports = {
     has_state: false,
     async execute(message, args, extra) {
         var api = extra.api;
-        const { MessageActionRow, MessageButton, MessageEmbed } = require('discord.js');
+        const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
         const voiceChannel = message.member.voice.channel;
         if (!voiceChannel) {
             message.channel.send({ content: "You need to be in a voice channel to use this command." });
             return;
         }
         var voiceChannelId = voiceChannel.id;
-
         var respGame;
         // Check for and clean up existing game hosted by this user
         try {
@@ -62,7 +61,7 @@ module.exports = {
                                     game_player_id: Number(respTemp.game_joining_players[0].game_player_id)
                                 });
                             }
-                        }
+                        
                     } catch (playerDeleteError) {
                         this.logger.error(`Failed to delete player ${respPlayersList.game_joining_players[i].player_id} from old game ${oldGameId}: ${playerDeleteError.message || playerDeleteError}`);
                     }

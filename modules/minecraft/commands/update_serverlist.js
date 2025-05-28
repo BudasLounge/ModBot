@@ -1,4 +1,4 @@
-const { MessageEmbed } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 
 module.exports = {
   name: 'updatesl',
@@ -95,10 +95,8 @@ module.exports = {
 • **Status API Port**: ${updatedServer.status_api_port}
 • **MC Version**: ${updatedServer.mc_version}
 • **Pack Version**: ${updatedServer.pack_version}
-• **Pack URL**: ${updatedServer.url}
-`;
-
-        const embed = new MessageEmbed()
+• **Pack Version**: ${updatedServer.url}
+`;        const embed = new EmbedBuilder()
           .setColor('#f92f03')
           .setTitle(`Field Updated: ${fieldToUpdate}`)
           .setDescription(changedInfo)

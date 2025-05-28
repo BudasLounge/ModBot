@@ -7,7 +7,7 @@ module.exports = {
     needs_api: true,
     has_state: false,
     async execute(message, args, extra) {
-        const { MessageActionRow, MessageButton, MessageEmbed } = require('discord.js');
+        const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
         const api = extra.api;
         const subCommand = args[1]; // Already lowercased by args_to_lower: true
 
@@ -71,6 +71,11 @@ module.exports = {
                 }
             }
 
+        const voiceTrackings = respVoice.voice_trackings;
+        if (!voiceTrackings[0]) {
+        await message.channel.send({ content: "There is no data available yet..." });
+        return;
+        }
             if (ghostSessionUsers.length === 0) {
                 await reply.edit({ content: "✅ No ghost sessions found. All users have at most one active session." });
                 return;
@@ -117,6 +122,26 @@ module.exports = {
 
             const voiceTrackings = respVoice && respVoice.voice_trackings ? respVoice.voice_trackings : [];
 
+        const ListEmbed = new EmbedBuilder()
+        .setColor("#c586b6")
+        .setTitle(`Voice Channel Leaderboard (Top 10) (Start Date: ${formattedDate})`);
+        for (let i = 0; i < sortedTotalTime.length; i++) {
+        const [user_id, duration] = sortedTotalTime[i];
+        try{
+            const userId = user_id;
+            const user = await message.guild.members.fetch(userId);
+            var mention = user.displayName;
+        }catch(error){
+            logger.error(error.message);
+        }
+        let diff = duration;
+        const units = [
+            { d: 60, l: "seconds" },
+            { d: 60, l: "minutes" },
+            { d: 24, l: "hours" },
+            // change 365 to a higher number if someone hits 365 days of cumulative voice timings
+            { d: 1000, l: "days" },
+        ];
             if (voiceTrackings.length === 0) {
                 message.channel.send({ content: "There is no voice tracking data available yet." });
                 return;
@@ -135,6 +160,58 @@ module.exports = {
                     continue;
                 }
 
+        const timingFilters = new ActionRowBuilder()
+        .addComponents(
+            new ButtonBuilder()
+            .setCustomId("VOICEnon-muted")
+            .setLabel("Non-muted times only")
+            .setStyle(ButtonStyle.Primary)
+            .setDisabled(false),
+            new ButtonBuilder()
+            .setCustomId("VOICEmuted")
+            .setLabel("Muted times only")
+            .setStyle(ButtonStyle.Primary)
+            .setDisabled(false),
+            new ButtonBuilder()
+            .setCustomId("VOICElonely")
+            .setLabel("Alone times only")
+            .setStyle(ButtonStyle.Primary)
+            .setDisabled(true),
+            new ButtonBuilder()
+            .setCustomId("VOICEbottom")
+            .setLabel("Bottom Talkers")
+            .setStyle(ButtonStyle.Primary)
+            .setDisabled(false),
+        );
+
+        const timingFilters2 = new ActionRowBuilder()
+        .addComponents(
+            new ButtonBuilder()
+            .setCustomId("VOICE30days")
+            .setLabel("Top - Last 30 Days")
+            .setStyle(ButtonStyle.Primary)
+            .setDisabled(false),
+            new ButtonBuilder()
+            .setCustomId("VOICE7days")
+            .setLabel("Top - Last 7 Days")
+            .setStyle(ButtonStyle.Primary)
+            .setDisabled(false),
+            new ButtonBuilder()
+            .setCustomId("VOICEchannel")
+            .setLabel("Top Talkers - By Channel")
+            .setStyle(ButtonStyle.Primary)
+            .setDisabled(false),
+            new ButtonBuilder()
+            .setCustomId("VOICEchannelUse")
+            .setLabel("Top Channels by use")
+            .setStyle(ButtonStyle.Primary)
+            .setDisabled(false),
+        );
+
+        await message.channel.send({ components: [timingFilters, timingFilters2], embeds: [ListEmbed] });
+        this.logger.info("Sent Voice Leaderboard!");
+    }
+}
                 const effectiveDisconnectTime = (rawDisconnectTime === 0 || isNaN(rawDisconnectTime)) ? currentTime : rawDisconnectTime;
                 const duration = Math.max(0, Math.floor(effectiveDisconnectTime - connectTime));
 

@@ -7,7 +7,7 @@ module.exports = {
     needs_api: false,
     has_state: false,
     async execute(message, args, extra) {
-        const Discord = require('discord.js');
+        const { EmbedBuilder } = require('discord.js');
         role = message.guild.roles.cache.find(role => role.name.toLowerCase().trim() === args[1]);
 		if(args[1] == "everyone") return message.reply("I don't like listing everyone, sorry!");
 		var strLength = 0;
@@ -35,7 +35,7 @@ module.exports = {
 		for(let j = counter; j>=0; j--){
 			args.shift();
 		}
-		const ListEmbed = new Discord.MessageEmbed()
+		const ListEmbed = new EmbedBuilder()
 		.setTitle('Users with the '+role.name+' role:')
 		.setDescription(message.guild.roles.cache.get(role.id).members.map(m=>m.user.username)+"\n");
 		message.channel.send({embeds: [ListEmbed]}); 

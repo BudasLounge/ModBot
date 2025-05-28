@@ -1,5 +1,6 @@
 const fs = require('fs');
 const Rcon = require('rcon');
+const { EmbedBuilder } = require('discord.js');
 
 module.exports = {
     name: 'rcon',
@@ -23,19 +24,33 @@ module.exports = {
 
         // Display help information
         if (args[1] === 'help') {
-            return message.reply({
-                content: "Arguments:\n`minecraft_shortname`: the short name of the Minecraft server (first part of the IP, use ,listmc to find).\n`rcon_command`: any in-game server command, usually prefixed with `/`.\nMUST BE LISTED AS AN MC ADMIN TO USE THIS COMMAND."
+            return message.channel.send({
+                embeds: [
+                    new EmbedBuilder()
+                        .setTitle('RCON Command Help')
+                        .setDescription("Arguments:\n`minecraft_shortname`: the short name of the Minecraft server (first part of the IP, use ,listmc to find).\n`rcon_command`: any in-game server command, usually prefixed with `/`.\nMUST BE LISTED AS AN MC ADMIN TO USE THIS COMMAND.")
+                ]
             });
         }
 
         // Ensure the user has the required role
         if (!message.member.roles.cache.some(role => role.name === 'MCadmin')) {
-            return message.reply({ content: "You are not an MC Admin, so you cannot use this command." });
+            return message.channel.send({
+                embeds: [
+                    new EmbedBuilder()
+                        .setDescription("You are not an MC Admin, so you cannot use this command.")
+                ]
+            });
         }
 
         // Ensure all arguments are provided
         if (!args[2]) {
-            return message.reply({ content: "Please provide all required arguments. Use `rcon help` for instructions." });
+            return message.channel.send({
+                embeds: [
+                    new EmbedBuilder()
+                        .setDescription("Please provide all required arguments. Use `rcon help` for instructions.")
+                ]
+            });
         }
 
         // Fetch the server information from the API
@@ -68,7 +83,13 @@ module.exports = {
             conn.send(command);
         }).on('response', function(str) {
             console.log('RCON response:', str);
-            message.reply({ content: `Command executed successfully:\n${str}` }); // Notify user with response
+            message.channel.send({
+                embeds: [
+                    new EmbedBuilder()
+                        .setTitle('RCON Command Executed')
+                        .setDescription(`Command executed successfully:\n${str}`)
+                ]
+            });
         }).on('error', function(err) {
             console.error('RCON error:', err);
             message.reply({ content: `An RCON error occurred: ${err.message}` });

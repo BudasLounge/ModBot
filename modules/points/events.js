@@ -1,12 +1,12 @@
 var ApiClient = require("../../core/js/APIClient.js");
 var api = new ApiClient();
+const { EmbedBuilder, PermissionsBitField } = require('discord.js');
 
 async function onButtonClick(button){
 if (button.isButton() || button.isSelectMenu()){
     if(!(button.customId.substring(0,4)==="BETS")) return;
     button.channel.send(button.customId.substring(0,4))
 if(button.isButton()){
-    const {MessageEmbed} = require('discord.js');
     const moment = require("moment");
     button.customId = button.customId.substr(4)
     button.channel.send(button.customId)
@@ -125,12 +125,11 @@ if(button.isButton()){
                     }
                     output += forBet[j].better_discord_username + " added " + winnings + " to their wealth\n";
                 }
-            }
-            button.channel.send({content: "Bet with total pot of: " + pot + ". Which had " + forBet.length + " for it and " + againstBet.length + " against it. The winners will split: " + winTotal.toString()});
-            const listWinners = new MessageEmbed()
+            }            button.channel.send({content: "Bet with total pot of: " + pot + ". Which had " + forBet.length + " for it and " + againstBet.length + " against it. The winners will split: " + winTotal.toString()});
+            const listWinners = new EmbedBuilder()
             .setColor("#f92f03")
             .setTitle("Here are the winners of this bet: ")
-            .addField("Winners: ", output.toString());
+            .addFields({ name: "Winners: ", value: output.toString(), inline: false });
 
             button.channel.send({embeds: [listWinners] });
         }else{
@@ -183,11 +182,10 @@ if(button.isButton()){
                     output += againstBet[k].better_discord_username + " added " + winnings.toString() + " to their wealth\n";
                 }
             }
-            button.channel.send({content: "Bet with total pot of: " + pot + ". Which had " + forBet.length + " for it and " + againstBet.length + " against it. The winners will split: " + winTotal.toString()});
-            const listWinners = new MessageEmbed()
+            button.channel.send({content: "Bet with total pot of: " + pot + ". Which had " + forBet.length + " for it and " + againstBet.length + " against it. The winners will split: " + winTotal.toString()});            const listWinners = new EmbedBuilder()
             .setColor("#f92f03")
             .setTitle("Here are the winners of this bet: ")
-            .addField("Winners: ", output.toString());
+            .addFields({ name: "Winners: ", value: output.toString(), inline: false });
 
             button.channel.send({embeds: [listWinners] });
         }
@@ -230,12 +228,11 @@ if(button.isButton()){
                 }
                 if(againstOutput === ""){
                     againstOutput = "none";
-                }
-                const listBetters = new MessageEmbed()
+                }                const listBetters = new EmbedBuilder()
                 .setColor("#f92f03")
                 .setTitle("Here are the current standings: ")
-                .addField(forCount + " For: ", forOutput.toString())
-                .addField(againstCount + " Against: ", againstOutput.toString());
+                .addFields({ name: forCount + " For: ", value: forOutput.toString(), inline: false })
+                .addFields({ name: againstCount + " Against: ", value: againstOutput.toString(), inline: false });
                 button.channel.send({embeds: [listBetters]})
                 button.deferUpdate();
                 return;
