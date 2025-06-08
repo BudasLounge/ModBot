@@ -1,8 +1,14 @@
 var ApiClient = require("../../core/js/APIClient.js");
-var api = new ApiClient();
-const { ActionRowBuilder, ButtonBuilder, EmbedBuilder, StringSelectMenuBuilder, PermissionsBitField, ButtonStyle, Modal, TextInputComponent } = require('discord.js'); // Consolidated imports, removed old ones
-
-//todo: add a way to track how many times a user streams and for how long
+var api = new ApiClient(); // Module-scoped API client
+const {
+    ActionRowBuilder,
+    ButtonBuilder,
+    ModalBuilder,
+    TextInputBuilder,
+    EmbedBuilder,
+    ButtonStyle,
+    TextInputStyle
+} = require('discord.js');
 
 // Module-scoped logger, initialized in register_handlers
 var logger;
@@ -33,7 +39,7 @@ function formatDuration(totalSeconds) {
 // Helper function for generating standard voice leaderboards
 async function generateVoiceLeaderboard(button, title, options) {
     await button.deferUpdate();
-    const { timeFilterDays, mutedFilter, sortOrder, originalCustomId } = options; // sortOrder: 'top' or 'bottom'
+    const { timeFilterDays, mutedFilter, sortOrder } = options; // sortOrder: 'top' or 'bottom'
     const guildId = button.guild.id;
     const currentTime = Math.floor(Date.now() / 1000);
 
@@ -128,13 +134,9 @@ async function generateVoiceLeaderboard(button, title, options) {
     const updatedComponents = button.message.components.map(row => {
         const newRow = new ActionRowBuilder();
         row.components.forEach(comp => {
-            if (comp.type === 2 /* BUTTON */) {
-                const newComp = ButtonBuilder.from(comp);
-                newComp.setDisabled(comp.customId === originalCustomId);
-                newRow.addComponents(newComp);
-            } else {
-                newRow.addComponents(comp); // Add other component types as is
-            }
+            const newComp = new ButtonBuilder(comp);
+            newComp.setDisabled(comp.customId === button.customId);
+            newRow.addComponents(newComp);
         });
         return newRow;
     });
@@ -143,312 +145,784 @@ async function generateVoiceLeaderboard(button, title, options) {
     logger.info(`Sent Voice Leaderboard: ${title}`);
 }
 
+// NEW: Handler for GAME_ button interactions
+async function handleGameButton(buttonInteraction, logger, localApi) {
+    const customId = buttonInteraction.customId;
+    const parts = customId.split('-'); 
+    if (parts.length < 2) {
+        logger.warn(`[GAME_BTN] Invalid customId format: ${customId}`);
+        await buttonInteraction.reply({ content: "Invalid button action.", ephemeral: true });
+        return;
+    }
 
-async function onButtonClick(button){ // 'button' is actually an interaction object
-    // Ensure logger and api are defined in this scope, or passed appropriately.
-    // Assuming logger and api are available as per the context of other handlers in the file.
+    const fullAction = parts[0]; 
+    const gameIdString = parts[1]; // gameId is a string initially    
+    const gameId = Number(gameIdString); // Convert to number
+    if (isNaN(gameId)) {
+        logger.warn(`[GAME_BTN] Invalid gameId (not a number): ${gameIdString}`);
+        await buttonInteraction.reply({ content: "Invalid game ID in button.", ephemeral: true });
+        return;
+    }
+    const userId = buttonInteraction.user.id;
 
-    if (button.customId.startsWith("VOICE")) { // Changed from substr for clarity
-        if (button.customId.startsWith("VOICE_FIX_ALL_")) {
-            logger.info(`[VOICE_FIX_ALL] User ${button.user.tag} (${button.user.id}) initiated fix for guild ${button.guild.id} via button click.`);
-            await button.deferUpdate(); 
+    const actionPrefix = "GAME_";
+    if (!fullAction.startsWith(actionPrefix)) {
+        logger.warn(`[GAME_BTN] Invalid action prefix: ${fullAction}`);
+        await buttonInteraction.reply({ content: "Invalid button action.", ephemeral: true });
+        return;
+    }
+    const actionKey = fullAction.substring(actionPrefix.length);
 
-            let voiceTrackings;
+    let gameDetails;
+    try {
+        const resp = await localApi.get("game_joining_master", { game_id: gameId });
+        if (resp && resp.game_joining_masters && resp.game_joining_masters[0]) {
+            gameDetails = resp.game_joining_masters[0];
+        } else {
+            logger.warn(`[GAME_BTN] Game not found: ${gameId} for action ${actionKey}. Button message will be updated.`);
+            await buttonInteraction.update({ content: "This game session no longer exists or could not be found.", embeds: [], components: [] });
+            return;
+        }
+    } catch (error) {
+        logger.error(`[GAME_BTN] API error fetching game ${gameId}: ${error.message || error}`);
+        await buttonInteraction.reply({ content: "Error fetching game details. Please try again.", ephemeral: true });
+        return;
+    }
+
+    logger.info(`[GAME_BTN] Processing action '${actionKey}' for game ${gameId}. Host: ${userId}. Game Details: Status='${gameDetails.status}', NumTeams='${gameDetails.num_teams}', MaxPlayers='${gameDetails.max_players}'`);
+
+    const isHost = (gameDetails.host_id === userId);
+
+    switch (actionKey) {
+        case "JOIN":
             try {
-                const respVoice = await api.get("voice_tracking", {
-                    discord_server_id: button.guild.id,
-                    disconnect_time: 0 
-                });
-                voiceTrackings = (respVoice && respVoice.voice_trackings) ? respVoice.voice_trackings : [];
+                await buttonInteraction.deferReply({ ephemeral: true });
+                const currentLobbyState = await localApi.get("game_joining_master", { game_id: gameId });
+                if (!currentLobbyState || !currentLobbyState.game_joining_masters || !currentLobbyState.game_joining_masters[0]) {
+                    await buttonInteraction.editReply({ content: "Game not found." });
+                    return;
+                }
+                const freshGameDetails = currentLobbyState.game_joining_masters[0];
+
+                if (freshGameDetails.status !== 'setup' && freshGameDetails.status !== 'lobby_configured') {
+                    await buttonInteraction.editReply({ content: "This game is not currently accepting new players." });
+                    return;
+                }
+
+                await localApi.post("game_joining_player", { game_id: gameId, player_id: userId });
+                await buttonInteraction.editReply({ content: `You have joined game ${gameId}!` });
+                logger.info(`[GAME_BTN] Player ${userId} joined game ${gameId}`);
             } catch (error) {
-                logger.error(`[VOICE_FIX_ALL] Failed to fetch voice_tracking data for guild ${button.guild.id}: ${error.message}`, error);
-                await button.editReply({ content: "An error occurred while fetching voice data. Unable to fix ghost sessions.", components: [] }).catch(e => logger.error(`[VOICE_FIX_ALL] Failed to send error reply (fetch): ${e.message}`));
+                logger.error(`[GAME_BTN] Error joining game ${gameId} for ${userId}: ${error.message || error}`);
+                if (!buttonInteraction.replied && !buttonInteraction.deferred) {
+                    await buttonInteraction.reply({ content: "Could not join the game due to an error.", ephemeral: true });
+                } else {
+                    await buttonInteraction.editReply({ content: "Could not join the game due to an error." });
+                }
+            }
+            break;
+
+        case "LEAVE":
+            try {
+                await buttonInteraction.deferReply({ ephemeral: true });
+                const playerResp = await localApi.get("game_joining_player", { game_id: gameId, player_id: userId, _limit: 1 });
+                if (playerResp && playerResp.game_joining_players && playerResp.game_joining_players[0]) {
+                    const gamePlayerId = playerResp.game_joining_players[0].game_player_id;
+                    await localApi.delete("game_joining_player", { game_player_id: Number(gamePlayerId) });
+                    await buttonInteraction.editReply({ content: `You have left game ${gameId}.` });
+                    logger.info(`[GAME_BTN] Player ${userId} left game ${gameId}`);
+                } else {
+                    await buttonInteraction.editReply({ content: "You are not currently in this game or could not be removed." });
+                }
+            } catch (error) {
+                logger.error(`[GAME_BTN] Error leaving game ${gameId} for ${userId}: ${error.message || error}`);
+                if (!buttonInteraction.replied && !buttonInteraction.deferred) {
+                    await buttonInteraction.reply({ content: "Could not leave the game due to an error.", ephemeral: true });
+                } else {
+                    await buttonInteraction.editReply({ content: "Could not leave the game due to an error." });
+                }
+            }
+            break;
+
+        case "HOST_SETUP_TEAMS":
+            if (!isHost) {
+                await buttonInteraction.reply({ content: "Only the host can set up teams.", ephemeral: true });
+                return;
+            }
+            const modal = new ModalBuilder()
+                .setCustomId(`GAME_MODAL_SETUP_TEAMS-${gameIdString}`)
+                .setTitle(`Team Setup for Game ID: ${gameIdString}`);
+            
+            const numTeamsInput = new TextInputBuilder()
+                .setCustomId('numTeams')
+                .setLabel("Number of Teams (e.g., 2, 3)")
+                .setStyle(TextInputStyle.Short)
+                .setRequired(true)
+                .setPlaceholder("Enter a number > 1");
+
+            const playersPerTeamInput = new TextInputBuilder()
+                .setCustomId('playersPerTeam')
+                .setLabel("Max Players Per Team (0 for unlimited)")
+                .setStyle(TextInputStyle.Short)
+                .setRequired(true)
+                .setValue(gameDetails.max_players !== undefined ? String(gameDetails.max_players) : '0')
+                .setPlaceholder("Enter a number >= 0");
+            
+            const currentNumTeams = gameDetails.num_teams !== undefined ? String(gameDetails.num_teams) : '2';
+            if (currentNumTeams !== '0') {
+                 numTeamsInput.setValue(currentNumTeams);
+            }
+
+            modal.addComponents(
+                new ActionRowBuilder().addComponents(numTeamsInput),
+                new ActionRowBuilder().addComponents(playersPerTeamInput)
+            );
+            await buttonInteraction.showModal(modal);
+            logger.info(`[GAME_BTN] Host ${userId} initiated team setup for game ${gameId}`);
+            break;
+
+        case "HOST_MANAGE_PLAYERS":
+            if (!isHost) {
+                await buttonInteraction.reply({ content: "Only the host can manage players.", ephemeral: true });
+                return;
+            }
+            // Add this log:
+            logger.info(`[GAME_BTN_MANAGE_PLAYERS] Game ${gameId} details on entry: Status='${gameDetails.status}', NumTeams=${gameDetails.num_teams}`);
+
+            if (gameDetails.status === 'setup' || !gameDetails.num_teams || gameDetails.num_teams === 0) {
+                 await buttonInteraction.reply({ content: "Teams need to be configured first. Use 'Setup Teams' / 'Reconfigure Teams'.", ephemeral: true });
+                 return;
+            }
+            try {
+                await buttonInteraction.deferReply({ ephemeral: true });
+                const playersResp = await localApi.get("game_joining_player", { game_id: gameId, _limit: 100 });
+                const playersInLobby = playersResp.game_joining_players || [];
+
+                if (playersInLobby.length === 0) {
+                    await buttonInteraction.editReply({ content: "No players currently in the lobby to manage.", components: [] });
+                    return;
+                }
+
+                const embed = new EmbedBuilder()
+                    .setTitle(`Manage Players for Game ${gameId}`)
+                    .setColor("#c586b6")
+                    .setDescription("Assign players to teams. This is a basic interface.");
+
+                let unassignedPlayersDescription = "**Unassigned Players:**\n";
+                const unassignedPlayers = [];
+                const teamPlayers = new Array(gameDetails.num_teams).fill(null).map(() => []);
+
+                for (const player of playersInLobby) {
+                    const member = await buttonInteraction.guild.members.fetch(player.player_id).catch(() => null);
+                    const playerName = member ? member.displayName : `User ID: ${player.player_id}`;
+                    if (player.team_id && player.team_id > 0 && player.team_id <= gameDetails.num_teams) {
+                        teamPlayers[player.team_id - 1].push(playerName);
+                    } else {
+                        unassignedPlayers.push({ id: player.player_id, name: playerName, game_player_id: player.game_player_id });
+                        unassignedPlayersDescription += `${playerName}\n`;
+                    }
+                }
+                if (unassignedPlayers.length === 0) {
+                    unassignedPlayersDescription = "**All players are currently assigned to a team.**\n";
+                }
+                embed.addField("Lobby Status", unassignedPlayersDescription);
+
+                for (let i = 0; i < gameDetails.num_teams; i++) {
+                    let teamDescription = `**Team ${i + 1} Players:**\n`;
+                    if (teamPlayers[i].length > 0) {
+                        teamPlayers[i].forEach(name => teamDescription += `${name}\n`);
+                    } else {
+                        teamDescription += "No players assigned yet.\n";
+                    }
+                    embed.addField(`Team ${i + 1}`, teamDescription, true);
+                }
+
+                const components = [];
+                if (unassignedPlayers.length > 0 || playersInLobby.length > 0) {
+                    const assignPlayerRow = new ActionRowBuilder();
+                    assignPlayerRow.addComponents(
+                        new ButtonBuilder()
+                            .setCustomId(`GAME_HOST_ASSIGN_PLAYER_MODAL-${gameIdString}`)
+                            .setLabel('Assign/Move Player')
+                            .setStyle(ButtonStyle.Primary)
+                    );
+                    components.push(assignPlayerRow);
+                }
+
+                await buttonInteraction.editReply({ embeds: [embed], components: components.length > 0 ? components : [] });
+                logger.info(`[GAME_BTN] Host ${userId} accessed manage players for game ${gameId}`);
+
+            } catch (error) {
+                logger.error(`[GAME_BTN] Error managing players for game ${gameId}: ${error.message || error}`);
+                if (!buttonInteraction.replied && !buttonInteraction.deferred) {
+                    await buttonInteraction.reply({ content: "Error loading player management.", ephemeral: true });
+                } else {
+                    await buttonInteraction.editReply({ content: "Error loading player management." });
+                }
+            }
+            break;
+
+        case "HOST_VOICE_CONTROL":
+            if (!isHost) {
+                await buttonInteraction.reply({ content: "Only the host can control voice channels.", ephemeral: true });
                 return;
             }
 
-            if (voiceTrackings.length === 0) {
-                logger.info(`[VOICE_FIX_ALL] No active voice sessions found for guild ${button.guild.id}.`);
-                await button.editReply({ content: "No active voice sessions found to diagnose or fix.", components: [] }).catch(e => logger.error(`[VOICE_FIX_ALL] Failed to send 'no sessions' reply: ${e.message}`));
+            const deployDisabled = gameDetails.status !== 'lobby_configured' || !gameDetails.num_teams || gameDetails.num_teams === 0;
+            let deployButtonLabel = "Move Teams to VCs";
+            if (deployDisabled) {
+                deployButtonLabel += " (Setup Teams First)";
+            }
+            
+            const voiceControlRow = new ActionRowBuilder()
+                .addComponents(
+                    new ButtonBuilder()
+                        .setCustomId(`GAME_HOST_VOICE_PULL_ALL-${gameIdString}`)
+                        .setLabel("Pull All to Start VC")
+                        .setStyle(ButtonStyle.Secondary),
+                    new ButtonBuilder()
+                        .setCustomId(`GAME_HOST_VOICE_DEPLOY_TEAMS-${gameIdString}`)
+                        .setLabel(deployButtonLabel)
+                        .setStyle(ButtonStyle.Success)
+                        .setDisabled(deployDisabled)
+                );
+            
+            await buttonInteraction.reply({
+                content: `Voice Controls for Game ${gameId}:`,
+                components: [voiceControlRow],
+                ephemeral: true
+            });
+            logger.info(`[GAME_BTN] Host ${userId} accessed voice controls for game ${gameId}`);
+            break;
+
+        case "HOST_ASSIGN_PLAYER_MODAL":
+            if (!isHost) {
+                await buttonInteraction.reply({ content: "Only the host can assign players.", ephemeral: true });
+                return;
+            }
+            if (gameDetails.status === 'setup' || !gameDetails.num_teams || gameDetails.num_teams === 0) {
+                await buttonInteraction.reply({ content: "Teams need to be configured first before assigning players. Use 'Setup Teams'.", ephemeral: true });
                 return;
             }
 
-            const userActiveSessions = new Map();
-            for (const track of voiceTrackings) {
-                if (!track.user_id || typeof track.connect_time === 'undefined' || !track.id) { 
-                    logger.warn(`[VOICE_FIX_ALL] Skipping invalid or incomplete voice track: ${JSON.stringify(track)} for guild ${button.guild.id}`);
-                    continue;
-                }
-                if (!userActiveSessions.has(track.user_id)) {
-                    userActiveSessions.set(track.user_id, []);
-                }
-                userActiveSessions.get(track.user_id).push(track);
+            const assignModal = new ModalBuilder()
+                .setCustomId(`GAME_MODAL_SUBMIT_ASSIGN_PLAYER-${gameIdString}`)
+                .setTitle(`Assign Player - Game ${gameId}`);
+
+            const playerInput = new TextInputBuilder()
+                .setCustomId('playerToAssign')
+                .setLabel("User ID or @Mention of Player")
+                .setPlaceholder("Enter User ID or mention the player")
+                .setStyle(TextInputStyle.Short)
+                .setRequired(true);
+
+            const teamInput = new TextInputBuilder()
+                .setCustomId('teamIdToAssign')
+                .setLabel(`Team Number (1-${gameDetails.num_teams}, or 0 to unassign)`)
+                .setPlaceholder(`Enter a team number, or 0`)
+                .setStyle(TextInputStyle.Short)
+                .setRequired(true);
+            
+            const playerActionRow = new ActionRowBuilder().addComponents(playerInput);
+            const teamActionRow = new ActionRowBuilder().addComponents(teamInput);
+            assignModal.addComponents(playerActionRow, teamActionRow);
+
+            await buttonInteraction.showModal(assignModal);
+            logger.info(`[GAME_BTN] Host ${userId} opened assign player modal for game ${gameId}`);
+            break;
+
+        case "HOST_VOICE_DEPLOY_TEAMS":
+            if (!isHost) {
+                await buttonInteraction.reply({ content: "Only the host can do this.", ephemeral: true });
+                return;
+            }
+            await buttonInteraction.deferReply({ephemeral: true});
+
+            if (gameDetails.status !== 'lobby_configured' || !gameDetails.num_teams || gameDetails.num_teams === 0) {
+                await buttonInteraction.editReply({ content: "Teams must be configured and players assigned before deploying to voice channels." });
+                return;
             }
 
-            let fixedSessionsCount = 0;
-            let affectedUsersCount = 0;
-            // const currentTimeToDisconnect = Math.floor(Date.now() / 1000); // Not needed anymore
+            try {
+                const playersResp = await localApi.get("game_joining_player", { game_id: gameId, _filter: "team_id IS NOT NULL AND team_id > 0", _limit: 100 });
+                const playersToMove = playersResp.game_joining_players || [];
 
-            for (const [userId, sessions] of userActiveSessions) {
-                if (sessions.length > 1) {
-                    affectedUsersCount++;
-                    sessions.sort((a, b) => parseInt(a.connect_time, 10) - parseInt(b.connect_time, 10));
-                    
-                    for (let i = 1; i < sessions.length; i++) { 
-                        const ghostSession = sessions[i];
-                        const newDisconnectTime = parseInt(ghostSession.connect_time, 10) + 3600; // 1 hour after connect time
-                        
-                        // Prepare the full object for PUT, ensuring we update a copy
-                        const sessionUpdatePayload = { ...ghostSession }; // Create a shallow copy
-                        sessionUpdatePayload.disconnect_time = newDisconnectTime;
+                if (playersToMove.length === 0) {
+                    await buttonInteraction.editReply({ content: "No players assigned to teams to move." });
+                    return;
+                }
 
-                        // Note: If your API's PUT method for 'voice_tracking' 
-                        // expects only specific fields for an update rather than the full object,
-                        // this payload might need further adjustment by removing unchanged fields.
-                        // However, typically PUT implies replacing the resource with the given payload.
+                let movedCount = 0;
+                let failedCount = 0;
+                let channelsNotFound = new Set();
 
+                const teamVoiceChannelIds = []; 
+                for (let i = 1; i <= gameDetails.num_teams; i++) {
+                    const channelName = `Team ${i}`;
+                    const voiceChannel = buttonInteraction.guild.channels.cache.find(ch => ch.name === channelName && ch.type === 'GUILD_VOICE');
+                    if (voiceChannel) {
+                        teamVoiceChannelIds[i-1] = voiceChannel.id;
+                    } else {
+                        channelsNotFound.add(channelName);
+                        teamVoiceChannelIds[i-1] = null; // Mark as not found
+                    }
+                }
+
+                if (channelsNotFound.size > 0) {
+                    await buttonInteraction.editReply({ content: `Could not find voice channels for: ${[...channelsNotFound].join(', ')}. Please create them or configure them.` });
+                    return;
+                }
+
+                for (const player of playersToMove) {
+                    if (!player.team_id || player.team_id <= 0 || player.team_id > gameDetails.num_teams) {
+                        logger.warn(`[GAME_VOICE_DEPLOY] Player ${player.player_id} has invalid team_id ${player.team_id}`);
+                        failedCount++;
+                        continue;
+                    }
+                    const targetChannelId = teamVoiceChannelIds[player.team_id - 1];
+                    if (!targetChannelId) {
+                        logger.warn(`[GAME_VOICE_DEPLOY] No channel configured for Team ${player.team_id} for player ${player.player_id}`);
+                        failedCount++; 
+                        continue;
+                    }
+
+                    try {
+                        const member = await buttonInteraction.guild.members.fetch(player.player_id);
+                        if (member && member.voice && member.voice.channelId && member.voice.channelId !== targetChannelId) {
+                            await member.voice.setChannel(targetChannelId);
+                            movedCount++;
+                        } else if (member && member.voice && member.voice.channelId === targetChannelId) {
+                            movedCount++; 
+                        } else if (member && !member.voice.channelId){
+                            logger.info(`[GAME_VOICE_DEPLOY] Player ${player.player_id} not in a voice channel.`);
+                            failedCount++;
+                        }
+                    } catch (moveError) {
+                        failedCount++;
+                        logger.warn(`[GAME_VOICE_DEPLOY] Failed to move player ${player.player_id} to channel for Team ${player.team_id}: ${moveError.message}`);
+                    }
+                }
+                await buttonInteraction.editReply({ content: `Attempted to move players to team channels. Moved: ${movedCount}, Failed/Skipped: ${failedCount}.`});
+                logger.info(`[GAME_VOICE_DEPLOY] Host ${userId} deployed teams for game ${gameId}. Moved: ${movedCount}, Failed: ${failedCount}`);
+            } catch (error) {
+                logger.error(`[GAME_VOICE_DEPLOY] Error deploying teams for game ${gameId}: ${error.message || error}`);
+                await buttonInteraction.editReply({ content: "An error occurred while trying to move players to team channels."});
+            }
+            break;
+
+        case "HOST_END":
+            if (!isHost) {
+                await buttonInteraction.reply({ content: "Only the host can end the game.", ephemeral: true });
+                return;
+            }
+            try {
+                await buttonInteraction.deferUpdate();
+                const playersListResp = await localApi.get("game_joining_player", {
+                    game_id: gameId,
+                    _limit: 500
+                });
+
+                let deletedPlayersCount = 0;
+                if (playersListResp && playersListResp.game_joining_players) {
+                    for (const player of playersListResp.game_joining_players) {
                         try {
-                            // Use PUT to update the existing record with the modified full session data
-                            await api.put("voice_tracking", sessionUpdatePayload);
-                            fixedSessionsCount++;
-                            logger.info(`[VOICE_FIX_ALL] Attempted to fix ghost session ID ${ghostSession.id} for user ${userId} in guild ${button.guild.id}. Set disconnect_time to ${newDisconnectTime}.`);
-                        } catch (error) {
-                            logger.error(`[VOICE_FIX_ALL] Failed to fix session ID ${ghostSession.id} for user ${userId} in guild ${button.guild.id} using PUT: ${error.message}`, error);
+                            if (player.game_player_id) {
+                                await localApi.delete("game_joining_player", {
+                                    game_player_id: Number(player.game_player_id)
+                                });
+                                deletedPlayersCount++;
+                            }
+                        } catch (playerDeleteError) {
+                            logger.error(`[GAME_BTN_END] Failed to delete player ${player.player_id} (game_player_id: ${player.game_player_id}) from game ${gameId}: ${playerDeleteError.message || playerDeleteError}`);
                         }
                     }
                 }
+                logger.info(`[GAME_BTN_END] Deleted ${deletedPlayersCount} players from game ${gameId}.`);
+
+                await localApi.delete("game_joining_master", { game_id: Number(gameId) });
+                logger.info(`[GAME_BTN_END] Deleted game master record for game ${gameId}.`);
+
+                const endedEmbed = new EmbedBuilder()
+                    .setColor("#c586b6")
+                    .setTitle(`Game ID: ${gameId} - Ended`)
+                    .setDescription(`This game session was ended by the host (${buttonInteraction.user.tag}).`)
+                    .setTimestamp();
+                await buttonInteraction.editReply({ content: `Game ${gameId} has been ended.`, embeds: [endedEmbed], components: [] });
+                logger.info(`[GAME_BTN] Host ${userId} ended game ${gameId}. Players deleted: ${deletedPlayersCount}.`);
+
+            } catch (error) {
+                logger.error(`[GAME_BTN_END] Error ending game ${gameId} for host ${userId}: ${error.message || error}`);
+                await buttonInteraction.editReply({ content: "An error occurred while trying to end the game. Some cleanup may have failed. Please check logs.", components: [] });
             }
+            break;
 
-            let replyMessage;
-            if (fixedSessionsCount > 0) {
-                replyMessage = `✅ Successfully fixed ${fixedSessionsCount} ghost session(s) for ${affectedUsersCount} user(s).`;
-            } else if (affectedUsersCount > 0 && fixedSessionsCount === 0) {
-                replyMessage = `ℹ️ Found ${affectedUsersCount} user(s) with multiple sessions, but could not fix any. This might be due to missing session IDs or API errors. Please check the logs.`;
-            } else { 
-                replyMessage = "✅ No ghost sessions were found that needed fixing.";
-            }
-            
-            await button.editReply({ content: replyMessage, components: [] }).catch(e => logger.error(`[VOICE_FIX_ALL] Failed to send final reply: ${e.message}`));
-            return; 
-        } else { 
-            // Existing switch logic for other VOICE buttons
-            const originalCustomId = button.customId; // Define for potential use in cases
-            const subCommand = button.customId.substring("VOICE".length); // Use this for the switch
-
-            switch(subCommand){ // Ensure this uses the subCommand variable or original .substr(5)
-            case "bottom":
-                return generateVoiceLeaderboard(button, "Voice Channel Leaderboard (Bottom 10)", { sortOrder: 'bottom', originalCustomId });
-            case "top":
-                return generateVoiceLeaderboard(button, "Voice Channel Leaderboard (Top 10)", { sortOrder: 'top', originalCustomId });
-            case "muted":
-                return generateVoiceLeaderboard(button, "Voice Channel Leaderboard (Top 10 Muters)", { mutedFilter: true, sortOrder: 'top', originalCustomId });
-            case "non-muted":
-                return generateVoiceLeaderboard(button, "Voice Channel Leaderboard (Top 10 Non-Muters)", { mutedFilter: false, sortOrder: 'top', originalCustomId });
-            case "30days":
-                return generateVoiceLeaderboard(button, "Voice Channel Leaderboard (Top Talkers - Last 30 days)", { timeFilterDays: 30, sortOrder: 'top', originalCustomId });
-            case "7days":
-                return generateVoiceLeaderboard(button, "Voice Channel Leaderboard (Top Talkers - Last 7 days)", { timeFilterDays: 7, sortOrder: 'top', originalCustomId });
-            case "channel":
-                logger.info("Gathering all voice timings for 'channel' specific leaderboard");
-                await button.deferUpdate();
-                try {
-                    const respVoice = await api.get("voice_tracking", {
-                      discord_server_id: button.guild.id,
-                    });
-                  
-                    if (!respVoice.voice_trackings || respVoice.voice_trackings.length === 0) {
-                      await button.editReply({ content: "There is no data available yet...", embeds: [], components: button.message.components });
-                      return;
-                    }
-                  
-                    const totalTimeByUserAndChannel = new Map();
-                    const currentTime = Math.floor(new Date().getTime() / 1000);
-
-                    for (const voiceTracking of respVoice.voice_trackings) {
-                      const channel = button.guild.channels.cache.get(voiceTracking.channel_id);
-                      if (!channel) continue;
-
-                      let user;
-                      try {
-                        user = await button.guild.members.fetch(voiceTracking.user_id);
-                      } catch (error) {
-                        logger.error(`Failed to fetch user ${voiceTracking.user_id} for channel leaderboard: ${error.message}`);
-                        continue;
-                      }
-
-                      const disconnectTime = parseInt(voiceTracking.disconnect_time) || currentTime;
-                      const connectionTime = Math.floor(disconnectTime - parseInt(voiceTracking.connect_time));
-                      
-                      if (connectionTime <=0) continue;
-
-                      const key = `${user.displayName} in ${channel.name}`;
-                      totalTimeByUserAndChannel.set(key, (totalTimeByUserAndChannel.get(key) || 0) + connectionTime);
-                    }
-                  
-                    const sortedTotalTime = [...totalTimeByUserAndChannel.entries()].sort((a, b) => b[1] - a[1]).slice(0,10);
-                  
-                    const { EmbedBuilder, ActionRowBuilder, ButtonBuilder } = require('discord.js'); // Ensure builders are in scope
-                    const listEmbed = new EmbedBuilder()
-                      .setColor("#c586b6")
-                      .setTitle("Voice Channel Leaderboard (Top 10 User/Channel Times)");
-                  
-                    if (sortedTotalTime.length === 0) {
-                        listEmbed.setDescription("No data to display.");
-                    } else {
-                        // Assuming formatDuration is available in this scope
-                        // const { formatDuration } = require('./commands/voicetime.js'); // Or from a shared utility
-                        sortedTotalTime.forEach(([userChannelKey, time], index) => {
-                            listEmbed.addFields({ name: `${index + 1}. ${userChannelKey}`, value: formatDuration(time) });
-                        });
-                    }
-                    
-                    const updatedComponents = button.message.components.map(row => {
-                        const newRow = new ActionRowBuilder();
-                        row.components.forEach(comp => {
-                            if (comp.type === 2 /* BUTTON */) {
-                                const newComp = ButtonBuilder.from(comp);
-                                newComp.setDisabled(comp.customId === originalCustomId); // originalCustomId is defined above
-                                newRow.addComponents(newComp);
-                            } else {
-                                newRow.addComponents(comp); 
-                            }
-                        });
-                        return newRow;
-                    });
-                    await button.editReply({ embeds: [listEmbed], components: updatedComponents });
-                    logger.info("Sent Voice Leaderboard (User/Channel)!");
-                } catch (error) {
-                    logger.error(`Error generating 'channel' leaderboard: ${error.message}`);
-                    await button.editReply({ content: "Error generating leaderboard.", embeds:[], components: button.message.components });
-                }
-                break; 
-            case "channelUse":
-                logger.info("Gathering all voice timings for 'channelUse' specific leaderboard");
-                await button.deferUpdate();
-                try {
-                    const respVoice = await api.get("voice_tracking", {
-                      discord_server_id: button.guild.id,
-                    });
-                  
-                    if (!respVoice.voice_trackings || respVoice.voice_trackings.length === 0) {
-                      await button.editReply({ content: "There is no data available yet...", embeds: [], components: button.message.components });
-                      return;
-                    }
-                  
-                    const totalTimeByChannel = new Map();
-                    const currentTime = Math.floor(new Date().getTime() / 1000);
-                  
-                    for (const voiceTracking of respVoice.voice_trackings) {
-                      const channel = button.guild.channels.cache.get(voiceTracking.channel_id);
-                      if (!channel) continue; // Added continue here
-          
-                      const disconnectTime = parseInt(voiceTracking.disconnect_time) || currentTime;
-                      const connectionTime = Math.floor(disconnectTime - parseInt(voiceTracking.connect_time)); // Added connectionTime calculation
-
-                      if (connectionTime <=0) continue; // Skip if no duration
-
-                      totalTimeByChannel.set(channel.name, (totalTimeByChannel.get(channel.name) || 0) + connectionTime); // Use channel.name as key
-                    }
-                  
-                    const sortedTotalTime = [...totalTimeByChannel.entries()].sort((a, b) => b[1] - a[1]).slice(0,10);
-                  
-                    const { EmbedBuilder, ActionRowBuilder, ButtonBuilder } = require('discord.js'); // Ensure builders are in scope
-                    const listEmbed = new EmbedBuilder()
-                      .setColor("#c586b6")
-                      .setTitle("Voice Channel Leaderboard (Top 10 Channels by Use)");
-
-                    if (sortedTotalTime.length === 0) {
-                        listEmbed.setDescription("No data to display.");
-                    } else {
-                        // Assuming formatDuration is available
-                        sortedTotalTime.forEach(([channelName, time], index) => {
-                            listEmbed.addFields({ name: `${index + 1}. ${channelName}`, value: formatDuration(time) });
-                        });
-                    }
-                     const updatedComponents = button.message.components.map(row => {
-                        const newRow = new ActionRowBuilder();
-                        row.components.forEach(comp => {
-                            if (comp.type === 2 /* BUTTON */) {
-                                const newComp = ButtonBuilder.from(comp);
-                                newComp.setDisabled(comp.customId === originalCustomId);
-                                newRow.addComponents(newComp);
-                            } else {
-                                newRow.addComponents(comp); 
-                            }
-                        });
-                        return newRow;
-                    });
-                    await button.editReply({ embeds: [listEmbed], components: updatedComponents });
-                    logger.info("Sent Voice Leaderboard (Channel Usage)!");
-
-                } catch (error) {
-                    logger.error(`Error generating 'channelUse' leaderboard: ${error.message}`);
-                    await button.editReply({ content: "Error generating leaderboard.", embeds:[], components: button.message.components });
-                }
-                break;
-            // default:
-            //     logger.warn(`[onButtonClick] Unhandled VOICE subcommand: ${subCommand} for ID ${button.customId}`);
-            //     // Optional: reply if interaction not handled
-            //     if (!button.replied && !button.deferred) {
-            //          await button.reply({ content: 'This button action is not recognized.', ephemeral: true }).catch(e => logger.error("Failed to send default reply",e));
-            //     } else if(button.deferred) {
-            //          await button.editReply({ content: 'This button action is not recognized.', components:[], embeds:[] }).catch(e => logger.error("Failed to send default editReply",e));
-            //     }
-            }
-        }
-    } else if((button.customId.substr(0,4)==="GAME")){ // Handling for old GAME buttons/select menus
-        button.customId = button.customId.substr(4);
-        var operation = button.customId.substr(0,button.customId.indexOf('-'));
-        var hostId = button.customId.substr(button.customId.indexOf('-')+1);
-        
-        // The extensive switch for old GAME operations (join, leave, start, etc.) would go here.
-        // This is a very large block of code from the original file.
-        // For brevity in this diff, it's represented by this comment.
-        // Ensure this logic is correctly restored if these old buttons are still in use.
-        logger.info(`Old GAME button: operation=${operation}, hostId=${hostId}. Interaction by ${button.user.id}`);
-        // Example:
-        // switch(operation) {
-        //    case "join":
-        //        // ... old join logic ...
-        //        break;
-        //    // ... other cases ...
-        // }
-        // For now, let's just acknowledge it.
-        if (button.isMessageComponent() && !button.deferred && !button.replied) {
-             await button.deferUpdate().catch(e => logger.error("Error deferring update for old GAME button: " + e));
-        }
-        logger.warn("Old GAME button/select menu interaction received but full logic is not re-implemented in this snippet.");
-    } else if (button.customId.startsWith("DND_")) { // Example from other context
-        // ...existing code...
+        default:
+            logger.warn(`[GAME_BTN] Unknown game actionKey: ${actionKey} for game ${gameId}`);
+            await buttonInteraction.reply({ content: "Unknown game action.", ephemeral: true });
     }
-    // ... Potentially other handlers or end of function
 }
 
-async function onInteractionCreate(interaction) {
-    // Assuming 'logger' is a module-scoped variable initialized elsewhere
-    // Assuming 'api' is the new ApiClient() instance defined at the top of the file
-
-    if (interaction.isButton()) {
-        const customId = interaction.customId;
-        if (customId.startsWith("GAME_")) {
-            // Route new game buttons to handleGameButton
-            return handleGameButton(interaction, logger, api);
-        } else {
-            // Route VOICE buttons and old GAME buttons to onButtonClick
-            return onButtonClick(interaction);
-        }
-    } else if (interaction.isModalSubmit()) {
-        const customId = interaction.customId;
-        if (customId.startsWith("GAME_MODAL_SETUP_TEAMS-")) {
-            return handleGameSetupTeamsModal(interaction, logger, api);
-        } else if (customId.startsWith("GAME_MODAL_SUBMIT_ASSIGN_PLAYER-")) {
-            return handleAssignPlayerModal(interaction, logger, api);
-        }
-        // Add other modal handlers if needed
-    } else if (interaction.isStringSelectMenu()) { // Check if it's a select menu
-        // Route select menu interactions (used by old GAME logic) to onButtonClick
-        return onButtonClick(interaction);
+// NEW: Handler for GAME_MODAL_SETUP_TEAMS modal submission
+async function handleGameSetupTeamsModal(modalInteraction, logger, localApi) {
+    const customId = modalInteraction.customId;
+    const gameIdString = customId.split('-')[1];
+    const gameId = Number(gameIdString);
+    if (isNaN(gameId)) {
+        logger.warn(`[GAME_MODAL_SETUP] Invalid gameId (not a number): ${gameIdString}`);
+        await modalInteraction.reply({ content: "Invalid game ID in modal submission.", ephemeral: true });
+        return;
     }
-    // Add handlers for other interaction types if necessary
+    const userId = modalInteraction.user.id;
+
+    try {
+        await modalInteraction.deferReply({ ephemeral: true });
+
+        const gameMasterResp = await localApi.get("game_joining_master", { game_id: gameId, _limit: 1 });
+        if (!gameMasterResp || !gameMasterResp.game_joining_masters || !gameMasterResp.game_joining_masters[0]) {
+            await modalInteraction.editReply({ content: "Original game not found. Cannot update settings." });
+            return;
+        }
+        const gameMasterDetails = gameMasterResp.game_joining_masters[0];
+
+        if (gameMasterDetails.host_id !== userId) {
+            await modalInteraction.editReply({ content: "Only the host can modify game settings." });
+            return;
+        }
+
+        const numTeams = modalInteraction.fields.getTextInputValue('numTeams');
+        const maxPlayers = modalInteraction.fields.getTextInputValue('playersPerTeam'); // Field ID is 'playersPerTeam'
+
+        const parsedNumTeams = parseInt(numTeams, 10);
+        const parsedMaxPlayers = parseInt(maxPlayers, 10);
+
+        if (isNaN(parsedNumTeams) || parsedNumTeams <= 1) {
+            await modalInteraction.editReply({ content: "Number of teams must be a number greater than 1." });
+            return;
+        }
+        if (isNaN(parsedMaxPlayers) || parsedMaxPlayers < 0) {
+            await modalInteraction.editReply({ content: "Max players per team must be a number (0 for unlimited)." });
+            return;
+        }
+
+        const updatePayload = {
+            gameId: gameId,
+            num_teams: parsedNumTeams,
+            max_players: parsedMaxPlayers,
+            status: 'lobby_configured'
+        };
+
+        await localApi.put("game_joining_master", updatePayload);
+        logger.info(`[GAME_MODAL_SETUP] Game ${gameId} updated by host ${userId}. New settings: Teams=${parsedNumTeams}, MaxPlayers=${parsedMaxPlayers}, Status=lobby_configured`);
+
+        // Fetch the original game message to update it
+        const originalMessage = modalInteraction.message; // This should be the message with the buttons
+
+        if (originalMessage) {
+            const gameDetailsForUpdate = await localApi.get("game_joining_master", { game_id: gameId });
+            if (gameDetailsForUpdate && gameDetailsForUpdate.game_joining_masters && gameDetailsForUpdate.game_joining_masters[0]) {
+                const updatedGameData = gameDetailsForUpdate.game_joining_masters[0];
+                const newEmbed = EmbedBuilder.from(originalMessage.embeds[0]); // MODIFIED
+                
+                let teamsConfigured = updatedGameData.status === 'lobby_configured' && updatedGameData.num_teams > 0;
+                
+                newEmbed.setFields( // MODIFIED (original .fields = [] and .addField calls removed)
+                    { name: "Status", value: updatedGameData.status === 'setup' ? '⚙️ Setup (Waiting for Host)' : (updatedGameData.status === 'lobby_configured' ? '✅ Lobby Configured' : updatedGameData.status), inline: true },
+                    { name: "Teams", value: teamsConfigured ? `${updatedGameData.num_teams}` : "Not Set", inline: true },
+                    { name: "Players/Team", value: teamsConfigured ? (updatedGameData.max_players === 0 ? "Unlimited" : `${updatedGameData.max_players}`) : "N/A", inline: true }
+                );
+
+                const newComponents = originalMessage.components.map(apiActionRow => { // MODIFIED
+                    const newRow = new ActionRowBuilder(); // MODIFIED
+                    apiActionRow.components.forEach(apiButton => { // MODIFIED
+                        const buttonBuilder = new ButtonBuilder(apiButton); // MODIFIED
+                        
+                        // Update button states based on 'teamsConfigured'
+                        if (buttonBuilder.data.custom_id && buttonBuilder.data.custom_id.startsWith(`GAME_HOST_SETUP_TEAMS-${gameIdString}`)) {
+                            buttonBuilder.setDisabled(teamsConfigured);
+                        }
+                        if (buttonBuilder.data.custom_id && buttonBuilder.data.custom_id.startsWith(`GAME_HOST_MANAGE_PLAYERS-${gameIdString}`)) {
+                            buttonBuilder.setDisabled(!teamsConfigured);
+                        }
+                        if (buttonBuilder.data.custom_id && buttonBuilder.data.custom_id.startsWith(`GAME_HOST_VOICE_CONTROL-${gameIdString}`)) {
+                            buttonBuilder.setDisabled(!teamsConfigured);
+                        }
+                        newRow.addComponents(buttonBuilder);
+                    });
+                    return newRow;
+                });
+                await originalMessage.edit({ embeds: [newEmbed], components: newComponents });
+                logger.info(`[GAME_MODAL_SETUP] Original game message for game ${gameId} updated after team setup.`);
+            }
+        }
+        await modalInteraction.editReply({ content: `Game settings updated! Teams: ${parsedNumTeams}, Max Players/Team: ${parsedMaxPlayers === 0 ? "Unlimited" : parsedMaxPlayers}. You can now manage players and voice controls.` });
+
+    } catch (error) {
+        logger.error(`[GAME_MODAL_SETUP] Error processing team setup for game ${gameId}: ${error.message || error}`);
+        if (!modalInteraction.replied && !modalInteraction.deferred) {
+            await modalInteraction.reply({ content: "An error occurred while updating game settings.", ephemeral: true });
+        } else {
+            await modalInteraction.editReply({ content: "An error occurred while updating game settings." });
+        }
+    }
+}
+
+// NEW: Placeholder for Assign Player Modal Handler
+async function handleAssignPlayerModal(modalInteraction, logger, localApi) {
+    const customId = modalInteraction.customId; // GAME_MODAL_SUBMIT_ASSIGN_PLAYER-<gameId>
+    const gameIdString = customId.split('-')[1];
+    const gameId = Number(gameIdString);
+    const hostId = modalInteraction.user.id;
+
+    try {
+        await modalInteraction.deferReply({ ephemeral: true });
+
+        const playerIdToAssign = modalInteraction.fields.getTextInputValue('playerToAssign');
+        const teamIdToAssignTo = parseInt(modalInteraction.fields.getTextInputValue('teamIdToAssign'), 10);
+
+        if (!playerIdToAssign || isNaN(teamIdToAssignTo) || teamIdToAssignTo <= 0) {
+            await modalInteraction.editReply({ content: "Invalid player ID or team ID provided." });
+            return;
+        }
+
+        const gameResp = await localApi.get("game_joining_master", { game_id: gameId });
+        if (!gameResp || !gameResp.game_joining_masters || !gameResp.game_joining_masters[0] || gameResp.game_joining_masters[0].host_id !== hostId) {
+            await modalInteraction.editReply({ content: "You are not authorized to perform this action or game not found." });
+            return;
+        }
+        const gameDetails = gameResp.game_joining_masters[0];
+        if (teamIdToAssignTo > gameDetails.num_teams) {
+             await modalInteraction.editReply({ content: `Invalid Team ID. This game only has ${gameDetails.num_teams} teams.` });
+            return;
+        }
+
+        const playerResp = await localApi.get("game_joining_player", { game_id: gameId, player_id: playerIdToAssign, _limit: 1 });
+        if (!playerResp || !playerResp.game_joining_players || !playerResp.game_joining_players[0]) {
+            await modalInteraction.editReply({ content: `Player ${playerIdToAssign} not found in this game lobby.` });
+            return;
+        }
+        const gamePlayerId = playerResp.game_joining_players[0].game_player_id;
+
+        await localApi.put("game_joining_player", { 
+            game_player_id: Number(gamePlayerId),
+            team_id: teamIdToAssignTo
+        });
+
+        logger.info(`[GAME_ASSIGN_MODAL] Host ${hostId} assigned player ${playerIdToAssign} (gp_id: ${gamePlayerId}) to team ${teamIdToAssignTo} in game ${gameId}.`);
+        await modalInteraction.editReply({ content: `Successfully assigned player to Team ${teamIdToAssignTo}. Click 'Manage Players' again to see updates.` });
+
+    } catch (error) {
+        logger.error(`[GAME_ASSIGN_MODAL] Error assigning player in game ${gameId}: ${error.message || error}`);
+        await modalInteraction.editReply({ content: "An error occurred while assigning the player." });
+    }
+}
+
+// Modified to handle different interaction types (buttons, modals)
+async function onInteractionCreate(interaction) {
+    if (interaction.isButton()) {
+        const buttonInteraction = interaction;
+        const guildId = buttonInteraction.guild ? buttonInteraction.guild.id : null; 
+
+        if (buttonInteraction.customId.startsWith("VOICE_CLEANUP_CONFIRM_")) {
+            await buttonInteraction.deferUpdate();
+            const targetGuildId = buttonInteraction.customId.split('_').pop();
+            if (targetGuildId !== guildId) {
+                logger.warn(`[BTN_CLEANUP_CONFIRM] Guild ID mismatch: button.customId=${buttonInteraction.customId}, interaction.guild.id=${guildId}`);
+                await buttonInteraction.editReply({ content: "Error: Guild ID mismatch. Cannot perform cleanup.", components: [] });
+                return;
+            }
+            try {
+                logger.info(`[BTN_CLEANUP_CONFIRM] Attempting to delete all voice data for guild ${targetGuildId}. Fetching records...`);
+                
+                const recordsToDeleteResp = await api.get("voice_tracking", {
+                    discord_server_id: targetGuildId,
+                    _limit: 10000000
+                });
+
+                const records = recordsToDeleteResp.voice_trackings || [];
+                const recordsWithId = records.filter(session => session.voice_state_id);
+                const recordsWithoutIdCount = records.length - recordsWithId.length;
+
+                logger.info(`[BTN_CLEANUP_CONFIRM] Found ${records.length} total voice tracking records for guild ${targetGuildId}.`);
+                logger.info(`[BTN_CLEANUP_CONFIRM] ${recordsWithId.length} records have a voice_state_id and will be targeted for deletion.`);
+                if (recordsWithoutIdCount > 0) { logger.warn(`[BTN_CLEANUP_CONFIRM] ${recordsWithoutIdCount} records are missing a voice_state_id and cannot be deleted by this process.`); }
+
+                if (recordsWithId.length === 0) {
+                    let noRecordsMessage = `No voice session records with an ID found to delete for guild ${targetGuildId}.`;
+                    if (recordsWithoutIdCount > 0) noRecordsMessage += ` ${recordsWithoutIdCount} records were found without an ID.`;
+                    await buttonInteraction.editReply({ content: noRecordsMessage, components: [] });
+                    return;
+                }
+                await buttonInteraction.editReply({ content: `Found ${recordsWithId.length} voice session record(s) for guild ${targetGuildId}. Attempting to delete them in batches... (this may take a moment)`, components: [] });
+
+                let deletedCount = 0;
+                let failedCount = 0;
+                const chunkSize = 100; 
+
+                for (let i = 0; i < recordsWithId.length; i += chunkSize) {
+                    const chunk = recordsWithId.slice(i, i + chunkSize);
+                    for (const record of chunk) {
+                        try {
+                            await api.delete("voice_tracking", { voice_state_id: record.voice_state_id });
+                            deletedCount++;
+                        } catch (delError) {
+                            failedCount++;
+                            logger.error(`[BTN_CLEANUP_CONFIRM] Failed to delete voice_state_id ${record.voice_state_id}: ${delError.message || delError}`);
+                        }
+                    }
+                }
+                let replyMessage = `Voice data cleanup for guild ${targetGuildId} process finished. `;
+                if (deletedCount > 0) replyMessage += `Successfully deleted ${deletedCount} record(s). `;
+                if (failedCount > 0) replyMessage += `${failedCount} record(s) failed to delete. `;
+                if (deletedCount === 0 && failedCount === 0 && recordsWithId.length > 0) replyMessage += "No records were deleted, though some were targeted. This might indicate an issue. ";
+                if (recordsWithoutIdCount > 0) replyMessage += `${recordsWithoutIdCount} record(s) were skipped as they lacked an ID. `;
+                if (deletedCount === 0 && failedCount === 0 && recordsWithId.length === 0 && recordsWithoutIdCount === 0) replyMessage = "No voice data found to cleanup. ";
+                replyMessage += "Please check logs for more details if needed.";
+
+                logger.info(`[BTN_CLEANUP_CONFIRM] ${replyMessage}`);
+                await buttonInteraction.editReply({ content: replyMessage, components: [] });
+
+            } catch (error) {
+                logger.error(`[BTN_CLEANUP_CONFIRM] API error during voice data cleanup for guild ${targetGuildId}: ${error.message || error}`);
+                let errorMessage = "An error occurred while trying to delete voice data. ";
+                if (error.response && error.response.data && typeof error.response.data === 'string') {
+                    errorMessage += `API Response: ${error.response.data.substring(0, 1000)}. `;
+                } else if (error.response && error.response.data) {
+                     errorMessage += "Check logs for API response details. ";
+                }
+                errorMessage += "Please check the logs.";
+                await buttonInteraction.editReply({ content: errorMessage, components: [] });
+            }
+            return;
+
+        } else if (buttonInteraction.customId.startsWith("VOICE_CLEANUP_CANCEL_")) { // MODIFIED: button -> buttonInteraction
+            await buttonInteraction.deferUpdate(); // MODIFIED: button -> buttonInteraction
+            logger.info(`[BTN_CLEANUP_CANCEL] Voice data cleanup cancelled for guild ${guildId}`);
+            await buttonInteraction.editReply({ content: "Voice data cleanup has been cancelled.", components: [] }); // MODIFIED: button -> buttonInteraction
+            return;
+
+        } else if (buttonInteraction.customId.startsWith("VOICE_FIX_ALL_")) { // MODIFIED: button -> buttonInteraction
+            await buttonInteraction.deferUpdate(); // MODIFIED: button -> buttonInteraction
+            const targetGuildId = buttonInteraction.customId.split('_').pop(); // MODIFIED: button -> buttonInteraction
+            if (targetGuildId !== guildId) {
+                logger.warn(`[BTN_FIX_ALL] Guild ID mismatch: button.customId=${buttonInteraction.customId}, interaction.guild.id=${guildId}`); // MODIFIED: button -> buttonInteraction
+                await buttonInteraction.editReply({ content: "Error: Guild ID mismatch. Cannot perform fix.", components: [] }); // MODIFIED: button -> buttonInteraction
+                return;
+            }
+            logger.info(`[BTN_FIX_ALL] Attempting to fix ghost sessions for guild ${targetGuildId}`);
+            try {
+                const activeSessionsResp = await api.get("voice_tracking", {
+                    discord_server_id: targetGuildId,
+                    disconnect_time: 0,
+                    _limit: 500 // Fetch a large number to ensure all active sessions are retrieved
+                });
+
+                if (!activeSessionsResp || !activeSessionsResp.voice_trackings || activeSessionsResp.voice_trackings.length === 0) {
+                    await buttonInteraction.editReply({ content: "No active voice sessions found to diagnose or fix.", components: [] }); // MODIFIED: button -> buttonInteraction
+                    return;
+                }
+
+                const sessionsByUser = new Map();
+                for (const session of activeSessionsResp.voice_trackings) {
+                    if (!sessionsByUser.has(session.user_id)) {
+                        sessionsByUser.set(session.user_id, []);
+                    }
+                    sessionsByUser.get(session.user_id).push(session);
+                }
+
+                let fixedSessionsCount = 0;
+                let usersAffectedCount = 0;
+                // const currentTime = Math.floor(Date.now() / 1000); // Not used in this branch
+
+                for (const [userId, sessions] of sessionsByUser.entries()) {
+                    if (sessions.length > 1) {
+                        usersAffectedCount++;
+                        // Sort sessions by connect_time descending (most recent first)
+                        sessions.sort((a, b) => parseInt(b.connect_time, 10) - parseInt(a.connect_time, 10));
+                        
+                        const sessionToKeep = sessions[0]; // Keep the most recent one
+                        logger.info(`[BTN_FIX_ALL] User ${userId} has ${sessions.length} active sessions. Keeping ${sessionToKeep.voice_state_id} (connected at ${sessionToKeep.connect_time}).`);
+
+                        for (let i = 1; i < sessions.length; i++) {
+                            const sessionToClose = sessions[i];
+                            const originalConnectTime = parseInt(sessionToClose.connect_time, 10);
+
+                            if (isNaN(originalConnectTime)) { // ADDED: Check for NaN
+                                logger.warn(`[BTN_FIX_ALL] Ghost session ${sessionToClose.voice_state_id} for user ${userId} has invalid connect_time: ${sessionToClose.connect_time}. Skipping.`);
+                                continue;
+                            }
+
+                            const newDisconnectTime = originalConnectTime + 3600; // Add 1 hour
+
+                            logger.info(`[BTN_FIX_ALL] Closing ghost session ${sessionToClose.voice_state_id} for user ${userId} (connected at ${originalConnectTime}). Setting disconnect_time to ${newDisconnectTime}.`);
+                            try {
+                                await api.put(`voice_tracking`, { // MODIFIED: Simplified payload
+                                    voice_state_id: parseInt(sessionToClose.voice_state_id, 10),
+                                    disconnect_time: newDisconnectTime,
+                                });
+                                fixedSessionsCount++;
+                            } catch (putError) {
+                                logger.error(`[BTN_FIX_ALL] Error PUTTING session ${sessionToClose.voice_state_id} for user ${userId}: ${putError.message || putError}`);
+                            }
+                        }
+                    }
+                }
+
+                if (fixedSessionsCount > 0) {
+                    await buttonInteraction.editReply({ content: `Attempted to fix ${fixedSessionsCount} ghost session(s) for ${usersAffectedCount} user(s). Please run the diagnose command again to verify.`, components: [] }); // MODIFIED: button -> buttonInteraction
+                } else if (usersAffectedCount > 0 && fixedSessionsCount === 0) {
+                    await buttonInteraction.editReply({ content: `Found ${usersAffectedCount} user(s) with multiple sessions, but no sessions were fixed. This might indicate an issue with the patching process or the sessions were already fixed. Check logs.`, components: [] }); // MODIFIED: button -> buttonInteraction
+                } else {
+                    await buttonInteraction.editReply({ content: "No users with multiple active sessions found. Everything seems to be in order.", components: [] }); // MODIFIED: button -> buttonInteraction
+                }
+
+            } catch (error) {
+                logger.error(`[BTN_FIX_ALL] Error fixing ghost sessions for guild ${targetGuildId}: ${error.message || error}`);
+                await buttonInteraction.editReply({ content: "An error occurred while trying to fix ghost sessions. Please check the logs.", components: [] }); // MODIFIED: button -> buttonInteraction
+            }
+            return;
+        } else if (buttonInteraction.customId.startsWith("GAME_")) {
+            await handleGameButton(buttonInteraction, logger, api);
+            return;
+
+        } else if (buttonInteraction.customId.startsWith("VOICE")) {
+            const commandName = buttonInteraction.customId.substring("VOICE".length);
+            switch (commandName) {
+                case "bottom":
+                    await generateVoiceLeaderboard(buttonInteraction, 'Least Voice Users (All Time)', { sortOrder: 'bottom' });
+                    break;
+                case "top":
+                    await generateVoiceLeaderboard(buttonInteraction, 'Top Voice Users (All Time)', { sortOrder: 'top' });
+                    break;
+                case "muted":
+                    await generateVoiceLeaderboard(buttonInteraction, 'Top Muted Voice Users (All Time)', { mutedFilter: true, sortOrder: 'top' });
+                    break;
+                case "non-muted":
+                    await generateVoiceLeaderboard(buttonInteraction, 'Top Non-Muted Voice Users (All Time)', { mutedFilter: false, sortOrder: 'top' });
+                    break;
+                case "30days":
+                    await generateVoiceLeaderboard(buttonInteraction, 'Top Voice Users (Last 30 Days)', { timeFilterDays: 30, sortOrder: 'top' });
+                    break;
+                case "7days":
+                    await generateVoiceLeaderboard(buttonInteraction, 'Top Voice Users (Last 7 Days)', { timeFilterDays: 7, sortOrder: 'top' });
+                    break;
+                default:
+                    logger.warn(`Unknown VOICE leaderboard command: ${commandName}`);
+                    if (!buttonInteraction.replied && !buttonInteraction.deferred) {
+                        await buttonInteraction.reply({ content: "Unknown voice leaderboard action.", ephemeral: true });
+                    }
+                    break;
+            }
+            return;
+        }
+
+    } else if (interaction.isModalSubmit()) {
+        const modalInteraction = interaction;
+        if (modalInteraction.customId.startsWith("GAME_MODAL_SETUP_TEAMS-")) {
+            await handleGameSetupTeamsModal(modalInteraction, logger, api);
+        } else if (modalInteraction.customId.startsWith("GAME_MODAL_ASSIGN_PLAYER-")) {
+            await handleAssignPlayerModal(modalInteraction, logger, api);
+        }
+    }
 }
 
 async function userJoinsVoice(oldState, newState) {
