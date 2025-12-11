@@ -134,7 +134,7 @@ async function generateVoiceLeaderboard(button, title, options) {
     const updatedComponents = button.message.components.map(row => {
         const newRow = new ActionRowBuilder();
         row.components.forEach(comp => {
-            const newComp = new ButtonBuilder(comp);
+            const newComp = ButtonBuilder.from(comp);
             newComp.setDisabled(comp.customId === button.customId);
             newRow.addComponents(newComp);
         });
@@ -634,7 +634,7 @@ async function handleGameSetupTeamsModal(modalInteraction, logger, localApi) {
                 const newComponents = originalMessage.components.map(apiActionRow => { // MODIFIED
                     const newRow = new ActionRowBuilder(); // MODIFIED
                     apiActionRow.components.forEach(apiButton => { // MODIFIED
-                        const buttonBuilder = new ButtonBuilder(apiButton); // MODIFIED
+                        const buttonBuilder = ButtonBuilder.from(apiButton); // MODIFIED
                         
                         // Update button states based on 'teamsConfigured'
                         if (buttonBuilder.data.custom_id && buttonBuilder.data.custom_id.startsWith(`GAME_HOST_SETUP_TEAMS-${gameIdString}`)) {
