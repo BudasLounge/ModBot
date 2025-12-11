@@ -39,7 +39,7 @@ function formatDuration(totalSeconds) {
 // Helper function for generating standard voice leaderboards
 async function generateVoiceLeaderboard(button, title, options) {
     await button.deferUpdate();
-    const { timeFilterDays, mutedFilter, sortOrder } = options; // sortOrder: 'top' or 'bottom'
+    const { timeFilterDays, mutedFilter, sortOrder, groupBy, filterUser } = options; // sortOrder: 'top' or 'bottom', groupBy: 'user' or 'channel'
     const guildId = button.guild.id;
     const currentTime = Math.floor(Date.now() / 1000);
 
@@ -52,6 +52,9 @@ async function generateVoiceLeaderboard(button, title, options) {
     }
     if (mutedFilter !== null && mutedFilter !== undefined) {
         apiParams.selfmute = String(mutedFilter);
+    }
+    if (filterUser) {
+        apiParams.user_id = filterUser;
     }
 
     let voiceTrackings;
@@ -69,7 +72,7 @@ async function generateVoiceLeaderboard(button, title, options) {
         return;
     }
 
-    const totalTimeByUser = new Map(); // Map<user_id, total_seconds>
+    const totalTimeMap = new Map(); // Map<key, total_seconds>
 
     for (const track of voiceTrackings) {
         let connectTime = parseInt(track.connect_time, 10);
@@ -95,39 +98,50 @@ async function generateVoiceLeaderboard(button, title, options) {
         
         const duration = Math.max(0, Math.floor(effectiveDisconnectTime - effectiveConnectTime));
 
-        if (duration > 0 && track.user_id) {
-            totalTimeByUser.set(track.user_id, (totalTimeByUser.get(track.user_id) || 0) + duration);
+        if (duration > 0) {
+            const key = groupBy === 'channel' ? track.channel_id : track.user_id;
+            if (key) {
+                totalTimeMap.set(key, (totalTimeMap.get(key) || 0) + duration);
+            }
         }
     }
 
-    if (totalTimeByUser.size === 0) {
-        await button.editReply({ content: "No user voice time data to display after filtering.", embeds: [], components: [] });
+    if (totalTimeMap.size === 0) {
+        await button.editReply({ content: "No voice time data to display after filtering.", embeds: [], components: [] });
         return;
     }
 
-    let sortedUsers = [...totalTimeByUser.entries()];
+    let sortedEntries = [...totalTimeMap.entries()];
     if (sortOrder === 'top') {
-        sortedUsers.sort((a, b) => b[1] - a[1]);
+        sortedEntries.sort((a, b) => b[1] - a[1]);
     } else { // 'bottom'
-        sortedUsers.sort((a, b) => a[1] - b[1]);
+        sortedEntries.sort((a, b) => a[1] - b[1]);
     }
-    sortedUsers = sortedUsers.slice(0, 10);
+    sortedEntries = sortedEntries.slice(0, 10);
 
     const listEmbed = new EmbedBuilder().setColor("#c586b6").setTitle(title);
 
-    if (sortedUsers.length === 0) {
-        listEmbed.setDescription("No users to display on the leaderboard for these filters.");
+    if (sortedEntries.length === 0) {
+        listEmbed.setDescription("No data to display on the leaderboard for these filters.");
     } else {
-        for (let i = 0; i < sortedUsers.length; i++) {
-            const [userId, totalSeconds] = sortedUsers[i];
-            let userName = `User ID: ${userId}`;
-            try {
-                const member = await button.guild.members.fetch(userId);
-                if (member) userName = member.displayName;
-            } catch (err) {
-                logger.warn(`Could not fetch member ${userId} for ${title} leaderboard: ${err.message}`);
+        for (let i = 0; i < sortedEntries.length; i++) {
+            const [key, totalSeconds] = sortedEntries[i];
+            let displayName = `ID: ${key}`;
+            
+            if (groupBy === 'channel') {
+                const channel = button.guild.channels.cache.get(key);
+                if (channel) displayName = channel.name;
+                else displayName = `Channel ID: ${key}`;
+            } else {
+                try {
+                    const member = await button.guild.members.fetch(key);
+                    if (member) displayName = member.displayName;
+                    else displayName = `User ID: ${key}`;
+                } catch (err) {
+                    logger.warn(`Could not fetch member ${key} for ${title} leaderboard: ${err.message}`);
+                }
             }
-            listEmbed.addFields({ name: `${i + 1}. ${userName}`, value: formatDuration(totalSeconds) });
+            listEmbed.addFields({ name: `${i + 1}. ${displayName}`, value: formatDuration(totalSeconds) });
         }
     }
     
@@ -904,6 +918,15 @@ async function onInteractionCreate(interaction) {
                     break;
                 case "7days":
                     await generateVoiceLeaderboard(buttonInteraction, 'Top Voice Users (Last 7 Days)', { timeFilterDays: 7, sortOrder: 'top' });
+                    break;
+                case "channel":
+                    await generateVoiceLeaderboard(buttonInteraction, 'Your Top Channels', { sortOrder: 'top', groupBy: 'channel', filterUser: buttonInteraction.user.id });
+                    break;
+                case "channelUse":
+                    await generateVoiceLeaderboard(buttonInteraction, 'Most Used Channels (All Time)', { sortOrder: 'top', groupBy: 'channel' });
+                    break;
+                case "lonely":
+                    await buttonInteraction.reply({ content: "This feature is currently disabled.", ephemeral: true });
                     break;
                 default:
                     logger.warn(`Unknown VOICE leaderboard command: ${commandName}`);
