@@ -39,7 +39,7 @@ function formatDuration(totalSeconds) {
 // Helper function for generating standard voice leaderboards
 async function generateVoiceLeaderboard(button, title, options) {
     await button.deferUpdate();
-    const { timeFilterDays, mutedFilter, sortOrder, groupBy, filterUser } = options; // sortOrder: 'top' or 'bottom', groupBy: 'user' or 'channel'
+    const { timeFilterDays, mutedFilter, sortOrder, groupBy, filterUser, aloneTime } = options; // sortOrder: 'top' or 'bottom', groupBy: 'user' or 'channel'
     const guildId = button.guild.id;
     const currentTime = Math.floor(Date.now() / 1000);
 
@@ -74,34 +74,85 @@ async function generateVoiceLeaderboard(button, title, options) {
 
     const totalTimeMap = new Map(); // Map<key, total_seconds>
 
-    for (const track of voiceTrackings) {
-        let connectTime = parseInt(track.connect_time, 10);
-        let disconnectTime = parseInt(track.disconnect_time, 10);
+    if (aloneTime) {
+        const sessionsByChannel = new Map();
+        for (const track of voiceTrackings) {
+            let connectTime = parseInt(track.connect_time, 10);
+            let disconnectTime = parseInt(track.disconnect_time, 10);
 
-        if (isNaN(connectTime)) {
-            logger.warn(`Skipping track with invalid connect_time: ${JSON.stringify(track)}`);
-            continue;
+            if (isNaN(connectTime)) continue;
+            if (disconnectTime === 0 || isNaN(disconnectTime)) disconnectTime = currentTime;
+
+            let effectiveConnectTime = connectTime;
+            let effectiveDisconnectTime = disconnectTime;
+
+            if (filterStartDate) {
+                effectiveConnectTime = Math.max(connectTime, filterStartDate);
+                if (effectiveDisconnectTime <= filterStartDate || effectiveConnectTime >= effectiveDisconnectTime) {
+                    continue;
+                }
+            }
+
+            if (!sessionsByChannel.has(track.channel_id)) sessionsByChannel.set(track.channel_id, []);
+            sessionsByChannel.get(track.channel_id).push({ user_id: track.user_id, start: effectiveConnectTime, end: effectiveDisconnectTime });
         }
-        if (disconnectTime === 0 || isNaN(disconnectTime)) {
-            disconnectTime = currentTime;
-        }
 
-        let effectiveConnectTime = connectTime;
-        let effectiveDisconnectTime = disconnectTime;
+        for (const [channelId, sessions] of sessionsByChannel) {
+            const events = [];
+            for (const s of sessions) {
+                events.push({ time: s.start, type: 'join', user_id: s.user_id });
+                events.push({ time: s.end, type: 'leave', user_id: s.user_id });
+            }
+            events.sort((a, b) => a.time - b.time);
 
-        if (filterStartDate) {
-            effectiveConnectTime = Math.max(connectTime, filterStartDate);
-            if (effectiveDisconnectTime <= filterStartDate || effectiveConnectTime >= effectiveDisconnectTime) {
-                continue;
+            let activeUsers = new Set();
+            let lastTime = events.length > 0 ? events[0].time : 0;
+
+            for (const event of events) {
+                const duration = event.time - lastTime;
+                if (duration > 0 && activeUsers.size === 1) {
+                    const userId = activeUsers.values().next().value;
+                    totalTimeMap.set(userId, (totalTimeMap.get(userId) || 0) + duration);
+                }
+
+                if (event.type === 'join') {
+                    activeUsers.add(event.user_id);
+                } else {
+                    activeUsers.delete(event.user_id);
+                }
+                lastTime = event.time;
             }
         }
-        
-        const duration = Math.max(0, Math.floor(effectiveDisconnectTime - effectiveConnectTime));
+    } else {
+        for (const track of voiceTrackings) {
+            let connectTime = parseInt(track.connect_time, 10);
+            let disconnectTime = parseInt(track.disconnect_time, 10);
 
-        if (duration > 0) {
-            const key = groupBy === 'channel' ? track.channel_id : track.user_id;
-            if (key) {
-                totalTimeMap.set(key, (totalTimeMap.get(key) || 0) + duration);
+            if (isNaN(connectTime)) {
+                logger.warn(`Skipping track with invalid connect_time: ${JSON.stringify(track)}`);
+                continue;
+            }
+            if (disconnectTime === 0 || isNaN(disconnectTime)) {
+                disconnectTime = currentTime;
+            }
+
+            let effectiveConnectTime = connectTime;
+            let effectiveDisconnectTime = disconnectTime;
+
+            if (filterStartDate) {
+                effectiveConnectTime = Math.max(connectTime, filterStartDate);
+                if (effectiveDisconnectTime <= filterStartDate || effectiveConnectTime >= effectiveDisconnectTime) {
+                    continue;
+                }
+            }
+            
+            const duration = Math.max(0, Math.floor(effectiveDisconnectTime - effectiveConnectTime));
+
+            if (duration > 0) {
+                const key = groupBy === 'channel' ? track.channel_id : track.user_id;
+                if (key) {
+                    totalTimeMap.set(key, (totalTimeMap.get(key) || 0) + duration);
+                }
             }
         }
     }
@@ -926,7 +977,7 @@ async function onInteractionCreate(interaction) {
                     await generateVoiceLeaderboard(buttonInteraction, 'Most Used Channels (All Time)', { sortOrder: 'top', groupBy: 'channel' });
                     break;
                 case "lonely":
-                    await buttonInteraction.reply({ content: "This feature is currently disabled.", ephemeral: true });
+                    await generateVoiceLeaderboard(buttonInteraction, 'Top Lonely Users (All Time)', { sortOrder: 'top', aloneTime: true });
                     break;
                 default:
                     logger.warn(`Unknown VOICE leaderboard command: ${commandName}`);

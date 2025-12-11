@@ -186,7 +186,7 @@ module.exports = {
                 .addComponents(
                     new ButtonBuilder().setCustomId("VOICEnon-muted").setLabel("Non-muted times only").setStyle(ButtonStyle.Primary).setDisabled(false),
                     new ButtonBuilder().setCustomId("VOICEmuted").setLabel("Muted times only").setStyle(ButtonStyle.Primary).setDisabled(false),
-                    new ButtonBuilder().setCustomId("VOICElonely").setLabel("Alone times only").setStyle(ButtonStyle.Primary).setDisabled(true),
+                    new ButtonBuilder().setCustomId("VOICElonely").setLabel("Alone times only").setStyle(ButtonStyle.Primary).setDisabled(false),
                     new ButtonBuilder().setCustomId("VOICEbottom").setLabel("Bottom Talkers").setStyle(ButtonStyle.Primary).setDisabled(false)
                 );
 
