@@ -9,8 +9,7 @@ module.exports = {
   needs_api: false,
   has_state: false,
 
-  async execute(message, args) {
-    // 1) anyone can use without args (this command already has num_args: 0)
+  async execute(message) {
     const row = new ActionRowBuilder().addComponents(
       new ButtonBuilder()
         .setCustomId('LEAGUE_LINK_BUTTON')
@@ -18,9 +17,8 @@ module.exports = {
         .setStyle(ButtonStyle.Primary),
     );
 
-    // 2) respond with button
     await message.channel.send({
-      content: 'Click the button below to link your League of Legends account!',
+      content: 'Click the button below to link your League of Legends account.',
       components: [row],
     });
   },
