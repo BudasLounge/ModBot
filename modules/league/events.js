@@ -265,7 +265,6 @@ if (interaction.isModalSubmit()) {
     } else {
       await api.post('league_player', {
         ...payload,
-        league_admin: false,
       });
     }
 
