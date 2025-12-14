@@ -98,13 +98,12 @@ function extractRanks(entries = []) {
 }
 
 /* =====================================================
-   Core Interaction Handler
+   Interaction Handler
 ===================================================== */
 
 async function onInteraction(interaction) {
   if (!interaction.isButton() && !interaction.isModalSubmit()) return;
 
-  /* ---------- Button ---------- */
   if (interaction.isButton()) {
     if (interaction.customId !== 'LEAGUE_LINK_BUTTON') return;
 
@@ -140,7 +139,6 @@ async function onInteraction(interaction) {
     return;
   }
 
-  /* ---------- Modal Submit ---------- */
   if (interaction.isModalSubmit()) {
     if (interaction.customId !== 'LEAGUE_LINK_MODAL') return;
 
@@ -148,11 +146,6 @@ async function onInteraction(interaction) {
 
     try {
       logger.info(`[LoL Link] Modal submit by ${interaction.user.id}`);
-
-      if (!RIOT_API_KEY) {
-        await interaction.editReply({ content: 'RIOT_API_KEY is not configured.' });
-        return;
-      }
 
       const parsed = parseRiotId(
         interaction.fields.getTextInputValue('riot_id')
@@ -171,13 +164,9 @@ async function onInteraction(interaction) {
         interaction.fields.getTextInputValue('lfg_status')
       );
 
-      /* =====================================================
-         STEP 1 — Riot ID → PUUID (GLOBAL)
-      ===================================================== */
+      /* ---------- Riot ID → PUUID ---------- */
 
-      logger.info(
-        `[LoL Link] Resolving Riot ID ${parsed.gameName}#${parsed.tagLine}`
-      );
+      logger.info(`[LoL Link] Resolving Riot ID ${parsed.gameName}#${parsed.tagLine}`);
 
       const accountRes = await riotGet(
         `https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(parsed.gameName)}/${encodeURIComponent(parsed.tagLine)}`
@@ -186,66 +175,37 @@ async function onInteraction(interaction) {
       const { puuid } = accountRes.data;
       logger.info(`[LoL Link] PUUID resolved: ${puuid}`);
 
-      /* =====================================================
-         STEP 2 — NA Summoner by PUUID (BEST EFFORT)
-      ===================================================== */
+      /* ---------- Summoner Resolution ---------- */
 
-      let summoner = null;
+      let summonerRes = null;
 
       try {
         logger.info('[LoL Link] Attempting NA summoner lookup by PUUID');
-        summoner = await riotGet(
+        summonerRes = await riotGet(
           `https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${puuid}`
         );
-        logger.info('[LoL Link] NA PUUID → summoner resolved successfully');
       } catch (err) {
-        const status = err?.response?.status;
-
-        if (status === 403) {
-          logger.warn(
-            `[LoL Link] NA PUUID lookup FORBIDDEN (403). Falling back to legacy summoner-name lookup`
-          );
-        } else if (status === 404) {
-          logger.warn(
-            `[LoL Link] NA PUUID lookup returned 404. Possible propagation delay. Falling back`
-          );
-        } else {
-          throw err;
-        }
+        logger.warn('[LoL Link] NA PUUID lookup failed; falling back to legacy name lookup');
       }
 
-      /* =====================================================
-         STEP 3 — Legacy NA Summoner Name Fallback (wins.js logic)
-      ===================================================== */
+      const summonerData = summonerRes?.data;
 
-      if (!summoner) {
-        logger.info(
-          `[LoL Link] Legacy NA lookup by summoner name: ${parsed.gameName}`
+      if (!summonerData?.id) {
+        logger.warn(
+          '[LoL Link] PUUID summoner response missing id; falling back to legacy lookup',
+          summonerData
         );
 
-        summoner = await riotGet(
+        summonerRes = await riotGet(
           `https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/${encodeURIComponent(parsed.gameName)}`
         );
-
-        logger.info('[LoL Link] Legacy NA summoner lookup succeeded');
       }
 
-      const summonerData = summoner?.data;
+      const summonerId = summonerRes.data.id;
 
-        if (!summonerData?.id) {
-        logger.error('[LoL Link] Summoner object missing id', {
-            summonerData,
-        });
-        throw new Error('Failed to resolve summoner ID');
-        }
+      logger.info('[LoL Link] Using summonerId', { summonerId });
 
-        const summonerId = summonerData.id;
-
-      /* =====================================================
-         STEP 4 — League Entries
-      ===================================================== */
-
-      logger.info('[LoL Link] Fetching ranked data');
+      /* ---------- Ranked Data ---------- */
 
       const leagueRes = await riotGet(
         `https://na1.api.riotgames.com/lol/league/v4/entries/by-summoner/${summonerId}`
@@ -253,17 +213,7 @@ async function onInteraction(interaction) {
 
       const { soloRank, flexRank } = extractRanks(leagueRes.data);
 
-      logger.info(
-        `[LoL Link] Rank results — Solo: ${soloRank ?? 'unranked'}, Flex: ${flexRank ?? 'unranked'}`
-      );
-
-      /* =====================================================
-         STEP 5 — DB Upsert
-      ===================================================== */
-
-      const existing = await api.get('league_player', {
-        user_id: interaction.user.id,
-      });
+      /* ---------- DB ---------- */
 
       const payload = {
         user_id: interaction.user.id,
@@ -276,20 +226,7 @@ async function onInteraction(interaction) {
         flex_rank: flexRank || null,
       };
 
-      if (existing?.league_players?.length) {
-        logger.info('[LoL Link] Updating existing league_player record');
-        await api.put('league_player', payload);
-      } else {
-        logger.info('[LoL Link] Creating new league_player record');
-        await api.post('league_player', {
-          ...payload,
-          league_admin: 0,
-        });
-      }
-
-      /* =====================================================
-         SUCCESS RESPONSE
-      ===================================================== */
+      await api.post('league_player', payload);
 
       const embed = new EmbedBuilder()
         .setTitle('✅ League Account Linked')
@@ -297,10 +234,8 @@ async function onInteraction(interaction) {
         .addFields(
           { name: 'Riot ID', value: `${parsed.gameName}#${parsed.tagLine}`, inline: true },
           { name: 'Region', value: 'NA', inline: true },
-          { name: 'Role', value: mainRole, inline: true },
           { name: 'Solo Rank', value: soloRank || 'Unranked', inline: true },
           { name: 'Flex Rank', value: flexRank || 'Unranked', inline: true },
-          { name: 'LFG', value: lfg ? 'Yes' : 'No', inline: true },
         );
 
       await interaction.editReply({ embeds: [embed] });
@@ -315,7 +250,7 @@ async function onInteraction(interaction) {
 }
 
 /* =====================================================
-   Registration
+   Register
 ===================================================== */
 
 function register_handlers(event_registry) {
