@@ -204,7 +204,7 @@ async function getLastMatches(username, numberOfGames, logger, userId) {
   return matchDetails;
 }
 
-async function sendEmbeds(message, queueType, data) {
+async function sendEmbeds(channel, queueType, data) {
   let embed = new EmbedBuilder()
     .setTitle(`${data.games} games in ${queueType}`)
     .setColor('#0099ff')
@@ -214,7 +214,7 @@ async function sendEmbeds(message, queueType, data) {
 
   for (const [champion, { wins, losses }] of Object.entries(data.champions)) {    if (fieldCount === 25) {
       // Send the current embed and create a new one
-      await message.channel.send({ embeds: [embed] });
+      await channel.send({ embeds: [embed] });
       embed = new EmbedBuilder()
         .setTitle(`Continued: ${queueType}`)
         .setColor('#0099ff')
@@ -226,7 +226,7 @@ async function sendEmbeds(message, queueType, data) {
   }
 
   // Send the last or only embed for the current queue type
-  await message.channel.send({ embeds: [embed] });
+  await channel.send({ embeds: [embed] });
 }
 
 module.exports = {
@@ -257,6 +257,7 @@ async execute(message, args) {
         message.channel.send('You must request at least 1 game.');
         return;
     }
+    let thread;
     try {
       const longTermDelays = Math.floor(gameCount / 30000) * (600 * 1000); // 10 minutes for every 30,000 requests
       const shortTermDelays = Math.floor((gameCount % 30000) / 500) * 10000; // 10 seconds for every 500 requests in the last batch
@@ -264,14 +265,21 @@ async execute(message, args) {
       const estimatedTimeMinutes = Math.floor(estimatedTimeMs / 60000);
       const estimatedTimeSeconds = ((estimatedTimeMs % 60000) / 1000).toFixed(0);
       var summonerName = args.join(' ');
+
+      thread = await message.startThread({
+        name: `Wins: ${summonerName}`,
+        autoArchiveDuration: 60,
+      });
+      await thread.send(`<@${message.author.id}>`);
+
       // Send the estimated time to the user
-      message.channel.send(`Getting stats for ${summonerName}, please wait. Estimated time: ${estimatedTimeMinutes} minutes and ${parseInt(estimatedTimeSeconds)+parseInt(10)} seconds.\nIf multiple requests are made in a short period of time, the bot will take longer to respond.`);
+      thread.send(`Getting stats for ${summonerName}, please wait. Estimated time: ${estimatedTimeMinutes} minutes and ${parseInt(estimatedTimeSeconds)+parseInt(10)} seconds.\nIf multiple requests are made in a short period of time, the bot will take longer to respond.`);
       if(gameCount > 50) {
-        message.channel.send(`Please only request up to 50 games at one time unless pulling mass data for website viewing.`);
+        thread.send(`Please only request up to 50 games at one time unless pulling mass data for website viewing.`);
       }
       const results = await getLastMatches(summonerName, gameCount, this.logger, message.author.id);
       if (results.length === 0) {
-        message.channel.send(`No puuid on file. Please log in to the website and set your league name on the league homepage and then run the command on yourself once before running it on others.`);
+        thread.send(`No puuid on file. Please log in to the website and set your league name on the league homepage and then run the command on yourself once before running it on others.`);
         return;
       }
       const queueStats = results.reduce((stats, { champion, win, queueType }) => {
@@ -316,12 +324,16 @@ async execute(message, args) {
         }*/
   
         // Send the last or only embed for the current queue type
-        await message.channel.send({ embeds: [embed] });
-        await sendEmbeds(message, queueType, data);
+        await thread.send({ embeds: [embed] });
+        await sendEmbeds(thread, queueType, data);
       }
     } catch (error) {
       this.logger.error('Error fetching data from Riot API:', error);
-      message.channel.send('An error occurred while retrieving match history.\nPlease try again in 10 minutes.');
+      if (thread) {
+        thread.send('An error occurred while retrieving match history.\nPlease try again in 10 minutes.');
+      } else {
+        message.channel.send('An error occurred while retrieving match history.\nPlease try again in 10 minutes.');
+      }
     }
   }
 };
