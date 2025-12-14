@@ -13,39 +13,21 @@ const ApiClient = require("../../core/js/APIClient.js");
 const api = new ApiClient();
 
 const RIOT_API_KEY = process.env.RIOT_API_KEY;
+const RIOT_SUMMONER_BY_NAME_URL =
+  'https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/';
+const RIOT_LEAGUE_BY_SUMMONER_URL =
+  'https://na1.api.riotgames.com/lol/league/v4/entries/by-summoner/';
+
 let logger;
 
 /* =====================================================
-   Riot HTTP Client
+   Riot HTTP
 ===================================================== */
 
 const http = axios.create({
   headers: { 'X-Riot-Token': RIOT_API_KEY },
   timeout: 15000,
 });
-
-const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-
-async function riotGet(url, attempt = 0) {
-  try {
-    logger.debug?.(`[Riot] GET ${url}`);
-    return await http.get(url);
-  } catch (err) {
-    const status = err?.response?.status;
-
-    if (status === 429 && attempt < 5) {
-      const retryAfter =
-        parseInt(err.response.headers?.['retry-after'], 10) * 1000 || 2000;
-      logger.warn(
-        `[Riot] 429 rate limited. Retrying in ${retryAfter}ms (attempt ${attempt + 1})`
-      );
-      await sleep(retryAfter);
-      return riotGet(url, attempt + 1);
-    }
-
-    throw err;
-  }
-}
 
 /* =====================================================
    Helpers
@@ -85,12 +67,12 @@ function extractRanks(entries = []) {
   let soloRank = null;
   let flexRank = null;
 
-  for (const e of entries) {
-    if (e.queueType === 'RANKED_SOLO_5x5') {
-      soloRank = `${e.tier} ${e.rank}`;
+  for (const entry of entries) {
+    if (entry.queueType === 'RANKED_SOLO_5x5') {
+      soloRank = `${entry.tier} ${entry.rank}`;
     }
-    if (e.queueType === 'RANKED_FLEX_SR') {
-      flexRank = `${e.tier} ${e.rank}`;
+    if (entry.queueType === 'RANKED_FLEX_SR') {
+      flexRank = `${entry.tier} ${entry.rank}`;
     }
   }
 
@@ -104,6 +86,7 @@ function extractRanks(entries = []) {
 async function onInteraction(interaction) {
   if (!interaction.isButton() && !interaction.isModalSubmit()) return;
 
+  /* ---------- Button ---------- */
   if (interaction.isButton()) {
     if (interaction.customId !== 'LEAGUE_LINK_BUTTON') return;
 
@@ -139,6 +122,7 @@ async function onInteraction(interaction) {
     return;
   }
 
+  /* ---------- Modal Submit ---------- */
   if (interaction.isModalSubmit()) {
     if (interaction.customId !== 'LEAGUE_LINK_MODAL') return;
 
@@ -150,6 +134,7 @@ async function onInteraction(interaction) {
       const parsed = parseRiotId(
         interaction.fields.getTextInputValue('riot_id')
       );
+
       if (!parsed) {
         await interaction.editReply({
           content: 'Invalid Riot ID format. Use **Name#TAG**.',
@@ -164,56 +149,62 @@ async function onInteraction(interaction) {
         interaction.fields.getTextInputValue('lfg_status')
       );
 
-      /* ---------- Riot ID → PUUID ---------- */
+      /* =====================================================
+         STEP 1 — Resolve Summoner (LEGACY, AUTHORITATIVE)
+      ===================================================== */
 
-      logger.info(`[LoL Link] Resolving Riot ID ${parsed.gameName}#${parsed.tagLine}`);
-
-      const accountRes = await riotGet(
-        `https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(parsed.gameName)}/${encodeURIComponent(parsed.tagLine)}`
+      logger.info(
+        `[LoL Link] Resolving summoner by legacy name on NA: ${parsed.gameName}`
       );
 
-      const { puuid } = accountRes.data;
-      logger.info(`[LoL Link] PUUID resolved: ${puuid}`);
-
-      /* ---------- Summoner Resolution ---------- */
-
-      let summonerRes = null;
-
+      let summonerRes;
       try {
-        logger.info('[LoL Link] Attempting NA summoner lookup by PUUID');
-        summonerRes = await riotGet(
-          `https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${puuid}`
+        summonerRes = await http.get(
+          `${RIOT_SUMMONER_BY_NAME_URL}${encodeURIComponent(parsed.gameName)}`
         );
       } catch (err) {
-        logger.warn('[LoL Link] NA PUUID lookup failed; falling back to legacy name lookup');
+        logger.error('[LoL Link] Summoner lookup failed', err);
+        await interaction.editReply({
+          content:
+            'Unable to verify your League account on NA. Please check your summoner name and try again.',
+        });
+        return;
       }
 
-      const summonerData = summonerRes?.data;
+      const summonerData = summonerRes.data;
 
       if (!summonerData?.id) {
-        logger.warn(
-          '[LoL Link] PUUID summoner response missing id; falling back to legacy lookup',
-          summonerData
-        );
-
-        summonerRes = await riotGet(
-          `https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/${encodeURIComponent(parsed.gameName)}`
-        );
+        logger.error('[LoL Link] Invalid summoner response', summonerData);
+        await interaction.editReply({
+          content:
+            'Riot returned incomplete summoner data. Please try again later.',
+        });
+        return;
       }
 
-      const summonerId = summonerRes.data.id;
+      const summonerId = summonerData.id;
+      const puuid = summonerData.puuid || null;
 
-      logger.info('[LoL Link] Using summonerId', { summonerId });
+      logger.info('[LoL Link] Summoner resolved', {
+        summonerId,
+        puuid,
+      });
 
-      /* ---------- Ranked Data ---------- */
+      /* =====================================================
+         STEP 2 — Ranked Data
+      ===================================================== */
 
-      const leagueRes = await riotGet(
-        `https://na1.api.riotgames.com/lol/league/v4/entries/by-summoner/${summonerId}`
+      logger.info('[LoL Link] Fetching ranked data');
+
+      const leagueRes = await http.get(
+        `${RIOT_LEAGUE_BY_SUMMONER_URL}${summonerId}`
       );
 
       const { soloRank, flexRank } = extractRanks(leagueRes.data);
 
-      /* ---------- DB ---------- */
+      /* =====================================================
+         STEP 3 — DB Upsert
+      ===================================================== */
 
       const payload = {
         user_id: interaction.user.id,
@@ -221,21 +212,29 @@ async function onInteraction(interaction) {
         discord_name: interaction.user.username,
         main_role: mainRole,
         lfg,
-        puuid,
+        puuid: puuid || 'none',
         solo_rank: soloRank || 'unranked',
         flex_rank: flexRank || null,
       };
 
+      logger.info('[LoL Link] Saving league_player record', payload);
+
       await api.post('league_player', payload);
+
+      /* =====================================================
+         SUCCESS
+      ===================================================== */
 
       const embed = new EmbedBuilder()
         .setTitle('✅ League Account Linked')
         .setColor('#2ecc71')
         .addFields(
-          { name: 'Riot ID', value: `${parsed.gameName}#${parsed.tagLine}`, inline: true },
+          { name: 'Summoner', value: parsed.gameName, inline: true },
           { name: 'Region', value: 'NA', inline: true },
           { name: 'Solo Rank', value: soloRank || 'Unranked', inline: true },
           { name: 'Flex Rank', value: flexRank || 'Unranked', inline: true },
+          { name: 'Role', value: mainRole, inline: true },
+          { name: 'LFG', value: lfg ? 'Yes' : 'No', inline: true },
         );
 
       await interaction.editReply({ embeds: [embed] });
@@ -243,7 +242,8 @@ async function onInteraction(interaction) {
     } catch (err) {
       logger.error('[LoL Link] Fatal error', err);
       await interaction.editReply({
-        content: 'Failed to link League account. Check logs for details.',
+        content:
+          'An unexpected error occurred while linking your League account.',
       });
     }
   }
