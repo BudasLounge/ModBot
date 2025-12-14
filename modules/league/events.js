@@ -27,6 +27,15 @@ const http = axios.create({
 
 let logger;
 
+const PLATFORM_FALLBACKS = [
+  'na1',   // default
+  'br1',
+  'la1',   // LAN
+  'la2',   // LAS
+  'oc1',   // OCE
+];
+
+
 /* ---------------- Utilities ---------------- */
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
@@ -43,6 +52,41 @@ async function riotGet(url, attempt = 0) {
     }
     throw err;
   }
+}
+
+async function fetchRanksWithFallback(puuid) {
+  for (const platform of PLATFORM_FALLBACKS) {
+    try {
+      logger.info(`[LoL Link] Trying rank lookup on platform ${platform}`);
+
+      const summonerRes = await riotGet(
+        `https://${platform}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${puuid}`
+      );
+
+      const summonerId = summonerRes.data.id;
+
+      const leagueRes = await riotGet(
+        `https://${platform}.api.riotgames.com/lol/league/v4/entries/by-summoner/${summonerId}`
+      );
+
+      logger.info(`[LoL Link] Rank data found on ${platform}`);
+
+      return {
+        platform,
+        entries: leagueRes.data,
+      };
+    } catch (err) {
+      if (err?.response?.status === 403 || err?.response?.status === 404) {
+        logger.info(`[LoL Link] No summoner on ${platform}, trying next`);
+        continue;
+      }
+
+      // real error → stop
+      throw err;
+    }
+  }
+
+  return null;
 }
 
 function parseRiotId(input) {
@@ -164,31 +208,29 @@ async function onInteraction(interaction) {
       const { id: summonerId, profileIconId } = summonerRes.data;
 
       let soloRank = null;
-      let flexRank = null;
+        let flexRank = null;
+        let platformUsed = null;
 
-      try {
-        const leagueRes = await riotGet(
-          `${RIOT_LEAGUE_BY_SUMMONER}${summonerId}`
-        );
+        const rankResult = await fetchRanksWithFallback(puuid);
 
-        for (const entry of leagueRes.data) {
-          if (entry.queueType === 'RANKED_SOLO_5x5') {
+        if (rankResult) {
+        platformUsed = rankResult.platform;
+
+        for (const entry of rankResult.entries) {
+            if (entry.queueType === 'RANKED_SOLO_5x5') {
             soloRank = `${entry.tier} ${entry.rank}`;
-          }
-          if (entry.queueType === 'RANKED_FLEX_SR') {
+            }
+            if (entry.queueType === 'RANKED_FLEX_SR') {
             flexRank = `${entry.tier} ${entry.rank}`;
-          }
+            }
         }
 
-        logger.info(`[LoL Link] Ranks resolved solo=${soloRank} flex=${flexRank}`);
-      } catch (err) {
-        logger.error('[LoL Link] Rank fetch failed', {
-            status: err?.response?.status,
-            data: err?.response?.data,
-            message: err?.message,
-        });
-    }
-
+        logger.info(
+            `[LoL Link] Ranks resolved on ${platformUsed} solo=${soloRank} flex=${flexRank}`
+        );
+        } else {
+        logger.info('[LoL Link] No ranked data found on any platform');
+        }
 
       const existing = await api.get('league_player', {
         user_id: interaction.user.id,
