@@ -181,9 +181,14 @@ async function onInteraction(interaction) {
         }
 
         logger.info(`[LoL Link] Ranks resolved solo=${soloRank} flex=${flexRank}`);
-      } catch {
-        logger.info('[LoL Link] No rank data available');
-      }
+      } catch (err) {
+        logger.error('[LoL Link] Rank fetch failed', {
+            status: err?.response?.status,
+            data: err?.response?.data,
+            message: err?.message,
+        });
+    }
+
 
       const existing = await api.get('league_player', {
         user_id: interaction.user.id,
