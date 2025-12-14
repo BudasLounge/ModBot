@@ -200,7 +200,7 @@ async function onInteraction(interaction) {
       };
 
       const existing = await api.get('league_player', {
-        user_id: showing interaction.user.id,
+        user_id: interaction.user.id,
       });
 
       if (existing?.league_players?.length) {
