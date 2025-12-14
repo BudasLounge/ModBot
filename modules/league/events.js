@@ -257,7 +257,7 @@ async function onInteraction(interaction) {
       } else {
         await api.post('league_player', {
           ...payload,
-          league_admin: 0,
+          league_admin: false,
         });
       }
 
