@@ -207,7 +207,6 @@ async function onInteraction(interaction) {
           ...basePayload,
           solo_rank: soloRank ?? current.solo_rank,
           flex_rank: flexRank ?? current.flex_rank,
-          league_admin: current.league_admin,
         };
 
         logger.info('[LoL Link] Updating existing player', updatePayload);
@@ -218,7 +217,7 @@ async function onInteraction(interaction) {
           ...basePayload,
           solo_rank: soloRank || 'not set yet',
           flex_rank: flexRank,
-          league_admin: 0,
+          league_admin: false,
         });
       }
 
