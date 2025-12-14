@@ -136,7 +136,7 @@ async function resolvePUUID(userId, input) {
    Rank Fetch (explicit success vs failure)
 ===================================================== */
 
-async function fetchRanksNA(puuid) {
+async function fetchRanksNA(puuid, summonerName) {
   try {
     logger.info('[LoL Link] Resolving summonerId by PUUID');
 
@@ -144,9 +144,25 @@ async function fetchRanksNA(puuid) {
       `${RIOT_SUMMONER_BY_PUUID_NA}${puuid}`
     );
 
-    const summonerId = summonerRes.data?.id;
+    let summonerId = summonerRes.data?.id;
+
+    // 🔑 IMPORTANT FIX:
+    // Riot sometimes returns a PUUID shell without `id`
+    if (!summonerId && summonerName) {
+      logger.warn(
+        '[LoL Link] Summoner-V4 by-puuid returned no id; retrying by-name',
+        summonerRes.data
+      );
+
+      const byNameRes = await riotGet(
+        `${RIOT_SUMMONER_BY_NAME_NA}${encodeURIComponent(summonerName)}`
+      );
+
+      summonerId = byNameRes.data?.id;
+    }
+
     if (!summonerId) {
-      logger.warn('[LoL Link] Summoner-V4 returned no id', summonerRes.data);
+      logger.warn('[LoL Link] Unable to resolve summonerId by any method');
       return { success: false };
     }
 
@@ -156,7 +172,7 @@ async function fetchRanksNA(puuid) {
       `${RIOT_LEAGUE_BY_SUMMONER_NA}${summonerId}`
     );
 
-    // SUCCESS: even empty array = unranked
+    // SUCCESS: empty array = unranked
     const ranks = extractRanks(leagueRes.data);
     return { success: true, ...ranks };
 
@@ -168,6 +184,7 @@ async function fetchRanksNA(puuid) {
     return { success: false };
   }
 }
+
 
 /* =====================================================
    Interaction Handler
@@ -242,7 +259,8 @@ if (interaction.isModalSubmit()) {
       input
     );
 
-    const rankResult = await fetchRanksNA(puuid);
+    const rankResult = await fetchRanksNA(puuid, existing?.league_name || input);
+
 
     const payload = {
       user_id: interaction.user.id,
