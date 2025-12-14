@@ -2,7 +2,7 @@ const { ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
 module.exports = {
   name: 'lol_link',
-  description: 'Link your League of Legends account to your Discord user.',
+  description: 'Link your League of Legends account to your Discord user',
   syntax: 'lol_link',
   num_args: 0,
   args_to_lower: false,
