@@ -230,7 +230,16 @@ async function onInteraction(interaction) {
         logger.info('[LoL Link] Legacy NA summoner lookup succeeded');
       }
 
-      const summonerId = summoner.data.id;
+      const summonerData = summoner?.data;
+
+        if (!summonerData?.id) {
+        logger.error('[LoL Link] Summoner object missing id', {
+            summonerData,
+        });
+        throw new Error('Failed to resolve summoner ID');
+        }
+
+        const summonerId = summonerData.id;
 
       /* =====================================================
          STEP 4 — League Entries
