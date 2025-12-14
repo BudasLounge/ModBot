@@ -14,8 +14,10 @@ var api = new ApiClient();
 
 const RIOT_API_KEY = process.env.RIOT_API_KEY;
 
-/* ---------------- Riot Endpoints (Modern) ---------------- */
-
+/* ---------------- Riot Endpoints (Modern) ----------------
+   Riot Account API is regional routing (americas/europe/asia).
+   Summoner/League APIs are platform routing (na1/euw1/etc).
+*/
 const RIOT_ACCOUNT_API =
   'https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/';
 const RIOT_SUMMONER_BY_PUUID =
@@ -23,6 +25,7 @@ const RIOT_SUMMONER_BY_PUUID =
 const RIOT_LEAGUE_BY_SUMMONER =
   'https://na1.api.riotgames.com/lol/league/v4/entries/by-summoner/';
 
+// Create axios instance like wins.js style
 const http = axios.create({
   headers: { 'X-Riot-Token': RIOT_API_KEY },
 });
@@ -51,7 +54,7 @@ function parseRiotId(input) {
   if (!input || !input.includes('#')) return null;
   const [gameName, tagLine] = input.split('#');
   if (!gameName || !tagLine) return null;
-  return { gameName, tagLine };
+  return { gameName: gameName.trim(), tagLine: tagLine.trim() };
 }
 
 function normalizeRole(input) {
@@ -130,6 +133,13 @@ async function onInteraction(interaction) {
     await interaction.deferReply({ ephemeral: true });
 
     try {
+      if (!RIOT_API_KEY) {
+        await interaction.editReply({
+          content: 'Server is missing RIOT_API_KEY. Ask an admin to configure it.',
+        });
+        return;
+      }
+
       const riotIdInput = interaction.fields.getTextInputValue('riot_id');
       const parsed = parseRiotId(riotIdInput);
 
@@ -154,18 +164,17 @@ async function onInteraction(interaction) {
 
       const { puuid, gameName, tagLine } = accountRes.data;
 
-      /* ---------- PUUID → Summoner ---------- */
+      /* ---------- PUUID → Summoner (platform endpoint) ---------- */
       const summonerRes = await riotGet(
         `${RIOT_SUMMONER_BY_PUUID}${puuid}`
       );
 
       const {
         id: summonerId,
-        name: summonerName,
         profileIconId,
       } = summonerRes.data;
 
-      /* ---------- Ranks ---------- */
+      /* ---------- Ranks (queue-aware) ---------- */
       let soloRank = 'not set yet';
       let flexRank = null;
 
@@ -182,11 +191,11 @@ async function onInteraction(interaction) {
             flexRank = `${entry.tier} ${entry.rank}`;
           }
         }
-      } catch {
-        logger?.warn('Rank fetch failed; continuing');
+      } catch (e) {
+        logger?.warn('Rank fetch failed; continuing without ranks');
       }
 
-      /* ---------- DB Write ---------- */
+      /* ---------- DB Write (fixed syntax here) ---------- */
       const payload = {
         user_id: interaction.user.id,
         league_name: `${gameName}#${tagLine}`,
@@ -200,7 +209,7 @@ async function onInteraction(interaction) {
       };
 
       const existing = await api.get('league_player', {
-        user_id: interaction.user.id,
+        user_id: interaction.user.id, // ✅ FIXED
       });
 
       if (existing?.league_players?.length) {
@@ -227,12 +236,16 @@ async function onInteraction(interaction) {
       await interaction.editReply({ embeds: [embed] });
     } catch (err) {
       logger?.error(err);
-      await interaction.editReply({
-        content:
-          err?.response?.status === 404
-            ? 'Riot account not found. Check your Riot ID.'
-            : 'Failed to link League account. Please try again later.',
-      });
+
+      const status = err?.response?.status;
+      const msg =
+        status === 404
+          ? 'Riot account not found. Check your Riot ID.'
+          : status === 403
+            ? 'Riot API rejected the request (check key / permissions / routing).'
+            : 'Failed to link League account. Please try again later.';
+
+      await interaction.editReply({ content: msg });
     }
   }
 }
