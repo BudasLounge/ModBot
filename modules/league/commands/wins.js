@@ -274,9 +274,6 @@ async execute(message, args) {
 
       // Send the estimated time to the user
       thread.send(`Getting stats for ${summonerName}, please wait. Estimated time: ${estimatedTimeMinutes} minutes and ${parseInt(estimatedTimeSeconds)+parseInt(10)} seconds.\nIf multiple requests are made in a short period of time, the bot will take longer to respond.`);
-      if(gameCount > 50) {
-        thread.send(`Please only request up to 50 games at one time unless pulling mass data for website viewing.`);
-      }
       const results = await getLastMatches(summonerName, gameCount, this.logger, message.author.id);
       if (results.length === 0) {
         thread.send(`No puuid on file. Please log in to the website and set your league name on the league homepage and then run the command on yourself once before running it on others.`);
