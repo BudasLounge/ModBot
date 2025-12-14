@@ -13,35 +13,27 @@ const ApiClient = require("../../core/js/APIClient.js");
 const api = new ApiClient();
 
 const RIOT_API_KEY = process.env.RIOT_API_KEY;
-const RIOT_SUMMONER_BY_NAME_URL =
-  'https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/';
-const RIOT_LEAGUE_BY_SUMMONER_URL =
-  'https://na1.api.riotgames.com/lol/league/v4/entries/by-summoner/';
-
 let logger;
 
 /* =====================================================
-   Riot HTTP
+   Riot HTTP (IDENTICAL BEHAVIOR TO wins.js)
 ===================================================== */
 
 const http = axios.create({
-  headers: { 'X-Riot-Token': RIOT_API_KEY },
+  headers: {
+    "X-Riot-Token": RIOT_API_KEY,
+  },
   timeout: 15000,
 });
+
+const SUMMONER_BY_NAME_URL =
+  "https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/";
+const LEAGUE_BY_SUMMONER_URL =
+  "https://na1.api.riotgames.com/lol/league/v4/entries/by-summoner/";
 
 /* =====================================================
    Helpers
 ===================================================== */
-
-function parseRiotId(input) {
-  if (!input) return null;
-  const idx = input.lastIndexOf('#');
-  if (idx === -1) return null;
-  return {
-    gameName: input.slice(0, idx).trim(),
-    tagLine: input.slice(idx + 1).trim(),
-  };
-}
 
 function normalizeRole(input) {
   if (!input) return 'fill';
@@ -92,13 +84,13 @@ async function onInteraction(interaction) {
 
     const modal = new ModalBuilder()
       .setCustomId('LEAGUE_LINK_MODAL')
-      .setTitle('Link League Account');
+      .setTitle('Link League Account (NA)');
 
     modal.addComponents(
       new ActionRowBuilder().addComponents(
         new TextInputBuilder()
-          .setCustomId('riot_id')
-          .setLabel('Riot ID (Name#TAG)')
+          .setCustomId('summoner_name')
+          .setLabel('League Summoner Name (NA)')
           .setStyle(TextInputStyle.Short)
           .setRequired(true),
       ),
@@ -131,16 +123,8 @@ async function onInteraction(interaction) {
     try {
       logger.info(`[LoL Link] Modal submit by ${interaction.user.id}`);
 
-      const parsed = parseRiotId(
-        interaction.fields.getTextInputValue('riot_id')
-      );
-
-      if (!parsed) {
-        await interaction.editReply({
-          content: 'Invalid Riot ID format. Use **Name#TAG**.',
-        });
-        return;
-      }
+      const summonerName =
+        interaction.fields.getTextInputValue('summoner_name').trim();
 
       const mainRole = normalizeRole(
         interaction.fields.getTextInputValue('main_role')
@@ -150,31 +134,29 @@ async function onInteraction(interaction) {
       );
 
       /* =====================================================
-         STEP 1 — Resolve Summoner (LEGACY, AUTHORITATIVE)
+         STEP 1 — Resolve Summoner (IDENTICAL TO wins.js)
       ===================================================== */
 
-      logger.info(
-        `[LoL Link] Resolving summoner by legacy name on NA: ${parsed.gameName}`
-      );
+      logger.info(`[LoL Link] Resolving summoner: ${summonerName}`);
 
       let summonerRes;
       try {
         summonerRes = await http.get(
-          `${RIOT_SUMMONER_BY_NAME_URL}${encodeURIComponent(parsed.gameName)}`
+          `${SUMMONER_BY_NAME_URL}${encodeURIComponent(summonerName)}`
         );
       } catch (err) {
-        logger.error('[LoL Link] Summoner lookup failed', err);
+        logger.error('[LoL Link] Summoner lookup failed', err?.response?.data || err);
         await interaction.editReply({
           content:
-            'Unable to verify your League account on NA. Please check your summoner name and try again.',
+            'Unable to find that summoner on NA. Please check spelling and try again.',
         });
         return;
       }
 
-      const summonerData = summonerRes.data;
+      const summoner = summonerRes.data;
 
-      if (!summonerData?.id) {
-        logger.error('[LoL Link] Invalid summoner response', summonerData);
+      if (!summoner?.id) {
+        logger.error('[LoL Link] Invalid summoner response', summoner);
         await interaction.editReply({
           content:
             'Riot returned incomplete summoner data. Please try again later.',
@@ -182,37 +164,32 @@ async function onInteraction(interaction) {
         return;
       }
 
-      const summonerId = summonerData.id;
-      const puuid = summonerData.puuid || null;
-
       logger.info('[LoL Link] Summoner resolved', {
-        summonerId,
-        puuid,
+        id: summoner.id,
+        puuid: summoner.puuid,
       });
 
       /* =====================================================
-         STEP 2 — Ranked Data
+         STEP 2 — Ranked Data (IDENTICAL TO wins.js)
       ===================================================== */
 
-      logger.info('[LoL Link] Fetching ranked data');
-
       const leagueRes = await http.get(
-        `${RIOT_LEAGUE_BY_SUMMONER_URL}${summonerId}`
+        `${LEAGUE_BY_SUMMONER_URL}${summoner.id}`
       );
 
       const { soloRank, flexRank } = extractRanks(leagueRes.data);
 
       /* =====================================================
-         STEP 3 — DB Upsert
+         STEP 3 — Store Link Data
       ===================================================== */
 
       const payload = {
         user_id: interaction.user.id,
-        league_name: `${parsed.gameName}#${parsed.tagLine}`,
+        league_name: summonerName,
         discord_name: interaction.user.username,
+        puuid: summoner.puuid,
         main_role: mainRole,
         lfg,
-        puuid: puuid || 'none',
         solo_rank: soloRank || 'unranked',
         flex_rank: flexRank || null,
       };
@@ -229,7 +206,7 @@ async function onInteraction(interaction) {
         .setTitle('✅ League Account Linked')
         .setColor('#2ecc71')
         .addFields(
-          { name: 'Summoner', value: parsed.gameName, inline: true },
+          { name: 'Summoner', value: summonerName, inline: true },
           { name: 'Region', value: 'NA', inline: true },
           { name: 'Solo Rank', value: soloRank || 'Unranked', inline: true },
           { name: 'Flex Rank', value: flexRank || 'Unranked', inline: true },
