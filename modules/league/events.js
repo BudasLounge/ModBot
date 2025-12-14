@@ -70,9 +70,13 @@ function normalizeRole(input) {
 }
 
 function parseLFG(input) {
-  if (!input) return 0;
-  return ['yes', 'y', 'true', '1'].includes(input.trim().toLowerCase()) ? 1 : 0;
+  if (!input) return false;
+
+  return ['yes', 'y', 'true', '1'].includes(
+    input.trim().toLowerCase()
+  );
 }
+
 
 /* ---------------- Interaction Handler ---------------- */
 
