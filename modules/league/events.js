@@ -213,85 +213,103 @@ async function onInteraction(interaction) {
   }
 
   // Modal submit
-  if (interaction.isModalSubmit()) {
-    if (interaction.customId !== 'LEAGUE_LINK_MODAL') return;
+if (interaction.isModalSubmit()) {
+  if (interaction.customId !== 'LEAGUE_LINK_MODAL') return;
 
-    await interaction.deferReply({ ephemeral: true });
+  // ✅ ACKNOWLEDGE THE INTERACTION IMMEDIATELY
+  // This MUST be the first awaited call
+  await interaction.deferReply({ flags: 64 });
 
-    try {
-      const input = interaction.fields.getTextInputValue('account_input').trim();
-      const mainRole = normalizeRole(
-        interaction.fields.getTextInputValue('main_role')
-      );
-      const lfg = parseLFG(
-        interaction.fields.getTextInputValue('lfg_status')
-      );
+  try {
+    const input =
+      interaction.fields.getTextInputValue('account_input').trim();
 
-      logger.info('[LoL Link] Modal submit', { user: interaction.user.id, input });
+    const mainRole = normalizeRole(
+      interaction.fields.getTextInputValue('main_role')
+    );
 
-      const { puuid, existing } = await resolvePUUID(
-        interaction.user.id,
-        input
-      );
+    const lfg = parseLFG(
+      interaction.fields.getTextInputValue('lfg_status')
+    );
 
-      const rankResult = await fetchRanksNA(puuid);
+    logger.info('[LoL Link] Modal submit', {
+      user: interaction.user.id,
+      input,
+    });
 
-      const payload = {
-        user_id: interaction.user.id,
-        league_name: input,
-        discord_name: interaction.user.username,
-        puuid,
-        main_role: mainRole,
-        lfg,
-      };
+    const { puuid, existing } = await resolvePUUID(
+      interaction.user.id,
+      input
+    );
 
-      // Only write rank data if Riot explicitly returned it
-      if (rankResult.success) {
-        payload.solo_rank = rankResult.soloRank;
-        payload.flex_rank = rankResult.flexRank;
-      }
+    const rankResult = await fetchRanksNA(puuid);
 
-      if (existing) {
-        const merged = { ...existing, ...payload };
-        await api.put('league_player', merged);
-      } else {
-        await api.post('league_player', {
-          ...payload,
-          league_admin: false,
-        });
-      }
+    const payload = {
+      user_id: interaction.user.id,
+      league_name: input,
+      discord_name: interaction.user.username,
+      puuid,
+      main_role: mainRole,
+      lfg,
+    };
 
-      const embed = new EmbedBuilder()
-        .setTitle('✅ League Account Linked')
-        .setColor('#2ecc71')
-        .addFields(
-          { name: 'Input', value: input },
-          { name: 'Region', value: 'NA', inline: true },
-          {
-            name: 'Solo Rank',
-            value: rankResult.success ? rankResult.soloRank : 'unchanged',
-            inline: true,
-          },
-          {
-            name: 'Flex Rank',
-            value: rankResult.success
-              ? rankResult.flexRank || 'Unranked'
-              : 'unchanged',
-            inline: true,
-          },
-          { name: 'Role', value: mainRole, inline: true },
-          { name: 'LFG', value: lfg ? 'Yes' : 'No', inline: true },
-        );
+    // ✅ Only write ranks if Riot explicitly succeeded
+    if (rankResult.success) {
+      payload.solo_rank = rankResult.soloRank;
+      payload.flex_rank = rankResult.flexRank;
+    }
 
-      await interaction.editReply({ embeds: [embed] });
-
-    } catch (err) {
-      logger.error('[LoL Link] Fatal error', err);
-      await interaction.editReply({
-        content: `Failed to link account: ${err.message}`,
+    if (existing) {
+      const merged = { ...existing, ...payload };
+      await api.put('league_player', merged);
+    } else {
+      await api.post('league_player', {
+        ...payload,
+        league_admin: 0,
       });
     }
+
+    const embed = new EmbedBuilder()
+      .setTitle('✅ League Account Linked')
+      .setColor('#2ecc71')
+      .addFields(
+        { name: 'Input', value: input },
+        { name: 'Region', value: 'NA', inline: true },
+        {
+          name: 'Solo Rank',
+          value: rankResult.success
+            ? rankResult.soloRank
+            : 'unchanged',
+          inline: true,
+        },
+        {
+          name: 'Flex Rank',
+          value: rankResult.success
+            ? rankResult.flexRank || 'Unranked'
+            : 'unchanged',
+          inline: true,
+        },
+        { name: 'Role', value: mainRole, inline: true },
+        { name: 'LFG', value: lfg ? 'Yes' : 'No', inline: true },
+      );
+
+    // ✅ After deferReply, ALWAYS use editReply
+    await interaction.editReply({ embeds: [embed] });
+
+  } catch (err) {
+    logger.error('[LoL Link] Fatal error', err);
+
+    // ✅ Safe fallback — editReply only
+    try {
+      await interaction.editReply({
+        content:
+          'An unexpected error occurred while linking your League account.',
+      });
+    } catch (e) {
+      logger.error('[LoL Link] Failed to edit reply after error', e);
+    }
   }
+}
 }
 
 /* =====================================================
