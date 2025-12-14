@@ -260,8 +260,21 @@ if (interaction.isModalSubmit()) {
     }
 
     if (existing) {
-      const merged = { ...existing, ...payload };
-      await api.put('league_player', merged);
+      const merged = {
+        ...existing,
+        ...payload,
+
+        // ✅ enforce boolean typing
+        league_admin:
+            typeof existing.league_admin === 'boolean'
+            ? existing.league_admin
+            : existing.league_admin === 1 ||
+                existing.league_admin === '1' ||
+                existing.league_admin === 'true',
+        };
+
+        await api.put('league_player', merged);
+
     } else {
       await api.post('league_player', {
         ...payload,
