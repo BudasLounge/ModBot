@@ -14,27 +14,18 @@ var api = new ApiClient();
 
 const RIOT_API_KEY = process.env.RIOT_API_KEY;
 
+/* ---------------- Riot Endpoints ---------------- */
+
 const RIOT_ACCOUNT_API =
   'https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/';
-const RIOT_SUMMONER_BY_PUUID =
-  'https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/';
-const RIOT_LEAGUE_BY_SUMMONER =
-  'https://na1.api.riotgames.com/lol/league/v4/entries/by-summoner/';
+
+const PLATFORM_FALLBACKS = ['na1', 'br1', 'la1', 'la2', 'oc1'];
 
 const http = axios.create({
   headers: { 'X-Riot-Token': RIOT_API_KEY },
 });
 
 let logger;
-
-const PLATFORM_FALLBACKS = [
-  'na1',   // default
-  'br1',
-  'la1',   // LAN
-  'la2',   // LAS
-  'oc1',   // OCE
-];
-
 
 /* ---------------- Utilities ---------------- */
 
@@ -52,41 +43,6 @@ async function riotGet(url, attempt = 0) {
     }
     throw err;
   }
-}
-
-async function fetchRanksWithFallback(puuid) {
-  for (const platform of PLATFORM_FALLBACKS) {
-    try {
-      logger.info(`[LoL Link] Trying rank lookup on platform ${platform}`);
-
-      const summonerRes = await riotGet(
-        `https://${platform}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${puuid}`
-      );
-
-      const summonerId = summonerRes.data.id;
-
-      const leagueRes = await riotGet(
-        `https://${platform}.api.riotgames.com/lol/league/v4/entries/by-summoner/${summonerId}`
-      );
-
-      logger.info(`[LoL Link] Rank data found on ${platform}`);
-
-      return {
-        platform,
-        entries: leagueRes.data,
-      };
-    } catch (err) {
-      if (err?.response?.status === 403 || err?.response?.status === 404) {
-        logger.info(`[LoL Link] No summoner on ${platform}, trying next`);
-        continue;
-      }
-
-      // real error → stop
-      throw err;
-    }
-  }
-
-  return null;
 }
 
 function parseRiotId(input) {
@@ -115,22 +71,64 @@ function normalizeRole(input) {
 
 function parseLFG(input) {
   if (!input) return false;
-
-  return ['yes', 'y', 'true', '1'].includes(
-    input.trim().toLowerCase()
-  );
+  return ['yes', 'y', 'true', '1'].includes(input.trim().toLowerCase());
 }
 
+/* ---------------- Rank Resolution ---------------- */
+
+async function fetchRanksByPUUID(puuid) {
+  for (const platform of PLATFORM_FALLBACKS) {
+    try {
+      logger.info(`[LoL Link] Trying PUUID rank lookup on ${platform}`);
+
+      const summonerRes = await riotGet(
+        `https://${platform}.api.riotgames.com/lol/summoner/v4/summoners/by-puuid/${puuid}`
+      );
+
+      const summonerId = summonerRes.data.id;
+
+      const leagueRes = await riotGet(
+        `https://${platform}.api.riotgames.com/lol/league/v4/entries/by-summoner/${summonerId}`
+      );
+
+      logger.info(`[LoL Link] Rank data found via PUUID on ${platform}`);
+      return leagueRes.data;
+    } catch (err) {
+      if ([403, 404].includes(err?.response?.status)) {
+        logger.info(`[LoL Link] No PUUID summoner on ${platform}`);
+        continue;
+      }
+      throw err;
+    }
+  }
+  return null;
+}
+
+async function fetchRanksByLegacyName(name) {
+  logger.info('[LoL Link] Falling back to legacy summoner name lookup (NA)');
+
+  const summonerRes = await riotGet(
+    `https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/${encodeURIComponent(name)}`
+  );
+
+  const summonerId = summonerRes.data.id;
+
+  const leagueRes = await riotGet(
+    `https://na1.api.riotgames.com/lol/league/v4/entries/by-summoner/${summonerId}`
+  );
+
+  logger.info('[LoL Link] Rank data found via legacy summoner name');
+  return leagueRes.data;
+}
 
 /* ---------------- Interaction Handler ---------------- */
 
 async function onInteraction(interaction) {
   if (!interaction.isButton() && !interaction.isModalSubmit()) return;
 
+  /* ---------- Button ---------- */
   if (interaction.isButton()) {
     if (interaction.customId !== 'LEAGUE_LINK_BUTTON') return;
-
-    logger.info(`[LoL Link] Button clicked by ${interaction.user.id}`);
 
     const modal = new ModalBuilder()
       .setCustomId('LEAGUE_LINK_MODAL')
@@ -177,7 +175,6 @@ async function onInteraction(interaction) {
       );
 
       if (!parsed) {
-        logger.info('[LoL Link] Invalid Riot ID format');
         await interaction.editReply({
           content: 'Please enter your Riot ID as **Name#TAG**.',
         });
@@ -191,52 +188,39 @@ async function onInteraction(interaction) {
         interaction.fields.getTextInputValue('lfg_status')
       );
 
-      logger.info(`[LoL Link] Fetching Riot account for ${parsed.gameName}#${parsed.tagLine}`);
-
+      /* ---------- Riot ID → PUUID ---------- */
       const accountRes = await riotGet(
         `${RIOT_ACCOUNT_API}${encodeURIComponent(parsed.gameName)}/${encodeURIComponent(parsed.tagLine)}`
       );
 
       const { puuid } = accountRes.data;
-
       logger.info(`[LoL Link] PUUID resolved: ${puuid}`);
 
-      const summonerRes = await riotGet(
-        `${RIOT_SUMMONER_BY_PUUID}${puuid}`
-      );
+      /* ---------- Rank Resolution (Hybrid) ---------- */
+      let rankEntries = await fetchRanksByPUUID(puuid);
 
-      const { id: summonerId, profileIconId } = summonerRes.data;
+      if (!rankEntries) {
+        rankEntries = await fetchRanksByLegacyName(parsed.gameName);
+      }
 
       let soloRank = null;
-        let flexRank = null;
-        let platformUsed = null;
+      let flexRank = null;
 
-        const rankResult = await fetchRanksWithFallback(puuid);
-
-        if (rankResult) {
-        platformUsed = rankResult.platform;
-
-        for (const entry of rankResult.entries) {
-            if (entry.queueType === 'RANKED_SOLO_5x5') {
-            soloRank = `${entry.tier} ${entry.rank}`;
-            }
-            if (entry.queueType === 'RANKED_FLEX_SR') {
-            flexRank = `${entry.tier} ${entry.rank}`;
-            }
+      for (const entry of rankEntries || []) {
+        if (entry.queueType === 'RANKED_SOLO_5x5') {
+          soloRank = `${entry.tier} ${entry.rank}`;
         }
-
-        logger.info(
-            `[LoL Link] Ranks resolved on ${platformUsed} solo=${soloRank} flex=${flexRank}`
-        );
-        } else {
-        logger.info('[LoL Link] No ranked data found on any platform');
+        if (entry.queueType === 'RANKED_FLEX_SR') {
+          flexRank = `${entry.tier} ${entry.rank}`;
         }
+      }
 
+      logger.info(`[LoL Link] Final ranks solo=${soloRank} flex=${flexRank}`);
+
+      /* ---------- DB ---------- */
       const existing = await api.get('league_player', {
         user_id: interaction.user.id,
       });
-
-      logger.info(`[LoL Link] Existing DB rows: ${existing?.league_players?.length || 0}`);
 
       const basePayload = {
         user_id: interaction.user.id,
@@ -250,36 +234,29 @@ async function onInteraction(interaction) {
       if (existing?.league_players?.length) {
         const current = existing.league_players[0];
 
-        const updatePayload = {
+        await api.put('league_player', {
           ...basePayload,
           solo_rank: soloRank ?? current.solo_rank,
           flex_rank: flexRank ?? current.flex_rank,
-        };
-
-        logger.info('[LoL Link] Updating existing player', updatePayload);
-        await api.put('league_player', updatePayload);
+        });
       } else {
-        logger.info('[LoL Link] Creating new player record');
         await api.post('league_player', {
           ...basePayload,
           solo_rank: soloRank || 'not set yet',
           flex_rank: flexRank,
-          league_admin: false,
+          league_admin: 0,
         });
       }
 
       const embed = new EmbedBuilder()
         .setTitle('✅ League Account Linked')
         .setColor('#2ecc71')
-        .setThumbnail(
-          `http://ddragon.leagueoflegends.com/cdn/13.24.1/img/profileicon/${profileIconId}.png`
-        )
         .addFields(
           { name: 'Riot ID', value: `${parsed.gameName}#${parsed.tagLine}`, inline: true },
           { name: 'Role', value: mainRole, inline: true },
           { name: 'LFG', value: lfg ? 'Yes' : 'No', inline: true },
-          { name: 'Solo Rank', value: soloRank || 'unchanged', inline: true },
-          { name: 'Flex Rank', value: flexRank || 'unchanged', inline: true },
+          { name: 'Solo Rank', value: soloRank || '—', inline: true },
+          { name: 'Flex Rank', value: flexRank || '—', inline: true },
         );
 
       await interaction.editReply({ embeds: [embed] });
