@@ -143,16 +143,50 @@ async function getLastMatches(username, numberOfGames, logger, userId) {
   let puuid = await getPuuidFromDatabase(userId);
 
   if (!puuid) {
-    // Fetch puuid from Riot API if not found in the database
-    const summonerResponse = await http.get(`${RIOT_ACCOUNT_BASE_URL}${encodeURIComponent(username)}`, {
-      headers: { "X-Riot-Token": RIOT_API_KEY }
-    });
-    puuid = summonerResponse.data.puuid;
+    logger.info(`No PUUID in DB for ${username}, resolving via Riot API`);
+
+    let resolvedPuuid = null;
+
+    // Case 1: Riot ID (Name#TAG)
+    if (username.includes('#')) {
+      const idx = username.lastIndexOf('#');
+      const gameName = username.slice(0, idx).trim();
+      const tagLine = username.slice(idx + 1).trim();
+
+      logger.info(`Resolving PUUID via Account-V1 for ${gameName}#${tagLine}`);
+
+      const accountRes = await http.get(
+        `https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}`,
+        { headers: { "X-Riot-Token": RIOT_API_KEY } }
+      );
+
+      resolvedPuuid = accountRes.data?.puuid;
+    }
+
+    // Case 2: Legacy summoner name (NA)
+    else {
+      logger.info(`Resolving PUUID via Summoner-V4 by-name for ${username}`);
+
+      const summonerRes = await http.get(
+        `https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/${encodeURIComponent(username)}`,
+        { headers: { "X-Riot-Token": RIOT_API_KEY } }
+      );
+
+      resolvedPuuid = summonerRes.data?.puuid;
+    }
+
+    if (!resolvedPuuid) {
+      throw new Error(`Unable to resolve PUUID for ${username}`);
+    }
+
+    puuid = resolvedPuuid;
     await storePuuidInDatabase(userId, puuid);
-    logger.info(`Found summoner ${username} with puuid ${puuid}`);
+
+    logger.info(`Resolved and stored PUUID ${puuid} for ${username}`);
   } else {
-    logger.info(`Found puuid in database for summoner ${username}`);
+    logger.info(`Found PUUID in database for ${username}`);
   }
+
 
   let matchDetails = [];
   let startIndex = 0;
