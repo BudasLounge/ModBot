@@ -156,7 +156,7 @@ async function onButtonClick(button){
         }
         //else if((button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && button.customId==="MCSERVERDELETORMODAL"){
         //}
-        await button.reply({content:"Added a new server with Display Name: " +display_name});
+        await button.reply({content:"Added a new server!"});
         logger.info("<<MCSERVERCREATORMODAL() SUCCESS");     
     }
 }
