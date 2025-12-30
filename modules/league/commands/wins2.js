@@ -19,9 +19,10 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 let QUEUE_MAP = null;
 
-async function loadQueueMap() {
+async function loadQueueMap(logger) {
   if (QUEUE_MAP) return QUEUE_MAP;
 
+  logger.info('[wins2] Loading queue mapping from Riot');
   const res = await axios.get(
     'https://static.developer.riotgames.com/docs/lol/queues.json'
   );
@@ -31,14 +32,15 @@ async function loadQueueMap() {
     return acc;
   }, {});
 
+  logger.info(`[wins2] Loaded ${Object.keys(QUEUE_MAP).length} queue mappings`);
   return QUEUE_MAP;
 }
 
 /**
- * Fully dynamic queue resolver.
- * No hard-coding of Riot modes.
+ * Dynamic queue resolver with logging.
+ * Does NOT hard-code modes.
  */
-function resolveQueueName(info, queueMap) {
+function resolveQueueName(info, queueMap, logger) {
   const parts = [];
 
   if (queueMap[info.queueId]) {
@@ -47,21 +49,31 @@ function resolveQueueName(info, queueMap) {
     parts.push(info.gameMode);
   }
 
-  if (
-    info.gameName &&
-    !parts.some(p =>
-      info.gameName.toLowerCase().includes(p.toLowerCase())
-    )
-  ) {
-    parts.push(info.gameName.replace(/^teambuilder-match-\d+$/, '').trim());
+  // Preserve raw gameName for diagnostics (ARAM Mayhem often only appears here)
+  if (info.gameName) {
+    const cleaned = info.gameName.trim();
+    if (!parts.some(p => cleaned.toLowerCase().includes(p.toLowerCase()))) {
+      parts.push(cleaned);
+    }
   }
 
-  return parts.join(': ').replace(/\s+/g, ' ').trim();
+  const resolved = parts.join(': ').replace(/\s+/g, ' ').trim();
+
+  logger.info('[wins2] Queue resolution', {
+    matchId: info.gameId,
+    queueId: info.queueId,
+    gameMode: info.gameMode,
+    gameType: info.gameType,
+    gameName: info.gameName,
+    resolvedQueue: resolved
+  });
+
+  return resolved;
 }
 
 /* -------------------- PUUID -------------------- */
 
-async function getPuuidFromDatabase(userId) {
+async function getPuuidFromDatabase(userId, logger) {
   const res = await api.get('league_player', { user_id: userId });
 
   if (
@@ -69,24 +81,26 @@ async function getPuuidFromDatabase(userId) {
     !Array.isArray(res.league_players) ||
     res.league_players.length === 0
   ) {
+    logger.info(`[wins2] No PUUID in DB for user ${userId}`);
     return null;
   }
 
   const puuid = res.league_players[0].puuid;
-
   if (!puuid || puuid === 'none') {
+    logger.info(`[wins2] Invalid PUUID stored for user ${userId}`);
     return null;
   }
 
+  logger.info(`[wins2] Found PUUID in DB for user ${userId}`);
   return puuid;
 }
 
-
-async function storePuuidInDatabase(userId, puuid) {
+async function storePuuidInDatabase(userId, puuid, logger) {
   await api.put('league_player', { user_id: userId, puuid });
+  logger.info(`[wins2] Stored PUUID for user ${userId}`);
 }
 
-async function resolvePuuid(username) {
+async function resolvePuuid(username, logger) {
   const idx = username.lastIndexOf('#');
   if (idx === -1) {
     throw new Error('Riot ID must be in Name#TAG format');
@@ -94,6 +108,8 @@ async function resolvePuuid(username) {
 
   const gameName = username.slice(0, idx);
   const tag = username.slice(idx + 1);
+
+  logger.info(`[wins2] Resolving PUUID via Account-V1 for ${gameName}#${tag}`);
 
   const res = await http.get(
     `${ACCOUNT_BASE}/${encodeURIComponent(gameName)}/${encodeURIComponent(tag)}`
@@ -104,7 +120,7 @@ async function resolvePuuid(username) {
 
 /* -------------------- MATCH FETCHING -------------------- */
 
-async function fetchMatchIds(puuid, maxGames) {
+async function fetchMatchIds(puuid, maxGames, logger) {
   let start = 0;
   const ids = [];
 
@@ -121,7 +137,10 @@ async function fetchMatchIds(puuid, maxGames) {
     ids.push(...res.data);
     start += res.data.length;
 
+    logger.info(`[wins2] Fetched ${ids.length}/${maxGames} match IDs`);
+
     if (ids.length % 500 === 0) {
+      logger.info('[wins2] Rate safety pause (10s)');
       await sleep(10_000);
     }
   }
@@ -129,42 +148,51 @@ async function fetchMatchIds(puuid, maxGames) {
   return ids;
 }
 
-async function fetchMatch(matchId) {
+async function fetchMatch(matchId, logger) {
   try {
     return (await http.get(`${MATCH_BASE}/${matchId}`)).data;
   } catch (err) {
     if (err.response?.status === 429) {
       const wait = Number(err.response.headers['retry-after'] ?? 1) * 1000;
+      logger.warn(`[wins2] Rate limited. Retrying match ${matchId} in ${wait}ms`);
       await sleep(wait);
-      return fetchMatch(matchId);
+      return fetchMatch(matchId, logger);
     }
+    logger.error(`[wins2] Failed to fetch match ${matchId}`, err);
     return null;
   }
 }
 
 /* -------------------- CORE LOGIC -------------------- */
 
-async function getLastMatches(username, gameCount, queueFilter, userId) {
-  const queueMap = await loadQueueMap();
+async function getLastMatches(username, gameCount, queueFilter, logger, userId) {
+  const queueMap = await loadQueueMap(logger);
 
-  let puuid = await getPuuidFromDatabase(userId);
+  let puuid = await getPuuidFromDatabase(userId, logger);
   if (!puuid) {
-    puuid = await resolvePuuid(username);
-    await storePuuidInDatabase(userId, puuid);
+    puuid = await resolvePuuid(username, logger);
+    await storePuuidInDatabase(userId, puuid, logger);
   }
 
-  const matchIds = await fetchMatchIds(puuid, gameCount * 2); // over-fetch for filtering
-  const matches = await Promise.all(matchIds.map(fetchMatch));
+  const matchIds = await fetchMatchIds(puuid, gameCount * 2, logger);
+  const matches = await Promise.all(matchIds.map(id => fetchMatch(id, logger)));
 
   const results = [];
 
-  for (const match of matches) {
-    if (!match) continue;
+  const validMatches = matches.filter(Boolean);
+  if (validMatches.length) {
+    logger.info('[wins2] Match date range', {
+      newest: new Date(validMatches[0].info.gameEndTimestamp).toISOString(),
+      oldest: new Date(validMatches.at(-1).info.gameEndTimestamp).toISOString(),
+      totalFetched: validMatches.length
+    });
+  }
 
+  for (const match of validMatches) {
     const participant = match.info.participants.find(p => p.puuid === puuid);
     if (!participant) continue;
 
-    const queueName = resolveQueueName(match.info, queueMap);
+    const queueName = resolveQueueName(match.info, queueMap, logger);
 
     if (
       queueFilter &&
@@ -185,18 +213,74 @@ async function getLastMatches(username, gameCount, queueFilter, userId) {
   return results;
 }
 
-/* -------------------- DISCORD COMMAND -------------------- */
+/* -------------------- EMBEDS -------------------- */
+
+async function sendChampionEmbeds(channel, queueType, data) {
+  let embed = new EmbedBuilder()
+    .setTitle(`${data.games} games in ${queueType}`)
+    .setColor('#0099ff')
+    .setTimestamp();
+
+  let fieldCount = 0;
+
+  for (const [champ, record] of Object.entries(data.champions)) {
+    if (fieldCount === 25) {
+      await channel.send({ embeds: [embed] });
+      embed = new EmbedBuilder()
+        .setTitle(`Continued: ${queueType}`)
+        .setColor('#0099ff')
+        .setTimestamp();
+      fieldCount = 0;
+    }
+
+    embed.addFields({
+      name: champ,
+      value: `Wins: ${record.wins} | Losses: ${record.losses}`,
+      inline: true
+    });
+
+    fieldCount++;
+  }
+
+  await channel.send({ embeds: [embed] });
+}
+
+/* -------------------- COMMAND -------------------- */
 
 module.exports = {
     name: 'wins2',
     description: 'Shows last games in your match history',
-    syntax: 'wins [summoner name] [number of games up to 1000](optional)',
+    syntax: 'wins2 [summoner name] [number of games up to 1000](optional)',
     num_args: 1,
     args_to_lower: true,
     needs_api: true,
     has_state: false,
   async execute(message, args) {
     args.shift();
+
+    // Help subcommand
+    if (args[0]?.toLowerCase() === 'help') {
+      const embed = new EmbedBuilder()
+        .setTitle('wins2 Command Help')
+        .setDescription(
+`**Usage**
+\`wins2 <riotId> [queue] [count]\`
+
+**Examples**
+\`wins2 bigbuda#buda\`
+\`wins2 bigbuda#buda 50\`
+\`wins2 bigbuda#buda aram 25\`
+\`wins2 bigbuda#buda mayhem\`
+
+**Notes**
+• Queue filters are partial and case-insensitive  
+• Always pulls most recent matches  
+• Supports all Riot modes dynamically`
+        )
+        .setColor('#0099ff');
+
+      return message.channel.send({ embeds: [embed] });
+    }
 
     let gameCount = 25;
     if (!isNaN(args.at(-1))) {
@@ -217,30 +301,51 @@ module.exports = {
       summonerName,
       gameCount,
       queueFilter,
+      this.logger,
       message.author.id
     );
 
     if (!matches.length) {
-      return thread.send('No matches found.');
+      return thread.send(
+        queueFilter
+          ? `No recent matches found for queue filter "${queueFilter}".`
+          : 'No recent matches found.'
+      );
     }
 
-    const stats = matches.reduce((acc, m) => {
-      acc[m.queueType] ??= { games: 0, wins: 0, losses: 0 };
+    const queueStats = matches.reduce((acc, m) => {
+      acc[m.queueType] ??= {
+        games: 0,
+        wins: 0,
+        losses: 0,
+        champions: {}
+      };
+
       acc[m.queueType].games++;
       acc[m.queueType][m.win ? 'wins' : 'losses']++;
+
+      acc[m.queueType].champions[m.champion] ??= { wins: 0, losses: 0 };
+      acc[m.queueType].champions[m.champion][m.win ? 'wins' : 'losses']++;
+
       return acc;
     }, {});
 
-    for (const [queue, s] of Object.entries(stats)) {
-      const winrate = ((s.wins / s.games) * 100).toFixed(2);
-      const embed = new EmbedBuilder()
-        .setTitle(`${queue}`)
+    for (const [queue, data] of Object.entries(queueStats)) {
+      const winrate = ((data.wins / data.games) * 100).toFixed(2);
+
+      const summary = new EmbedBuilder()
+        .setTitle(queue)
         .setDescription(
-          `Games: ${s.games}\nWins: ${s.wins}\nLosses: ${s.losses}\nWinrate: ${winrate}%`
+`Games: ${data.games}
+Wins: ${data.wins}
+Losses: ${data.losses}
+Winrate: ${winrate}%`
         )
+        .setColor('#0099ff')
         .setTimestamp();
 
-      await thread.send({ embeds: [embed] });
+      await thread.send({ embeds: [summary] });
+      await sendChampionEmbeds(thread, queue, data);
     }
   }
 };
