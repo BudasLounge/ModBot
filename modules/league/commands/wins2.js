@@ -168,18 +168,31 @@ async function fetchMatch(matchId, logger) {
 async function getLastMatches(username, gameCount, queueFilter, logger, userId) {
   const queueMap = await loadQueueMap(logger);
 
-  let puuid = await getPuuidFromDatabase(userId, logger);
-  if (!puuid) {
+  let puuid = null;
+  const isRiotIdQuery = username.includes('#');
+
+  if (isRiotIdQuery) {
+    // RULE 1: Full Riot ID → never touch DB
+    logger.info(`[wins2] Riot ID provided (${username}); resolving PUUID via API only`);
     puuid = await resolvePuuid(username, logger);
-    await storePuuidInDatabase(userId, puuid, logger);
+  } else {
+    // RULE 2: No Riot ID → use invoking user's stored PUUID
+    logger.info(`[wins2] No Riot ID provided; resolving PUUID from DB for user ${userId}`);
+    puuid = await getPuuidFromDatabase(userId, logger);
+
+    if (!puuid) {
+      throw new Error(
+        'No Riot ID provided and no PUUID found for your account. ' +
+        'Please link your League account or use Name#TAG.'
+      );
+    }
   }
 
   const matchIds = await fetchMatchIds(puuid, gameCount * 2, logger);
   const matches = await Promise.all(matchIds.map(id => fetchMatch(id, logger)));
 
-  const results = [];
-
   const validMatches = matches.filter(Boolean);
+
   if (validMatches.length) {
     logger.info('[wins2] Match date range', {
       newest: new Date(validMatches[0].info.gameEndTimestamp).toISOString(),
@@ -187,6 +200,8 @@ async function getLastMatches(username, gameCount, queueFilter, logger, userId) 
       totalFetched: validMatches.length
     });
   }
+
+  const results = [];
 
   for (const match of validMatches) {
     const participant = match.info.participants.find(p => p.puuid === puuid);
@@ -212,6 +227,7 @@ async function getLastMatches(username, gameCount, queueFilter, logger, userId) 
 
   return results;
 }
+
 
 /* -------------------- EMBEDS -------------------- */
 
