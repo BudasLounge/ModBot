@@ -63,10 +63,24 @@ function resolveQueueName(info, queueMap) {
 
 async function getPuuidFromDatabase(userId) {
   const res = await api.get('league_player', { user_id: userId });
-  return res?.league_players?.[0]?.puuid !== 'none'
-    ? res.league_players[0].puuid
-    : null;
+
+  if (
+    !res ||
+    !Array.isArray(res.league_players) ||
+    res.league_players.length === 0
+  ) {
+    return null;
+  }
+
+  const puuid = res.league_players[0].puuid;
+
+  if (!puuid || puuid === 'none') {
+    return null;
+  }
+
+  return puuid;
 }
+
 
 async function storePuuidInDatabase(userId, puuid) {
   await api.put('league_player', { user_id: userId, puuid });
