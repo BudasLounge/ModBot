@@ -149,15 +149,30 @@ function fixChampName(name) {
 }
 
 function prepareScoreboardData(payload) {
-  const DD_VER = '14.3.1'; // Update periodically
-  const BASE_CHAMP = `https://ddragon.leagueoflegends.com/cdn/${DD_VER}/img/champion/`;
-  const BASE_ITEM = `https://ddragon.leagueoflegends.com/cdn/${DD_VER}/img/item/`;
+  // 1. Define Versions and Base URLs
+  // Pro-tip: You can fetch https://ddragon.leagueoflegends.com/api/versions.json to get the latest dynamically
+  const DD_VER = '14.3.1'; 
+  const CDN = `https://ddragon.leagueoflegends.com/cdn/${DD_VER}/img`;
+  const RUNE_CDN = `https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles`;
 
+  // 2. Map IDs to Filenames (Data Dragon format)
   const spellMap = {
-    1: '🧼', 3: '💨', 4: '✨', 6: '👻', 7: '💚', 
-    11: '⚡', 12: '🌀', 13: '🔋', 14: '🔥', 21: '🛡️', 32: '❄️'
+    1: 'SummonerBoost', 3: 'SummonerExhaust', 4: 'SummonerFlash',
+    6: 'SummonerHaste', 7: 'SummonerHeal', 11: 'SummonerSmite',
+    12: 'SummonerTeleport', 13: 'SummonerMana', 14: 'SummonerDot', // Ignite
+    21: 'SummonerBarrier', 30: 'SummonerPoroRecall', 31: 'SummonerPoroThrow',
+    32: 'SummonerSnowball', 39: 'SummonerSnowURFSnowball_Mark'
   };
-  const runeMap = { 8000: '⚔️', 8100: '🔴', 8200: '🟣', 8300: '🧪', 8400: '🟢' };
+
+  // Runes are weird. They don't use the versioned CDN, but a static path.
+  // We are mapping the "Primary Style" (e.g. Precision) to its icon.
+  const runeMap = {
+    8000: '7201_Precision',
+    8100: '7200_Domination',
+    8200: '7202_Sorcery',
+    8300: '7203_Whimsy', // Inspiration
+    8400: '7204_Resolve'
+  };
 
   let maxDamage = 0;
   payload.teams.forEach(t => t.players.forEach(p => {
@@ -172,37 +187,43 @@ function prepareScoreboardData(payload) {
     const a = stats.ASSISTS || 0;
     const dmg = stats.TOTAL_DAMAGE_DEALT_TO_CHAMPIONS || 0;
 
+    // ITEMS: Map IDs to URLs
     const items = [0,1,2,3,4,5,6].map(i => {
       const id = stats[`ITEM${i}`];
-      // Transparent pixel if no item
-      return id ? `${BASE_ITEM}${id}.png` : 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
+      // Return URL if item exists, else transparent pixel
+      return id ? `${CDN}/item/${id}.png` : 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
     });
 
-    const kdaRaw = d === 0 ? (k + a) : ((k + a) / d);
-    const primaryStyle = stats.PERK_PRIMARY_STYLE || 8000;
-    const subStyle = stats.PERK_SUB_STYLE || 8100;
+    // SPELLS: Map ID -> Name -> URL
+    const s1Name = spellMap[p.spell1Id] || 'SummonerFlash'; // Fallback
+    const s2Name = spellMap[p.spell2Id] || 'SummonerFlash';
+    
+    // RUNES: Map Style ID -> Name -> URL
+    const r1Name = runeMap[stats.PERK_PRIMARY_STYLE] || '7201_Precision';
+    const r2Name = runeMap[stats.PERK_SUB_STYLE] || '7201_Precision';
 
-    // Detect if this row is the uploader
+    // Helper for "Is this me?"
     let isLocal = false;
-    // 1. Check against explicit localPlayer flag from payload
-    if (p.isLocalPlayer) isLocal = true; 
-    // 2. Fallback: check PUUID if available
+    if (p.isLocalPlayer) isLocal = true;
     if (payload.user_id && p.puuid === payload.puuid) isLocal = true;
 
     return {
       name: p.summonerName || p.riotIdGameName || 'Unknown',
       championName: p.championName,
-      championIcon: `${BASE_CHAMP}${fixChampName(p.championName)}.png`,
+      championIcon: `${CDN}/champion/${fixChampName(p.championName)}.png`,
       level: stats.LEVEL || 18,
-      spell1: spellMap[p.spell1Id] || '❓',
-      spell2: spellMap[p.spell2Id] || '❓',
-      rune1: runeMap[primaryStyle] || '⚫',
-      rune2: runeMap[subStyle] || '⚪',
+      
+      // NEW: Full URLs for images
+      spell1: `${CDN}/spell/${s1Name}.png`,
+      spell2: `${CDN}/spell/${s2Name}.png`,
+      rune1: `${RUNE_CDN}/${r1Name}.png`,
+      rune2: `${RUNE_CDN}/${r2Name}.png`,
+
       items: items,
       k, d, a,
-      kdaRatio: kdaRaw.toFixed(2),
+      kdaRatio: d === 0 ? (k + a).toFixed(2) : ((k + a) / d).toFixed(2),
       totalDamage: dmg.toLocaleString(),
-      damagePercent: maxDamage > 0 ? (dmg / maxDamage * 100).toFixed(1) : 0,
+      damagePercent: maxDamage > 0 ? ((dmg / maxDamage) * 100).toFixed(1) : 0,
       gold: ((stats.GOLD_EARNED || 0) / 1000).toFixed(1) + 'k',
       cs: (stats.MINIONS_KILLED || 0) + (stats.NEUTRAL_MINIONS_KILLED || 0),
       vision: stats.VISION_SCORE || 0,
@@ -210,18 +231,11 @@ function prepareScoreboardData(payload) {
     };
   };
 
+  // ... (Rest of function remains the same: uploaderResult logic, return object, etc.)
   const localPlayer = payload.localPlayer || payload.teams.flatMap(t => t.players).find(p => p.isLocalPlayer);
   const uploaderTeamId = localPlayer?.teamId;
   const winningTeamId = payload.teams.find(t => t.isWinningTeam)?.teamId;
-  
-  // Default to "MATCH COMPLETED" if we can't determine win/loss
-  let uploaderResult = "MATCH COMPLETED";
-  let resultClass = "";
-  if (uploaderTeamId && winningTeamId) {
-    const won = uploaderTeamId === winningTeamId;
-    uploaderResult = won ? "VICTORY" : "DEFEAT";
-    resultClass = won ? "victory" : "defeat";
-  }
+  const uploaderWon = uploaderTeamId === winningTeamId;
 
   const t100 = payload.teams.find(t => t.teamId === 100) || { players: [] };
   const t200 = payload.teams.find(t => t.teamId === 200) || { players: [] };
@@ -229,8 +243,8 @@ function prepareScoreboardData(payload) {
   return {
     gameMode: payload.gameMode || 'LoL Match',
     duration: payload.gameLength ? `${Math.floor(payload.gameLength / 60)}m ${payload.gameLength % 60}s` : '0m 0s',
-    uploaderResult,
-    resultClass,
+    uploaderResult: uploaderWon ? "VICTORY" : "DEFEAT",
+    resultClass: uploaderWon ? "victory" : "defeat",
     team100: t100.players.map(p => mapPlayer(p, payload.uploaderId)),
     team200: t200.players.map(p => mapPlayer(p, payload.uploaderId))
   };

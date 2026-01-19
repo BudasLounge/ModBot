@@ -60,9 +60,11 @@
     .col-spells { display: flex; flex-direction: column; gap: 2px; justify-content: center; }
     .spell-row { display: flex; gap: 4px; }
     .tiny-icon {
-      width: 22px; height: 22px; border-radius: 3px; background: #181b1f;
-      display: flex; justify-content: center; align-items: center;
-      font-size: 14px; cursor: default;
+      width: 22px;
+      height: 22px;
+      border-radius: 3px;
+      background: #000;
+      display: block;
     }
 
     .col-name { padding-left: 15px; display: flex; flex-direction: column; justify-content: center; }
@@ -98,8 +100,14 @@
       <div class="player-row {{#if isLocal}}is-local{{/if}}">
         <div class="col-champ"><img src="{{championIcon}}" class="champ-img"><div class="level-badge">{{level}}</div></div>
         <div class="col-spells">
-          <div class="spell-row"><div class="tiny-icon">{{spell1}}</div><div class="tiny-icon">{{spell2}}</div></div>
-          <div class="spell-row"><div class="tiny-icon">{{rune1}}</div><div class="tiny-icon">{{rune2}}</div></div>
+          <div class="spell-row">
+            <img src="{{spell1}}" class="tiny-icon" onerror="this.style.display='none'">
+            <img src="{{spell2}}" class="tiny-icon" onerror="this.style.display='none'">
+          </div>
+          <div class="spell-row">
+            <img src="{{rune1}}" class="tiny-icon" onerror="this.style.display='none'">
+            <img src="{{rune2}}" class="tiny-icon" onerror="this.style.display='none'">
+          </div>
         </div>
         <div class="col-name"><div class="summoner-name">{{name}}</div><div class="champion-name">{{championName}}</div></div>
         <div class="col-items">{{#each items}}<img src="{{this}}" class="item-icon {{#if @last}}trinket{{/if}}" onerror="this.style.opacity=0">{{/each}}</div>
@@ -117,9 +125,15 @@
       <div class="player-row {{#if isLocal}}is-local{{/if}}">
         <div class="col-champ"><img src="{{championIcon}}" class="champ-img"><div class="level-badge">{{level}}</div></div>
         <div class="col-spells">
-          <div class="spell-row"><div class="tiny-icon">{{spell1}}</div><div class="tiny-icon">{{spell2}}</div></div>
-          <div class="spell-row"><div class="tiny-icon">{{rune1}}</div><div class="tiny-icon">{{rune2}}</div></div>
+        <div class="spell-row">
+          <img src="{{spell1}}" class="tiny-icon" onerror="this.style.display='none'">
+          <img src="{{spell2}}" class="tiny-icon" onerror="this.style.display='none'">
         </div>
+        <div class="spell-row">
+          <img src="{{rune1}}" class="tiny-icon" onerror="this.style.display='none'">
+          <img src="{{rune2}}" class="tiny-icon" onerror="this.style.display='none'">
+        </div>
+      </div>
         <div class="col-name"><div class="summoner-name">{{name}}</div><div class="champion-name">{{championName}}</div></div>
         <div class="col-items">{{#each items}}<img src="{{this}}" class="item-icon {{#if @last}}trinket{{/if}}" onerror="this.style.opacity=0">{{/each}}</div>
         <div class="col-kda"><div>{{k}} / {{d}} / {{a}}</div><span class="kda-sub">{{kdaRatio}}</span></div>
