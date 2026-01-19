@@ -9,15 +9,14 @@
     
     body {
       width: 1350px;
-      height: 960px;
+      height: 900px; /* Reduced height since legend is gone */
       background-color: #010a13;
       font-family: 'Roboto', sans-serif;
       color: #a09b8c;
       padding: 30px;
-      position: relative;
     }
 
-    /* --- Common Headers --- */
+    /* --- Headers --- */
     .header { display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: 20px; border-bottom: 2px solid #1e2328; margin-bottom: 10px; }
     .outcome { font-size: 42px; font-weight: 700; text-transform: uppercase; letter-spacing: 3px; }
     .victory { color: #0acbe6; text-shadow: 0 0 10px rgba(10, 203, 230, 0.3); }
@@ -33,6 +32,7 @@
     .th-left { text-align: left; padding-left: 15px; }
     .th-right { text-align: right; padding-right: 20px; }
 
+    /* --- Rows --- */
     .player-row {
       display: grid;
       grid-template-columns: 70px 60px 200px 290px 120px 180px 100px 80px 80px;
@@ -52,21 +52,24 @@
     .spell-row { display: flex; gap: 4px; }
     .tiny-icon { width: 22px; height: 22px; border-radius: 3px; background: #181b1f; display: block; }
 
-    /* --- UPDATED BADGES CSS --- */
-    .col-name { padding-left: 15px; display: flex; flex-direction: column; justify-content: center; }
+    /* --- UPDATED BADGE CSS --- */
+    .col-name { padding-left: 15px; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
     .summoner-name { color: #fff; font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px; }
-    .champion-name { color: #888; font-size: 11px; margin-bottom: 2px; }
-    
-    .badge-container { display: flex; gap: 4px; margin-top: 2px; }
-    .badge {
-      background: #1e2328; border: 1px solid #333; border-radius: 3px;
-      padding: 1px 3px; height: 18px; display: inline-flex; align-items: center; justify-content: center;
-    }
-    /* Style the SVG inside the badge */
-    .badge svg { width: 12px; height: 12px; fill: #939a9e; }
-    .badge:hover svg { fill: #fff; }
+    .champion-name { color: #888; font-size: 11px; margin-bottom: 1px; }
 
-    /* --- Rest of Columns --- */
+    .badge-container { display: flex; gap: 4px; margin-top: 1px; flex-wrap: wrap; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: #1e2328; border: 1px solid #333; border-radius: 4px;
+      padding: 1px 5px; height: 18px; 
+      font-size: 10px; color: #939a9e; font-weight: 500; text-transform: uppercase;
+    }
+    /* Icon styling inside badge */
+    .badge svg { width: 10px; height: 10px; fill: #939a9e; }
+    /* Highlight badge on hover (optional since it's an image, but good for testing) */
+    .badge:last-child { margin-right: 0; }
+    
+    /* --- Other Columns --- */
     .col-items { display: flex; gap: 4px; align-items: center; }
     .item-icon { width: 32px; height: 32px; border-radius: 4px; background: #141619; border: 1px solid #333; }
     .trinket { margin-left: 6px; border-radius: 50%; }
@@ -86,16 +89,6 @@
     .col-cs { text-align: right; color: #939a9e; font-size: 14px; padding-right: 20px; }
     .col-vision { text-align: center; color: #939a9e; font-size: 14px; }
 
-    /* --- LEGEND FOOTER --- */
-    .legend-footer {
-      position: absolute; bottom: 20px; left: 0; right: 0;
-      display: flex; justify-content: center; gap: 25px;
-      color: #72767d; font-size: 13px;
-      border-top: 1px solid #1e2328; padding-top: 15px;
-      width: 90%; margin: 0 auto;
-    }
-    .legend-item { display: flex; align-items: center; gap: 6px; }
-    .legend-icon { width: 14px; height: 14px; fill: #72767d; }
   </style>
 </head>
 <body>
@@ -135,7 +128,7 @@
           <div class="champion-name">{{championName}}</div>
           <div class="badge-container">
             {{#each badges}}
-              <span class="badge" title="{{title}}">{{{icon}}}</span>
+              <span class="badge">{{{icon}}} {{text}}</span>
             {{/each}}
           </div>
         </div>
@@ -171,7 +164,7 @@
           <div class="champion-name">{{championName}}</div>
           <div class="badge-container">
             {{#each badges}}
-              <span class="badge" title="{{title}}">{{{icon}}}</span>
+              <span class="badge">{{{icon}}} {{text}}</span>
             {{/each}}
           </div>
         </div>
@@ -189,32 +182,5 @@
     {{/each}}
   </div>
 
- <div class="legend-footer">
-    <div class="legend-item">
-      <svg class="legend-icon" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-      The Protector
-    </div>
-    <div class="legend-item">
-      <svg class="legend-icon" viewBox="0 0 24 24"><path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z"/></svg>
-      Unstoppable
-    </div>
-    <div class="legend-item">
-      <svg class="legend-icon" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg> 
-      Most Tanked
-    </div>
-    <div class="legend-item">
-      <svg class="legend-icon" viewBox="0 0 24 24"><path d="M18 2h-4V0h-4v2H6v4h2v8H6v6h12v-6h-2V6h2z"/></svg> 
-      Objective Boss
-    </div>
-    <div class="legend-item">
-      <svg class="legend-icon" viewBox="0 0 24 24"><path d="M12 2L10 6H6l2 4-2 4h4l2 4 2-4h4l-2-4 2-4h-4z"/></svg> 
-      CC King
-    </div>
-    <div class="legend-item">
-      <svg class="legend-icon" viewBox="0 0 24 24"><path d="M12 2c-4.42 0-8 3.58-8 8 0 4.42 8 10 8 10s8-5.58 8-10c0-4.42-3.58-8-8-8zm0 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM9 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm6 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg> 
-      Grey Screen
-    </div>
-  </div>
-
-</body>
+  </body>
 </html>

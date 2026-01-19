@@ -247,11 +247,11 @@ function fixChampName(name) {
   return map[name] || name.replace(/[' .]/g, '');
 }
 
+/* =====================================================
+   Infographic Logic (Inline Badge Descriptions)
+===================================================== */
+
 async function prepareScoreboardData(payload, uploaderInfos = []) {
-  logger.info('[Infographic] Preparing scoreboard data', {
-    teams: Array.isArray(payload?.teams) ? payload.teams.length : 0,
-    uploaderInfos: uploaderInfos.length,
-  });
   const ver = await getLatestDDVersion();
   const CDN = `https://ddragon.leagueoflegends.com/cdn/${ver}/img`;
   const ITEM_CDN = `${CDN}/item`;
@@ -274,13 +274,12 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
   const allPlayers = payload.teams.flatMap(t => t.players);
   const getStat = (p, key) => (p.stats && p.stats[key]) ? p.stats[key] : 0;
   
-  // CALCULATE NEW MAX VALUES
   const maxVals = {
-    protector: Math.max(...allPlayers.map(p => 
-      getStat(p, 'TOTAL_HEAL_ON_TEAMMATES') + getStat(p, 'TOTAL_DAMAGE_SHIELDED_ON_TEAMMATES')
-    )),
+    protector: Math.max(...allPlayers.map(p => getStat(p, 'TOTAL_HEAL_ON_TEAMMATES') + getStat(p, 'TOTAL_DAMAGE_SHIELDED_ON_TEAMMATES'))),
     spree: Math.max(...allPlayers.map(p => getStat(p, 'LARGEST_KILLING_SPREE'))),
+    damage: Math.max(...allPlayers.map(p => getStat(p, 'TOTAL_DAMAGE_DEALT_TO_CHAMPIONS'))),
     tank: Math.max(...allPlayers.map(p => getStat(p, 'TOTAL_DAMAGE_TAKEN') + getStat(p, 'TOTAL_DAMAGE_SELF_MITIGATED'))),
+    vision: Math.max(...allPlayers.map(p => getStat(p, 'VISION_SCORE'))),
     turret: Math.max(...allPlayers.map(p => getStat(p, 'TOTAL_DAMAGE_DEALT_TO_TURRETS'))),
     cc: Math.max(...allPlayers.map(p => getStat(p, 'TIME_CCING_OTHERS'))),
     dead: Math.max(...allPlayers.map(p => getStat(p, 'TOTAL_TIME_SPENT_DEAD')))
@@ -289,7 +288,7 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
   const mapPlayer = (p) => {
     const stats = p.stats || {};
     
-    // Items
+    // Items logic (same as before)
     const itemIds = [0, 1, 2, 3, 4, 5, 6].map(i => (p.items && p.items[i]) ? p.items[i] : (stats[`ITEM${i}`] || 0));
     const trinketId = itemIds[6];
     const mainItemIds = itemIds.slice(0, 6);
@@ -302,42 +301,48 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
       { url: buildUrl(trinketId), isPlaceholder: !trinketId, isTrinket: true }
     ];
 
-    // --- ASSIGN NEW BADGES ---
+    // --- ASSIGN BADGES WITH TEXT ---
     const badges = [];
 
-    // The Protector (Heal + Shield)
+    // The Protector
     const myProtection = getStat(p, 'TOTAL_HEAL_ON_TEAMMATES') + getStat(p, 'TOTAL_DAMAGE_SHIELDED_ON_TEAMMATES');
-    if (myProtection === maxVals.protector && maxVals.protector > 1000) // Minimum threshold to avoid badge in 0-heal games
-      badges.push({ icon: ICONS.HEART, title: 'The Protector' });
+    if (myProtection === maxVals.protector && maxVals.protector > 1000) 
+      badges.push({ icon: ICONS.HEART, text: 'Saver' }); // Short text
     
-    // Unstoppable (Spree)
-    if (getStat(p, 'LARGEST_KILLING_SPREE') === maxVals.spree && maxVals.spree >= 3) // Minimum spree of 3
-      badges.push({ icon: ICONS.FIRE, title: 'Unstoppable' });
+    // Unstoppable
+    if (getStat(p, 'LARGEST_KILLING_SPREE') === maxVals.spree && maxVals.spree >= 3)
+      badges.push({ icon: ICONS.FIRE, text: 'Spree' });
 
-    // Most Tanked
+    // Damage
+    if (getStat(p, 'TOTAL_DAMAGE_DEALT_TO_CHAMPIONS') === maxVals.damage && maxVals.damage > 0) 
+      badges.push({ icon: ICONS.SWORD, text: 'Dmg' });
+    
+    // Tank
     if ((getStat(p, 'TOTAL_DAMAGE_TAKEN') + getStat(p, 'TOTAL_DAMAGE_SELF_MITIGATED')) === maxVals.tank && maxVals.tank > 0)
-      badges.push({ icon: ICONS.SHIELD, title: 'Most Tanked' });
+      badges.push({ icon: ICONS.SHIELD, text: 'Tank' });
 
-    // Objective Boss
+    // Vision
+    if (getStat(p, 'VISION_SCORE') === maxVals.vision && maxVals.vision > 0)
+      badges.push({ icon: ICONS.EYE, text: 'Vis' });
+
+    // Towers
     if (getStat(p, 'TOTAL_DAMAGE_DEALT_TO_TURRETS') === maxVals.turret && maxVals.turret > 0)
-      badges.push({ icon: ICONS.TOWER, title: 'Objective Boss' });
+      badges.push({ icon: ICONS.TOWER, text: 'Towers' });
 
-    // CC King
+    // CC
     if (getStat(p, 'TIME_CCING_OTHERS') === maxVals.cc && maxVals.cc > 0)
-      badges.push({ icon: ICONS.CC, title: 'CC King' });
+      badges.push({ icon: ICONS.CC, text: 'CC' });
       
     // Grey Screen
     if (getStat(p, 'TOTAL_TIME_SPENT_DEAD') === maxVals.dead && maxVals.dead > 0)
-      badges.push({ icon: ICONS.SKULL, title: 'Grey Screen King' });
+      badges.push({ icon: ICONS.SKULL, text: 'Dead' });
 
-
-    // Stats
+    // Rest of stats logic...
     const k = stats.CHAMPIONS_KILLED || 0;
     const d = stats.NUM_DEATHS || 0;
     const a = stats.ASSISTS || 0;
     const dmg = stats.TOTAL_DAMAGE_DEALT_TO_CHAMPIONS || 0;
     
-    // Highlight
     let isHighlight = p.isLocalPlayer || (payload.user_id && p.puuid === payload.puuid);
     const playerName = p.summonerName || p.riotIdGameName;
     if (!isHighlight && uploaderInfos.length > 0) {
@@ -375,7 +380,6 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
 
   const t100 = payload.teams.find(t => t.teamId === 100) || { players: [] };
   const t200 = payload.teams.find(t => t.teamId === 200) || { players: [] };
-
   const getTotals = (team) => ({
     k: team.players.reduce((a,b) => a + (b.stats.CHAMPIONS_KILLED||0), 0),
     d: team.players.reduce((a,b) => a + (b.stats.NUM_DEATHS||0), 0),
@@ -392,7 +396,7 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
     anyUploaderWon = local?.teamId === winTeam;
   }
 
-  const result = {
+  return {
     gameMode: payload.gameMode || 'LoL Match',
     duration: `${Math.floor(payload.gameLength / 60)}m ${payload.gameLength % 60}s`,
     uploaderResult: anyUploaderWon ? "VICTORY" : "DEFEAT",
@@ -404,13 +408,6 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
     t200Stats: getTotals(t200),
     t200Win: t200.isWinningTeam
   };
-
-  logger.info('[Infographic] Scoreboard data prepared', {
-    gameMode: result.gameMode,
-    duration: result.duration,
-  });
-
-  return result;
 }
 
 async function generateInfographicImage(payload, uploaderInfos) {
