@@ -96,6 +96,37 @@ function parseRiotId(raw) {
   };
 }
 
+function formatName(player) {
+  if (!player) return 'unknown';
+  if (player.riotIdGameName) {
+    return `${player.riotIdGameName}${player.riotIdTagLine ? '#' + player.riotIdTagLine : ''}`;
+  }
+  if (player.summonerName) return player.summonerName;
+  return 'unknown';
+}
+
+function getUploaderInfo(payload) {
+  const teams = Array.isArray(payload?.teams) ? payload.teams : [];
+  const winningTeam = teams.find((t) => t.isWinningTeam);
+
+  const localPlayer = payload?.localPlayer || teams.flatMap((t) => t.players || []).find((p) => p?.isLocalPlayer);
+  const uploaderName =
+    payload?.uploader ||
+    payload?.uploadedBy ||
+    payload?.uploaderName ||
+    payload?.uploaderId ||
+    formatName(localPlayer);
+
+  const uploaderPlayer = localPlayer || teams.flatMap((t) => t.players || []).find((p) => formatName(p) === uploaderName);
+  const uploaderTeamId = uploaderPlayer?.teamId ?? null;
+  const winningTeamId = winningTeam?.teamId ?? null;
+  const result = uploaderTeamId && winningTeamId
+    ? (uploaderTeamId === winningTeamId ? 'Win' : 'Loss')
+    : 'Unknown';
+
+  return { name: uploaderName, result };
+}
+
 /* =====================================================
    Match ingest server
 ===================================================== */
@@ -105,20 +136,25 @@ function enqueueMatchPayload(payload, client) {
 
   // If no gameId, send immediately.
   if (!gameId) {
-    return handleMatchPayload(payload, client);
+    return handleMatchPayload(payload, client, [getUploaderInfo(payload)]);
   }
 
   const key = String(gameId);
-  const existing = pendingMatches.get(key) || { timer: null, payload: null };
+  const existing = pendingMatches.get(key) || { timer: null, payloads: [] };
 
   if (existing.timer) {
     clearTimeout(existing.timer);
   }
 
-  existing.payload = payload;
+  existing.payloads.push(payload);
   existing.timer = setTimeout(() => {
+    const bundle = pendingMatches.get(key) || existing;
     pendingMatches.delete(key);
-    handleMatchPayload(existing.payload, client);
+
+    const latest = (bundle.payloads && bundle.payloads[bundle.payloads.length - 1]) || payload;
+    const uploaderInfos = (bundle.payloads || []).map(getUploaderInfo).filter(Boolean);
+
+    handleMatchPayload(latest, client, uploaderInfos);
   }, MATCH_DEBOUNCE_MS);
 
   pendingMatches.set(key, existing);
@@ -126,7 +162,7 @@ function enqueueMatchPayload(payload, client) {
   return Promise.resolve();
 }
 
-async function handleMatchPayload(payload, client) {
+async function handleMatchPayload(payload, client, uploaderInfos = []) {
   const gameId = payload.gameId || payload.reportGameId || 'unknown';
   const mode = payload.gameMode || payload.queueType || 'unknown';
   const queueType = payload.queueType || '';
@@ -136,27 +172,7 @@ async function handleMatchPayload(payload, client) {
   const winningTeam = teams.find((t) => t.isWinningTeam);
   const lengthSeconds = typeof payload.gameLength === 'number' ? payload.gameLength : null;
 
-  const formatName = (p) => {
-    if (!p) return 'unknown';
-    if (p.riotIdGameName) return `${p.riotIdGameName}${p.riotIdTagLine ? '#' + p.riotIdTagLine : ''}`;
-    if (p.summonerName) return p.summonerName;
-    return 'unknown';
-  };
-
-  const localPlayer = payload.localPlayer || teams.flatMap((t) => t.players || []).find((p) => p?.isLocalPlayer);
-  const uploader =
-    payload.uploader ||
-    payload.uploadedBy ||
-    payload.uploaderName ||
-    payload.uploaderId ||
-    formatName(localPlayer);
-
-  const uploaderPlayer = localPlayer || teams.flatMap((t) => t.players || []).find((p) => formatName(p) === uploader);
-  const uploaderTeamId = uploaderPlayer?.teamId ?? null;
-  const winningTeamId = winningTeam?.teamId ?? null;
-  const uploaderResult = uploaderTeamId && winningTeamId
-    ? (uploaderTeamId === winningTeamId ? 'Win' : 'Loss')
-    : 'Unknown';
+  const uploaderData = uploaderInfos.length ? uploaderInfos : [getUploaderInfo(payload)];
 
   logger.info('[LoL Match Ingest] Payload received', {
     gameId,
@@ -217,16 +233,17 @@ async function handleMatchPayload(payload, client) {
       .setTitle('LoL Match Received')
       .setColor('#3498db')
       .addFields(
-        { name: 'Mode', value: String(describeMode()), inline: true }
+        { name: 'Mode', value: String(describeMode()), inline: true },
+        { name: 'Length', value: durationLabel, inline: true },
+        { name: 'Players', value: playerCount ? String(playerCount) : 'unknown', inline: true }
       )
       .setFooter({
-        text: `Uploaded by ${uploader}${
-          uploaderResult === 'Win'
-            ? ' (win)'
-            : uploaderResult === 'Loss'
-              ? ' (loss)'
-              : ''
-        }`,
+        text: uploaderData
+          .map((u) => {
+            const suffix = u.result === 'Win' ? ' (win)' : u.result === 'Loss' ? ' (loss)' : '';
+            return `${u.name}${suffix}`;
+          })
+          .join('; '),
       });
 
     if (team100?.players?.length) {
