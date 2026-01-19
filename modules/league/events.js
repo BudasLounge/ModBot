@@ -15,12 +15,14 @@ const api = new ApiClient();
 
 const RIOT_API_KEY = process.env.RIOT_API_KEY;
 let logger;
+const pendingMatches = new Map();
 
 const MATCH_WEBHOOK_PORT = parseInt(process.env.MATCH_WEBHOOK_PORT || '38900', 10);
 const MATCH_WEBHOOK_HOST = process.env.MATCH_WEBHOOK_HOST || '0.0.0.0';
 const MATCH_WEBHOOK_PATH = process.env.MATCH_WEBHOOK_PATH || '/lol/match';
 const MATCH_WEBHOOK_SECRET = process.env.MATCH_WEBHOOK_SECRET;
 const MATCH_WEBHOOK_CHANNEL = process.env.MATCH_WEBHOOK_CHANNEL;
+const MATCH_DEBOUNCE_MS = 10000;
 let matchServerStarted = false;
 
 /* =====================================================
@@ -97,6 +99,32 @@ function parseRiotId(raw) {
 /* =====================================================
    Match ingest server
 ===================================================== */
+
+function enqueueMatchPayload(payload, client) {
+  const gameId = payload.gameId || payload.reportGameId;
+
+  // If no gameId, send immediately.
+  if (!gameId) {
+    return handleMatchPayload(payload, client);
+  }
+
+  const key = String(gameId);
+  const existing = pendingMatches.get(key) || { timer: null, payload: null };
+
+  if (existing.timer) {
+    clearTimeout(existing.timer);
+  }
+
+  existing.payload = payload;
+  existing.timer = setTimeout(() => {
+    pendingMatches.delete(key);
+    handleMatchPayload(existing.payload, client);
+  }, MATCH_DEBOUNCE_MS);
+
+  pendingMatches.set(key, existing);
+
+  return Promise.resolve();
+}
 
 async function handleMatchPayload(payload, client) {
   const gameId = payload.gameId || payload.reportGameId || 'unknown';
@@ -189,10 +217,7 @@ async function handleMatchPayload(payload, client) {
       .setTitle('LoL Match Received')
       .setColor('#3498db')
       .addFields(
-        { name: 'Mode', value: String(describeMode()), inline: true },
-        { name: 'Length', value: durationLabel, inline: true },
-        { name: 'Players', value: playerCount ? String(playerCount) : 'unknown', inline: true },
-        { name: 'Uploader Result', value: uploaderResult, inline: true }
+        { name: 'Mode', value: String(describeMode()), inline: true }
       )
       .setFooter({
         text: `Uploaded by ${uploader}${
@@ -207,13 +232,13 @@ async function handleMatchPayload(payload, client) {
     if (team100?.players?.length) {
       const lines = team100.players.map(formatPlayer).slice(0, 10).join('\n');
       const mark = winningTeam?.teamId === 100 ? ' ✅' : '';
-      embed.addFields({ name: 'Blue (100)' + mark, value: lines ? '```' + lines + '```' : 'No players', inline: false });
+      embed.addFields({ name: 'Blue' + mark, value: lines ? '```' + lines + '```' : 'No players', inline: false });
     }
 
     if (team200?.players?.length) {
       const lines = team200.players.map(formatPlayer).slice(0, 10).join('\n');
       const mark = winningTeam?.teamId === 200 ? ' ✅' : '';
-      embed.addFields({ name: 'Red (200)' + mark, value: lines ? '```' + lines + '```' : 'No players', inline: false });
+      embed.addFields({ name: 'Red' + mark, value: lines ? '```' + lines + '```' : 'No players', inline: false });
     }
 
     await channel.send({ embeds: [embed] });
@@ -268,7 +293,7 @@ function startMatchWebhook(event_registry) {
         return;
       }
 
-      handleMatchPayload(payload, client)
+      enqueueMatchPayload(payload, client)
         .then(() => {
           res.writeHead(200, { 'content-type': 'application/json' });
           res.end(JSON.stringify({ ok: true }));
