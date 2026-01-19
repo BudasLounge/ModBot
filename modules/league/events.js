@@ -134,12 +134,33 @@ function getUploaderInfo(payload) {
 
 
 /* =====================================================
-   Infographic Logic
+   Infographic Logic (Dynamic & Season 2026 Ready)
 ===================================================== */
+
+// 1. Dynamic Version Cache
+let cachedVersion = '14.3.1';
+let lastVersionFetch = 0;
+
+async function getLatestDDVersion() {
+  const now = Date.now();
+  // Fetch only once every hour to be polite
+  if (now - lastVersionFetch > 1000 * 60 * 60) {
+    try {
+      const res = await axios.get('https://ddragon.leagueoflegends.com/api/versions.json');
+      if (res.data && res.data[0]) {
+        cachedVersion = res.data[0];
+        logger.info(`[Infographic] Updated DataDragon version to: ${cachedVersion}`);
+      }
+    } catch (e) {
+      logger.warn('[Infographic] Failed to fetch versions, using cache', e.message);
+    }
+    lastVersionFetch = now;
+  }
+  return cachedVersion;
+}
 
 function fixChampName(name) {
   if (!name) return 'Unknown';
-  // Common Riot API vs CDN mismatches
   const map = {
     'Wukong': 'MonkeyKing', 'Renata Glasc': 'Renata', 'Bel\'Veth': 'Belveth',
     'Kog\'Maw': 'KogMaw', 'Rek\'Sai': 'RekSai', 'Dr. Mundo': 'DrMundo',
@@ -148,10 +169,12 @@ function fixChampName(name) {
   return map[name] || name.replace(/[' .]/g, '');
 }
 
-function prepareScoreboardData(payload) {
-  const DD_VER = '14.3.1'; // Update this periodically
-  const BASE_CHAMP = `https://ddragon.leagueoflegends.com/cdn/${DD_VER}/img/champion/`;
-  const BASE_ITEM = `https://ddragon.leagueoflegends.com/cdn/${DD_VER}/img/item/`;
+// 2. Updated Data Processor
+async function prepareScoreboardData(payload, uploaderInfos = []) {
+  const ver = await getLatestDDVersion();
+  const CDN = `https://ddragon.leagueoflegends.com/cdn/${ver}/img`;
+  const ITEM_CDN = `${CDN}/item`;
+  const SPELL_CDN = `${CDN}/spell`;
   const RUNE_CDN = `https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles`;
 
   // Mappings
@@ -163,7 +186,11 @@ function prepareScoreboardData(payload) {
   };
   const runeMap = {
     8000: '7201_Precision', 8100: '7200_Domination', 8200: '7202_Sorcery',
-    8300: '7203_Whimsy', 8400: '7204_Resolve'
+    8300: '7203_Whimsy', 8400: '7204_Resolve', 
+    // New Season 2025/26 paths often default to Domination icons if unknown, 
+    // or you can add specific IDs if Riot adds new trees.
+    40500: '7201_Precision', // Fallbacks for custom/arena modes
+    41300: '7200_Domination' 
   };
 
   let maxDamage = 0;
@@ -172,25 +199,54 @@ function prepareScoreboardData(payload) {
     if (d > maxDamage) maxDamage = d;
   }));
 
-  const mapPlayer = (p, localId) => {
+  const mapPlayer = (p) => {
     const stats = p.stats || {};
     
-    // --- THE FIX IS HERE ---
-    // We check p.items (Array) first. If not found, we check stats.ITEMx (Legacy)
-    const items = [0, 1, 2, 3, 4, 5, 6].map(i => {
-      let id = 0;
-      if (p.items && p.items[i]) {
-        id = p.items[i]; // Use the array from your JSON
-      } else if (stats[`ITEM${i}`]) {
-        id = stats[`ITEM${i}`]; // Fallback for public API
-      }
-      
-      // Return the URL or a transparent pixel
-      return id 
-        ? `${BASE_ITEM}${id}.png` 
-        : 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='; 
+    // --- ITEMS LOGIC (Season 2026 Support) ---
+    // 1. Main Inventory (6 slots)
+    // 2. Trinket (Slot 6 in array, usually)
+    // 3. Role/Boot Slot (stats.ROLE_BOUND_ITEM)
+
+    // Get raw IDs first
+    const itemIds = [0, 1, 2, 3, 4, 5, 6].map(i => {
+      if (p.items && p.items[i]) return p.items[i];
+      return stats[`ITEM${i}`] || 0;
     });
-    // -----------------------
+
+    // Extract Trinket (Last item is usually trinket in the array)
+    // In your JSON, the array has 7 items. The last one (index 6) is trinket.
+    const trinketId = itemIds[6];
+    const mainItemIds = itemIds.slice(0, 6); // 0-5
+
+    // Check for Season 2026 "Role/Boot Slot"
+    const roleItem = stats.ROLE_BOUND_ITEM || 0;
+
+    const buildUrl = (id) => id ? `${ITEM_CDN}/${id}.png` : null;
+
+    // Construct the view object
+    const mainItems = mainItemIds.map(id => ({ 
+      url: buildUrl(id), 
+      isPlaceholder: !id 
+    }));
+    
+    // Add Role Item (The 7th Slot / Boots)
+    const roleItemObj = {
+      url: buildUrl(roleItem),
+      isPlaceholder: !roleItem,
+      isRole: true // CSS class trigger
+    };
+
+    // Add Trinket
+    const trinketObj = {
+      url: buildUrl(trinketId),
+      isPlaceholder: !trinketId,
+      isTrinket: true
+    };
+    
+    // Final Display Array: [Item0...Item5, RoleItem, Trinket]
+    const displayItems = [...mainItems, roleItemObj, trinketObj];
+
+    // -----------------------------------------
 
     const k = stats.CHAMPIONS_KILLED || 0;
     const d = stats.NUM_DEATHS || 0;
@@ -201,24 +257,34 @@ function prepareScoreboardData(payload) {
     // Spell/Rune Lookups
     const s1 = spellMap[p.spell1Id] || 'SummonerFlash';
     const s2 = spellMap[p.spell2Id] || 'SummonerFlash';
-    const r1 = runeMap[stats.PERK_PRIMARY_STYLE] || '7201_Precision';
-    const r2 = runeMap[stats.PERK_SUB_STYLE] || '7201_Precision';
+    // Handle specific perks from your JSON (40500 etc)
+    const pStyle = stats.PERK_PRIMARY_STYLE || 8000;
+    const sStyle = stats.PERK_SUB_STYLE || 8100;
+    const r1 = runeMap[pStyle] || '7201_Precision'; 
+    const r2 = runeMap[sStyle] || '7200_Domination';
 
-    // Is Local Player?
-    let isLocal = false;
-    if (p.isLocalPlayer) isLocal = true;
-    if (payload.user_id && p.puuid === payload.puuid) isLocal = true;
+    // Highlight Logic: Check local flag OR if name matches any uploader
+    let isHighlight = p.isLocalPlayer || (payload.user_id && p.puuid === payload.puuid);
+    
+    // Check against list of uploaders (Multi-uploader support)
+    const playerName = p.summonerName || p.riotIdGameName;
+    if (!isHighlight && uploaderInfos.length > 0) {
+      // uploaderInfos is array of { name: '...', result: '...' }
+      if (uploaderInfos.some(u => u.name === playerName || formatName(p) === u.name)) {
+        isHighlight = true;
+      }
+    }
 
     return {
-      name: p.summonerName || p.riotIdGameName || 'Unknown',
+      name: playerName || 'Unknown',
       championName: p.championName,
-      championIcon: `${BASE_CHAMP}${fixChampName(p.championName)}.png`,
+      championIcon: `${CDN}/champion/${fixChampName(p.championName)}.png`,
       level: stats.LEVEL || 18,
-      spell1: `https://ddragon.leagueoflegends.com/cdn/${DD_VER}/img/spell/${s1}.png`,
-      spell2: `https://ddragon.leagueoflegends.com/cdn/${DD_VER}/img/spell/${s2}.png`,
+      spell1: `${SPELL_CDN}/${s1}.png`,
+      spell2: `${SPELL_CDN}/${s2}.png`,
       rune1: `${RUNE_CDN}/${r1}.png`,
       rune2: `${RUNE_CDN}/${r2}.png`,
-      items: items, // Passing the fixed array
+      displayItems, // <--- Using our new structure
       k, d, a,
       kdaRatio: kdaRaw.toFixed(2),
       totalDamage: dmg.toLocaleString(),
@@ -226,43 +292,57 @@ function prepareScoreboardData(payload) {
       gold: ((stats.GOLD_EARNED || 0) / 1000).toFixed(1) + 'k',
       cs: (stats.MINIONS_KILLED || 0) + (stats.NEUTRAL_MINIONS_KILLED || 0),
       vision: stats.VISION_SCORE || 0,
-      isLocal
+      isLocal: isHighlight
     };
   };
-
-  const localPlayer = payload.localPlayer || payload.teams.flatMap(t => t.players).find(p => p.isLocalPlayer);
-  const uploaderTeamId = localPlayer?.teamId;
-  const winningTeamId = payload.teams.find(t => t.isWinningTeam)?.teamId;
-  
-  // Header Logic
-  let uploaderResult = "MATCH COMPLETED";
-  let resultClass = "";
-  if (uploaderTeamId && winningTeamId) {
-    const won = uploaderTeamId === winningTeamId;
-    uploaderResult = won ? "VICTORY" : "DEFEAT";
-    resultClass = won ? "victory" : "defeat";
-  }
 
   const t100 = payload.teams.find(t => t.teamId === 100) || { players: [] };
   const t200 = payload.teams.find(t => t.teamId === 200) || { players: [] };
 
+  // Calculate Team Totals for Headers
+  const getTotals = (team) => ({
+    k: team.players.reduce((a,b) => a + (b.stats.CHAMPIONS_KILLED||0), 0),
+    d: team.players.reduce((a,b) => a + (b.stats.NUM_DEATHS||0), 0),
+    a: team.players.reduce((a,b) => a + (b.stats.ASSISTS||0), 0),
+    gold: (team.players.reduce((a,b) => a + (b.stats.GOLD_EARNED||0), 0) / 1000).toFixed(1) + 'k'
+  });
+
+  // Result Banner Logic
+  // Check if *any* uploader won
+  let anyUploaderWon = false;
+  if (uploaderInfos.length > 0) {
+    anyUploaderWon = uploaderInfos.some(u => u.result === 'Win');
+  } else {
+    // Fallback to single uploader logic
+    const local = payload.localPlayer || payload.teams.flatMap(t=>t.players).find(p=>p.isLocalPlayer);
+    const winTeam = payload.teams.find(t=>t.isWinningTeam)?.teamId;
+    anyUploaderWon = local?.teamId === winTeam;
+  }
+
   return {
     gameMode: payload.gameMode || 'LoL Match',
     duration: `${Math.floor(payload.gameLength / 60)}m ${payload.gameLength % 60}s`,
-    uploaderResult,
-    resultClass,
-    team100: t100.players.map(p => mapPlayer(p, payload.uploaderId)),
-    team200: t200.players.map(p => mapPlayer(p, payload.uploaderId))
+    uploaderResult: anyUploaderWon ? "VICTORY" : "DEFEAT",
+    resultClass: anyUploaderWon ? "victory" : "defeat",
+    
+    team100: t100.players.map(mapPlayer),
+    t100Stats: getTotals(t100),
+    t100Win: t100.isWinningTeam,
+    
+    team200: t200.players.map(mapPlayer),
+    t200Stats: getTotals(t200),
+    t200Win: t200.isWinningTeam
   };
 }
 
-async function generateInfographicImage(payload) {
+async function generateInfographicImage(payload, uploaderInfos) {
   try {
     const templatePath = path.join(__dirname, 'match-template.html');
     const template = fs.readFileSync(templatePath, 'utf8');
-    const data = prepareScoreboardData(payload);
+    
+    // Await the data preparation (since it fetches version)
+    const data = await prepareScoreboardData(payload, uploaderInfos);
 
-    // SSD PROTECTION: No output path provided = Image generated in RAM only.
     const imageBuffer = await nodeHtmlToImage({
       html: template,
       content: data,

@@ -4,11 +4,12 @@
   <meta charset="UTF-8">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+    
     * { box-sizing: border-box; margin: 0; padding: 0; }
     
     body {
-      width: 1280px;
-      height: 750px;
+      width: 1350px; /* Widened slightly for extra item slot */
+      height: 780px;
       background-color: #010a13;
       font-family: 'Roboto', sans-serif;
       color: #a09b8c;
@@ -22,27 +23,51 @@
       align-items: flex-end;
       padding-bottom: 20px;
       border-bottom: 2px solid #1e2328;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
     }
     .outcome { font-size: 42px; font-weight: 700; text-transform: uppercase; letter-spacing: 3px; }
     .victory { color: #0acbe6; text-shadow: 0 0 10px rgba(10, 203, 230, 0.3); }
     .defeat { color: #e84057; text-shadow: 0 0 10px rgba(232, 64, 87, 0.3); }
     .meta-info { text-align: right; font-size: 16px; color: #939a9e; }
 
+    /* TABLE HEADERS */
+    .table-header {
+      display: grid;
+      /* Adjusted Grid: Champ(70) Spells(60) Name(200) Items(290) KDA(120) Dmg(180) Gold(100) CS(80) Vis(80) */
+      grid-template-columns: 70px 60px 200px 290px 120px 180px 100px 80px 80px;
+      padding: 0 0 5px 0;
+      font-size: 12px;
+      font-weight: 700;
+      color: #5c5b57;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      text-align: center; /* Default center */
+    }
+    .th-left { text-align: left; padding-left: 15px; } /* Align Name Left */
+    .th-right { text-align: right; padding-right: 20px; } /* Align Gold/CS Right */
+
     /* Team Containers */
     .team-container { margin-bottom: 25px; }
     
+    .team-info {
+      display: flex; justify-content: space-between; 
+      padding: 5px 10px; font-weight: bold; font-size: 13px; margin-bottom: 2px;
+    }
+    .t100-text { color: #0acbe6; }
+    .t200-text { color: #e84057; }
+
     /* Player Row Grid */
     .player-row {
       display: grid;
-      /* Champ | Spells/Runes | Name | Items | KDA | Damage | Gold | CS | Vision */
-      grid-template-columns: 70px 60px 200px 260px 120px 180px 100px 80px 80px;
+      /* MATCHES HEADER GRID */
+      grid-template-columns: 70px 60px 200px 290px 120px 180px 100px 80px 80px;
       align-items: center;
       height: 58px;
       background: #0f1216;
       border-bottom: 1px solid #1e2328;
       margin-bottom: 4px;
     }
+
     .team-100 .player-row { border-left: 5px solid #0acbe6; }
     .team-200 .player-row { border-left: 5px solid #e84057; }
     .is-local { background-color: #262118; border: 1px solid #c8aa6e; }
@@ -59,21 +84,18 @@
 
     .col-spells { display: flex; flex-direction: column; gap: 2px; justify-content: center; }
     .spell-row { display: flex; gap: 4px; }
-    .tiny-icon {
-      width: 22px;
-      height: 22px;
-      border-radius: 3px;
-      background: #000;
-      display: block;
-    }
+    .tiny-icon { width: 22px; height: 22px; border-radius: 3px; background: #181b1f; display: block; }
 
     .col-name { padding-left: 15px; display: flex; flex-direction: column; justify-content: center; }
     .summoner-name { color: #fff; font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px; }
     .champion-name { color: #888; font-size: 12px; }
 
+    /* UPDATED ITEMS COLUMN */
     .col-items { display: flex; gap: 4px; align-items: center; }
     .item-icon { width: 32px; height: 32px; border-radius: 4px; background: #141619; border: 1px solid #333; }
-    .trinket { margin-left: 8px; border-radius: 50%; }
+    .trinket { margin-left: 6px; border-radius: 50%; } /* Round trinket */
+    .role-item { border: 1px solid #c8aa6e; } /* Highlight the 7th/Boots slot */
+    .placeholder { opacity: 0; } /* Invisible if empty */
 
     .col-kda { text-align: center; font-size: 15px; color: #fff; letter-spacing: 0.5px; }
     .kda-sub { font-size: 12px; color: #666; display: block; margin-top: 2px; }
@@ -95,22 +117,36 @@
     <div class="meta-info">{{gameMode}} • {{duration}}</div>
   </div>
 
+  <div class="table-header">
+    <div></div><div></div><div class="th-left">Summoner</div>
+    <div class="th-left">Items</div>
+    <div>KDA</div>
+    <div class="th-left">Damage</div>
+    <div class="th-right">Gold</div>
+    <div class="th-right">CS</div>
+    <div>Vision</div>
+  </div>
+
   <div class="team-container team-100">
+    <div class="team-info t100-text">
+      <span>{{#if t100Win}}VICTORY{{else}}DEFEAT{{/if}} (Blue Team)</span>
+      <span>{{t100Stats.k}} / {{t100Stats.d}} / {{t100Stats.a}} &nbsp;•&nbsp; {{t100Stats.gold}} Gold</span>
+    </div>
     {{#each team100}}
       <div class="player-row {{#if isLocal}}is-local{{/if}}">
         <div class="col-champ"><img src="{{championIcon}}" class="champ-img"><div class="level-badge">{{level}}</div></div>
         <div class="col-spells">
-          <div class="spell-row">
-            <img src="{{spell1}}" class="tiny-icon" onerror="this.style.display='none'">
-            <img src="{{spell2}}" class="tiny-icon" onerror="this.style.display='none'">
-          </div>
-          <div class="spell-row">
-            <img src="{{rune1}}" class="tiny-icon" onerror="this.style.display='none'">
-            <img src="{{rune2}}" class="tiny-icon" onerror="this.style.display='none'">
-          </div>
+          <div class="spell-row"><img src="{{spell1}}" class="tiny-icon"><img src="{{spell2}}" class="tiny-icon"></div>
+          <div class="spell-row"><img src="{{rune1}}" class="tiny-icon"><img src="{{rune2}}" class="tiny-icon"></div>
         </div>
         <div class="col-name"><div class="summoner-name">{{name}}</div><div class="champion-name">{{championName}}</div></div>
-        <div class="col-items">{{#each items}}<img src="{{this}}" class="item-icon {{#if @last}}trinket{{/if}}" onerror="this.style.opacity=0">{{/each}}</div>
+        
+        <div class="col-items">
+          {{#each displayItems}}
+             <img src="{{url}}" class="item-icon {{#if isTrinket}}trinket{{/if}} {{#if isRole}}role-item{{/if}} {{#if isPlaceholder}}placeholder{{/if}}">
+          {{/each}}
+        </div>
+
         <div class="col-kda"><div>{{k}} / {{d}} / {{a}}</div><span class="kda-sub">{{kdaRatio}}</span></div>
         <div class="col-damage"><div class="damage-num">{{totalDamage}}</div><div class="damage-bar-bg"><div class="damage-bar-fill" style="width: {{damagePercent}}%;"></div></div></div>
         <div class="col-gold">{{gold}}</div>
@@ -121,21 +157,25 @@
   </div>
 
   <div class="team-container team-200">
+    <div class="team-info t200-text">
+      <span>{{#if t200Win}}VICTORY{{else}}DEFEAT{{/if}} (Red Team)</span>
+      <span>{{t200Stats.k}} / {{t200Stats.d}} / {{t200Stats.a}} &nbsp;•&nbsp; {{t200Stats.gold}} Gold</span>
+    </div>
     {{#each team200}}
       <div class="player-row {{#if isLocal}}is-local{{/if}}">
         <div class="col-champ"><img src="{{championIcon}}" class="champ-img"><div class="level-badge">{{level}}</div></div>
         <div class="col-spells">
-        <div class="spell-row">
-          <img src="{{spell1}}" class="tiny-icon" onerror="this.style.display='none'">
-          <img src="{{spell2}}" class="tiny-icon" onerror="this.style.display='none'">
+          <div class="spell-row"><img src="{{spell1}}" class="tiny-icon"><img src="{{spell2}}" class="tiny-icon"></div>
+          <div class="spell-row"><img src="{{rune1}}" class="tiny-icon"><img src="{{rune2}}" class="tiny-icon"></div>
         </div>
-        <div class="spell-row">
-          <img src="{{rune1}}" class="tiny-icon" onerror="this.style.display='none'">
-          <img src="{{rune2}}" class="tiny-icon" onerror="this.style.display='none'">
-        </div>
-      </div>
         <div class="col-name"><div class="summoner-name">{{name}}</div><div class="champion-name">{{championName}}</div></div>
-        <div class="col-items">{{#each items}}<img src="{{this}}" class="item-icon {{#if @last}}trinket{{/if}}" onerror="this.style.opacity=0">{{/each}}</div>
+        
+        <div class="col-items">
+          {{#each displayItems}}
+             <img src="{{url}}" class="item-icon {{#if isTrinket}}trinket{{/if}} {{#if isRole}}role-item{{/if}} {{#if isPlaceholder}}placeholder{{/if}}">
+          {{/each}}
+        </div>
+
         <div class="col-kda"><div>{{k}} / {{d}} / {{a}}</div><span class="kda-sub">{{kdaRatio}}</span></div>
         <div class="col-damage"><div class="damage-num">{{totalDamage}}</div><div class="damage-bar-bg"><div class="damage-bar-fill" style="width: {{damagePercent}}%;"></div></div></div>
         <div class="col-gold">{{gold}}</div>
@@ -144,5 +184,6 @@
       </div>
     {{/each}}
   </div>
+
 </body>
 </html>
