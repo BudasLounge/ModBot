@@ -190,19 +190,28 @@ async function handleMatchPayload(payload, client) {
         { name: 'Mode', value: String(describeMode()), inline: true },
         { name: 'Length', value: durationLabel, inline: true },
         { name: 'Players', value: playerCount ? String(playerCount) : 'unknown', inline: true },
-        { name: 'Winner', value: winningTeam ? (winningTeam.teamId === 100 ? 'Blue (100)' : 'Red (200)') : 'unknown', inline: true },
         { name: 'Uploader Result', value: uploaderResult, inline: true }
       )
-      .setFooter({ text: `Uploaded by ${uploader}` });
+      .setFooter({
+        text: `Uploaded by ${uploader}${
+          uploaderResult === 'Win'
+            ? ' (win)'
+            : uploaderResult === 'Loss'
+              ? ' (loss)'
+              : ''
+        }`,
+      });
 
     if (team100?.players?.length) {
       const lines = team100.players.map(formatPlayer).slice(0, 10).join('\n');
-      embed.addFields({ name: 'Blue (100)', value: lines ? '```' + lines + '```' : 'No players', inline: false });
+      const mark = winningTeam?.teamId === 100 ? ' ✅' : '';
+      embed.addFields({ name: 'Blue (100)' + mark, value: lines ? '```' + lines + '```' : 'No players', inline: false });
     }
 
     if (team200?.players?.length) {
       const lines = team200.players.map(formatPlayer).slice(0, 10).join('\n');
-      embed.addFields({ name: 'Red (200)', value: lines ? '```' + lines + '```' : 'No players', inline: false });
+      const mark = winningTeam?.teamId === 200 ? ' ✅' : '';
+      embed.addFields({ name: 'Red (200)' + mark, value: lines ? '```' + lines + '```' : 'No players', inline: false });
     }
 
     await channel.send({ embeds: [embed] });
