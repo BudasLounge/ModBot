@@ -170,7 +170,8 @@ async function handleMatchPayload(payload, client) {
       const m = mode.toUpperCase();
       const mut = mutators.map((x) => x.toUpperCase());
 
-      const isCustom = g.includes('CUSTOM') || q === '' || q === '0' || mut.includes('PRACTICETOOL');
+      const onlyElephant = mut.length > 0 && mut.every((x) => x === 'ENABLEELEPHANT');
+      const isCustom = g.includes('CUSTOM') || q === '' || q === '0' || mut.includes('PRACTICETOOL') || onlyElephant;
       const isDraft = q.includes('DRAFT') || m.includes('DRAFT') || mut.some((x) => x.includes('TEAMBUILDER'));
       const isRanked = q.includes('RANKED');
       const isNormal = q.includes('NORMAL') || m.includes('NORMAL');
