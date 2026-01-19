@@ -176,17 +176,23 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
   const SPELL_CDN = `${CDN}/spell`;
   const RUNE_CDN = `https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles`;
 
-  // Mappings (Keep existing spell/rune maps...)
+  // --- SVG ICONS (Vector Paths) ---
+  // These render perfectly on any server without fonts.
+  const ICONS = {
+    SWORD: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M14.5 17.5L3 6V3h3l11.5 11.5-3 3zM5 5l10 10"/><path d="M6 6l12 12M6 18L18 6"/></svg>`, // Crossed Swords
+    SHIELD: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>`, // Shield
+    EYE: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>`, // Eye
+    TOWER: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-4V0h-4v2H6v4h2v8H6v6h12v-6h-2V6h2z"/></svg>`, // Rook/Tower
+    CC: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L10 6H6l2 4-2 4h4l2 4 2-4h4l-2-4 2-4h-4z"/></svg>`, // Star/Snowflake
+    SKULL: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c-4.42 0-8 3.58-8 8 0 4.42 8 10 8 10s8-5.58 8-10c0-4.42-3.58-8-8-8zm0 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM9 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm6 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>` // Skull
+  };
+
   const spellMap = { 1:'SummonerBoost', 3:'SummonerExhaust', 4:'SummonerFlash', 6:'SummonerHaste', 7:'SummonerHeal', 11:'SummonerSmite', 12:'SummonerTeleport', 13:'SummonerMana', 14:'SummonerDot', 21:'SummonerBarrier', 32:'SummonerSnowball' };
   const runeMap = { 8000:'7201_Precision', 8100:'7200_Domination', 8200:'7202_Sorcery', 8300:'7203_Whimsy', 8400:'7204_Resolve', 40500:'7201_Precision', 41300:'7200_Domination' };
 
-  // 1. Flatten players to find Max Stats
   const allPlayers = payload.teams.flatMap(t => t.players);
-
-  // Helper to safely get stat
   const getStat = (p, key) => (p.stats && p.stats[key]) ? p.stats[key] : 0;
   
-  // Calculate Max Values
   const maxVals = {
     damage: Math.max(...allPlayers.map(p => getStat(p, 'TOTAL_DAMAGE_DEALT_TO_CHAMPIONS'))),
     tank: Math.max(...allPlayers.map(p => getStat(p, 'TOTAL_DAMAGE_TAKEN') + getStat(p, 'TOTAL_DAMAGE_SELF_MITIGATED'))),
@@ -199,7 +205,7 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
   const mapPlayer = (p) => {
     const stats = p.stats || {};
     
-    // --- Items Logic (Keep existing) ---
+    // Items
     const itemIds = [0, 1, 2, 3, 4, 5, 6].map(i => (p.items && p.items[i]) ? p.items[i] : (stats[`ITEM${i}`] || 0));
     const trinketId = itemIds[6];
     const mainItemIds = itemIds.slice(0, 6);
@@ -211,36 +217,35 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
       { url: buildUrl(roleItem), isPlaceholder: !roleItem, isRole: true },
       { url: buildUrl(trinketId), isPlaceholder: !trinketId, isTrinket: true }
     ];
-    // -----------------------------------
 
-    // --- BADGES LOGIC ---
+    // --- ASSIGN SVG ICONS ---
     const badges = [];
+    // Only show badges if the value is > 0 to avoid everyone getting badges in empty games
     if (getStat(p, 'TOTAL_DAMAGE_DEALT_TO_CHAMPIONS') === maxVals.damage && maxVals.damage > 0) 
-      badges.push({ icon: '⚔️', title: 'Highest Damage' });
+      badges.push({ icon: ICONS.SWORD, title: 'Highest Damage' });
     
     if ((getStat(p, 'TOTAL_DAMAGE_TAKEN') + getStat(p, 'TOTAL_DAMAGE_SELF_MITIGATED')) === maxVals.tank && maxVals.tank > 0)
-      badges.push({ icon: '🛡️', title: 'Most Tanked' });
+      badges.push({ icon: ICONS.SHIELD, title: 'Most Tanked' });
 
     if (getStat(p, 'VISION_SCORE') === maxVals.vision && maxVals.vision > 0)
-      badges.push({ icon: '👁️', title: 'Visionary' });
+      badges.push({ icon: ICONS.EYE, title: 'Visionary' });
 
     if (getStat(p, 'TOTAL_DAMAGE_DEALT_TO_TURRETS') === maxVals.turret && maxVals.turret > 0)
-      badges.push({ icon: '🏰', title: 'Objective Boss' });
+      badges.push({ icon: ICONS.TOWER, title: 'Objective Boss' });
 
     if (getStat(p, 'TIME_CCING_OTHERS') === maxVals.cc && maxVals.cc > 0)
-      badges.push({ icon: '❄️', title: 'CC King' });
+      badges.push({ icon: ICONS.CC, title: 'CC King' });
       
     if (getStat(p, 'TOTAL_TIME_SPENT_DEAD') === maxVals.dead && maxVals.dead > 0)
-      badges.push({ icon: '💀', title: 'Grey Screen King' });
-    // --------------------
+      badges.push({ icon: ICONS.SKULL, title: 'Grey Screen King' });
 
-    // Stats & Formatting
+    // Stats
     const k = stats.CHAMPIONS_KILLED || 0;
     const d = stats.NUM_DEATHS || 0;
     const a = stats.ASSISTS || 0;
     const dmg = stats.TOTAL_DAMAGE_DEALT_TO_CHAMPIONS || 0;
     
-    // Uploader Highlight Logic
+    // Highlight
     let isHighlight = p.isLocalPlayer || (payload.user_id && p.puuid === payload.puuid);
     const playerName = p.summonerName || p.riotIdGameName;
     if (!isHighlight && uploaderInfos.length > 0) {
@@ -249,7 +254,6 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
       }
     }
 
-    // Spell/Rune Lookups
     const s1 = spellMap[p.spell1Id] || 'SummonerFlash';
     const s2 = spellMap[p.spell2Id] || 'SummonerFlash';
     const pStyle = stats.PERK_PRIMARY_STYLE || 8000;
@@ -265,7 +269,7 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
       rune1: `${RUNE_CDN}/${runeMap[pStyle]||'7201_Precision'}.png`,
       rune2: `${RUNE_CDN}/${runeMap[sStyle]||'7200_Domination'}.png`,
       displayItems,
-      badges, // <--- New Badge Array
+      badges,
       k, d, a,
       kdaRatio: d === 0 ? (k + a).toFixed(2) : ((k + a) / d).toFixed(2),
       totalDamage: dmg.toLocaleString(),
@@ -287,7 +291,6 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
     gold: (team.players.reduce((a,b) => a + (b.stats.GOLD_EARNED||0), 0) / 1000).toFixed(1) + 'k'
   });
 
-  // Uploader Result Logic
   let anyUploaderWon = false;
   if (uploaderInfos.length > 0) {
     anyUploaderWon = uploaderInfos.some(u => u.result === 'Win');

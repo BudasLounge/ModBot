@@ -9,7 +9,7 @@
     
     body {
       width: 1350px;
-      height: 960px; /* Increased height for Legend */
+      height: 960px;
       background-color: #010a13;
       font-family: 'Roboto', sans-serif;
       color: #a09b8c;
@@ -17,11 +17,7 @@
       position: relative;
     }
 
-    /* --- [Existing Header & Grid CSS from previous turn goes here] --- */
-    /* (Keep your existing .header, .table-header, .team-container, .player-row styles same as before) */
-    
-    /* RE-PASTE these specific classes to ensure they match the new badge layout */
-    
+    /* --- Common Headers --- */
     .header { display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: 20px; border-bottom: 2px solid #1e2328; margin-bottom: 10px; }
     .outcome { font-size: 42px; font-weight: 700; text-transform: uppercase; letter-spacing: 3px; }
     .victory { color: #0acbe6; text-shadow: 0 0 10px rgba(10, 203, 230, 0.3); }
@@ -47,6 +43,7 @@
     .team-200 .player-row { border-left: 5px solid #e84057; }
     .is-local { background-color: #262118; border: 1px solid #c8aa6e; }
 
+    /* --- Columns --- */
     .col-champ { position: relative; display: flex; justify-content: center; align-items: center; }
     .champ-img { width: 44px; height: 44px; border-radius: 50%; border: 2px solid #333; }
     .level-badge { position: absolute; bottom: 0; right: 10px; background: #000; color: white; font-size: 11px; width: 18px; height: 18px; border-radius: 50%; text-align: center; line-height: 18px; border: 1px solid #c8aa6e; }
@@ -55,24 +52,21 @@
     .spell-row { display: flex; gap: 4px; }
     .tiny-icon { width: 22px; height: 22px; border-radius: 3px; background: #181b1f; display: block; }
 
-    /* --- UPDATED NAME COLUMN WITH BADGES --- */
+    /* --- UPDATED BADGES CSS --- */
     .col-name { padding-left: 15px; display: flex; flex-direction: column; justify-content: center; }
     .summoner-name { color: #fff; font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px; }
     .champion-name { color: #888; font-size: 11px; margin-bottom: 2px; }
     
     .badge-container { display: flex; gap: 4px; margin-top: 2px; }
-    .badge { 
-      font-size: 12px; 
-      background: #1e2328; 
-      border: 1px solid #333; 
-      border-radius: 3px; 
-      padding: 0 4px; 
-      height: 16px; 
-      line-height: 14px;
-      cursor: default;
+    .badge {
+      background: #1e2328; border: 1px solid #333; border-radius: 3px;
+      padding: 1px 3px; height: 18px; display: inline-flex; align-items: center; justify-content: center;
     }
+    /* Style the SVG inside the badge */
+    .badge svg { width: 12px; height: 12px; fill: #939a9e; }
+    .badge:hover svg { fill: #fff; }
 
-    /* --- REST OF COLUMNS --- */
+    /* --- Rest of Columns --- */
     .col-items { display: flex; gap: 4px; align-items: center; }
     .item-icon { width: 32px; height: 32px; border-radius: 4px; background: #141619; border: 1px solid #333; }
     .trinket { margin-left: 6px; border-radius: 50%; }
@@ -92,16 +86,16 @@
     .col-cs { text-align: right; color: #939a9e; font-size: 14px; padding-right: 20px; }
     .col-vision { text-align: center; color: #939a9e; font-size: 14px; }
 
-    /* --- NEW LEGEND FOOTER --- */
+    /* --- LEGEND FOOTER --- */
     .legend-footer {
       position: absolute; bottom: 20px; left: 0; right: 0;
-      display: flex; justify-content: center; gap: 20px;
-      color: #939a9e; font-size: 13px;
-      border-top: 1px solid #1e2328;
-      padding-top: 15px;
+      display: flex; justify-content: center; gap: 25px;
+      color: #72767d; font-size: 13px;
+      border-top: 1px solid #1e2328; padding-top: 15px;
       width: 90%; margin: 0 auto;
     }
     .legend-item { display: flex; align-items: center; gap: 6px; }
+    .legend-icon { width: 14px; height: 14px; fill: #72767d; }
   </style>
 </head>
 <body>
@@ -141,7 +135,7 @@
           <div class="champion-name">{{championName}}</div>
           <div class="badge-container">
             {{#each badges}}
-              <span class="badge" title="{{title}}">{{icon}}</span>
+              <span class="badge" title="{{title}}">{{{icon}}}</span>
             {{/each}}
           </div>
         </div>
@@ -177,7 +171,7 @@
           <div class="champion-name">{{championName}}</div>
           <div class="badge-container">
             {{#each badges}}
-              <span class="badge" title="{{title}}">{{icon}}</span>
+              <span class="badge" title="{{title}}">{{{icon}}}</span>
             {{/each}}
           </div>
         </div>
@@ -196,12 +190,24 @@
   </div>
 
   <div class="legend-footer">
-    <div class="legend-item"><span>⚔️</span> Highest Damage</div>
-    <div class="legend-item"><span>🛡️</span> Most Tanked</div>
-    <div class="legend-item"><span>👁️</span> Visionary</div>
-    <div class="legend-item"><span>🏰</span> Tower Destroyer</div>
-    <div class="legend-item"><span>❄️</span> CC King</div>
-    <div class="legend-item"><span>💀</span> Grey Screen</div>
+    <div class="legend-item">
+      <svg class="legend-icon" viewBox="0 0 24 24"><path d="M14.5 17.5L3 6V3h3l11.5 11.5-3 3zM5 5l10 10"/><path d="M6 6l12 12M6 18L18 6"/></svg> Highest Damage
+    </div>
+    <div class="legend-item">
+      <svg class="legend-icon" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg> Most Tanked
+    </div>
+    <div class="legend-item">
+      <svg class="legend-icon" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg> Visionary
+    </div>
+    <div class="legend-item">
+      <svg class="legend-icon" viewBox="0 0 24 24"><path d="M18 2h-4V0h-4v2H6v4h2v8H6v6h12v-6h-2V6h2z"/></svg> Objective Boss
+    </div>
+    <div class="legend-item">
+      <svg class="legend-icon" viewBox="0 0 24 24"><path d="M12 2L10 6H6l2 4-2 4h4l2 4 2-4h4l-2-4 2-4h-4z"/></svg> CC King
+    </div>
+    <div class="legend-item">
+      <svg class="legend-icon" viewBox="0 0 24 24"><path d="M12 2c-4.42 0-8 3.58-8 8 0 4.42 8 10 8 10s8-5.58 8-10c0-4.42-3.58-8-8-8zm0 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM9 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm6 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg> Grey Screen
+    </div>
   </div>
 
 </body>
