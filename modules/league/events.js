@@ -101,6 +101,8 @@ function parseRiotId(raw) {
 async function handleMatchPayload(payload, client) {
   const gameId = payload.gameId || payload.reportGameId || 'unknown';
   const mode = payload.gameMode || payload.queueType || 'unknown';
+  const queueType = payload.queueType || '';
+  const gameType = payload.gameType || '';
   const teams = Array.isArray(payload.teams) ? payload.teams : [];
   const playerCount = teams.reduce((acc, t) => acc + (Array.isArray(t.players) ? t.players.length : 0), 0);
   const winningTeam = teams.find((t) => t.isWinningTeam);
@@ -121,9 +123,18 @@ async function handleMatchPayload(payload, client) {
     payload.uploaderId ||
     formatName(localPlayer);
 
+  const uploaderPlayer = localPlayer || teams.flatMap((t) => t.players || []).find((p) => formatName(p) === uploader);
+  const uploaderTeamId = uploaderPlayer?.teamId ?? null;
+  const winningTeamId = winningTeam?.teamId ?? null;
+  const uploaderResult = uploaderTeamId && winningTeamId
+    ? (uploaderTeamId === winningTeamId ? 'Win' : 'Loss')
+    : 'Unknown';
+
   logger.info('[LoL Match Ingest] Payload received', {
     gameId,
     mode,
+    queueType,
+    gameType,
     teams: teams.length,
     players: playerCount,
   });
@@ -152,17 +163,28 @@ async function handleMatchPayload(payload, client) {
     const team100 = teams.find((t) => t.teamId === 100);
     const team200 = teams.find((t) => t.teamId === 200);
 
+    const describeMode = () => {
+      const q = queueType.toUpperCase();
+      const g = gameType.toUpperCase();
+      const m = mode.toUpperCase();
+      if (g.includes('CUSTOM') || q.includes('CUSTOM')) return 'Custom';
+      if (q.includes('RANKED')) return 'Ranked';
+      if (q.includes('DRAFT') || m.includes('DRAFT')) return 'Draft';
+      if (q.includes('NORMAL') || m.includes('NORMAL')) return 'Normal';
+      return mode;
+    };
+
     const embed = new EmbedBuilder()
       .setTitle('LoL Match Received')
       .setColor('#3498db')
       .addFields(
-        { name: 'Game ID', value: String(gameId) },
-        { name: 'Mode', value: String(mode), inline: true },
+        { name: 'Mode', value: String(describeMode()), inline: true },
         { name: 'Length', value: durationLabel, inline: true },
         { name: 'Players', value: playerCount ? String(playerCount) : 'unknown', inline: true },
         { name: 'Winner', value: winningTeam ? (winningTeam.teamId === 100 ? 'Blue (100)' : 'Red (200)') : 'unknown', inline: true },
-        { name: 'Uploaded By', value: String(uploader) }
-      );
+        { name: 'Uploader Result', value: uploaderResult, inline: true }
+      )
+      .setFooter({ text: `Uploaded by ${uploader}` });
 
     if (team100?.players?.length) {
       const lines = team100.players.map(formatPlayer).slice(0, 10).join('\n');
