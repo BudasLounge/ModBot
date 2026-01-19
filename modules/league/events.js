@@ -169,7 +169,6 @@ function fixChampName(name) {
   return map[name] || name.replace(/[' .]/g, '');
 }
 
-// 2. Updated Data Processor
 async function prepareScoreboardData(payload, uploaderInfos = []) {
   const ver = await getLatestDDVersion();
   const CDN = `https://ddragon.leagueoflegends.com/cdn/${ver}/img`;
@@ -177,103 +176,84 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
   const SPELL_CDN = `${CDN}/spell`;
   const RUNE_CDN = `https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles`;
 
-  // Mappings
-  const spellMap = {
-    1: 'SummonerBoost', 3: 'SummonerExhaust', 4: 'SummonerFlash',
-    6: 'SummonerHaste', 7: 'SummonerHeal', 11: 'SummonerSmite',
-    12: 'SummonerTeleport', 13: 'SummonerMana', 14: 'SummonerDot', 
-    21: 'SummonerBarrier', 32: 'SummonerSnowball'
-  };
-  const runeMap = {
-    8000: '7201_Precision', 8100: '7200_Domination', 8200: '7202_Sorcery',
-    8300: '7203_Whimsy', 8400: '7204_Resolve', 
-    // New Season 2025/26 paths often default to Domination icons if unknown, 
-    // or you can add specific IDs if Riot adds new trees.
-    40500: '7201_Precision', // Fallbacks for custom/arena modes
-    41300: '7200_Domination' 
-  };
+  // Mappings (Keep existing spell/rune maps...)
+  const spellMap = { 1:'SummonerBoost', 3:'SummonerExhaust', 4:'SummonerFlash', 6:'SummonerHaste', 7:'SummonerHeal', 11:'SummonerSmite', 12:'SummonerTeleport', 13:'SummonerMana', 14:'SummonerDot', 21:'SummonerBarrier', 32:'SummonerSnowball' };
+  const runeMap = { 8000:'7201_Precision', 8100:'7200_Domination', 8200:'7202_Sorcery', 8300:'7203_Whimsy', 8400:'7204_Resolve', 40500:'7201_Precision', 41300:'7200_Domination' };
 
-  let maxDamage = 0;
-  payload.teams.forEach(t => t.players.forEach(p => {
-    const d = p.stats.TOTAL_DAMAGE_DEALT_TO_CHAMPIONS || 0;
-    if (d > maxDamage) maxDamage = d;
-  }));
+  // 1. Flatten players to find Max Stats
+  const allPlayers = payload.teams.flatMap(t => t.players);
+
+  // Helper to safely get stat
+  const getStat = (p, key) => (p.stats && p.stats[key]) ? p.stats[key] : 0;
+  
+  // Calculate Max Values
+  const maxVals = {
+    damage: Math.max(...allPlayers.map(p => getStat(p, 'TOTAL_DAMAGE_DEALT_TO_CHAMPIONS'))),
+    tank: Math.max(...allPlayers.map(p => getStat(p, 'TOTAL_DAMAGE_TAKEN') + getStat(p, 'TOTAL_DAMAGE_SELF_MITIGATED'))),
+    vision: Math.max(...allPlayers.map(p => getStat(p, 'VISION_SCORE'))),
+    turret: Math.max(...allPlayers.map(p => getStat(p, 'TOTAL_DAMAGE_DEALT_TO_TURRETS'))),
+    cc: Math.max(...allPlayers.map(p => getStat(p, 'TIME_CCING_OTHERS'))),
+    dead: Math.max(...allPlayers.map(p => getStat(p, 'TOTAL_TIME_SPENT_DEAD')))
+  };
 
   const mapPlayer = (p) => {
     const stats = p.stats || {};
     
-    // --- ITEMS LOGIC (Season 2026 Support) ---
-    // 1. Main Inventory (6 slots)
-    // 2. Trinket (Slot 6 in array, usually)
-    // 3. Role/Boot Slot (stats.ROLE_BOUND_ITEM)
-
-    // Get raw IDs first
-    const itemIds = [0, 1, 2, 3, 4, 5, 6].map(i => {
-      if (p.items && p.items[i]) return p.items[i];
-      return stats[`ITEM${i}`] || 0;
-    });
-
-    // Extract Trinket (Last item is usually trinket in the array)
-    // In your JSON, the array has 7 items. The last one (index 6) is trinket.
+    // --- Items Logic (Keep existing) ---
+    const itemIds = [0, 1, 2, 3, 4, 5, 6].map(i => (p.items && p.items[i]) ? p.items[i] : (stats[`ITEM${i}`] || 0));
     const trinketId = itemIds[6];
-    const mainItemIds = itemIds.slice(0, 6); // 0-5
-
-    // Check for Season 2026 "Role/Boot Slot"
+    const mainItemIds = itemIds.slice(0, 6);
     const roleItem = stats.ROLE_BOUND_ITEM || 0;
-
     const buildUrl = (id) => id ? `${ITEM_CDN}/${id}.png` : null;
 
-    // Construct the view object
-    const mainItems = mainItemIds.map(id => ({ 
-      url: buildUrl(id), 
-      isPlaceholder: !id 
-    }));
+    const displayItems = [
+      ...mainItemIds.map(id => ({ url: buildUrl(id), isPlaceholder: !id })),
+      { url: buildUrl(roleItem), isPlaceholder: !roleItem, isRole: true },
+      { url: buildUrl(trinketId), isPlaceholder: !trinketId, isTrinket: true }
+    ];
+    // -----------------------------------
+
+    // --- BADGES LOGIC ---
+    const badges = [];
+    if (getStat(p, 'TOTAL_DAMAGE_DEALT_TO_CHAMPIONS') === maxVals.damage && maxVals.damage > 0) 
+      badges.push({ icon: '⚔️', title: 'Highest Damage' });
     
-    // Add Role Item (The 7th Slot / Boots)
-    const roleItemObj = {
-      url: buildUrl(roleItem),
-      isPlaceholder: !roleItem,
-      isRole: true // CSS class trigger
-    };
+    if ((getStat(p, 'TOTAL_DAMAGE_TAKEN') + getStat(p, 'TOTAL_DAMAGE_SELF_MITIGATED')) === maxVals.tank && maxVals.tank > 0)
+      badges.push({ icon: '🛡️', title: 'Most Tanked' });
 
-    // Add Trinket
-    const trinketObj = {
-      url: buildUrl(trinketId),
-      isPlaceholder: !trinketId,
-      isTrinket: true
-    };
-    
-    // Final Display Array: [Item0...Item5, RoleItem, Trinket]
-    const displayItems = [...mainItems, roleItemObj, trinketObj];
+    if (getStat(p, 'VISION_SCORE') === maxVals.vision && maxVals.vision > 0)
+      badges.push({ icon: '👁️', title: 'Visionary' });
 
-    // -----------------------------------------
+    if (getStat(p, 'TOTAL_DAMAGE_DEALT_TO_TURRETS') === maxVals.turret && maxVals.turret > 0)
+      badges.push({ icon: '🏰', title: 'Objective Boss' });
 
+    if (getStat(p, 'TIME_CCING_OTHERS') === maxVals.cc && maxVals.cc > 0)
+      badges.push({ icon: '❄️', title: 'CC King' });
+      
+    if (getStat(p, 'TOTAL_TIME_SPENT_DEAD') === maxVals.dead && maxVals.dead > 0)
+      badges.push({ icon: '💀', title: 'Grey Screen King' });
+    // --------------------
+
+    // Stats & Formatting
     const k = stats.CHAMPIONS_KILLED || 0;
     const d = stats.NUM_DEATHS || 0;
     const a = stats.ASSISTS || 0;
     const dmg = stats.TOTAL_DAMAGE_DEALT_TO_CHAMPIONS || 0;
-    const kdaRaw = d === 0 ? (k + a) : ((k + a) / d);
-
-    // Spell/Rune Lookups
-    const s1 = spellMap[p.spell1Id] || 'SummonerFlash';
-    const s2 = spellMap[p.spell2Id] || 'SummonerFlash';
-    // Handle specific perks from your JSON (40500 etc)
-    const pStyle = stats.PERK_PRIMARY_STYLE || 8000;
-    const sStyle = stats.PERK_SUB_STYLE || 8100;
-    const r1 = runeMap[pStyle] || '7201_Precision'; 
-    const r2 = runeMap[sStyle] || '7200_Domination';
-
-    // Highlight Logic: Check local flag OR if name matches any uploader
-    let isHighlight = p.isLocalPlayer || (payload.user_id && p.puuid === payload.puuid);
     
-    // Check against list of uploaders (Multi-uploader support)
+    // Uploader Highlight Logic
+    let isHighlight = p.isLocalPlayer || (payload.user_id && p.puuid === payload.puuid);
     const playerName = p.summonerName || p.riotIdGameName;
     if (!isHighlight && uploaderInfos.length > 0) {
-      // uploaderInfos is array of { name: '...', result: '...' }
       if (uploaderInfos.some(u => u.name === playerName || formatName(p) === u.name)) {
         isHighlight = true;
       }
     }
+
+    // Spell/Rune Lookups
+    const s1 = spellMap[p.spell1Id] || 'SummonerFlash';
+    const s2 = spellMap[p.spell2Id] || 'SummonerFlash';
+    const pStyle = stats.PERK_PRIMARY_STYLE || 8000;
+    const sStyle = stats.PERK_SUB_STYLE || 8100;
 
     return {
       name: playerName || 'Unknown',
@@ -282,13 +262,14 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
       level: stats.LEVEL || 18,
       spell1: `${SPELL_CDN}/${s1}.png`,
       spell2: `${SPELL_CDN}/${s2}.png`,
-      rune1: `${RUNE_CDN}/${r1}.png`,
-      rune2: `${RUNE_CDN}/${r2}.png`,
-      displayItems, // <--- Using our new structure
+      rune1: `${RUNE_CDN}/${runeMap[pStyle]||'7201_Precision'}.png`,
+      rune2: `${RUNE_CDN}/${runeMap[sStyle]||'7200_Domination'}.png`,
+      displayItems,
+      badges, // <--- New Badge Array
       k, d, a,
-      kdaRatio: kdaRaw.toFixed(2),
+      kdaRatio: d === 0 ? (k + a).toFixed(2) : ((k + a) / d).toFixed(2),
       totalDamage: dmg.toLocaleString(),
-      damagePercent: maxDamage > 0 ? ((dmg / maxDamage) * 100).toFixed(1) : 0,
+      damagePercent: maxVals.damage > 0 ? ((dmg / maxVals.damage) * 100).toFixed(1) : 0,
       gold: ((stats.GOLD_EARNED || 0) / 1000).toFixed(1) + 'k',
       cs: (stats.MINIONS_KILLED || 0) + (stats.NEUTRAL_MINIONS_KILLED || 0),
       vision: stats.VISION_SCORE || 0,
@@ -299,7 +280,6 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
   const t100 = payload.teams.find(t => t.teamId === 100) || { players: [] };
   const t200 = payload.teams.find(t => t.teamId === 200) || { players: [] };
 
-  // Calculate Team Totals for Headers
   const getTotals = (team) => ({
     k: team.players.reduce((a,b) => a + (b.stats.CHAMPIONS_KILLED||0), 0),
     d: team.players.reduce((a,b) => a + (b.stats.NUM_DEATHS||0), 0),
@@ -307,13 +287,11 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
     gold: (team.players.reduce((a,b) => a + (b.stats.GOLD_EARNED||0), 0) / 1000).toFixed(1) + 'k'
   });
 
-  // Result Banner Logic
-  // Check if *any* uploader won
+  // Uploader Result Logic
   let anyUploaderWon = false;
   if (uploaderInfos.length > 0) {
     anyUploaderWon = uploaderInfos.some(u => u.result === 'Win');
   } else {
-    // Fallback to single uploader logic
     const local = payload.localPlayer || payload.teams.flatMap(t=>t.players).find(p=>p.isLocalPlayer);
     const winTeam = payload.teams.find(t=>t.isWinningTeam)?.teamId;
     anyUploaderWon = local?.teamId === winTeam;
@@ -324,11 +302,9 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
     duration: `${Math.floor(payload.gameLength / 60)}m ${payload.gameLength % 60}s`,
     uploaderResult: anyUploaderWon ? "VICTORY" : "DEFEAT",
     resultClass: anyUploaderWon ? "victory" : "defeat",
-    
     team100: t100.players.map(mapPlayer),
     t100Stats: getTotals(t100),
     t100Win: t100.isWinningTeam,
-    
     team200: t200.players.map(mapPlayer),
     t200Stats: getTotals(t200),
     t200Win: t200.isWinningTeam

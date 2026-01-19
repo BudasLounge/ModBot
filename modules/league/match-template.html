@@ -8,94 +8,76 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     
     body {
-      width: 1350px; /* Widened slightly for extra item slot */
-      height: 900px;
+      width: 1350px;
+      height: 960px; /* Increased height for Legend */
       background-color: #010a13;
       font-family: 'Roboto', sans-serif;
       color: #a09b8c;
       padding: 30px;
+      position: relative;
     }
 
-    /* Header */
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      padding-bottom: 20px;
-      border-bottom: 2px solid #1e2328;
-      margin-bottom: 10px;
-    }
+    /* --- [Existing Header & Grid CSS from previous turn goes here] --- */
+    /* (Keep your existing .header, .table-header, .team-container, .player-row styles same as before) */
+    
+    /* RE-PASTE these specific classes to ensure they match the new badge layout */
+    
+    .header { display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: 20px; border-bottom: 2px solid #1e2328; margin-bottom: 10px; }
     .outcome { font-size: 42px; font-weight: 700; text-transform: uppercase; letter-spacing: 3px; }
     .victory { color: #0acbe6; text-shadow: 0 0 10px rgba(10, 203, 230, 0.3); }
     .defeat { color: #e84057; text-shadow: 0 0 10px rgba(232, 64, 87, 0.3); }
     .meta-info { text-align: right; font-size: 16px; color: #939a9e; }
 
-    /* TABLE HEADERS */
     .table-header {
       display: grid;
-      /* Adjusted Grid: Champ(70) Spells(60) Name(200) Items(290) KDA(120) Dmg(180) Gold(100) CS(80) Vis(80) */
       grid-template-columns: 70px 60px 200px 290px 120px 180px 100px 80px 80px;
-      padding: 0 0 5px 0;
-      font-size: 12px;
-      font-weight: 700;
-      color: #5c5b57;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      text-align: center; /* Default center */
+      padding: 0 0 5px 0; font-size: 12px; font-weight: 700; color: #5c5b57;
+      text-transform: uppercase; letter-spacing: 1px; text-align: center;
     }
-    .th-left { text-align: left; padding-left: 15px; } /* Align Name Left */
-    .th-right { text-align: right; padding-right: 20px; } /* Align Gold/CS Right */
+    .th-left { text-align: left; padding-left: 15px; }
+    .th-right { text-align: right; padding-right: 20px; }
 
-    /* Team Containers */
-    .team-container { margin-bottom: 25px; }
-    
-    .team-info {
-      display: flex; justify-content: space-between; 
-      padding: 5px 10px; font-weight: bold; font-size: 13px; margin-bottom: 2px;
-    }
-    .t100-text { color: #0acbe6; }
-    .t200-text { color: #e84057; }
-
-    /* Player Row Grid */
     .player-row {
       display: grid;
-      /* MATCHES HEADER GRID */
       grid-template-columns: 70px 60px 200px 290px 120px 180px 100px 80px 80px;
-      align-items: center;
-      height: 58px;
-      background: #0f1216;
-      border-bottom: 1px solid #1e2328;
-      margin-bottom: 4px;
+      align-items: center; height: 58px; background: #0f1216;
+      border-bottom: 1px solid #1e2328; margin-bottom: 4px;
     }
-
     .team-100 .player-row { border-left: 5px solid #0acbe6; }
     .team-200 .player-row { border-left: 5px solid #e84057; }
     .is-local { background-color: #262118; border: 1px solid #c8aa6e; }
 
-    /* Columns */
     .col-champ { position: relative; display: flex; justify-content: center; align-items: center; }
     .champ-img { width: 44px; height: 44px; border-radius: 50%; border: 2px solid #333; }
-    .level-badge {
-      position: absolute; bottom: 0; right: 10px;
-      background: #000; color: white; font-size: 11px;
-      width: 18px; height: 18px; border-radius: 50%;
-      text-align: center; line-height: 18px; border: 1px solid #c8aa6e;
-    }
+    .level-badge { position: absolute; bottom: 0; right: 10px; background: #000; color: white; font-size: 11px; width: 18px; height: 18px; border-radius: 50%; text-align: center; line-height: 18px; border: 1px solid #c8aa6e; }
 
     .col-spells { display: flex; flex-direction: column; gap: 2px; justify-content: center; }
     .spell-row { display: flex; gap: 4px; }
     .tiny-icon { width: 22px; height: 22px; border-radius: 3px; background: #181b1f; display: block; }
 
+    /* --- UPDATED NAME COLUMN WITH BADGES --- */
     .col-name { padding-left: 15px; display: flex; flex-direction: column; justify-content: center; }
     .summoner-name { color: #fff; font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px; }
-    .champion-name { color: #888; font-size: 12px; }
+    .champion-name { color: #888; font-size: 11px; margin-bottom: 2px; }
+    
+    .badge-container { display: flex; gap: 4px; margin-top: 2px; }
+    .badge { 
+      font-size: 12px; 
+      background: #1e2328; 
+      border: 1px solid #333; 
+      border-radius: 3px; 
+      padding: 0 4px; 
+      height: 16px; 
+      line-height: 14px;
+      cursor: default;
+    }
 
-    /* UPDATED ITEMS COLUMN */
+    /* --- REST OF COLUMNS --- */
     .col-items { display: flex; gap: 4px; align-items: center; }
     .item-icon { width: 32px; height: 32px; border-radius: 4px; background: #141619; border: 1px solid #333; }
-    .trinket { margin-left: 6px; border-radius: 50%; } /* Round trinket */
-    .role-item { border: 1px solid #c8aa6e; } /* Highlight the 7th/Boots slot */
-    .placeholder { opacity: 0; } /* Invisible if empty */
+    .trinket { margin-left: 6px; border-radius: 50%; }
+    .role-item { border: 1px solid #c8aa6e; }
+    .placeholder { opacity: 0; }
 
     .col-kda { text-align: center; font-size: 15px; color: #fff; letter-spacing: 0.5px; }
     .kda-sub { font-size: 12px; color: #666; display: block; margin-top: 2px; }
@@ -109,16 +91,29 @@
     .col-gold { text-align: right; color: #c8aa6e; font-size: 14px; padding-right: 20px; font-weight: 500; }
     .col-cs { text-align: right; color: #939a9e; font-size: 14px; padding-right: 20px; }
     .col-vision { text-align: center; color: #939a9e; font-size: 14px; }
+
+    /* --- NEW LEGEND FOOTER --- */
+    .legend-footer {
+      position: absolute; bottom: 20px; left: 0; right: 0;
+      display: flex; justify-content: center; gap: 20px;
+      color: #939a9e; font-size: 13px;
+      border-top: 1px solid #1e2328;
+      padding-top: 15px;
+      width: 90%; margin: 0 auto;
+    }
+    .legend-item { display: flex; align-items: center; gap: 6px; }
   </style>
 </head>
 <body>
+
   <div class="header">
     <div class="outcome {{resultClass}}">{{uploaderResult}}</div>
     <div class="meta-info">{{gameMode}} • {{duration}}</div>
   </div>
 
   <div class="table-header">
-    <div></div><div></div><div class="th-left">Summoner</div>
+    <div></div><div></div>
+    <div class="th-left">Summoner</div>
     <div class="th-left">Items</div>
     <div>KDA</div>
     <div class="th-left">Damage</div>
@@ -128,10 +123,11 @@
   </div>
 
   <div class="team-container team-100">
-    <div class="team-info t100-text">
-      <span>{{#if t100Win}}VICTORY{{else}}DEFEAT{{/if}} (Blue Team)</span>
-      <span>{{t100Stats.k}} / {{t100Stats.d}} / {{t100Stats.a}} &nbsp;•&nbsp; {{t100Stats.gold}} Gold</span>
+    <div style="display:flex; justify-content:space-between; padding:5px 10px; font-weight:bold; font-size:13px; color:#0acbe6;">
+        <span>{{#if t100Win}}VICTORY{{else}}DEFEAT{{/if}} (Blue Team)</span>
+        <span>{{t100Stats.k}} / {{t100Stats.d}} / {{t100Stats.a}} • {{t100Stats.gold}} Gold</span>
     </div>
+    
     {{#each team100}}
       <div class="player-row {{#if isLocal}}is-local{{/if}}">
         <div class="col-champ"><img src="{{championIcon}}" class="champ-img"><div class="level-badge">{{level}}</div></div>
@@ -139,14 +135,22 @@
           <div class="spell-row"><img src="{{spell1}}" class="tiny-icon"><img src="{{spell2}}" class="tiny-icon"></div>
           <div class="spell-row"><img src="{{rune1}}" class="tiny-icon"><img src="{{rune2}}" class="tiny-icon"></div>
         </div>
-        <div class="col-name"><div class="summoner-name">{{name}}</div><div class="champion-name">{{championName}}</div></div>
         
+        <div class="col-name">
+          <div class="summoner-name">{{name}}</div>
+          <div class="champion-name">{{championName}}</div>
+          <div class="badge-container">
+            {{#each badges}}
+              <span class="badge" title="{{title}}">{{icon}}</span>
+            {{/each}}
+          </div>
+        </div>
+
         <div class="col-items">
           {{#each displayItems}}
              <img src="{{url}}" class="item-icon {{#if isTrinket}}trinket{{/if}} {{#if isRole}}role-item{{/if}} {{#if isPlaceholder}}placeholder{{/if}}">
           {{/each}}
         </div>
-
         <div class="col-kda"><div>{{k}} / {{d}} / {{a}}</div><span class="kda-sub">{{kdaRatio}}</span></div>
         <div class="col-damage"><div class="damage-num">{{totalDamage}}</div><div class="damage-bar-bg"><div class="damage-bar-fill" style="width: {{damagePercent}}%;"></div></div></div>
         <div class="col-gold">{{gold}}</div>
@@ -157,9 +161,9 @@
   </div>
 
   <div class="team-container team-200">
-    <div class="team-info t200-text">
-      <span>{{#if t200Win}}VICTORY{{else}}DEFEAT{{/if}} (Red Team)</span>
-      <span>{{t200Stats.k}} / {{t200Stats.d}} / {{t200Stats.a}} &nbsp;•&nbsp; {{t200Stats.gold}} Gold</span>
+    <div style="display:flex; justify-content:space-between; padding:5px 10px; font-weight:bold; font-size:13px; color:#e84057;">
+        <span>{{#if t200Win}}VICTORY{{else}}DEFEAT{{/if}} (Red Team)</span>
+        <span>{{t200Stats.k}} / {{t200Stats.d}} / {{t200Stats.a}} • {{t200Stats.gold}} Gold</span>
     </div>
     {{#each team200}}
       <div class="player-row {{#if isLocal}}is-local{{/if}}">
@@ -168,14 +172,20 @@
           <div class="spell-row"><img src="{{spell1}}" class="tiny-icon"><img src="{{spell2}}" class="tiny-icon"></div>
           <div class="spell-row"><img src="{{rune1}}" class="tiny-icon"><img src="{{rune2}}" class="tiny-icon"></div>
         </div>
-        <div class="col-name"><div class="summoner-name">{{name}}</div><div class="champion-name">{{championName}}</div></div>
-        
+        <div class="col-name">
+          <div class="summoner-name">{{name}}</div>
+          <div class="champion-name">{{championName}}</div>
+          <div class="badge-container">
+            {{#each badges}}
+              <span class="badge" title="{{title}}">{{icon}}</span>
+            {{/each}}
+          </div>
+        </div>
         <div class="col-items">
           {{#each displayItems}}
              <img src="{{url}}" class="item-icon {{#if isTrinket}}trinket{{/if}} {{#if isRole}}role-item{{/if}} {{#if isPlaceholder}}placeholder{{/if}}">
           {{/each}}
         </div>
-
         <div class="col-kda"><div>{{k}} / {{d}} / {{a}}</div><span class="kda-sub">{{kdaRatio}}</span></div>
         <div class="col-damage"><div class="damage-num">{{totalDamage}}</div><div class="damage-bar-bg"><div class="damage-bar-fill" style="width: {{damagePercent}}%;"></div></div></div>
         <div class="col-gold">{{gold}}</div>
@@ -183,6 +193,15 @@
         <div class="col-vision">{{vision}}</div>
       </div>
     {{/each}}
+  </div>
+
+  <div class="legend-footer">
+    <div class="legend-item"><span>⚔️</span> Highest Damage</div>
+    <div class="legend-item"><span>🛡️</span> Most Tanked</div>
+    <div class="legend-item"><span>👁️</span> Visionary</div>
+    <div class="legend-item"><span>🏰</span> Tower Destroyer</div>
+    <div class="legend-item"><span>❄️</span> CC King</div>
+    <div class="legend-item"><span>💀</span> Grey Screen</div>
   </div>
 
 </body>
