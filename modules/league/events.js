@@ -157,7 +157,7 @@ async function handleMatchPayload(payload, client) {
       const d = s.NUM_DEATHS ?? '?';
       const a = s.ASSISTS ?? '?';
       const dmgChamp = s.TOTAL_DAMAGE_DEALT_TO_CHAMPIONS ?? s.TOTAL_DAMAGE_DEALT ?? '?';
-      return `${champ}: ${name} | K/D/A ${k}/${d}/${a} | DMG to Champs ${dmgChamp}`;
+      return `${champ}: ${name} | K/D/A ${k}/${d}/${a} | Champ DMG ${dmgChamp}`;
     };
 
     const team100 = teams.find((t) => t.teamId === 100);
