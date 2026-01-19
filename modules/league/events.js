@@ -248,7 +248,7 @@ function fixChampName(name) {
 }
 
 /* =====================================================
-   Infographic Logic (Inline Badge Descriptions)
+   Infographic Logic (Clean Badges + Detailed Footer)
 ===================================================== */
 
 async function prepareScoreboardData(payload, uploaderInfos = []) {
@@ -265,7 +265,9 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
     SHIELD: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>`,
     TOWER: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-4V0h-4v2H6v4h2v8H6v6h12v-6h-2V6h2z"/></svg>`,
     CC: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L10 6H6l2 4-2 4h4l2 4 2-4h4l-2-4 2-4h-4z"/></svg>`,
-    SKULL: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c-4.42 0-8 3.58-8 8 0 4.42 8 10 8 10s8-5.58 8-10c0-4.42-3.58-8-8-8zm0 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM9 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm6 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>`
+    SKULL: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c-4.42 0-8 3.58-8 8 0 4.42 8 10 8 10s8-5.58 8-10c0-4.42-3.58-8-8-8zm0 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM9 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm6 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>`,
+    SWORD: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M14.5 17.5L3 6V3h3l11.5 11.5-3 3zM5 5l10 10"/><path d="M6 6l12 12M6 18L18 6"/></svg>`,
+    EYE: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>`
   };
 
   const spellMap = { 1:'SummonerBoost', 3:'SummonerExhaust', 4:'SummonerFlash', 6:'SummonerHaste', 7:'SummonerHeal', 11:'SummonerSmite', 12:'SummonerTeleport', 13:'SummonerMana', 14:'SummonerDot', 21:'SummonerBarrier', 32:'SummonerSnowball' };
@@ -288,7 +290,7 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
   const mapPlayer = (p) => {
     const stats = p.stats || {};
     
-    // Items logic (same as before)
+    // Items
     const itemIds = [0, 1, 2, 3, 4, 5, 6].map(i => (p.items && p.items[i]) ? p.items[i] : (stats[`ITEM${i}`] || 0));
     const trinketId = itemIds[6];
     const mainItemIds = itemIds.slice(0, 6);
@@ -301,43 +303,35 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
       { url: buildUrl(trinketId), isPlaceholder: !trinketId, isTrinket: true }
     ];
 
-    // --- ASSIGN BADGES WITH TEXT ---
+    // --- ASSIGN BADGES (Icon + Title Only) ---
     const badges = [];
 
     // The Protector
     const myProtection = getStat(p, 'TOTAL_HEAL_ON_TEAMMATES') + getStat(p, 'TOTAL_DAMAGE_SHIELDED_ON_TEAMMATES');
     if (myProtection === maxVals.protector && maxVals.protector > 1000) 
-      badges.push({ icon: ICONS.HEART, text: 'Saver' }); // Short text
+      badges.push({ icon: ICONS.HEART, title: 'The Protector' });
     
     // Unstoppable
     if (getStat(p, 'LARGEST_KILLING_SPREE') === maxVals.spree && maxVals.spree >= 3)
-      badges.push({ icon: ICONS.FIRE, text: 'Spree' });
+      badges.push({ icon: ICONS.FIRE, title: 'Unstoppable' });
 
-    // Damage
-    if (getStat(p, 'TOTAL_DAMAGE_DEALT_TO_CHAMPIONS') === maxVals.damage && maxVals.damage > 0) 
-      badges.push({ icon: ICONS.SWORD, text: 'Dmg' });
-    
-    // Tank
+    // Most Tanked
     if ((getStat(p, 'TOTAL_DAMAGE_TAKEN') + getStat(p, 'TOTAL_DAMAGE_SELF_MITIGATED')) === maxVals.tank && maxVals.tank > 0)
-      badges.push({ icon: ICONS.SHIELD, text: 'Tank' });
+      badges.push({ icon: ICONS.SHIELD, title: 'Most Tanked' });
 
-    // Vision
-    if (getStat(p, 'VISION_SCORE') === maxVals.vision && maxVals.vision > 0)
-      badges.push({ icon: ICONS.EYE, text: 'Vis' });
-
-    // Towers
+    // Objective Boss
     if (getStat(p, 'TOTAL_DAMAGE_DEALT_TO_TURRETS') === maxVals.turret && maxVals.turret > 0)
-      badges.push({ icon: ICONS.TOWER, text: 'Towers' });
+      badges.push({ icon: ICONS.TOWER, title: 'Objective Boss' });
 
-    // CC
+    // CC King
     if (getStat(p, 'TIME_CCING_OTHERS') === maxVals.cc && maxVals.cc > 0)
-      badges.push({ icon: ICONS.CC, text: 'CC' });
+      badges.push({ icon: ICONS.CC, title: 'CC King' });
       
     // Grey Screen
     if (getStat(p, 'TOTAL_TIME_SPENT_DEAD') === maxVals.dead && maxVals.dead > 0)
-      badges.push({ icon: ICONS.SKULL, text: 'Dead' });
+      badges.push({ icon: ICONS.SKULL, title: 'Grey Screen King' });
+    // ------------------------------------------
 
-    // Rest of stats logic...
     const k = stats.CHAMPIONS_KILLED || 0;
     const d = stats.NUM_DEATHS || 0;
     const a = stats.ASSISTS || 0;
@@ -380,6 +374,7 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
 
   const t100 = payload.teams.find(t => t.teamId === 100) || { players: [] };
   const t200 = payload.teams.find(t => t.teamId === 200) || { players: [] };
+
   const getTotals = (team) => ({
     k: team.players.reduce((a,b) => a + (b.stats.CHAMPIONS_KILLED||0), 0),
     d: team.players.reduce((a,b) => a + (b.stats.NUM_DEATHS||0), 0),

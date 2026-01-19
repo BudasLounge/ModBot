@@ -9,11 +9,12 @@
     
     body {
       width: 1350px;
-      height: 900px; /* Reduced height since legend is gone */
+      height: 980px; /* Taller for footer descriptions */
       background-color: #010a13;
       font-family: 'Roboto', sans-serif;
       color: #a09b8c;
       padding: 30px;
+      position: relative;
     }
 
     /* --- Headers --- */
@@ -52,22 +53,18 @@
     .spell-row { display: flex; gap: 4px; }
     .tiny-icon { width: 22px; height: 22px; border-radius: 3px; background: #181b1f; display: block; }
 
-    /* --- UPDATED BADGE CSS --- */
+    /* --- Clean Badge CSS (Icons Only) --- */
     .col-name { padding-left: 15px; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
     .summoner-name { color: #fff; font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px; }
     .champion-name { color: #888; font-size: 11px; margin-bottom: 1px; }
 
-    .badge-container { display: flex; gap: 4px; margin-top: 1px; flex-wrap: wrap; }
+    .badge-container { display: flex; gap: 4px; margin-top: 1px; }
     .badge {
-      display: inline-flex; align-items: center; gap: 4px;
-      background: #1e2328; border: 1px solid #333; border-radius: 4px;
-      padding: 1px 5px; height: 18px; 
-      font-size: 10px; color: #939a9e; font-weight: 500; text-transform: uppercase;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: #1e2328; border: 1px solid #333; border-radius: 3px;
+      width: 18px; height: 18px;
     }
-    /* Icon styling inside badge */
-    .badge svg { width: 10px; height: 10px; fill: #939a9e; }
-    /* Highlight badge on hover (optional since it's an image, but good for testing) */
-    .badge:last-child { margin-right: 0; }
+    .badge svg { width: 12px; height: 12px; fill: #939a9e; }
     
     /* --- Other Columns --- */
     .col-items { display: flex; gap: 4px; align-items: center; }
@@ -89,6 +86,27 @@
     .col-cs { text-align: right; color: #939a9e; font-size: 14px; padding-right: 20px; }
     .col-vision { text-align: center; color: #939a9e; font-size: 14px; }
 
+    /* --- DETAILED FOOTER --- */
+    .legend-footer {
+      position: absolute; bottom: 20px; left: 0; right: 0;
+      display: flex; justify-content: center; gap: 30px;
+      color: #939a9e; 
+      border-top: 1px solid #1e2328; padding-top: 15px;
+      width: 90%; margin: 0 auto;
+    }
+    .legend-item { 
+      display: flex; flex-direction: column; align-items: flex-start; 
+      gap: 2px; font-size: 12px; 
+    }
+    .legend-title { 
+      display: flex; align-items: center; gap: 6px; 
+      font-weight: 700; color: #c8aa6e; 
+    }
+    .legend-desc { 
+      font-size: 11px; color: #5c5b57; font-style: italic; 
+      padding-left: 20px; /* Indent to align with text above */
+    }
+    .legend-icon { width: 14px; height: 14px; fill: #939a9e; }
   </style>
 </head>
 <body>
@@ -128,7 +146,7 @@
           <div class="champion-name">{{championName}}</div>
           <div class="badge-container">
             {{#each badges}}
-              <span class="badge">{{{icon}}} {{text}}</span>
+              <span class="badge" title="{{title}}">{{{icon}}}</span>
             {{/each}}
           </div>
         </div>
@@ -164,7 +182,7 @@
           <div class="champion-name">{{championName}}</div>
           <div class="badge-container">
             {{#each badges}}
-              <span class="badge">{{{icon}}} {{text}}</span>
+              <span class="badge" title="{{title}}">{{{icon}}}</span>
             {{/each}}
           </div>
         </div>
@@ -182,5 +200,55 @@
     {{/each}}
   </div>
 
-  </body>
+  <div class="legend-footer">
+    <div class="legend-item">
+      <div class="legend-title">
+        <svg class="legend-icon" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        The Protector
+      </div>
+      <div class="legend-desc">Most Heals & Shields</div>
+    </div>
+
+    <div class="legend-item">
+      <div class="legend-title">
+        <svg class="legend-icon" viewBox="0 0 24 24"><path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z"/></svg>
+        Unstoppable
+      </div>
+      <div class="legend-desc">Largest Kill Spree</div>
+    </div>
+
+    <div class="legend-item">
+      <div class="legend-title">
+        <svg class="legend-icon" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg> 
+        Most Tanked
+      </div>
+      <div class="legend-desc">Dmg Taken + Mitigated</div>
+    </div>
+
+    <div class="legend-item">
+      <div class="legend-title">
+        <svg class="legend-icon" viewBox="0 0 24 24"><path d="M18 2h-4V0h-4v2H6v4h2v8H6v6h12v-6h-2V6h2z"/></svg> 
+        Objective Boss
+      </div>
+      <div class="legend-desc">Most Tower Dmg</div>
+    </div>
+
+    <div class="legend-item">
+      <div class="legend-title">
+        <svg class="legend-icon" viewBox="0 0 24 24"><path d="M12 2L10 6H6l2 4-2 4h4l2 4 2-4h4l-2-4 2-4h-4z"/></svg> 
+        CC King
+      </div>
+      <div class="legend-desc">Crowd Control Time</div>
+    </div>
+
+    <div class="legend-item">
+      <div class="legend-title">
+        <svg class="legend-icon" viewBox="0 0 24 24"><path d="M12 2c-4.42 0-8 3.58-8 8 0 4.42 8 10 8 10s8-5.58 8-10c0-4.42-3.58-8-8-8zm0 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM9 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm6 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg> 
+        Grey Screen
+      </div>
+      <div class="legend-desc">Time Spent Dead</div>
+    </div>
+  </div>
+
+</body>
 </html>
