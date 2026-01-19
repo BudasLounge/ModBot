@@ -175,11 +175,13 @@ async function handleMatchPayload(payload, client) {
       const isDraft = q.includes('DRAFT') || m.includes('DRAFT') || mut.some((x) => x.includes('TEAMBUILDER'));
       const isRanked = q.includes('RANKED');
       const isNormal = q.includes('NORMAL') || m.includes('NORMAL');
+      const isAramMayhem = q.includes('KIWI');
 
       if (isCustom) return 'Custom';
       if (isDraft) return 'Draft';
       if (isRanked) return 'Ranked';
       if (isNormal) return 'Normal';
+      if (isAramMayhem) return 'ARAM Mayhem';
       return mode;
     };
 
