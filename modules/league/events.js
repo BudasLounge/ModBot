@@ -227,7 +227,7 @@ async function resolveMatchPlayers(payload) {
   return Array.from(matched.values());
 }
 
-async function createMentionThread(parentMessage, matchedPlayers, gameId) {
+async function createMentionThread(parentMessage, matchedPlayers, gameId, payload) {
   if (!parentMessage || !Array.isArray(matchedPlayers) || matchedPlayers.length === 0) return;
 
   try {
@@ -235,6 +235,19 @@ async function createMentionThread(parentMessage, matchedPlayers, gameId) {
       matchedPlayers: matchedPlayers.length,
       gameId,
     });
+
+    // Map riotId (name#tag) to champion for display
+    const riotIdToChamp = new Map();
+    const teams = Array.isArray(payload?.teams) ? payload.teams : [];
+    for (const team of teams) {
+      for (const player of team.players || []) {
+        const name = (player?.riotIdGameName || '').trim();
+        const tag = (player?.riotIdTagLine || '').trim();
+        if (name && tag) {
+          riotIdToChamp.set(`${name.toLowerCase()}#${tag.toLowerCase()}`, player.championName || 'Unknown');
+        }
+      }
+    }
     const uniqueUserIds = Array.from(
       new Set(
         matchedPlayers
@@ -245,7 +258,6 @@ async function createMentionThread(parentMessage, matchedPlayers, gameId) {
 
     if (uniqueUserIds.length === 0) return;
 
-    const mentionLine = uniqueUserIds.map((id) => `<@${id}>`).join(' ');
     const threadNameBase = gameId ? `Match ${gameId} players` : 'Match participants';
     const threadName = threadNameBase.slice(0, 90);
 
@@ -255,7 +267,15 @@ async function createMentionThread(parentMessage, matchedPlayers, gameId) {
     });
     logger.info('[LoL Match Ingest] Mention thread created', { threadName, mentions: uniqueUserIds.length });
 
-    await thread.send({ content: `Players from DB in this match:\n${mentionLine}` });
+    const lines = matchedPlayers.map((p, idx) => {
+      const label = `Player${idx + 1}`;
+      const leagueName = (p?.league_name || 'Unknown').trim();
+      const mention = p?.user_id ? ` (<@${String(p.user_id).trim()}>)` : '';
+      const champ = riotIdToChamp.get(leagueName.toLowerCase()) || 'Unknown';
+      return `${label}: ${leagueName} — ${champ}${mention}`;
+    });
+
+    await thread.send({ content: `Players in this match:\n${lines.join('\n')}` });
   } catch (err) {
     logger.error('[LoL Match Ingest] Failed to create mention thread', err);
   }
@@ -486,7 +506,7 @@ async function generateInfographicImage(payload, uploaderInfos) {
    Match ingest server
 ===================================================== */
 
-function enqueueMatchPayload(payload, client) {
+async function enqueueMatchPayload(payload, client) {
   const gameId = payload.gameId || payload.reportGameId;
 
   logger.info('[LoL Match Ingest] Enqueue match payload', { gameId });
@@ -498,26 +518,42 @@ function enqueueMatchPayload(payload, client) {
   }
 
   const key = String(gameId);
-  const existing = pendingMatches.get(key) || { timer: null, payloads: [] };
+  const existing = pendingMatches.get(key) || { timer: null, payloads: [], placeholderMessage: null };
 
   if (existing.timer) {
     clearTimeout(existing.timer);
   }
 
   existing.payloads.push(payload);
+
+  // If this is the first payload in the window, post a placeholder message
+  if (!existing.placeholderMessage) {
+    try {
+      const channel = await client.channels.fetch(MATCH_WEBHOOK_CHANNEL);
+      if (channel) {
+        existing.placeholderMessage = await channel.send(`Receiving data from Match ${gameId}...`);
+        logger.info('[LoL Match Ingest] Posted placeholder message', { gameId, messageId: existing.placeholderMessage.id });
+      } else {
+        logger.warn('[LoL Match Ingest] Could not fetch channel for placeholder', { MATCH_WEBHOOK_CHANNEL });
+      }
+    } catch (err) {
+      logger.warn('[LoL Match Ingest] Failed to post placeholder message', { gameId, err: err?.message });
+    }
+  }
   existing.timer = setTimeout(() => {
     const bundle = pendingMatches.get(key) || existing;
     pendingMatches.delete(key);
 
     const latest = (bundle.payloads && bundle.payloads[bundle.payloads.length - 1]) || payload;
     const uploaderInfos = (bundle.payloads || []).map(getUploaderInfo).filter(Boolean);
+    const placeholderMessage = bundle.placeholderMessage;
 
     logger.info('[LoL Match Ingest] Debounced payload bundle ready', {
       gameId,
       bundleCount: bundle.payloads?.length || 1,
     });
 
-    handleMatchPayload(latest, client, uploaderInfos);
+    handleMatchPayload(latest, client, uploaderInfos, placeholderMessage);
   }, MATCH_DEBOUNCE_MS);
 
   pendingMatches.set(key, existing);
@@ -531,7 +567,7 @@ function enqueueMatchPayload(payload, client) {
   return Promise.resolve();
 }
 
-async function handleMatchPayload(payload, client) {
+async function handleMatchPayload(payload, client, uploaderInfos = [], placeholderMessage = null) {
   const gameId = payload.gameId || payload.reportGameId || 'unknown';
   logger.info('[LoL Match Ingest] Payload received, generating infographic...', { gameId });
 
@@ -551,23 +587,31 @@ async function handleMatchPayload(payload, client) {
 
     // Generate image in memory
     const imageBuffer = await generateInfographicImage(payload);
-    let scoreboardMessage;
+    let scoreboardMessage = placeholderMessage;
 
     if (imageBuffer) {
       const attachment = new AttachmentBuilder(imageBuffer, { name: `match-${gameId}.png` });
-      scoreboardMessage = await channel.send({
-        files: [attachment]
-      });
-      logger.info('[LoL Match Ingest] Infographic sent.');
+      if (scoreboardMessage) {
+        await scoreboardMessage.edit({ content: '', files: [attachment] });
+        logger.info('[LoL Match Ingest] Infographic edited into placeholder.', { gameId });
+      } else {
+        scoreboardMessage = await channel.send({ files: [attachment] });
+        logger.info('[LoL Match Ingest] Infographic sent (no placeholder).');
+      }
     } else {
-      // Fallback text if generation fails
-      scoreboardMessage = await channel.send(`Match ${gameId} completed (Image generation failed).`);
-      logger.info('[LoL Match Ingest] Fallback text sent for match', { gameId });
+      const fallbackContent = `Match ${gameId} completed (Image generation failed).`;
+      if (scoreboardMessage) {
+        await scoreboardMessage.edit({ content: fallbackContent, files: [] });
+        logger.info('[LoL Match Ingest] Fallback text edited into placeholder', { gameId });
+      } else {
+        scoreboardMessage = await channel.send(fallbackContent);
+        logger.info('[LoL Match Ingest] Fallback text sent for match', { gameId });
+      }
     }
 
     const matchedPlayers = await matchedPlayersPromise;
     logger.info('[LoL Match Ingest] Matched players fetched', { matchedPlayers: matchedPlayers.length });
-    await createMentionThread(scoreboardMessage, matchedPlayers, gameId);
+    await createMentionThread(scoreboardMessage, matchedPlayers, gameId, payload);
 
   } catch (err) {
     logger.error('[LoL Match Ingest] Handler error', err);
