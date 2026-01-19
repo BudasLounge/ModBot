@@ -138,6 +138,7 @@ function getUploaderInfo(payload) {
 ===================================================== */
 
 function collectMatchPuuids(payload) {
+  logger.info('[LoL Match Ingest] Collecting PUUIDs from payload');
   const puuidSet = new Set();
 
   if (!payload?.teams) return [];
@@ -150,18 +151,23 @@ function collectMatchPuuids(payload) {
     }
   }
 
-  return Array.from(puuidSet);
+  const list = Array.from(puuidSet);
+  logger.info('[LoL Match Ingest] Collected PUUIDs', { count: list.length });
+  return list;
 }
 
 async function fetchPlayersByPuuid(puuids) {
   if (!Array.isArray(puuids) || puuids.length === 0) return [];
 
   try {
+    logger.info('[LoL Match Ingest] Fetching league_player records for match PUUIDs', { count: puuids.length });
     const res = await api.get('league_player', {});
     const players = Array.isArray(res?.league_players) ? res.league_players : [];
     const puuidSet = new Set(puuids);
 
-    return players.filter((p) => p?.puuid && puuidSet.has(p.puuid));
+    const matched = players.filter((p) => p?.puuid && puuidSet.has(p.puuid));
+    logger.info('[LoL Match Ingest] Matched players against DB', { matched: matched.length });
+    return matched;
   } catch (err) {
     logger.error('[LoL Match Ingest] Failed to fetch league players', err);
     return [];
@@ -172,6 +178,10 @@ async function createMentionThread(parentMessage, matchedPlayers, gameId) {
   if (!parentMessage || !Array.isArray(matchedPlayers) || matchedPlayers.length === 0) return;
 
   try {
+    logger.info('[LoL Match Ingest] Creating mention thread for matched players', {
+      matchedPlayers: matchedPlayers.length,
+      gameId,
+    });
     const uniqueUserIds = Array.from(
       new Set(
         matchedPlayers
@@ -190,6 +200,7 @@ async function createMentionThread(parentMessage, matchedPlayers, gameId) {
       name: threadName,
       autoArchiveDuration: 1440,
     });
+    logger.info('[LoL Match Ingest] Mention thread created', { threadName, mentions: uniqueUserIds.length });
 
     await thread.send({ content: `Players from DB in this match:\n${mentionLine}` });
   } catch (err) {
@@ -220,6 +231,8 @@ async function getLatestDDVersion() {
       logger.warn('[Infographic] Failed to fetch versions, using cache', e.message);
     }
     lastVersionFetch = now;
+  } else {
+    logger.info('[Infographic] Using cached DataDragon version', { cachedVersion });
   }
   return cachedVersion;
 }
@@ -235,6 +248,10 @@ function fixChampName(name) {
 }
 
 async function prepareScoreboardData(payload, uploaderInfos = []) {
+  logger.info('[Infographic] Preparing scoreboard data', {
+    teams: Array.isArray(payload?.teams) ? payload.teams.length : 0,
+    uploaderInfos: uploaderInfos.length,
+  });
   const ver = await getLatestDDVersion();
   const CDN = `https://ddragon.leagueoflegends.com/cdn/${ver}/img`;
   const ITEM_CDN = `${CDN}/item`;
@@ -375,7 +392,7 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
     anyUploaderWon = local?.teamId === winTeam;
   }
 
-  return {
+  const result = {
     gameMode: payload.gameMode || 'LoL Match',
     duration: `${Math.floor(payload.gameLength / 60)}m ${payload.gameLength % 60}s`,
     uploaderResult: anyUploaderWon ? "VICTORY" : "DEFEAT",
@@ -387,6 +404,13 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
     t200Stats: getTotals(t200),
     t200Win: t200.isWinningTeam
   };
+
+  logger.info('[Infographic] Scoreboard data prepared', {
+    gameMode: result.gameMode,
+    duration: result.duration,
+  });
+
+  return result;
 }
 
 async function generateInfographicImage(payload, uploaderInfos) {
@@ -397,12 +421,14 @@ async function generateInfographicImage(payload, uploaderInfos) {
     // Await the data preparation (since it fetches version)
     const data = await prepareScoreboardData(payload, uploaderInfos);
 
+    logger.info('[Infographic] Generating infographic image');
     const imageBuffer = await nodeHtmlToImage({
       html: template,
       content: data,
       puppeteerArgs: { args: ['--no-sandbox', '--disable-setuid-sandbox'] }
     });
 
+    logger.info('[Infographic] Infographic generation completed');
     return imageBuffer;
   } catch (err) {
     logger.error('[Infographic] Generation failed', err);
@@ -418,8 +444,11 @@ async function generateInfographicImage(payload, uploaderInfos) {
 function enqueueMatchPayload(payload, client) {
   const gameId = payload.gameId || payload.reportGameId;
 
+  logger.info('[LoL Match Ingest] Enqueue match payload', { gameId });
+
   // If no gameId, send immediately.
   if (!gameId) {
+    logger.info('[LoL Match Ingest] No gameId present, handling immediately');
     return handleMatchPayload(payload, client, [getUploaderInfo(payload)]);
   }
 
@@ -438,10 +467,21 @@ function enqueueMatchPayload(payload, client) {
     const latest = (bundle.payloads && bundle.payloads[bundle.payloads.length - 1]) || payload;
     const uploaderInfos = (bundle.payloads || []).map(getUploaderInfo).filter(Boolean);
 
+    logger.info('[LoL Match Ingest] Debounced payload bundle ready', {
+      gameId,
+      bundleCount: bundle.payloads?.length || 1,
+    });
+
     handleMatchPayload(latest, client, uploaderInfos);
   }, MATCH_DEBOUNCE_MS);
 
   pendingMatches.set(key, existing);
+
+  logger.info('[LoL Match Ingest] Payload enqueued with debounce', {
+    gameId,
+    debounceMs: MATCH_DEBOUNCE_MS,
+    queueSize: existing.payloads.length,
+  });
 
   return Promise.resolve();
 }
@@ -450,11 +490,17 @@ async function handleMatchPayload(payload, client) {
   const gameId = payload.gameId || payload.reportGameId || 'unknown';
   logger.info('[LoL Match Ingest] Payload received, generating infographic...', { gameId });
 
-  if (!MATCH_WEBHOOK_CHANNEL) return;
+  if (!MATCH_WEBHOOK_CHANNEL) {
+    logger.error('[LoL Match Ingest] MATCH_WEBHOOK_CHANNEL not configured');
+    return;
+  }
 
   try {
     const channel = await client.channels.fetch(MATCH_WEBHOOK_CHANNEL);
-    if (!channel) return;
+    if (!channel) {
+      logger.error('[LoL Match Ingest] Failed to fetch webhook channel', { MATCH_WEBHOOK_CHANNEL });
+      return;
+    }
 
     const matchPuuids = collectMatchPuuids(payload);
     const matchedPlayersPromise = fetchPlayersByPuuid(matchPuuids);
@@ -472,9 +518,11 @@ async function handleMatchPayload(payload, client) {
     } else {
       // Fallback text if generation fails
       scoreboardMessage = await channel.send(`Match ${gameId} completed (Image generation failed).`);
+      logger.info('[LoL Match Ingest] Fallback text sent for match', { gameId });
     }
 
     const matchedPlayers = await matchedPlayersPromise;
+    logger.info('[LoL Match Ingest] Matched players fetched', { matchedPlayers: matchedPlayers.length });
     await createMentionThread(scoreboardMessage, matchedPlayers, gameId);
 
   } catch (err) {
@@ -489,6 +537,11 @@ function startMatchWebhook(event_registry) {
   const client = event_registry.client;
 
   const server = http.createServer((req, res) => {
+    logger.info('[LoL Match Ingest] Incoming webhook request', {
+      url: req.url,
+      method: req.method,
+    });
+
     if (!req.url || !req.url.startsWith(MATCH_WEBHOOK_PATH) || req.method !== 'POST') {
       res.statusCode = 404;
       res.end();
@@ -532,6 +585,7 @@ function startMatchWebhook(event_registry) {
         .then(() => {
           res.writeHead(200, { 'content-type': 'application/json' });
           res.end(JSON.stringify({ ok: true }));
+          logger.info('[LoL Match Ingest] Payload accepted');
         })
         .catch((err) => {
           logger.error('[LoL Match Ingest] Handler error', err);
@@ -561,6 +615,7 @@ function startMatchWebhook(event_registry) {
 ===================================================== */
 
 async function resolvePUUID(userId, input) {
+  logger.info('[LoL Link] Resolving PUUID for user', { userId, input });
   // 1. Try DB first (wins.js behavior)
   const db = await api.get('league_player', { user_id: userId });
   const existing = db?.league_players?.[0];
@@ -667,6 +722,8 @@ async function onInteraction(interaction) {
   if (interaction.isButton()) {
     if (interaction.customId !== 'LEAGUE_LINK_BUTTON') return;
 
+    logger.info('[LoL Link] Link button pressed', { user: interaction.user.id });
+
     const modal = new ModalBuilder()
       .setCustomId('LEAGUE_LINK_MODAL')
       .setTitle('Link League Account (NA)');
@@ -702,6 +759,8 @@ async function onInteraction(interaction) {
   // Modal submit
 if (interaction.isModalSubmit()) {
   if (interaction.customId !== 'LEAGUE_LINK_MODAL') return;
+
+  logger.info('[LoL Link] Link modal submitted', { user: interaction.user.id });
 
   // ✅ ACKNOWLEDGE THE INTERACTION IMMEDIATELY
   // This MUST be the first awaited call
