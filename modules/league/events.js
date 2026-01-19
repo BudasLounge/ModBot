@@ -174,6 +174,70 @@ async function fetchPlayersByPuuid(puuids) {
   }
 }
 
+// LoL Match Ingest helper: resolve DB rows by match PUUIDs
+async function resolveMatchPlayers(payload) {
+  const puuids = collectMatchPuuids(payload);
+  if (!Array.isArray(puuids) || puuids.length === 0) return [];
+
+  const puuidSet = new Set(puuids);
+  const foundByPuuid = new Map();
+
+  logger.info('[LoL Match Ingest] Resolving match players', {
+    puuidCount: puuidSet.size,
+    puuids: Array.from(puuidSet)
+  });
+
+  // 1) Try targeted lookups by PUUID (API filter), then dedupe
+  for (const puuid of puuidSet) {
+    try {
+      const res = await api.get('league_player', { puuid });
+      const rows = Array.isArray(res?.league_players) ? res.league_players : [];
+      logger.info('[LoL Match Ingest] Targeted PUUID lookup result', {
+        puuid,
+        rows: rows.length
+      });
+      for (const row of rows) {
+        if (row?.puuid && puuidSet.has(row.puuid) && !foundByPuuid.has(row.puuid)) {
+          foundByPuuid.set(row.puuid, row);
+        }
+      }
+    } catch (err) {
+      logger.warn('[LoL Match Ingest] PUUID-targeted lookup failed', { puuid, err: err?.message });
+    }
+  }
+
+  // If we already matched everyone, stop here
+  if (foundByPuuid.size === puuidSet.size) {
+    logger.info('[LoL Match Ingest] Matched players via targeted PUUID lookups', {
+      matched: foundByPuuid.size,
+      puuids: Array.from(foundByPuuid.keys())
+    });
+    return Array.from(foundByPuuid.values());
+  }
+
+  // 2) Fallback: pull all league_player rows and filter
+  try {
+    const resAll = await api.get('league_player', {});
+    const players = Array.isArray(resAll?.league_players) ? resAll.league_players : [];
+    logger.info('[LoL Match Ingest] Fallback all-players fetch', { totalPlayers: players.length });
+    for (const p of players) {
+      if (p?.puuid && puuidSet.has(p.puuid) && !foundByPuuid.has(p.puuid)) {
+        foundByPuuid.set(p.puuid, p);
+      }
+    }
+    logger.info('[LoL Match Ingest] Fallback filtered all league_player rows', {
+      matched: foundByPuuid.size,
+      matchedPuuids: Array.from(foundByPuuid.keys())
+    });
+  } catch (err) {
+    logger.error('[LoL Match Ingest] Failed fallback all-player fetch', err);
+  }
+
+  const finalMatches = Array.from(foundByPuuid.values());
+  logger.info('[LoL Match Ingest] Resolve match players complete', { matched: finalMatches.length });
+  return finalMatches;
+}
+
 async function createMentionThread(parentMessage, matchedPlayers, gameId) {
   if (!parentMessage || !Array.isArray(matchedPlayers) || matchedPlayers.length === 0) return;
 
@@ -494,8 +558,7 @@ async function handleMatchPayload(payload, client) {
       return;
     }
 
-    const matchPuuids = collectMatchPuuids(payload);
-    const matchedPlayersPromise = fetchPlayersByPuuid(matchPuuids);
+    const matchedPlayersPromise = resolveMatchPlayers(payload);
 
     // Generate image in memory
     const imageBuffer = await generateInfographicImage(payload);
