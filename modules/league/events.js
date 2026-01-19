@@ -105,6 +105,7 @@ async function handleMatchPayload(payload, client) {
   const playerCount = teams.reduce((acc, t) => acc + (Array.isArray(t.players) ? t.players.length : 0), 0);
   const winningTeam = teams.find((t) => t.isWinningTeam);
   const lengthSeconds = typeof payload.gameLength === 'number' ? payload.gameLength : null;
+  const uploader = payload.uploader || payload.uploadedBy || payload.uploaderName || payload.uploaderId || 'unknown';
 
   logger.info('[LoL Match Ingest] Payload received', {
     gameId,
@@ -123,6 +124,22 @@ async function handleMatchPayload(payload, client) {
       ? `${Math.floor(lengthSeconds / 60)}m ${Math.max(0, lengthSeconds % 60)}s`
       : 'unknown';
 
+    const formatPlayer = (p) => {
+      const name = p.riotIdGameName
+        ? `${p.riotIdGameName}${p.riotIdTagLine ? '#' + p.riotIdTagLine : ''}`
+        : (p.summonerName || 'Unknown');
+      const champ = p.championName || 'Unknown';
+      const s = p.stats || {};
+      const k = s.CHAMPIONS_KILLED ?? '?';
+      const d = s.NUM_DEATHS ?? '?';
+      const a = s.ASSISTS ?? '?';
+      const dmg = s.TOTAL_DAMAGE_DEALT ?? s.TOTAL_DAMAGE_DEALT_TO_CHAMPIONS ?? '?';
+      return `${champ} - ${name} | ${k}/${d}/${a} | dmg ${dmg}`;
+    };
+
+    const team100 = teams.find((t) => t.teamId === 100);
+    const team200 = teams.find((t) => t.teamId === 200);
+
     const embed = new EmbedBuilder()
       .setTitle('LoL Match Received')
       .setColor('#3498db')
@@ -131,19 +148,18 @@ async function handleMatchPayload(payload, client) {
         { name: 'Mode', value: String(mode), inline: true },
         { name: 'Length', value: durationLabel, inline: true },
         { name: 'Players', value: playerCount ? String(playerCount) : 'unknown', inline: true },
-        {
-          name: 'Winner',
-          value: winningTeam ? (winningTeam.teamId === 100 ? 'Blue (100)' : 'Red (200)') : 'unknown',
-          inline: true,
-        },
+        { name: 'Winner', value: winningTeam ? (winningTeam.teamId === 100 ? 'Blue (100)' : 'Red (200)') : 'unknown', inline: true },
+        { name: 'Uploaded By', value: String(uploader) }
       );
 
-    if (payload.localPlayer) {
-      const lp = payload.localPlayer;
-      const lpName = lp.riotIdGameName || lp.summonerName || 'Unknown';
-      const lpTag = lp.riotIdTagLine ? `#${lp.riotIdTagLine}` : '';
-      const champ = lp.championName || 'Unknown';
-      embed.addFields({ name: 'Local Player', value: `${lpName}${lpTag} - ${champ}` });
+    if (team100?.players?.length) {
+      const lines = team100.players.map(formatPlayer).slice(0, 10).join('\n');
+      embed.addFields({ name: 'Blue (100)', value: lines || 'No players', inline: false });
+    }
+
+    if (team200?.players?.length) {
+      const lines = team200.players.map(formatPlayer).slice(0, 10).join('\n');
+      embed.addFields({ name: 'Red (200)', value: lines || 'No players', inline: false });
     }
 
     await channel.send({ embeds: [embed] });
