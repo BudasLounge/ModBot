@@ -174,68 +174,57 @@ async function fetchPlayersByPuuid(puuids) {
   }
 }
 
-// LoL Match Ingest helper: resolve DB rows by match PUUIDs
+// LoL Match Ingest helper: resolve DB rows by Riot ID (NAME#TAG) instead of PUUID
 async function resolveMatchPlayers(payload) {
-  const puuids = collectMatchPuuids(payload);
-  if (!Array.isArray(puuids) || puuids.length === 0) return [];
+  const teams = Array.isArray(payload?.teams) ? payload.teams : [];
 
-  const puuidSet = new Set(puuids);
-  const foundByPuuid = new Map();
+  const riotIds = [];
+  for (const team of teams) {
+    for (const player of team.players || []) {
+      const name = (player?.riotIdGameName || '').trim();
+      const tag = (player?.riotIdTagLine || '').trim();
+      if (name && tag) {
+        riotIds.push(`${name}#${tag}`);
+      }
+    }
+  }
 
-  logger.info('[LoL Match Ingest] Resolving match players', {
-    puuidCount: puuidSet.size,
-    puuids: Array.from(puuidSet)
+  const normalizedRiotIds = Array.from(new Set(riotIds.map((id) => id.toLowerCase())));
+
+  logger.info('[LoL Match Ingest] Resolving match players by Riot ID', {
+    riotIdCount: normalizedRiotIds.length,
+    riotIds: normalizedRiotIds
   });
 
-  // 1) Try targeted lookups by PUUID (API filter), then dedupe
-  for (const puuid of puuidSet) {
-    try {
-      const res = await api.get('league_player', { puuid });
-      const rows = Array.isArray(res?.league_players) ? res.league_players : [];
-      logger.info('[LoL Match Ingest] Targeted PUUID lookup result', {
-        puuid,
-        rows: rows.length
-      });
-      for (const row of rows) {
-        if (row?.puuid && puuidSet.has(row.puuid) && !foundByPuuid.has(row.puuid)) {
-          foundByPuuid.set(row.puuid, row);
-        }
-      }
-    } catch (err) {
-      logger.warn('[LoL Match Ingest] PUUID-targeted lookup failed', { puuid, err: err?.message });
-    }
-  }
+  if (normalizedRiotIds.length === 0) return [];
 
-  // If we already matched everyone, stop here
-  if (foundByPuuid.size === puuidSet.size) {
-    logger.info('[LoL Match Ingest] Matched players via targeted PUUID lookups', {
-      matched: foundByPuuid.size,
-      puuids: Array.from(foundByPuuid.keys())
-    });
-    return Array.from(foundByPuuid.values());
-  }
-
-  // 2) Fallback: pull all league_player rows and filter
+  let players = [];
   try {
     const resAll = await api.get('league_player', {});
-    const players = Array.isArray(resAll?.league_players) ? resAll.league_players : [];
-    logger.info('[LoL Match Ingest] Fallback all-players fetch', { totalPlayers: players.length });
-    for (const p of players) {
-      if (p?.puuid && puuidSet.has(p.puuid) && !foundByPuuid.has(p.puuid)) {
-        foundByPuuid.set(p.puuid, p);
-      }
-    }
-    logger.info('[LoL Match Ingest] Fallback filtered all league_player rows', {
-      matched: foundByPuuid.size,
-      matchedPuuids: Array.from(foundByPuuid.keys())
-    });
+    players = Array.isArray(resAll?.league_players) ? resAll.league_players : [];
+    logger.info('[LoL Match Ingest] Loaded league_player rows for matching', { totalPlayers: players.length });
   } catch (err) {
-    logger.error('[LoL Match Ingest] Failed fallback all-player fetch', err);
+    logger.error('[LoL Match Ingest] Failed to load league_player table', err);
+    return [];
   }
 
-  const finalMatches = Array.from(foundByPuuid.values());
-  logger.info('[LoL Match Ingest] Resolve match players complete', { matched: finalMatches.length });
-  return finalMatches;
+  const riotIdSet = new Set(normalizedRiotIds);
+  const matched = new Map();
+
+  for (const row of players) {
+    const leagueName = (row?.league_name || '').trim().toLowerCase();
+    if (!leagueName) continue;
+    if (riotIdSet.has(leagueName) && !matched.has(leagueName)) {
+      matched.set(leagueName, row);
+    }
+  }
+
+  logger.info('[LoL Match Ingest] Matched players by Riot ID', {
+    matched: matched.size,
+    matchedLeagueNames: Array.from(matched.keys())
+  });
+
+  return Array.from(matched.values());
 }
 
 async function createMentionThread(parentMessage, matchedPlayers, gameId) {
