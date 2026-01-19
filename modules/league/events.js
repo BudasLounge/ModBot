@@ -134,6 +134,71 @@ function getUploaderInfo(payload) {
 
 
 /* =====================================================
+   League DB helpers (for match mentions)
+===================================================== */
+
+function collectMatchPuuids(payload) {
+  const puuidSet = new Set();
+
+  if (!payload?.teams) return [];
+
+  for (const team of payload.teams) {
+    for (const player of team.players || []) {
+      if (player?.puuid) {
+        puuidSet.add(player.puuid);
+      }
+    }
+  }
+
+  return Array.from(puuidSet);
+}
+
+async function fetchPlayersByPuuid(puuids) {
+  if (!Array.isArray(puuids) || puuids.length === 0) return [];
+
+  try {
+    const res = await api.get('league_player', {});
+    const players = Array.isArray(res?.league_players) ? res.league_players : [];
+    const puuidSet = new Set(puuids);
+
+    return players.filter((p) => p?.puuid && puuidSet.has(p.puuid));
+  } catch (err) {
+    logger.error('[LoL Match Ingest] Failed to fetch league players', err);
+    return [];
+  }
+}
+
+async function createMentionThread(parentMessage, matchedPlayers, gameId) {
+  if (!parentMessage || !Array.isArray(matchedPlayers) || matchedPlayers.length === 0) return;
+
+  try {
+    const uniqueUserIds = Array.from(
+      new Set(
+        matchedPlayers
+          .map((p) => (p?.user_id ? String(p.user_id).trim() : ''))
+          .filter(Boolean)
+      )
+    );
+
+    if (uniqueUserIds.length === 0) return;
+
+    const mentionLine = uniqueUserIds.map((id) => `<@${id}>`).join(' ');
+    const threadNameBase = gameId ? `Match ${gameId} players` : 'Match participants';
+    const threadName = threadNameBase.slice(0, 90);
+
+    const thread = await parentMessage.startThread({
+      name: threadName,
+      autoArchiveDuration: 1440,
+    });
+
+    await thread.send({ content: `Players from DB in this match:\n${mentionLine}` });
+  } catch (err) {
+    logger.error('[LoL Match Ingest] Failed to create mention thread', err);
+  }
+}
+
+
+/* =====================================================
    Infographic Logic (Dynamic & Season 2026 Ready)
 ===================================================== */
 
@@ -391,20 +456,26 @@ async function handleMatchPayload(payload, client) {
     const channel = await client.channels.fetch(MATCH_WEBHOOK_CHANNEL);
     if (!channel) return;
 
+    const matchPuuids = collectMatchPuuids(payload);
+    const matchedPlayersPromise = fetchPlayersByPuuid(matchPuuids);
+
     // Generate image in memory
     const imageBuffer = await generateInfographicImage(payload);
+    let scoreboardMessage;
 
     if (imageBuffer) {
       const attachment = new AttachmentBuilder(imageBuffer, { name: `match-${gameId}.png` });
-      
-      await channel.send({
+      scoreboardMessage = await channel.send({
         files: [attachment]
       });
       logger.info('[LoL Match Ingest] Infographic sent.');
     } else {
       // Fallback text if generation fails
-      channel.send(`Match ${gameId} completed (Image generation failed).`);
+      scoreboardMessage = await channel.send(`Match ${gameId} completed (Image generation failed).`);
     }
+
+    const matchedPlayers = await matchedPlayersPromise;
+    await createMentionThread(scoreboardMessage, matchedPlayers, gameId);
 
   } catch (err) {
     logger.error('[LoL Match Ingest] Handler error', err);
