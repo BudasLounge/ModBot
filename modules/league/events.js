@@ -176,15 +176,14 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
   const SPELL_CDN = `${CDN}/spell`;
   const RUNE_CDN = `https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles`;
 
-  // --- SVG ICONS (Vector Paths) ---
-  // These render perfectly on any server without fonts.
+  // --- SVG ICONS ---
   const ICONS = {
-    SWORD: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M14.5 17.5L3 6V3h3l11.5 11.5-3 3zM5 5l10 10"/><path d="M6 6l12 12M6 18L18 6"/></svg>`, // Crossed Swords
-    SHIELD: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>`, // Shield
-    EYE: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>`, // Eye
-    TOWER: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-4V0h-4v2H6v4h2v8H6v6h12v-6h-2V6h2z"/></svg>`, // Rook/Tower
-    CC: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L10 6H6l2 4-2 4h4l2 4 2-4h4l-2-4 2-4h-4z"/></svg>`, // Star/Snowflake
-    SKULL: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c-4.42 0-8 3.58-8 8 0 4.42 8 10 8 10s8-5.58 8-10c0-4.42-3.58-8-8-8zm0 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM9 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm6 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>` // Skull
+    HEART: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>`,
+    FIRE: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z"/></svg>`,
+    SHIELD: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>`,
+    TOWER: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-4V0h-4v2H6v4h2v8H6v6h12v-6h-2V6h2z"/></svg>`,
+    CC: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L10 6H6l2 4-2 4h4l2 4 2-4h4l-2-4 2-4h-4z"/></svg>`,
+    SKULL: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c-4.42 0-8 3.58-8 8 0 4.42 8 10 8 10s8-5.58 8-10c0-4.42-3.58-8-8-8zm0 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM9 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm6 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>`
   };
 
   const spellMap = { 1:'SummonerBoost', 3:'SummonerExhaust', 4:'SummonerFlash', 6:'SummonerHaste', 7:'SummonerHeal', 11:'SummonerSmite', 12:'SummonerTeleport', 13:'SummonerMana', 14:'SummonerDot', 21:'SummonerBarrier', 32:'SummonerSnowball' };
@@ -193,10 +192,13 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
   const allPlayers = payload.teams.flatMap(t => t.players);
   const getStat = (p, key) => (p.stats && p.stats[key]) ? p.stats[key] : 0;
   
+  // CALCULATE NEW MAX VALUES
   const maxVals = {
-    damage: Math.max(...allPlayers.map(p => getStat(p, 'TOTAL_DAMAGE_DEALT_TO_CHAMPIONS'))),
+    protector: Math.max(...allPlayers.map(p => 
+      getStat(p, 'TOTAL_HEAL_ON_TEAMMATES') + getStat(p, 'TOTAL_DAMAGE_SHIELDED_ON_TEAMMATES')
+    )),
+    spree: Math.max(...allPlayers.map(p => getStat(p, 'LARGEST_KILLING_SPREE'))),
     tank: Math.max(...allPlayers.map(p => getStat(p, 'TOTAL_DAMAGE_TAKEN') + getStat(p, 'TOTAL_DAMAGE_SELF_MITIGATED'))),
-    vision: Math.max(...allPlayers.map(p => getStat(p, 'VISION_SCORE'))),
     turret: Math.max(...allPlayers.map(p => getStat(p, 'TOTAL_DAMAGE_DEALT_TO_TURRETS'))),
     cc: Math.max(...allPlayers.map(p => getStat(p, 'TIME_CCING_OTHERS'))),
     dead: Math.max(...allPlayers.map(p => getStat(p, 'TOTAL_TIME_SPENT_DEAD')))
@@ -218,26 +220,34 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
       { url: buildUrl(trinketId), isPlaceholder: !trinketId, isTrinket: true }
     ];
 
-    // --- ASSIGN SVG ICONS ---
+    // --- ASSIGN NEW BADGES ---
     const badges = [];
-    // Only show badges if the value is > 0 to avoid everyone getting badges in empty games
-    if (getStat(p, 'TOTAL_DAMAGE_DEALT_TO_CHAMPIONS') === maxVals.damage && maxVals.damage > 0) 
-      badges.push({ icon: ICONS.SWORD, title: 'Highest Damage' });
+
+    // The Protector (Heal + Shield)
+    const myProtection = getStat(p, 'TOTAL_HEAL_ON_TEAMMATES') + getStat(p, 'TOTAL_DAMAGE_SHIELDED_ON_TEAMMATES');
+    if (myProtection === maxVals.protector && maxVals.protector > 1000) // Minimum threshold to avoid badge in 0-heal games
+      badges.push({ icon: ICONS.HEART, title: 'The Protector' });
     
+    // Unstoppable (Spree)
+    if (getStat(p, 'LARGEST_KILLING_SPREE') === maxVals.spree && maxVals.spree >= 3) // Minimum spree of 3
+      badges.push({ icon: ICONS.FIRE, title: 'Unstoppable' });
+
+    // Most Tanked
     if ((getStat(p, 'TOTAL_DAMAGE_TAKEN') + getStat(p, 'TOTAL_DAMAGE_SELF_MITIGATED')) === maxVals.tank && maxVals.tank > 0)
       badges.push({ icon: ICONS.SHIELD, title: 'Most Tanked' });
 
-    if (getStat(p, 'VISION_SCORE') === maxVals.vision && maxVals.vision > 0)
-      badges.push({ icon: ICONS.EYE, title: 'Visionary' });
-
+    // Objective Boss
     if (getStat(p, 'TOTAL_DAMAGE_DEALT_TO_TURRETS') === maxVals.turret && maxVals.turret > 0)
       badges.push({ icon: ICONS.TOWER, title: 'Objective Boss' });
 
+    // CC King
     if (getStat(p, 'TIME_CCING_OTHERS') === maxVals.cc && maxVals.cc > 0)
       badges.push({ icon: ICONS.CC, title: 'CC King' });
       
+    // Grey Screen
     if (getStat(p, 'TOTAL_TIME_SPENT_DEAD') === maxVals.dead && maxVals.dead > 0)
       badges.push({ icon: ICONS.SKULL, title: 'Grey Screen King' });
+
 
     // Stats
     const k = stats.CHAMPIONS_KILLED || 0;
