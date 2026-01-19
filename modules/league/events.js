@@ -105,7 +105,21 @@ async function handleMatchPayload(payload, client) {
   const playerCount = teams.reduce((acc, t) => acc + (Array.isArray(t.players) ? t.players.length : 0), 0);
   const winningTeam = teams.find((t) => t.isWinningTeam);
   const lengthSeconds = typeof payload.gameLength === 'number' ? payload.gameLength : null;
-  const uploader = payload.uploader || payload.uploadedBy || payload.uploaderName || payload.uploaderId || 'unknown';
+
+  const formatName = (p) => {
+    if (!p) return 'unknown';
+    if (p.riotIdGameName) return `${p.riotIdGameName}${p.riotIdTagLine ? '#' + p.riotIdTagLine : ''}`;
+    if (p.summonerName) return p.summonerName;
+    return 'unknown';
+  };
+
+  const localPlayer = payload.localPlayer || teams.flatMap((t) => t.players || []).find((p) => p?.isLocalPlayer);
+  const uploader =
+    payload.uploader ||
+    payload.uploadedBy ||
+    payload.uploaderName ||
+    payload.uploaderId ||
+    formatName(localPlayer);
 
   logger.info('[LoL Match Ingest] Payload received', {
     gameId,
@@ -125,16 +139,14 @@ async function handleMatchPayload(payload, client) {
       : 'unknown';
 
     const formatPlayer = (p) => {
-      const name = p.riotIdGameName
-        ? `${p.riotIdGameName}${p.riotIdTagLine ? '#' + p.riotIdTagLine : ''}`
-        : (p.summonerName || 'Unknown');
+      const name = formatName(p);
       const champ = p.championName || 'Unknown';
       const s = p.stats || {};
       const k = s.CHAMPIONS_KILLED ?? '?';
       const d = s.NUM_DEATHS ?? '?';
       const a = s.ASSISTS ?? '?';
       const dmg = s.TOTAL_DAMAGE_DEALT ?? s.TOTAL_DAMAGE_DEALT_TO_CHAMPIONS ?? '?';
-      return `${champ} - ${name} | ${k}/${d}/${a} | dmg ${dmg}`;
+      return `${champ}: ${name} | KDA ${k}/${d}/${a} | DMG ${dmg}`;
     };
 
     const team100 = teams.find((t) => t.teamId === 100);
@@ -154,12 +166,12 @@ async function handleMatchPayload(payload, client) {
 
     if (team100?.players?.length) {
       const lines = team100.players.map(formatPlayer).slice(0, 10).join('\n');
-      embed.addFields({ name: 'Blue (100)', value: lines || 'No players', inline: false });
+      embed.addFields({ name: 'Blue (100)', value: lines ? '```' + lines + '```' : 'No players', inline: false });
     }
 
     if (team200?.players?.length) {
       const lines = team200.players.map(formatPlayer).slice(0, 10).join('\n');
-      embed.addFields({ name: 'Red (200)', value: lines || 'No players', inline: false });
+      embed.addFields({ name: 'Red (200)', value: lines ? '```' + lines + '```' : 'No players', inline: false });
     }
 
     await channel.send({ embeds: [embed] });
