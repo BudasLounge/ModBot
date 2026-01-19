@@ -1,11 +1,16 @@
 const axios = require('axios');
 const http = require('http');
+const fs = require('fs');
+const path = require('path');
+const nodeHtmlToImage = require('node-html-to-image');
+
 const {
   ActionRowBuilder,
   ModalBuilder,
   TextInputBuilder,
   TextInputStyle,
   EmbedBuilder,
+  AttachmentBuilder, // <--- Make sure this is added
 } = require('discord.js');
 
 require('dotenv').config();
@@ -127,6 +132,131 @@ function getUploaderInfo(payload) {
   return { name: uploaderName, result };
 }
 
+
+/* =====================================================
+   Infographic Logic
+===================================================== */
+
+function fixChampName(name) {
+  if (!name) return 'Unknown';
+  // Common Riot API vs CDN mismatches
+  const map = {
+    'Wukong': 'MonkeyKing', 'Renata Glasc': 'Renata', 'Bel\'Veth': 'Belveth',
+    'Kog\'Maw': 'KogMaw', 'Rek\'Sai': 'RekSai', 'Dr. Mundo': 'DrMundo',
+    'Nunu & Willump': 'Nunu', 'Fiddlesticks': 'Fiddlesticks', 'LeBlanc': 'Leblanc',
+  };
+  return map[name] || name.replace(/[' .]/g, '');
+}
+
+function prepareScoreboardData(payload) {
+  const DD_VER = '14.3.1'; // Update periodically
+  const BASE_CHAMP = `https://ddragon.leagueoflegends.com/cdn/${DD_VER}/img/champion/`;
+  const BASE_ITEM = `https://ddragon.leagueoflegends.com/cdn/${DD_VER}/img/item/`;
+
+  const spellMap = {
+    1: '🧼', 3: '💨', 4: '✨', 6: '👻', 7: '💚', 
+    11: '⚡', 12: '🌀', 13: '🔋', 14: '🔥', 21: '🛡️', 32: '❄️'
+  };
+  const runeMap = { 8000: '⚔️', 8100: '🔴', 8200: '🟣', 8300: '🧪', 8400: '🟢' };
+
+  let maxDamage = 0;
+  payload.teams.forEach(t => t.players.forEach(p => {
+    const d = p.stats.TOTAL_DAMAGE_DEALT_TO_CHAMPIONS || 0;
+    if (d > maxDamage) maxDamage = d;
+  }));
+
+  const mapPlayer = (p, localId) => {
+    const stats = p.stats || {};
+    const k = stats.CHAMPIONS_KILLED || 0;
+    const d = stats.NUM_DEATHS || 0;
+    const a = stats.ASSISTS || 0;
+    const dmg = stats.TOTAL_DAMAGE_DEALT_TO_CHAMPIONS || 0;
+
+    const items = [0,1,2,3,4,5,6].map(i => {
+      const id = stats[`ITEM${i}`];
+      // Transparent pixel if no item
+      return id ? `${BASE_ITEM}${id}.png` : 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
+    });
+
+    const kdaRaw = d === 0 ? (k + a) : ((k + a) / d);
+    const primaryStyle = stats.PERK_PRIMARY_STYLE || 8000;
+    const subStyle = stats.PERK_SUB_STYLE || 8100;
+
+    // Detect if this row is the uploader
+    let isLocal = false;
+    // 1. Check against explicit localPlayer flag from payload
+    if (p.isLocalPlayer) isLocal = true; 
+    // 2. Fallback: check PUUID if available
+    if (payload.user_id && p.puuid === payload.puuid) isLocal = true;
+
+    return {
+      name: p.summonerName || p.riotIdGameName || 'Unknown',
+      championName: p.championName,
+      championIcon: `${BASE_CHAMP}${fixChampName(p.championName)}.png`,
+      level: stats.LEVEL || 18,
+      spell1: spellMap[p.spell1Id] || '❓',
+      spell2: spellMap[p.spell2Id] || '❓',
+      rune1: runeMap[primaryStyle] || '⚫',
+      rune2: runeMap[subStyle] || '⚪',
+      items: items,
+      k, d, a,
+      kdaRatio: kdaRaw.toFixed(2),
+      totalDamage: dmg.toLocaleString(),
+      damagePercent: maxDamage > 0 ? (dmg / maxDamage * 100).toFixed(1) : 0,
+      gold: ((stats.GOLD_EARNED || 0) / 1000).toFixed(1) + 'k',
+      cs: (stats.MINIONS_KILLED || 0) + (stats.NEUTRAL_MINIONS_KILLED || 0),
+      vision: stats.VISION_SCORE || 0,
+      isLocal: isLocal
+    };
+  };
+
+  const localPlayer = payload.localPlayer || payload.teams.flatMap(t => t.players).find(p => p.isLocalPlayer);
+  const uploaderTeamId = localPlayer?.teamId;
+  const winningTeamId = payload.teams.find(t => t.isWinningTeam)?.teamId;
+  
+  // Default to "MATCH COMPLETED" if we can't determine win/loss
+  let uploaderResult = "MATCH COMPLETED";
+  let resultClass = "";
+  if (uploaderTeamId && winningTeamId) {
+    const won = uploaderTeamId === winningTeamId;
+    uploaderResult = won ? "VICTORY" : "DEFEAT";
+    resultClass = won ? "victory" : "defeat";
+  }
+
+  const t100 = payload.teams.find(t => t.teamId === 100) || { players: [] };
+  const t200 = payload.teams.find(t => t.teamId === 200) || { players: [] };
+
+  return {
+    gameMode: payload.gameMode || 'LoL Match',
+    duration: payload.gameLength ? `${Math.floor(payload.gameLength / 60)}m ${payload.gameLength % 60}s` : '0m 0s',
+    uploaderResult,
+    resultClass,
+    team100: t100.players.map(p => mapPlayer(p, payload.uploaderId)),
+    team200: t200.players.map(p => mapPlayer(p, payload.uploaderId))
+  };
+}
+
+async function generateInfographicImage(payload) {
+  try {
+    const templatePath = path.join(__dirname, 'match-template.html');
+    const template = fs.readFileSync(templatePath, 'utf8');
+    const data = prepareScoreboardData(payload);
+
+    // SSD PROTECTION: No output path provided = Image generated in RAM only.
+    const imageBuffer = await nodeHtmlToImage({
+      html: template,
+      content: data,
+      puppeteerArgs: { args: ['--no-sandbox', '--disable-setuid-sandbox'] }
+    });
+
+    return imageBuffer;
+  } catch (err) {
+    logger.error('[Infographic] Generation failed', err);
+    return null;
+  }
+}
+
+
 /* =====================================================
    Match ingest server
 ===================================================== */
@@ -162,32 +292,9 @@ function enqueueMatchPayload(payload, client) {
   return Promise.resolve();
 }
 
-async function handleMatchPayload(payload, client, uploaderInfos = []) {
+async function handleMatchPayload(payload, client) {
   const gameId = payload.gameId || payload.reportGameId || 'unknown';
-  const mode = payload.gameMode || payload.queueType || 'unknown';
-  const queueType = payload.queueType || '';
-  const gameType = payload.gameType || '';
-  const teams = Array.isArray(payload.teams) ? payload.teams : [];
-  const playerCount = teams.reduce((acc, t) => acc + (Array.isArray(t.players) ? t.players.length : 0), 0);
-  const winningTeam = teams.find((t) => t.isWinningTeam);
-  const lengthSeconds = typeof payload.gameLength === 'number' ? payload.gameLength : null;
-  const forfeited = Boolean(
-    payload.teamEarlySurrendered ||
-    payload.gameEndedInEarlySurrender ||
-    payload.gameEndedInSurrender ||
-    teams.some((t) => t?.stats?.GAME_ENDED_IN_EARLY_SURRENDER === 1 || t?.stats?.GAME_ENDED_IN_SURRENDER === 1)
-  );
-
-  const uploaderData = uploaderInfos.length ? uploaderInfos : [getUploaderInfo(payload)];
-
-  logger.info('[LoL Match Ingest] Payload received', {
-    gameId,
-    mode,
-    queueType,
-    gameType,
-    teams: teams.length,
-    players: playerCount,
-  });
+  logger.info('[LoL Match Ingest] Payload received, generating infographic...', { gameId });
 
   if (!MATCH_WEBHOOK_CHANNEL) return;
 
@@ -195,78 +302,24 @@ async function handleMatchPayload(payload, client, uploaderInfos = []) {
     const channel = await client.channels.fetch(MATCH_WEBHOOK_CHANNEL);
     if (!channel) return;
 
-    const durationLabel = lengthSeconds !== null
-      ? `${Math.floor(lengthSeconds / 60)}m ${Math.max(0, lengthSeconds % 60)}s`
-      : 'unknown';
+    // Generate image in memory
+    const imageBuffer = await generateInfographicImage(payload);
 
-    const formatPlayer = (p) => {
-      const name = formatName(p);
-      const champ = p.championName || 'Unknown';
-      const s = p.stats || {};
-      const k = s.CHAMPIONS_KILLED ?? '?';
-      const d = s.NUM_DEATHS ?? '?';
-      const a = s.ASSISTS ?? '?';
-      const dmgChamp = s.TOTAL_DAMAGE_DEALT_TO_CHAMPIONS ?? s.TOTAL_DAMAGE_DEALT ?? '?';
-      return `${champ}: ${name} | K/D/A ${k}/${d}/${a} | Champ DMG ${dmgChamp}`;
-    };
-
-    const team100 = teams.find((t) => t.teamId === 100);
-    const team200 = teams.find((t) => t.teamId === 200);
-    const mutators = Array.isArray(payload.gameMutators) ? payload.gameMutators : [];
-
-    const describeMode = () => {
-      const q = queueType.toUpperCase();
-      const g = gameType.toUpperCase();
-      const m = mode.toUpperCase();
-      const mut = mutators.map((x) => x.toUpperCase());
-
-      const onlyElephant = mut.length > 0 && mut.every((x) => x === 'ENABLEELEPHANT');
-      const isCustom = g.includes('CUSTOM') || q === '' || q === '0' || mut.includes('PRACTICETOOL') || onlyElephant;
-      const isDraft = q.includes('DRAFT') || m.includes('DRAFT') || mut.some((x) => x.includes('TEAMBUILDER'));
-      const isRanked = q.includes('RANKED');
-      const isNormal = q.includes('NORMAL') || m.includes('NORMAL');
-      const isAramMayhem = q.includes('KIWI');
-
-      if (isCustom) return 'Custom';
-      if (isDraft) return 'Draft';
-      if (isRanked) return 'Ranked';
-      if (isNormal) return 'Normal';
-      if (isAramMayhem) return 'ARAM Mayhem';
-      return mode;
-    };
-
-    const embed = new EmbedBuilder()
-      .setTitle('LoL Match Received')
-      .setColor('#3498db')
-      .addFields(
-        { name: 'Mode', value: String(describeMode()), inline: true },
-        { name: 'Length', value: durationLabel, inline: true },
-        { name: 'Forfeit', value: forfeited ? 'Yes' : 'No', inline: true }
-      )
-      .setFooter({
-        text: uploaderData
-          .map((u) => {
-            const suffix = u.result === 'Win' ? ' (win)' : u.result === 'Loss' ? ' (loss)' : '';
-            return `${u.name}${suffix}`;
-          })
-          .join('; '),
+    if (imageBuffer) {
+      const attachment = new AttachmentBuilder(imageBuffer, { name: `match-${gameId}.png` });
+      
+      await channel.send({
+        content: `Match ID: ${gameId}`,
+        files: [attachment]
       });
-
-    if (team100?.players?.length) {
-      const lines = team100.players.map(formatPlayer).slice(0, 10).join('\n');
-      const mark = winningTeam?.teamId === 100 ? ' ✅' : '';
-      embed.addFields({ name: 'Blue' + mark, value: lines ? '```' + lines + '```' : 'No players', inline: false });
+      logger.info('[LoL Match Ingest] Infographic sent.');
+    } else {
+      // Fallback text if generation fails
+      channel.send(`Match ${gameId} completed (Image generation failed).`);
     }
 
-    if (team200?.players?.length) {
-      const lines = team200.players.map(formatPlayer).slice(0, 10).join('\n');
-      const mark = winningTeam?.teamId === 200 ? ' ✅' : '';
-      embed.addFields({ name: 'Red' + mark, value: lines ? '```' + lines + '```' : 'No players', inline: false });
-    }
-
-    await channel.send({ embeds: [embed] });
   } catch (err) {
-    logger.error('[LoL Match Ingest] Failed to fan out payload', err);
+    logger.error('[LoL Match Ingest] Handler error', err);
   }
 }
 
