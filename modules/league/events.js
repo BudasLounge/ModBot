@@ -162,15 +162,23 @@ async function handleMatchPayload(payload, client) {
 
     const team100 = teams.find((t) => t.teamId === 100);
     const team200 = teams.find((t) => t.teamId === 200);
+    const mutators = Array.isArray(payload.gameMutators) ? payload.gameMutators : [];
 
     const describeMode = () => {
       const q = queueType.toUpperCase();
       const g = gameType.toUpperCase();
       const m = mode.toUpperCase();
-      if (g.includes('CUSTOM') || q.includes('CUSTOM')) return 'Custom';
-      if (q.includes('RANKED')) return 'Ranked';
-      if (q.includes('DRAFT') || m.includes('DRAFT')) return 'Draft';
-      if (q.includes('NORMAL') || m.includes('NORMAL')) return 'Normal';
+      const mut = mutators.map((x) => x.toUpperCase());
+
+      const isCustom = g.includes('CUSTOM') || q === '' || q === '0' || mut.includes('PRACTICETOOL');
+      const isDraft = q.includes('DRAFT') || m.includes('DRAFT') || mut.some((x) => x.includes('TEAMBUILDER'));
+      const isRanked = q.includes('RANKED');
+      const isNormal = q.includes('NORMAL') || m.includes('NORMAL');
+
+      if (isCustom) return 'Custom';
+      if (isDraft) return 'Draft';
+      if (isRanked) return 'Ranked';
+      if (isNormal) return 'Normal';
       return mode;
     };
 
