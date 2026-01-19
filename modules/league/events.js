@@ -171,6 +171,12 @@ async function handleMatchPayload(payload, client, uploaderInfos = []) {
   const playerCount = teams.reduce((acc, t) => acc + (Array.isArray(t.players) ? t.players.length : 0), 0);
   const winningTeam = teams.find((t) => t.isWinningTeam);
   const lengthSeconds = typeof payload.gameLength === 'number' ? payload.gameLength : null;
+  const forfeited = Boolean(
+    payload.teamEarlySurrendered ||
+    payload.gameEndedInEarlySurrender ||
+    payload.gameEndedInSurrender ||
+    teams.some((t) => t?.stats?.GAME_ENDED_IN_EARLY_SURRENDER === 1 || t?.stats?.GAME_ENDED_IN_SURRENDER === 1)
+  );
 
   const uploaderData = uploaderInfos.length ? uploaderInfos : [getUploaderInfo(payload)];
 
@@ -235,7 +241,7 @@ async function handleMatchPayload(payload, client, uploaderInfos = []) {
       .addFields(
         { name: 'Mode', value: String(describeMode()), inline: true },
         { name: 'Length', value: durationLabel, inline: true },
-        { name: 'Players', value: playerCount ? String(playerCount) : 'unknown', inline: true }
+        { name: 'Forfeit', value: forfeited ? 'Yes' : 'No', inline: true }
       )
       .setFooter({
         text: uploaderData
