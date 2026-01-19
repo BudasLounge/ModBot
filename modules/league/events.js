@@ -1,4 +1,5 @@
 const axios = require('axios');
+const http = require('http');
 const {
   ActionRowBuilder,
   ModalBuilder,
@@ -15,6 +16,13 @@ const api = new ApiClient();
 const RIOT_API_KEY = process.env.RIOT_API_KEY;
 let logger;
 
+const MATCH_WEBHOOK_PORT = parseInt(process.env.MATCH_WEBHOOK_PORT || '38900', 10);
+const MATCH_WEBHOOK_HOST = process.env.MATCH_WEBHOOK_HOST || '0.0.0.0';
+const MATCH_WEBHOOK_PATH = process.env.MATCH_WEBHOOK_PATH || '/lol/match';
+const MATCH_WEBHOOK_SECRET = process.env.MATCH_WEBHOOK_SECRET;
+const MATCH_WEBHOOK_CHANNEL = process.env.MATCH_WEBHOOK_CHANNEL;
+let matchServerStarted = false;
+
 /* =====================================================
    Riot Endpoints (NA)
 ===================================================== */
@@ -28,11 +36,11 @@ const RIOT_SUMMONER_BY_PUUID_NA =
 const RIOT_LEAGUE_BY_SUMMONER_NA =
   'https://na1.api.riotgames.com/lol/league/v4/entries/by-summoner/';
 
-const http = axios.create({ timeout: 15000 });
+const riotHttp = axios.create({ timeout: 15000 });
 
 async function riotGet(url) {
   logger.info(`[Riot] GET ${url}`);
-  return http.get(url, {
+  return riotHttp.get(url, {
     headers: { 'X-Riot-Token': RIOT_API_KEY },
   });
 }
@@ -84,6 +92,138 @@ function parseRiotId(raw) {
     gameName: raw.slice(0, idx).trim(),
     tagLine: raw.slice(idx + 1).trim(),
   };
+}
+
+/* =====================================================
+   Match ingest server
+===================================================== */
+
+async function handleMatchPayload(payload, client) {
+  const gameId = payload.gameId || payload.reportGameId || 'unknown';
+  const mode = payload.gameMode || payload.queueType || 'unknown';
+  const teams = Array.isArray(payload.teams) ? payload.teams : [];
+  const playerCount = teams.reduce((acc, t) => acc + (Array.isArray(t.players) ? t.players.length : 0), 0);
+  const winningTeam = teams.find((t) => t.isWinningTeam);
+  const lengthSeconds = typeof payload.gameLength === 'number' ? payload.gameLength : null;
+
+  logger.info('[LoL Match Ingest] Payload received', {
+    gameId,
+    mode,
+    teams: teams.length,
+    players: playerCount,
+  });
+
+  if (!MATCH_WEBHOOK_CHANNEL) return;
+
+  try {
+    const channel = await client.channels.fetch(MATCH_WEBHOOK_CHANNEL);
+    if (!channel) return;
+
+    const durationLabel = lengthSeconds !== null
+      ? `${Math.floor(lengthSeconds / 60)}m ${Math.max(0, lengthSeconds % 60)}s`
+      : 'unknown';
+
+    const embed = new EmbedBuilder()
+      .setTitle('LoL Match Received')
+      .setColor('#3498db')
+      .addFields(
+        { name: 'Game ID', value: String(gameId) },
+        { name: 'Mode', value: String(mode), inline: true },
+        { name: 'Length', value: durationLabel, inline: true },
+        { name: 'Players', value: playerCount ? String(playerCount) : 'unknown', inline: true },
+        {
+          name: 'Winner',
+          value: winningTeam ? (winningTeam.teamId === 100 ? 'Blue (100)' : 'Red (200)') : 'unknown',
+          inline: true,
+        },
+      );
+
+    if (payload.localPlayer) {
+      const lp = payload.localPlayer;
+      const lpName = lp.riotIdGameName || lp.summonerName || 'Unknown';
+      const lpTag = lp.riotIdTagLine ? `#${lp.riotIdTagLine}` : '';
+      const champ = lp.championName || 'Unknown';
+      embed.addFields({ name: 'Local Player', value: `${lpName}${lpTag} - ${champ}` });
+    }
+
+    await channel.send({ embeds: [embed] });
+  } catch (err) {
+    logger.error('[LoL Match Ingest] Failed to fan out payload', err);
+  }
+}
+
+function startMatchWebhook(event_registry) {
+  if (matchServerStarted) return;
+  matchServerStarted = true;
+
+  const client = event_registry.client;
+
+  const server = http.createServer((req, res) => {
+    if (!req.url || !req.url.startsWith(MATCH_WEBHOOK_PATH) || req.method !== 'POST') {
+      res.statusCode = 404;
+      res.end();
+      return;
+    }
+
+    if (MATCH_WEBHOOK_SECRET) {
+      const provided = req.headers['x-match-secret'] || req.headers['x-webhook-secret'];
+      if (provided !== MATCH_WEBHOOK_SECRET) {
+        res.statusCode = 401;
+        res.end('unauthorized');
+        return;
+      }
+    }
+
+    let raw = '';
+    let tooLarge = false;
+    req.on('data', (chunk) => {
+      raw += chunk;
+      if (raw.length > 5 * 1024 * 1024) {
+        logger.warn('[LoL Match Ingest] Payload exceeded 5MB, dropping');
+        tooLarge = true;
+        res.statusCode = 413;
+        res.end('payload too large');
+        req.destroy();
+      }
+    });
+
+    req.on('end', () => {
+      if (tooLarge) return;
+      let payload;
+      try {
+        payload = raw ? JSON.parse(raw) : {};
+      } catch (err) {
+        res.statusCode = 400;
+        res.end('invalid json');
+        return;
+      }
+
+      handleMatchPayload(payload, client)
+        .then(() => {
+          res.writeHead(200, { 'content-type': 'application/json' });
+          res.end(JSON.stringify({ ok: true }));
+        })
+        .catch((err) => {
+          logger.error('[LoL Match Ingest] Handler error', err);
+          res.statusCode = 500;
+          res.end('error');
+        });
+    });
+
+    req.on('error', (err) => {
+      logger.error('[LoL Match Ingest] Request error', err);
+    });
+  });
+
+  server.on('error', (err) => {
+    logger.error('[LoL Match Ingest] Server error', err);
+  });
+
+  server.listen(MATCH_WEBHOOK_PORT, MATCH_WEBHOOK_HOST, () => {
+    logger.info(
+      `[LoL Match Ingest] Listening on http://${MATCH_WEBHOOK_HOST}:${MATCH_WEBHOOK_PORT}${MATCH_WEBHOOK_PATH}`
+    );
+  });
 }
 
 /* =====================================================
@@ -348,6 +488,7 @@ if (interaction.isModalSubmit()) {
 
 function register_handlers(event_registry) {
   logger = event_registry.logger;
+  startMatchWebhook(event_registry);
   event_registry.register('interactionCreate', onInteraction);
 }
 
