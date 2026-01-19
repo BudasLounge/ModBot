@@ -149,29 +149,21 @@ function fixChampName(name) {
 }
 
 function prepareScoreboardData(payload) {
-  // 1. Define Versions and Base URLs
-  // Pro-tip: You can fetch https://ddragon.leagueoflegends.com/api/versions.json to get the latest dynamically
-  const DD_VER = '14.3.1'; 
-  const CDN = `https://ddragon.leagueoflegends.com/cdn/${DD_VER}/img`;
+  const DD_VER = '14.3.1'; // Update this periodically
+  const BASE_CHAMP = `https://ddragon.leagueoflegends.com/cdn/${DD_VER}/img/champion/`;
+  const BASE_ITEM = `https://ddragon.leagueoflegends.com/cdn/${DD_VER}/img/item/`;
   const RUNE_CDN = `https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles`;
 
-  // 2. Map IDs to Filenames (Data Dragon format)
+  // Mappings
   const spellMap = {
     1: 'SummonerBoost', 3: 'SummonerExhaust', 4: 'SummonerFlash',
     6: 'SummonerHaste', 7: 'SummonerHeal', 11: 'SummonerSmite',
-    12: 'SummonerTeleport', 13: 'SummonerMana', 14: 'SummonerDot', // Ignite
-    21: 'SummonerBarrier', 30: 'SummonerPoroRecall', 31: 'SummonerPoroThrow',
-    32: 'SummonerSnowball', 39: 'SummonerSnowURFSnowball_Mark'
+    12: 'SummonerTeleport', 13: 'SummonerMana', 14: 'SummonerDot', 
+    21: 'SummonerBarrier', 32: 'SummonerSnowball'
   };
-
-  // Runes are weird. They don't use the versioned CDN, but a static path.
-  // We are mapping the "Primary Style" (e.g. Precision) to its icon.
   const runeMap = {
-    8000: '7201_Precision',
-    8100: '7200_Domination',
-    8200: '7202_Sorcery',
-    8300: '7203_Whimsy', // Inspiration
-    8400: '7204_Resolve'
+    8000: '7201_Precision', 8100: '7200_Domination', 8200: '7202_Sorcery',
+    8300: '7203_Whimsy', 8400: '7204_Resolve'
   };
 
   let maxDamage = 0;
@@ -182,27 +174,37 @@ function prepareScoreboardData(payload) {
 
   const mapPlayer = (p, localId) => {
     const stats = p.stats || {};
+    
+    // --- THE FIX IS HERE ---
+    // We check p.items (Array) first. If not found, we check stats.ITEMx (Legacy)
+    const items = [0, 1, 2, 3, 4, 5, 6].map(i => {
+      let id = 0;
+      if (p.items && p.items[i]) {
+        id = p.items[i]; // Use the array from your JSON
+      } else if (stats[`ITEM${i}`]) {
+        id = stats[`ITEM${i}`]; // Fallback for public API
+      }
+      
+      // Return the URL or a transparent pixel
+      return id 
+        ? `${BASE_ITEM}${id}.png` 
+        : 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs='; 
+    });
+    // -----------------------
+
     const k = stats.CHAMPIONS_KILLED || 0;
     const d = stats.NUM_DEATHS || 0;
     const a = stats.ASSISTS || 0;
     const dmg = stats.TOTAL_DAMAGE_DEALT_TO_CHAMPIONS || 0;
+    const kdaRaw = d === 0 ? (k + a) : ((k + a) / d);
 
-    // ITEMS: Map IDs to URLs
-    const items = [0,1,2,3,4,5,6].map(i => {
-      const id = stats[`ITEM${i}`];
-      // Return URL if item exists, else transparent pixel
-      return id ? `${CDN}/item/${id}.png` : 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
-    });
+    // Spell/Rune Lookups
+    const s1 = spellMap[p.spell1Id] || 'SummonerFlash';
+    const s2 = spellMap[p.spell2Id] || 'SummonerFlash';
+    const r1 = runeMap[stats.PERK_PRIMARY_STYLE] || '7201_Precision';
+    const r2 = runeMap[stats.PERK_SUB_STYLE] || '7201_Precision';
 
-    // SPELLS: Map ID -> Name -> URL
-    const s1Name = spellMap[p.spell1Id] || 'SummonerFlash'; // Fallback
-    const s2Name = spellMap[p.spell2Id] || 'SummonerFlash';
-    
-    // RUNES: Map Style ID -> Name -> URL
-    const r1Name = runeMap[stats.PERK_PRIMARY_STYLE] || '7201_Precision';
-    const r2Name = runeMap[stats.PERK_SUB_STYLE] || '7201_Precision';
-
-    // Helper for "Is this me?"
+    // Is Local Player?
     let isLocal = false;
     if (p.isLocalPlayer) isLocal = true;
     if (payload.user_id && p.puuid === payload.puuid) isLocal = true;
@@ -210,41 +212,45 @@ function prepareScoreboardData(payload) {
     return {
       name: p.summonerName || p.riotIdGameName || 'Unknown',
       championName: p.championName,
-      championIcon: `${CDN}/champion/${fixChampName(p.championName)}.png`,
+      championIcon: `${BASE_CHAMP}${fixChampName(p.championName)}.png`,
       level: stats.LEVEL || 18,
-      
-      // NEW: Full URLs for images
-      spell1: `${CDN}/spell/${s1Name}.png`,
-      spell2: `${CDN}/spell/${s2Name}.png`,
-      rune1: `${RUNE_CDN}/${r1Name}.png`,
-      rune2: `${RUNE_CDN}/${r2Name}.png`,
-
-      items: items,
+      spell1: `https://ddragon.leagueoflegends.com/cdn/${DD_VER}/img/spell/${s1}.png`,
+      spell2: `https://ddragon.leagueoflegends.com/cdn/${DD_VER}/img/spell/${s2}.png`,
+      rune1: `${RUNE_CDN}/${r1}.png`,
+      rune2: `${RUNE_CDN}/${r2}.png`,
+      items: items, // Passing the fixed array
       k, d, a,
-      kdaRatio: d === 0 ? (k + a).toFixed(2) : ((k + a) / d).toFixed(2),
+      kdaRatio: kdaRaw.toFixed(2),
       totalDamage: dmg.toLocaleString(),
       damagePercent: maxDamage > 0 ? ((dmg / maxDamage) * 100).toFixed(1) : 0,
       gold: ((stats.GOLD_EARNED || 0) / 1000).toFixed(1) + 'k',
       cs: (stats.MINIONS_KILLED || 0) + (stats.NEUTRAL_MINIONS_KILLED || 0),
       vision: stats.VISION_SCORE || 0,
-      isLocal: isLocal
+      isLocal
     };
   };
 
-  // ... (Rest of function remains the same: uploaderResult logic, return object, etc.)
   const localPlayer = payload.localPlayer || payload.teams.flatMap(t => t.players).find(p => p.isLocalPlayer);
   const uploaderTeamId = localPlayer?.teamId;
   const winningTeamId = payload.teams.find(t => t.isWinningTeam)?.teamId;
-  const uploaderWon = uploaderTeamId === winningTeamId;
+  
+  // Header Logic
+  let uploaderResult = "MATCH COMPLETED";
+  let resultClass = "";
+  if (uploaderTeamId && winningTeamId) {
+    const won = uploaderTeamId === winningTeamId;
+    uploaderResult = won ? "VICTORY" : "DEFEAT";
+    resultClass = won ? "victory" : "defeat";
+  }
 
   const t100 = payload.teams.find(t => t.teamId === 100) || { players: [] };
   const t200 = payload.teams.find(t => t.teamId === 200) || { players: [] };
 
   return {
     gameMode: payload.gameMode || 'LoL Match',
-    duration: payload.gameLength ? `${Math.floor(payload.gameLength / 60)}m ${payload.gameLength % 60}s` : '0m 0s',
-    uploaderResult: uploaderWon ? "VICTORY" : "DEFEAT",
-    resultClass: uploaderWon ? "victory" : "defeat",
+    duration: `${Math.floor(payload.gameLength / 60)}m ${payload.gameLength % 60}s`,
+    uploaderResult,
+    resultClass,
     team100: t100.players.map(p => mapPlayer(p, payload.uploaderId)),
     team200: t200.players.map(p => mapPlayer(p, payload.uploaderId))
   };
@@ -323,7 +329,6 @@ async function handleMatchPayload(payload, client) {
       const attachment = new AttachmentBuilder(imageBuffer, { name: `match-${gameId}.png` });
       
       await channel.send({
-        content: `Match ID: ${gameId}`,
         files: [attachment]
       });
       logger.info('[LoL Match Ingest] Infographic sent.');
