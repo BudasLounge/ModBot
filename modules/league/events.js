@@ -494,10 +494,10 @@ async function generateInfographicImage(payload, uploaderInfos) {
     });
 
     logger.info('[Infographic] Infographic generation completed');
-    return imageBuffer;
+    return { imageBuffer, errorMessage: null };
   } catch (err) {
     logger.error('[Infographic] Generation failed', err);
-    return null;
+    return { imageBuffer: null, errorMessage: err?.message || 'unknown error' };
   }
 }
 
@@ -517,8 +517,18 @@ async function enqueueMatchPayload(payload, client) {
     return handleMatchPayload(payload, client, [getUploaderInfo(payload)]);
   }
 
+  if (!MATCH_WEBHOOK_CHANNEL) {
+    logger.error('[LoL Match Ingest] MATCH_WEBHOOK_CHANNEL not configured; dropping payload');
+    return Promise.resolve();
+  }
+
   const key = String(gameId);
-  const existing = pendingMatches.get(key) || { timer: null, payloads: [], placeholderMessage: null };
+  let existing = pendingMatches.get(key);
+  // Lock the match entry immediately to avoid concurrent placeholders
+  if (!existing) {
+    existing = { timer: null, payloads: [], placeholderMessage: null };
+    pendingMatches.set(key, existing);
+  }
 
   if (existing.timer) {
     clearTimeout(existing.timer);
@@ -537,26 +547,29 @@ async function enqueueMatchPayload(payload, client) {
         logger.warn('[LoL Match Ingest] Could not fetch channel for placeholder', { MATCH_WEBHOOK_CHANNEL });
       }
     } catch (err) {
+      existing.placeholderMessage = null;
       logger.warn('[LoL Match Ingest] Failed to post placeholder message', { gameId, err: err?.message });
     }
   }
-  existing.timer = setTimeout(() => {
-    const bundle = pendingMatches.get(key) || existing;
-    pendingMatches.delete(key);
+  existing.timer = setTimeout(async () => {
+    try {
+      const bundle = pendingMatches.get(key) || existing;
+      pendingMatches.delete(key);
 
-    const latest = (bundle.payloads && bundle.payloads[bundle.payloads.length - 1]) || payload;
-    const uploaderInfos = (bundle.payloads || []).map(getUploaderInfo).filter(Boolean);
-    const placeholderMessage = bundle.placeholderMessage;
+      const latest = (bundle.payloads && bundle.payloads[bundle.payloads.length - 1]) || payload;
+      const uploaderInfos = (bundle.payloads || []).map(getUploaderInfo).filter(Boolean);
+      const placeholderMessage = bundle.placeholderMessage;
 
-    logger.info('[LoL Match Ingest] Debounced payload bundle ready', {
-      gameId,
-      bundleCount: bundle.payloads?.length || 1,
-    });
+      logger.info('[LoL Match Ingest] Debounced payload bundle ready', {
+        gameId,
+        bundleCount: bundle.payloads?.length || 1,
+      });
 
-    handleMatchPayload(latest, client, uploaderInfos, placeholderMessage);
+      await handleMatchPayload(latest, client, uploaderInfos, placeholderMessage);
+    } catch (err) {
+      logger.error('[LoL Match Ingest] Debounce handler error', { gameId, err: err?.message });
+    }
   }, MATCH_DEBOUNCE_MS);
-
-  pendingMatches.set(key, existing);
 
   logger.info('[LoL Match Ingest] Payload enqueued with debounce', {
     gameId,
@@ -586,7 +599,7 @@ async function handleMatchPayload(payload, client, uploaderInfos = [], placehold
     const matchedPlayersPromise = resolveMatchPlayers(payload);
 
     // Generate image in memory
-    const imageBuffer = await generateInfographicImage(payload);
+    const { imageBuffer, errorMessage: imageError } = await generateInfographicImage(payload);
     let scoreboardMessage = placeholderMessage;
 
     if (imageBuffer) {
@@ -599,7 +612,8 @@ async function handleMatchPayload(payload, client, uploaderInfos = [], placehold
         logger.info('[LoL Match Ingest] Infographic sent (no placeholder).');
       }
     } else {
-      const fallbackContent = `Match ${gameId} completed (Image generation failed).`;
+      const reason = imageError ? `: ${imageError}` : '';
+      const fallbackContent = `Match ${gameId} completed (Image generation failed${reason}).`;
       if (scoreboardMessage) {
         await scoreboardMessage.edit({ content: fallbackContent, files: [] });
         logger.info('[LoL Match Ingest] Fallback text edited into placeholder', { gameId });
@@ -654,7 +668,8 @@ function startMatchWebhook(event_registry) {
       if (raw.length > 5 * 1024 * 1024) {
         logger.warn('[LoL Match Ingest] Payload exceeded 5MB, dropping');
         tooLarge = true;
-        res.statusCode = 413;
+        res.statusCode = 429;
+        res.setHeader('Retry-After', '5');
         res.end('payload too large');
         req.destroy();
       }
@@ -679,7 +694,8 @@ function startMatchWebhook(event_registry) {
         })
         .catch((err) => {
           logger.error('[LoL Match Ingest] Handler error', err);
-          res.statusCode = 500;
+          res.statusCode = 503;
+          res.setHeader('Retry-After', '5');
           res.end('error');
         });
     });
