@@ -611,7 +611,9 @@ async function handleMatchPayload(payload, client, uploaderInfos = [], placehold
 
     const matchedPlayers = await matchedPlayersPromise;
     logger.info('[LoL Match Ingest] Matched players fetched', { matchedPlayers: matchedPlayers.length });
-    await createMentionThread(scoreboardMessage, matchedPlayers, gameId, payload);
+
+    // TODO: Re-enable mention threads once we have a better UX; currently floods the sidebar.
+    // await createMentionThread(scoreboardMessage, matchedPlayers, gameId, payload);
 
   } catch (err) {
     logger.error('[LoL Match Ingest] Handler error', err);
