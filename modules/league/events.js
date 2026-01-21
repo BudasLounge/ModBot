@@ -360,6 +360,12 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
     dead: Math.max(...allPlayers.map(p => getStat(p, 'TOTAL_TIME_SPENT_DEAD')))
   };
 
+  const uploaderNameSet = new Set(
+    uploaderInfos
+      .map((u) => (u?.name || '').trim().toLowerCase())
+      .filter(Boolean)
+  );
+
   const mapPlayer = (p) => {
     const stats = p.stats || {};
     
@@ -412,8 +418,10 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
     
     let isHighlight = p.isLocalPlayer || (payload.user_id && p.puuid === payload.puuid);
     const playerName = p.summonerName || p.riotIdGameName;
-    if (!isHighlight && uploaderInfos.length > 0) {
-      if (uploaderInfos.some(u => u.name === playerName || formatName(p) === u.name)) {
+    const normalizedPlayerName = (playerName || '').trim().toLowerCase();
+    const normalizedFormattedName = (formatName(p) || '').trim().toLowerCase();
+    if (!isHighlight && uploaderNameSet.size > 0) {
+      if (uploaderNameSet.has(normalizedPlayerName) || uploaderNameSet.has(normalizedFormattedName)) {
         isHighlight = true;
       }
     }
@@ -599,7 +607,7 @@ async function handleMatchPayload(payload, client, uploaderInfos = [], placehold
     const matchedPlayersPromise = resolveMatchPlayers(payload);
 
     // Generate image in memory
-    const { imageBuffer, errorMessage: imageError } = await generateInfographicImage(payload);
+    const { imageBuffer, errorMessage: imageError } = await generateInfographicImage(payload, uploaderInfos);
     let scoreboardMessage = placeholderMessage;
 
     if (imageBuffer) {
