@@ -856,10 +856,10 @@ async function handleMatchPayload(payload, client, uploaderInfos = [], placehold
     if (imageBuffer) {
       const attachment = new AttachmentBuilder(imageBuffer, { name: `match-${gameId}.png` });
       if (scoreboardMessage) {
-        await scoreboardMessage.edit({ content: forfeitText, files: [attachment] });
+        await scoreboardMessage.edit({ content: '', files: [attachment] });
         logger.info('[LoL Match Ingest] Infographic edited into placeholder.', { gameId });
       } else {
-        scoreboardMessage = await channel.send({ content: forfeitText, files: [attachment] });
+        scoreboardMessage = await channel.send({ content: '', files: [attachment] });
         logger.info('[LoL Match Ingest] Infographic sent (no placeholder).');
       }
     } else {
@@ -1258,7 +1258,7 @@ if (interaction.isModalSubmit()) {
            logger.error('Failed to save augments', e);
         }
 
-        await interaction.reply({ content: `Updated ${Object.keys(updates).length} augments! Use /reload to refresh the image if needed.`, ephemeral: true });
+        await interaction.reply({ content: `Thank you for uploading augment data!`, ephemeral: true });
         return;
     }
 
