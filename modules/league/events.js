@@ -650,28 +650,36 @@ async function generateInfographicImage(payload, uploaderInfos) {
 ===================================================== */
 
 function parseClashSummary(summary) {
-  const teamsMap = new Map();
-  const rawTeams = Array.isArray(summary.teams) ? summary.teams : [];
-  const rawPlayers = Array.isArray(summary.players) ? summary.players : [];
-
-  // Setup teams
-  for (const t of rawTeams) {
-    teamsMap.set(t.teamId, { ...t, players: [] });
-  }
-
-  // Distribute players
-  for (const p of rawPlayers) {
-    const team = teamsMap.get(p.teamId);
-    if (team) {
-      team.players.push(p);
-    }
-  }
-  
-  const teams = Array.from(teamsMap.values());
+  // Use teams directly from summary, mapping players to include stats for compatibility
+  const teams = (summary.teams || []).map(t => {
+    const players = (t.players || []).map(p => ({
+      ...p,
+      summonerName: p.riotIdGameName,
+      stats: {
+        CHAMPIONS_KILLED: p.kills,
+        NUM_DEATHS: p.deaths,
+        ASSISTS: p.assists,
+        TOTAL_DAMAGE_DEALT_TO_CHAMPIONS: p.damageDealt,
+        GOLD_EARNED: p.gold,
+        MINIONS_KILLED: p.cs,
+        VISION_SCORE: p.visionScore,
+        // Add defaults for missing fields to avoid crashes
+        TOTAL_DAMAGE_TAKEN: 0,
+        TOTAL_DAMAGE_SELF_MITIGATED: 0,
+        TOTAL_HEAL_ON_TEAMMATES: 0,
+        TOTAL_DAMAGE_SHIELDED_ON_TEAMMATES: 0,
+        LARGEST_KILLING_SPREE: 0,
+        TOTAL_DAMAGE_DEALT_TO_TURRETS: 0,
+        TIME_CCING_OTHERS: 0,
+        TOTAL_TIME_SPENT_DEAD: 0
+      }
+    }));
+    return { ...t, players };
+  });
   
   return {
     gameId: summary.matchId,
-    teams,
+    teams, // These teams contain players with mapped stats
     forfeit: summary.forfeit,
     forfeitReason: summary.forfeitReason,
     forfeitTeamId: summary.forfeitTeamId,
@@ -683,6 +691,30 @@ function parseClashSummary(summary) {
 function normalizeMatchPayload(payload) {
   if (payload.clashSummary) {
     const derived = parseClashSummary(payload.clashSummary);
+    
+    // Check if the original payload has detailed team data (items, runes)
+    // Detailed payloads usually have items array on players
+    const hasDetailedStats = Array.isArray(payload.teams) && 
+      payload.teams.some(t => t.players && t.players.some(p => p.items && p.items.length > 0));
+
+    // If detailed stats exist, we prefer them for the 'teams' property
+    // But we still want derived metadata (gameId mapping, forfeit info)
+    if (hasDetailedStats) {
+      return {
+        ...payload,
+        // Override simplified derived teams with detailed payload teams
+        teams: payload.teams,
+        // Apply derived metadata
+        gameId: derived.gameId,
+        forfeit: derived.forfeit,
+        forfeitReason: derived.forfeitReason,
+        forfeitTeamId: derived.forfeitTeamId,
+        forfeitTeamIsPlayer: derived.forfeitTeamIsPlayer,
+        forfeitPlayers: derived.forfeitPlayers
+      };
+    }
+
+    // Fallback to derived data entirely if detailed stats are missing
     return {
       ...payload,
       ...derived
