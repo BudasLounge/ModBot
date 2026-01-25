@@ -600,8 +600,16 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
     anyUploaderWon = local?.teamId === winTeam;
   }
 
+  // Use clashSummary existence check or explicit queueType override where applicable
+  let gameModeLabel = payload.gameMode || payload.queueType || 'LoL Match';
+  if (isMayhem) {
+    gameModeLabel = 'ARAM Mayhem';
+  } else if (payload.queueType === 'CLASH' || payload.clashSummary) {
+    gameModeLabel = 'Clash';
+  }
+
   return {
-    gameMode: isMayhem ? 'ARAM Mayhem' : (payload.gameMode || payload.queueType || 'LoL Match'),
+    gameMode: gameModeLabel,
     duration: `${Math.floor(payload.gameLength / 60)}m ${payload.gameLength % 60}s`,
     uploaderResult: anyUploaderWon ? "VICTORY" : "DEFEAT",
     resultClass: anyUploaderWon ? "victory" : "defeat",
