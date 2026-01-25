@@ -81,9 +81,10 @@
     .augment-placeholder { width: 28px; height: 28px; border-radius: 4px; background: #1e2328; border: 1px solid #333; color: #c8aa6e; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 10px; }
     .augment-name { font-size: 9px; color: #7f7c74; text-align: center; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 50px; }
 
-    .col-items { display: flex; gap: 3px; align-items: center; padding-left: 5px; }
-    .item-icon { width: 28px; height: 28px; border-radius: 4px; background: #141619; border: 1px solid #333; }
-    .trinket { margin-left: 4px; border-radius: 50%; }
+    /* Compacted items + Removed trinket */
+    .col-items { display: flex; gap: 2px; align-items: center; padding-left: 5px; }
+    .item-icon { width: 26px; height: 26px; border-radius: 4px; background: #141619; border: 1px solid #333; }
+    .trinket { display: none; } /* Trinket removed to prevent overlap */
     .role-item { border: 1px solid #c8aa6e; }
     .placeholder { opacity: 0; }
 
