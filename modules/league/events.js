@@ -10,13 +10,22 @@ const {
   TextInputBuilder,
   TextInputStyle,
   EmbedBuilder,
-  AttachmentBuilder, // <--- Make sure this is added
+  AttachmentBuilder,
+  ButtonBuilder,
+  ButtonStyle
 } = require('discord.js');
 
 require('dotenv').config();
 
 const ApiClient = require("../../core/js/APIClient.js");
 const api = new ApiClient();
+
+// Cache for recent matches to allow "Identify Augment" interactions
+// Key: gameId, Value: { players: [{ user_id, augments: [id1, id2...] }] }
+const recentMatchAugments = new Map();
+
+// File path for persistent Augment ID->Name mapping
+const AUGMENT_ID_FILE = path.join(__dirname, 'augment_ids.json');
 
 const RIOT_API_KEY = process.env.RIOT_API_KEY;
 let logger;
@@ -338,18 +347,52 @@ const AUGMENT_NAME_MAP = {
   // Populate with known ID->name pairs as they become available.
 };
 
+// Load persistent ID map
+try {
+  if (fs.existsSync(AUGMENT_ID_FILE)) {
+    const savedIds = JSON.parse(fs.readFileSync(AUGMENT_ID_FILE, 'utf8'));
+    Object.assign(AUGMENT_NAME_MAP, savedIds);
+    // logger.info('Loaded augment IDs', { count: Object.keys(savedIds).length });
+  }
+} catch (err) {
+  console.error('Failed to load augment_ids.json', err);
+}
+
+let wikiAugmentData = {};
+try {
+  wikiAugmentData = require('./mayhem_wiki_data.json');
+} catch (e) {
+  // Wiki data not yet fetched
+}
+const AUGMENT_ICON_DIR = path.join(__dirname, 'assets', 'mayhem');
+
 function getAugmentName(id) {
+  // If the ID is already a string (Name), return it.
+  if (typeof id === 'string') return id;
+
   if (!Number.isFinite(id)) return 'Augment';
   return AUGMENT_NAME_MAP[id] || `Augment ${id}`;
 }
 
 function buildAugmentDisplay(id) {
   const name = getAugmentName(id);
+  
+  let icon = null;
+  // If we have wiki data for this name, try to resolve the local icon
+  if (wikiAugmentData[name] && wikiAugmentData[name].icon) {
+    const iconName = wikiAugmentData[name].icon;
+    const fullPath = path.join(AUGMENT_ICON_DIR, iconName);
+    if (fs.existsSync(fullPath)) {
+      // Convert to file URI
+      icon = `file://${fullPath.replace(/\\/g, '/')}`;
+    }
+  }
+
   return {
     id,
     name,
     short: (name || '').slice(0, 3).toUpperCase() || 'AUG',
-    icon: null, // Icon mapping unavailable; template will render placeholder.
+    icon: icon, 
   };
 }
 
@@ -363,10 +406,11 @@ function extractPlayerAugments(player) {
     const stats = player.stats || {};
     ids = [1, 2, 3, 4, 5, 6]
       .map((i) => stats[`PLAYER_AUGMENT_${i}`])
-      .filter((v) => Number.isFinite(v));
+      .filter((v) => v !== undefined && v !== null && v !== 0);
   }
 
-  const unique = Array.from(new Set(ids.filter((v) => Number.isFinite(v))));
+  // Allow Numbers or non-empty Strings
+  const unique = Array.from(new Set(ids.filter((v) => Number.isFinite(v) || (typeof v === 'string' && v.length > 0))));
   return unique.map(buildAugmentDisplay);
 }
 
@@ -940,44 +984,124 @@ async function onInteraction(interaction) {
 
   // Button
   if (interaction.isButton()) {
-    if (interaction.customId !== 'LEAGUE_LINK_BUTTON') return;
+    if (interaction.customId === 'LEAGUE_LINK_BUTTON') {
 
-    logger.info('[LoL Link] Link button pressed', { user: interaction.user.id });
+      logger.info('[LoL Link] Link button pressed', { user: interaction.user.id });
 
-    const modal = new ModalBuilder()
-      .setCustomId('LEAGUE_LINK_MODAL')
-      .setTitle('Link League Account (NA)');
+      const modal = new ModalBuilder()
+        .setCustomId('LEAGUE_LINK_MODAL')
+        .setTitle('Link League Account (NA)');
 
-    modal.addComponents(
-      new ActionRowBuilder().addComponents(
-        new TextInputBuilder()
-          .setCustomId('account_input')
-          .setLabel('Riot ID (Name#TAG) or Summoner Name')
-          .setStyle(TextInputStyle.Short)
-          .setRequired(true),
-      ),
-      new ActionRowBuilder().addComponents(
-        new TextInputBuilder()
-          .setCustomId('main_role')
-          .setLabel('Main Role')
-          .setStyle(TextInputStyle.Short)
-          .setRequired(false),
-      ),
-      new ActionRowBuilder().addComponents(
-        new TextInputBuilder()
-          .setCustomId('lfg_status')
-          .setLabel('Looking for group? (yes / no)')
-          .setStyle(TextInputStyle.Short)
-          .setRequired(false),
-      ),
-    );
+      modal.addComponents(
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder()
+            .setCustomId('account_input')
+            .setLabel('Riot ID (Name#TAG) or Summoner Name')
+            .setStyle(TextInputStyle.Short)
+            .setRequired(true),
+        ),
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder()
+            .setCustomId('main_role')
+            .setLabel('Main Role')
+            .setStyle(TextInputStyle.Short)
+            .setRequired(false),
+        ),
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder()
+            .setCustomId('lfg_status')
+            .setLabel('Looking for group? (yes / no)')
+            .setStyle(TextInputStyle.Short)
+            .setRequired(false),
+        ),
+      );
 
-    await interaction.showModal(modal);
-    return;
+      await interaction.showModal(modal);
+      return;
+    }
+
+    if (interaction.customId.startsWith('LEAGUE_ID_AUGMENTS_')) {
+      const gameId = interaction.customId.replace('LEAGUE_ID_AUGMENTS_', '');
+      const gameData = recentMatchAugments.get(gameId);
+      
+      if (!gameData) {
+        return interaction.reply({ content: 'Match data expired or not found.', ephemeral: true });
+      }
+
+      const playerInfo = gameData.players.find(p => p.user_id === interaction.user.id);
+      if (!playerInfo) {
+         return interaction.reply({ content: 'You were not detected in this match (or are not linked).', ephemeral: true });
+      }
+
+      const editableAugments = playerInfo.augments.filter(id => typeof id === 'number');
+
+      if (editableAugments.length === 0) {
+         return interaction.reply({ content: 'You have no augments that need identification!', ephemeral: true });
+      }
+      
+      const modal = new ModalBuilder()
+        .setCustomId(`LEAGUE_ID_MODAL_${gameId}`)
+        .setTitle('Identify Augments');
+      
+      const maxFields = Math.min(editableAugments.length, 5);
+      
+      for (let i = 0; i < maxFields; i++) {
+        const id = editableAugments[i];
+        const knownName = AUGMENT_NAME_MAP[id] || '';
+        
+        modal.addComponents(
+          new ActionRowBuilder().addComponents(
+            new TextInputBuilder()
+              .setCustomId(`aug_${id}`)
+              .setLabel(`Augment ${id} Name`)
+              .setStyle(TextInputStyle.Short)
+              .setPlaceholder(knownName || 'e.g. Poltergeist')
+              .setValue(knownName) 
+              .setRequired(true)
+          )
+        );
+      }
+      
+      await interaction.showModal(modal);
+      return;
+    }
   }
 
   // Modal submit
 if (interaction.isModalSubmit()) {
+    if (interaction.customId.startsWith('LEAGUE_ID_MODAL_')) {
+        const updates = {};
+        // Iterate through all fields submitted
+        for (const [key, component] of interaction.fields.fields) {
+           if (key.startsWith('aug_')) {
+              const idStr = key.replace('aug_', '');
+              const id = parseInt(idStr, 10);
+              const name = component.value.trim();
+              if (name) {
+                 updates[id] = name;
+              }
+           }
+        }
+        
+        Object.assign(AUGMENT_NAME_MAP, updates);
+        
+        try {
+           let fileData = {};
+           if (fs.existsSync(AUGMENT_ID_FILE)) {
+              fileData = JSON.parse(fs.readFileSync(AUGMENT_ID_FILE, 'utf8'));
+           }
+           Object.assign(fileData, updates);
+           fs.writeFileSync(AUGMENT_ID_FILE, JSON.stringify(fileData, null, 2));
+           
+           logger.info('Updated augment IDs from user input', { count: Object.keys(updates).length });
+        } catch (e) {
+           logger.error('Failed to save augments', e);
+        }
+
+        await interaction.reply({ content: `Updated ${Object.keys(updates).length} augments! Use /reload to refresh the image if needed.`, ephemeral: true });
+        return;
+    }
+
   if (interaction.customId !== 'LEAGUE_LINK_MODAL') return;
 
   logger.info('[LoL Link] Link modal submitted', { user: interaction.user.id });
