@@ -391,11 +391,11 @@ function buildAugmentDisplay(id) {
     
     if (fs.existsSync(fullPath)) {
       try {
-        // On Linux/Puppeteer, ensure it's a valid file URI
-        icon = require('url').pathToFileURL(fullPath).href;
-        // logger.info(`[Infographic] Augment icon resolved: ${name} -> ${icon}`);
+        // Read as base64 to avoid Puppeteer local file permission issues
+        const imgParams = fs.readFileSync(fullPath, 'base64');
+        icon = `data:image/png;base64,${imgParams}`;
       } catch (err) {
-        if (logger) logger.error(`[Infographic] Failed to convert icon path: ${fullPath}`, err);
+        if (logger) logger.error(`[Infographic] Failed to read icon file: ${fullPath}`, err);
       }
     } else {
       if (logger) logger.warn(`[Infographic] Icon file missing: ${fullPath} (Augment: ${name})`);
