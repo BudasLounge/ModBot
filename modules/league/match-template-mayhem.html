@@ -6,24 +6,24 @@
     @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      width: 1450px;
-      height: 1000px;
+      width: 1400px; /* Width for Mayhem tempalte */
+      height: 980px; /* Reduced height to keep it compact */
       background-color: #010a13;
       font-family: 'Roboto', sans-serif;
       color: #a09b8c;
-      padding: 30px;
+      padding: 20px;
       position: relative;
     }
 
-    .header { display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: 20px; border-bottom: 2px solid #1e2328; margin-bottom: 10px; }
-    .outcome { font-size: 42px; font-weight: 700; text-transform: uppercase; letter-spacing: 3px; }
+    .header { display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: 5px; border-bottom: 2px solid #1e2328; margin-bottom: 8px; }
+    .outcome { font-size: 30px; font-weight: 700; text-transform: uppercase; letter-spacing: 3px; }
     .victory { color: #0acbe6; text-shadow: 0 0 10px rgba(10, 203, 230, 0.3); }
     .defeat { color: #e84057; text-shadow: 0 0 10px rgba(232, 64, 87, 0.3); }
-    .meta-info { text-align: right; font-size: 16px; color: #939a9e; }
+    .meta-info { text-align: right; font-size: 14px; color: #939a9e; }
 
     .forfeit-banner {
-      margin: 12px 0 16px 0;
-      padding: 12px 14px;
+      margin: 8px 0 12px 0;
+      padding: 8px 12px;
       background: #1e2328;
       border: 1px solid #e84057;
       color: #e84057;
@@ -33,68 +33,73 @@
       justify-content: space-between;
       align-items: center;
       gap: 10px;
+      font-size: 14px;
     }
     .forfeit-reason { text-transform: uppercase; letter-spacing: 1px; }
     .forfeit-names { color: #c8aa6e; font-weight: 600; }
 
+    /* Compact Grid: Champ(50) Spells(50) Name(170) Items(210) KDA(90) Damage(130) Gold(70) CS(50) Augments(rest) */
     .table-header {
       display: grid;
-      grid-template-columns: 70px 60px 200px 200px 220px 100px 180px 100px 80px 80px;
-      padding: 0 0 5px 0; font-size: 12px; font-weight: 700; color: #5c5b57;
+      grid-template-columns: 50px 50px 170px 210px 90px 130px 70px 50px 1fr;
+      padding: 0 0 4px 0; font-size: 11px; font-weight: 700; color: #5c5b57;
       text-transform: uppercase; letter-spacing: 1px; text-align: center;
     }
-    .th-left { text-align: left; padding-left: 15px; }
-    .th-right { text-align: right; padding-right: 20px; }
+    .th-left { text-align: left; padding-left: 10px; }
+    .th-right { text-align: right; padding-right: 15px; }
+    .th-augments { text-align: left; padding-left: 10px; }
 
     .player-row {
       display: grid;
-      grid-template-columns: 70px 60px 200px 200px 220px 100px 180px 100px 80px 80px;
-      align-items: center; min-height: 70px; background: #0f1216;
-      border-bottom: 1px solid #1e2328; margin-bottom: 4px;
+      grid-template-columns: 50px 50px 170px 210px 90px 130px 70px 50px 1fr;
+      align-items: center; height: 62px; background: #0f1216;
+      border-bottom: 1px solid #1e2328; margin-bottom: 3px;
     }
-    .team-100 .player-row { border-left: 5px solid #0acbe6; }
-    .team-200 .player-row { border-left: 5px solid #e84057; }
+    .team-100 .player-row { border-left: 4px solid #0acbe6; }
+    .team-200 .player-row { border-left: 4px solid #e84057; }
     .is-local { background-color: #262118; border: 1px solid #c8aa6e; }
 
     .col-champ { position: relative; display: flex; justify-content: center; align-items: center; }
-    .champ-img { width: 44px; height: 44px; border-radius: 50%; border: 2px solid #333; }
-    .level-badge { position: absolute; bottom: 0; right: 10px; background: #000; color: white; font-size: 11px; width: 18px; height: 18px; border-radius: 50%; text-align: center; line-height: 18px; border: 1px solid #c8aa6e; }
+    .champ-img { width: 38px; height: 38px; border-radius: 50%; border: 2px solid #333; }
+    .level-badge { position: absolute; bottom: -2px; right: 5px; background: #000; color: white; font-size: 10px; width: 16px; height: 16px; border-radius: 50%; text-align: center; line-height: 16px; border: 1px solid #c8aa6e; }
 
-    .col-spells { display: flex; flex-direction: column; gap: 2px; justify-content: center; }
-    .spell-row { display: flex; gap: 4px; }
-    .tiny-icon { width: 22px; height: 22px; border-radius: 3px; background: #181b1f; display: block; }
+    .col-spells { display: flex; flex-direction: column; gap: 2px; justify-content: center; align-items: center; }
+    .spell-row { display: flex; gap: 2px; }
+    .tiny-icon { width: 18px; height: 18px; border-radius: 3px; background: #181b1f; display: block; }
 
-    .col-name { padding-left: 15px; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
-    .summoner-name { color: #fff; font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px; }
-    .champion-name { color: #888; font-size: 11px; margin-bottom: 1px; }
-    .badge-container { display: flex; gap: 4px; margin-top: 1px; }
-    .badge { display: inline-flex; align-items: center; justify-content: center; background: #1e2328; border: 1px solid #333; border-radius: 3px; width: 18px; height: 18px; }
-    .badge svg { width: 12px; height: 12px; fill: #939a9e; }
+    .col-name { padding-left: 10px; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
+    .summoner-name { color: #fff; font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
+    .champion-name { color: #888; font-size: 10px; margin-bottom: 0; }
+    .badge-container { display: flex; gap: 3px; margin-top: 2px; }
+    .badge { display: inline-flex; align-items: center; justify-content: center; background: #1e2328; border: 1px solid #333; border-radius: 3px; width: 16px; height: 16px; }
+    .badge svg { width: 10px; height: 10px; fill: #939a9e; }
 
-    .col-augments { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 8px; }
-    .augment { width: 56px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-    .augment-icon { width: 32px; height: 32px; border-radius: 6px; background: #141619; border: 1px solid #333; object-fit: cover; }
-    .augment-placeholder { width: 32px; height: 32px; border-radius: 6px; background: #1e2328; border: 1px solid #333; color: #c8aa6e; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 11px; }
-    .augment-name { font-size: 10px; color: #7f7c74; text-align: center; line-height: 1.2; }
+    /* Augments Section (At the end now) */
+    .col-augments { display: flex; flex-wrap: nowrap; gap: 8px; padding-left: 10px; align-items: center; justify-content: flex-start; overflow: hidden; }
+    .augment { width: 44px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+    .augment-icon { width: 28px; height: 28px; border-radius: 4px; background: #141619; border: 1px solid #333; object-fit: cover; }
+    .augment-placeholder { width: 28px; height: 28px; border-radius: 4px; background: #1e2328; border: 1px solid #333; color: #c8aa6e; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 10px; }
+    .augment-name { font-size: 9px; color: #7f7c74; text-align: center; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 50px; }
 
-    .col-items { display: flex; gap: 4px; align-items: center; padding-left: 6px; }
-    .item-icon { width: 32px; height: 32px; border-radius: 4px; background: #141619; border: 1px solid #333; }
-    .trinket { margin-left: 6px; border-radius: 50%; }
+    .col-items { display: flex; gap: 3px; align-items: center; padding-left: 5px; }
+    .item-icon { width: 28px; height: 28px; border-radius: 4px; background: #141619; border: 1px solid #333; }
+    .trinket { margin-left: 4px; border-radius: 50%; }
     .role-item { border: 1px solid #c8aa6e; }
     .placeholder { opacity: 0; }
 
-    .col-kda { text-align: center; font-size: 15px; color: #fff; letter-spacing: 0.5px; }
-    .kda-sub { font-size: 12px; color: #666; display: block; margin-top: 2px; }
+    .col-kda { text-align: center; font-size: 14px; color: #fff; letter-spacing: 0.5px; }
+    .kda-sub { font-size: 11px; color: #666; display: block; margin-top: 1px; }
 
-    .col-damage { display: flex; flex-direction: column; justify-content: center; align-items: flex-start; padding-right: 20px; }
-    .damage-num { font-size: 13px; color: #939a9e; margin-bottom: 4px; }
-    .damage-bar-bg { width: 100%; height: 6px; background: #1c1f24; position: relative; border-radius: 2px; }
+    .col-damage { display: flex; flex-direction: column; justify-content: center; align-items: flex-start; padding-right: 15px; }
+    .damage-num { font-size: 12px; color: #939a9e; margin-bottom: 2px; }
+    .damage-bar-bg { width: 100%; height: 5px; background: #1c1f24; position: relative; border-radius: 2px; }
     .damage-bar-fill { height: 100%; background: #e84057; display: block; border-radius: 2px; }
     .team-100 .damage-bar-fill { background: #0acbe6; }
 
-    .col-gold { text-align: right; color: #c8aa6e; font-size: 14px; padding-right: 20px; font-weight: 500; }
-    .col-cs { text-align: right; color: #939a9e; font-size: 14px; padding-right: 20px; }
-    .col-vision { text-align: center; color: #939a9e; font-size: 14px; }
+    .col-gold { text-align: right; color: #c8aa6e; font-size: 13px; padding-right: 15px; font-weight: 500; }
+    .col-cs { text-align: right; color: #939a9e; font-size: 13px; padding-right: 15px; }
+    
+    /* Removed col-vision */
 
     .legend-footer { position: absolute; bottom: 20px; left: 0; right: 0; display: flex; justify-content: center; gap: 30px; color: #939a9e; border-top: 1px solid #1e2328; padding-top: 15px; width: 90%; margin: 0 auto; }
     .legend-item { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; font-size: 12px; }
@@ -120,17 +125,16 @@
   <div class="table-header">
     <div></div><div></div>
     <div class="th-left">Summoner</div>
-    <div class="th-left">Augments</div>
     <div class="th-left">Items</div>
     <div>KDA</div>
     <div class="th-left">Damage</div>
     <div class="th-right">Gold</div>
     <div class="th-right">CS</div>
-    <div>Vision</div>
+    <div class="th-augments">Augments</div>
   </div>
 
   <div class="team-container team-100">
-    <div style="display:flex; justify-content:space-between; padding:5px 10px; font-weight:bold; font-size:13px; color:#0acbe6;">
+    <div style="display:flex; justify-content:space-between; padding:5px 10px; font-weight:bold; font-size:12px; color:#0acbe6;">
         <span>{{#if t100Win}}VICTORY{{else}}DEFEAT{{/if}} (Blue Team)</span>
         <span>{{t100Stats.k}} / {{t100Stats.d}} / {{t100Stats.a}} • {{t100Stats.gold}} Gold</span>
     </div>
@@ -153,6 +157,17 @@
           </div>
         </div>
 
+        <div class="col-items">
+          {{#each displayItems}}
+             <img src="{{url}}" class="item-icon {{#if isTrinket}}trinket{{/if}} {{#if isRole}}role-item{{/if}} {{#if isPlaceholder}}placeholder{{/if}}">
+          {{/each}}
+        </div>
+        
+        <div class="col-kda"><div>{{k}} / {{d}} / {{a}}</div><span class="kda-sub">{{kdaRatio}}</span></div>
+        <div class="col-damage"><div class="damage-num">{{totalDamage}}</div><div class="damage-bar-bg"><div class="damage-bar-fill" style="width: {{damagePercent}}%;"></div></div></div>
+        <div class="col-gold">{{gold}}</div>
+        <div class="col-cs">{{cs}}</div>
+
         <div class="col-augments">
           {{#if augments.length}}
             {{#each augments}}
@@ -166,26 +181,15 @@
               </div>
             {{/each}}
           {{else}}
-            <div class="augment-name">No augments</div>
+            <!-- Empty -->
           {{/if}}
         </div>
-
-        <div class="col-items">
-          {{#each displayItems}}
-             <img src="{{url}}" class="item-icon {{#if isTrinket}}trinket{{/if}} {{#if isRole}}role-item{{/if}} {{#if isPlaceholder}}placeholder{{/if}}">
-          {{/each}}
-        </div>
-        <div class="col-kda"><div>{{k}} / {{d}} / {{a}}</div><span class="kda-sub">{{kdaRatio}}</span></div>
-        <div class="col-damage"><div class="damage-num">{{totalDamage}}</div><div class="damage-bar-bg"><div class="damage-bar-fill" style="width: {{damagePercent}}%;"></div></div></div>
-        <div class="col-gold">{{gold}}</div>
-        <div class="col-cs">{{cs}}</div>
-        <div class="col-vision">{{vision}}</div>
       </div>
     {{/each}}
   </div>
 
   <div class="team-container team-200">
-    <div style="display:flex; justify-content:space-between; padding:5px 10px; font-weight:bold; font-size:13px; color:#e84057;">
+    <div style="display:flex; justify-content:space-between; padding:5px 10px; font-weight:bold; font-size:12px; color:#e84057;">
         <span>{{#if t200Win}}VICTORY{{else}}DEFEAT{{/if}} (Red Team)</span>
         <span>{{t200Stats.k}} / {{t200Stats.d}} / {{t200Stats.a}} • {{t200Stats.gold}} Gold</span>
     </div>
@@ -206,6 +210,17 @@
           </div>
         </div>
 
+        <div class="col-items">
+          {{#each displayItems}}
+             <img src="{{url}}" class="item-icon {{#if isTrinket}}trinket{{/if}} {{#if isRole}}role-item{{/if}} {{#if isPlaceholder}}placeholder{{/if}}">
+          {{/each}}
+        </div>
+        
+        <div class="col-kda"><div>{{k}} / {{d}} / {{a}}</div><span class="kda-sub">{{kdaRatio}}</span></div>
+        <div class="col-damage"><div class="damage-num">{{totalDamage}}</div><div class="damage-bar-bg"><div class="damage-bar-fill" style="width: {{damagePercent}}%;"></div></div></div>
+        <div class="col-gold">{{gold}}</div>
+        <div class="col-cs">{{cs}}</div>
+
         <div class="col-augments">
           {{#if augments.length}}
             {{#each augments}}
@@ -219,20 +234,10 @@
               </div>
             {{/each}}
           {{else}}
-            <div class="augment-name">No augments</div>
+            <!-- Empty -->
           {{/if}}
         </div>
 
-        <div class="col-items">
-          {{#each displayItems}}
-             <img src="{{url}}" class="item-icon {{#if isTrinket}}trinket{{/if}} {{#if isRole}}role-item{{/if}} {{#if isPlaceholder}}placeholder{{/if}}">
-          {{/each}}
-        </div>
-        <div class="col-kda"><div>{{k}} / {{d}} / {{a}}</div><span class="kda-sub">{{kdaRatio}}</span></div>
-        <div class="col-damage"><div class="damage-num">{{totalDamage}}</div><div class="damage-bar-bg"><div class="damage-bar-fill" style="width: {{damagePercent}}%;"></div></div></div>
-        <div class="col-gold">{{gold}}</div>
-        <div class="col-cs">{{cs}}</div>
-        <div class="col-vision">{{vision}}</div>
       </div>
     {{/each}}
   </div>
