@@ -388,10 +388,23 @@ function buildAugmentDisplay(id) {
   if (wikiEntry && wikiEntry.icon) {
     const iconName = wikiEntry.icon;
     const fullPath = path.join(AUGMENT_ICON_DIR, iconName);
+    
     if (fs.existsSync(fullPath)) {
-      // Use URL module for cross-platform file URI generation (works on Linux & Windows)
-      icon = require('url').pathToFileURL(fullPath).href;
+      try {
+        // On Linux/Puppeteer, ensure it's a valid file URI
+        icon = require('url').pathToFileURL(fullPath).href;
+        // logger.info(`[Infographic] Augment icon resolved: ${name} -> ${icon}`);
+      } catch (err) {
+        if (logger) logger.error(`[Infographic] Failed to convert icon path: ${fullPath}`, err);
+      }
+    } else {
+      if (logger) logger.warn(`[Infographic] Icon file missing: ${fullPath} (Augment: ${name})`);
     }
+  } else {
+    // Debug: log if we have a name but no wiki entry
+    // if (name && !name.startsWith('Augment ') && logger) {
+    //   logger.info(`[Infographic] No wiki entry found for augment: ${name}`);
+    // }
   }
 
   return {
