@@ -328,6 +328,48 @@ function getForfeitDetails(payload) {
   };
 }
 
+function isAramMayhem(payload) {
+  const mode = (payload?.gameMode || '').toUpperCase();
+  const queue = (payload?.queueType || '').toUpperCase();
+  return Boolean(payload?.isAramMayhem) || mode === 'KIWI' || queue === 'KIWI';
+}
+
+const AUGMENT_NAME_MAP = {
+  // Populate with known ID->name pairs as they become available.
+};
+
+function getAugmentName(id) {
+  if (!Number.isFinite(id)) return 'Augment';
+  return AUGMENT_NAME_MAP[id] || `Augment ${id}`;
+}
+
+function buildAugmentDisplay(id) {
+  const name = getAugmentName(id);
+  return {
+    id,
+    name,
+    short: (name || '').slice(0, 3).toUpperCase() || 'AUG',
+    icon: null, // Icon mapping unavailable; template will render placeholder.
+  };
+}
+
+function extractPlayerAugments(player) {
+  if (!player) return [];
+
+  let ids = [];
+  if (Array.isArray(player.augments)) {
+    ids = player.augments;
+  } else {
+    const stats = player.stats || {};
+    ids = [1, 2, 3, 4, 5, 6]
+      .map((i) => stats[`PLAYER_AUGMENT_${i}`])
+      .filter((v) => Number.isFinite(v));
+  }
+
+  const unique = Array.from(new Set(ids.filter((v) => Number.isFinite(v))));
+  return unique.map(buildAugmentDisplay);
+}
+
 async function getLatestDDVersion() {
   const now = Date.now();
   // Fetch only once every hour to be polite
@@ -364,6 +406,7 @@ function fixChampName(name) {
 
 async function prepareScoreboardData(payload, uploaderInfos = []) {
   const teams = Array.isArray(payload.teams) ? payload.teams : [];
+  const isMayhem = isAramMayhem(payload);
   const forfeit = getForfeitDetails(payload);
   const ver = await getLatestDDVersion();
   const CDN = `https://ddragon.leagueoflegends.com/cdn/${ver}/img`;
@@ -482,6 +525,7 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
       rune2: `${RUNE_CDN}/${runeMap[sStyle]||'7200_Domination'}.png`,
       displayItems,
       badges,
+      augments: isMayhem ? extractPlayerAugments(p) : [],
       k, d, a,
       kdaRatio: d === 0 ? (k + a).toFixed(2) : ((k + a) / d).toFixed(2),
       totalDamage: dmg.toLocaleString(),
@@ -507,16 +551,18 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
   if (uploaderInfos.length > 0) {
     anyUploaderWon = uploaderInfos.some(u => u.result === 'Win');
   } else {
-    const local = payload.localPlayer || payload.teams.flatMap(t=>t.players).find(p=>p.isLocalPlayer);
-    const winTeam = payload.teams.find(t=>t.isWinningTeam)?.teamId;
+    const local = payload.localPlayer || teams.flatMap((t) => t.players || []).find((p) => p.isLocalPlayer);
+    const winTeam = teams.find((t) => t.isWinningTeam)?.teamId;
     anyUploaderWon = local?.teamId === winTeam;
   }
 
   return {
-    gameMode: payload.gameMode || 'LoL Match',
+    gameMode: isMayhem ? 'ARAM Mayhem' : (payload.gameMode || payload.queueType || 'LoL Match'),
     duration: `${Math.floor(payload.gameLength / 60)}m ${payload.gameLength % 60}s`,
     uploaderResult: anyUploaderWon ? "VICTORY" : "DEFEAT",
     resultClass: anyUploaderWon ? "victory" : "defeat",
+    isMayhem,
+    augmentsVersion: payload.augmentsVersion || null,
     forfeit: forfeit.isForfeit,
     forfeitReason: forfeit.reasonLabel,
     forfeitTeam: forfeit.teamLabel,
@@ -532,13 +578,14 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
 
 async function generateInfographicImage(payload, uploaderInfos) {
   try {
-    const templatePath = path.join(__dirname, 'match-template.html');
+    const templateFile = isAramMayhem(payload) ? 'match-template-mayhem.html' : 'match-template.html';
+    const templatePath = path.join(__dirname, templateFile);
     const template = fs.readFileSync(templatePath, 'utf8');
     
     // Await the data preparation (since it fetches version)
     const data = await prepareScoreboardData(payload, uploaderInfos);
 
-    logger.info('[Infographic] Generating infographic image');
+    logger.info('[Infographic] Generating infographic image', { templateFile });
     const imageBuffer = await nodeHtmlToImage({
       html: template,
       content: data,

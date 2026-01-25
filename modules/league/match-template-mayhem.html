@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 1450px;
+      height: 1000px;
+      background-color: #010a13;
+      font-family: 'Roboto', sans-serif;
+      color: #a09b8c;
+      padding: 30px;
+      position: relative;
+    }
+
+    .header { display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: 20px; border-bottom: 2px solid #1e2328; margin-bottom: 10px; }
+    .outcome { font-size: 42px; font-weight: 700; text-transform: uppercase; letter-spacing: 3px; }
+    .victory { color: #0acbe6; text-shadow: 0 0 10px rgba(10, 203, 230, 0.3); }
+    .defeat { color: #e84057; text-shadow: 0 0 10px rgba(232, 64, 87, 0.3); }
+    .meta-info { text-align: right; font-size: 16px; color: #939a9e; }
+
+    .forfeit-banner {
+      margin: 12px 0 16px 0;
+      padding: 12px 14px;
+      background: #1e2328;
+      border: 1px solid #e84057;
+      color: #e84057;
+      font-weight: 700;
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+    .forfeit-reason { text-transform: uppercase; letter-spacing: 1px; }
+    .forfeit-names { color: #c8aa6e; font-weight: 600; }
+
+    .table-header {
+      display: grid;
+      grid-template-columns: 70px 60px 200px 200px 220px 100px 180px 100px 80px 80px;
+      padding: 0 0 5px 0; font-size: 12px; font-weight: 700; color: #5c5b57;
+      text-transform: uppercase; letter-spacing: 1px; text-align: center;
+    }
+    .th-left { text-align: left; padding-left: 15px; }
+    .th-right { text-align: right; padding-right: 20px; }
+
+    .player-row {
+      display: grid;
+      grid-template-columns: 70px 60px 200px 200px 220px 100px 180px 100px 80px 80px;
+      align-items: center; min-height: 70px; background: #0f1216;
+      border-bottom: 1px solid #1e2328; margin-bottom: 4px;
+    }
+    .team-100 .player-row { border-left: 5px solid #0acbe6; }
+    .team-200 .player-row { border-left: 5px solid #e84057; }
+    .is-local { background-color: #262118; border: 1px solid #c8aa6e; }
+
+    .col-champ { position: relative; display: flex; justify-content: center; align-items: center; }
+    .champ-img { width: 44px; height: 44px; border-radius: 50%; border: 2px solid #333; }
+    .level-badge { position: absolute; bottom: 0; right: 10px; background: #000; color: white; font-size: 11px; width: 18px; height: 18px; border-radius: 50%; text-align: center; line-height: 18px; border: 1px solid #c8aa6e; }
+
+    .col-spells { display: flex; flex-direction: column; gap: 2px; justify-content: center; }
+    .spell-row { display: flex; gap: 4px; }
+    .tiny-icon { width: 22px; height: 22px; border-radius: 3px; background: #181b1f; display: block; }
+
+    .col-name { padding-left: 15px; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
+    .summoner-name { color: #fff; font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px; }
+    .champion-name { color: #888; font-size: 11px; margin-bottom: 1px; }
+    .badge-container { display: flex; gap: 4px; margin-top: 1px; }
+    .badge { display: inline-flex; align-items: center; justify-content: center; background: #1e2328; border: 1px solid #333; border-radius: 3px; width: 18px; height: 18px; }
+    .badge svg { width: 12px; height: 12px; fill: #939a9e; }
+
+    .col-augments { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 8px; }
+    .augment { width: 56px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .augment-icon { width: 32px; height: 32px; border-radius: 6px; background: #141619; border: 1px solid #333; object-fit: cover; }
+    .augment-placeholder { width: 32px; height: 32px; border-radius: 6px; background: #1e2328; border: 1px solid #333; color: #c8aa6e; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 11px; }
+    .augment-name { font-size: 10px; color: #7f7c74; text-align: center; line-height: 1.2; }
+
+    .col-items { display: flex; gap: 4px; align-items: center; padding-left: 6px; }
+    .item-icon { width: 32px; height: 32px; border-radius: 4px; background: #141619; border: 1px solid #333; }
+    .trinket { margin-left: 6px; border-radius: 50%; }
+    .role-item { border: 1px solid #c8aa6e; }
+    .placeholder { opacity: 0; }
+
+    .col-kda { text-align: center; font-size: 15px; color: #fff; letter-spacing: 0.5px; }
+    .kda-sub { font-size: 12px; color: #666; display: block; margin-top: 2px; }
+
+    .col-damage { display: flex; flex-direction: column; justify-content: center; align-items: flex-start; padding-right: 20px; }
+    .damage-num { font-size: 13px; color: #939a9e; margin-bottom: 4px; }
+    .damage-bar-bg { width: 100%; height: 6px; background: #1c1f24; position: relative; border-radius: 2px; }
+    .damage-bar-fill { height: 100%; background: #e84057; display: block; border-radius: 2px; }
+    .team-100 .damage-bar-fill { background: #0acbe6; }
+
+    .col-gold { text-align: right; color: #c8aa6e; font-size: 14px; padding-right: 20px; font-weight: 500; }
+    .col-cs { text-align: right; color: #939a9e; font-size: 14px; padding-right: 20px; }
+    .col-vision { text-align: center; color: #939a9e; font-size: 14px; }
+
+    .legend-footer { position: absolute; bottom: 20px; left: 0; right: 0; display: flex; justify-content: center; gap: 30px; color: #939a9e; border-top: 1px solid #1e2328; padding-top: 15px; width: 90%; margin: 0 auto; }
+    .legend-item { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; font-size: 12px; }
+    .legend-title { display: flex; align-items: center; gap: 6px; font-weight: 700; color: #c8aa6e; }
+    .legend-desc { font-size: 11px; color: #5c5b57; font-style: italic; padding-left: 20px; }
+    .legend-icon { width: 14px; height: 14px; fill: #939a9e; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="outcome {{resultClass}}">{{uploaderResult}}</div>
+    <div class="meta-info">{{gameMode}} • {{duration}}</div>
+  </div>
+
+  {{#if forfeit}}
+    <div class="forfeit-banner">
+      <span class="forfeit-reason">{{forfeitReason}} by {{forfeitTeam}}</span>
+      <span class="forfeit-names">{{forfeitNames}}</span>
+    </div>
+  {{/if}}
+
+  <div class="table-header">
+    <div></div><div></div>
+    <div class="th-left">Summoner</div>
+    <div class="th-left">Augments</div>
+    <div class="th-left">Items</div>
+    <div>KDA</div>
+    <div class="th-left">Damage</div>
+    <div class="th-right">Gold</div>
+    <div class="th-right">CS</div>
+    <div>Vision</div>
+  </div>
+
+  <div class="team-container team-100">
+    <div style="display:flex; justify-content:space-between; padding:5px 10px; font-weight:bold; font-size:13px; color:#0acbe6;">
+        <span>{{#if t100Win}}VICTORY{{else}}DEFEAT{{/if}} (Blue Team)</span>
+        <span>{{t100Stats.k}} / {{t100Stats.d}} / {{t100Stats.a}} • {{t100Stats.gold}} Gold</span>
+    </div>
+    
+    {{#each team100}}
+      <div class="player-row {{#if isLocal}}is-local{{/if}}">
+        <div class="col-champ"><img src="{{championIcon}}" class="champ-img"><div class="level-badge">{{level}}</div></div>
+        <div class="col-spells">
+          <div class="spell-row"><img src="{{spell1}}" class="tiny-icon"><img src="{{spell2}}" class="tiny-icon"></div>
+          <div class="spell-row"><img src="{{rune1}}" class="tiny-icon"><img src="{{rune2}}" class="tiny-icon"></div>
+        </div>
+        
+        <div class="col-name">
+          <div class="summoner-name">{{name}}</div>
+          <div class="champion-name">{{championName}}</div>
+          <div class="badge-container">
+            {{#each badges}}
+              <span class="badge" title="{{title}}">{{{icon}}}</span>
+            {{/each}}
+          </div>
+        </div>
+
+        <div class="col-augments">
+          {{#if augments.length}}
+            {{#each augments}}
+              <div class="augment">
+                {{#if icon}}
+                  <img src="{{icon}}" class="augment-icon">
+                {{else}}
+                  <div class="augment-placeholder">{{short}}</div>
+                {{/if}}
+                <div class="augment-name">{{name}}</div>
+              </div>
+            {{/each}}
+          {{else}}
+            <div class="augment-name">No augments</div>
+          {{/if}}
+        </div>
+
+        <div class="col-items">
+          {{#each displayItems}}
+             <img src="{{url}}" class="item-icon {{#if isTrinket}}trinket{{/if}} {{#if isRole}}role-item{{/if}} {{#if isPlaceholder}}placeholder{{/if}}">
+          {{/each}}
+        </div>
+        <div class="col-kda"><div>{{k}} / {{d}} / {{a}}</div><span class="kda-sub">{{kdaRatio}}</span></div>
+        <div class="col-damage"><div class="damage-num">{{totalDamage}}</div><div class="damage-bar-bg"><div class="damage-bar-fill" style="width: {{damagePercent}}%;"></div></div></div>
+        <div class="col-gold">{{gold}}</div>
+        <div class="col-cs">{{cs}}</div>
+        <div class="col-vision">{{vision}}</div>
+      </div>
+    {{/each}}
+  </div>
+
+  <div class="team-container team-200">
+    <div style="display:flex; justify-content:space-between; padding:5px 10px; font-weight:bold; font-size:13px; color:#e84057;">
+        <span>{{#if t200Win}}VICTORY{{else}}DEFEAT{{/if}} (Red Team)</span>
+        <span>{{t200Stats.k}} / {{t200Stats.d}} / {{t200Stats.a}} • {{t200Stats.gold}} Gold</span>
+    </div>
+    {{#each team200}}
+      <div class="player-row {{#if isLocal}}is-local{{/if}}">
+        <div class="col-champ"><img src="{{championIcon}}" class="champ-img"><div class="level-badge">{{level}}</div></div>
+        <div class="col-spells">
+          <div class="spell-row"><img src="{{spell1}}" class="tiny-icon"><img src="{{spell2}}" class="tiny-icon"></div>
+          <div class="spell-row"><img src="{{rune1}}" class="tiny-icon"><img src="{{rune2}}" class="tiny-icon"></div>
+        </div>
+        <div class="col-name">
+          <div class="summoner-name">{{name}}</div>
+          <div class="champion-name">{{championName}}</div>
+          <div class="badge-container">
+            {{#each badges}}
+              <span class="badge" title="{{title}}">{{{icon}}}</span>
+            {{/each}}
+          </div>
+        </div>
+
+        <div class="col-augments">
+          {{#if augments.length}}
+            {{#each augments}}
+              <div class="augment">
+                {{#if icon}}
+                  <img src="{{icon}}" class="augment-icon">
+                {{else}}
+                  <div class="augment-placeholder">{{short}}</div>
+                {{/if}}
+                <div class="augment-name">{{name}}</div>
+              </div>
+            {{/each}}
+          {{else}}
+            <div class="augment-name">No augments</div>
+          {{/if}}
+        </div>
+
+        <div class="col-items">
+          {{#each displayItems}}
+             <img src="{{url}}" class="item-icon {{#if isTrinket}}trinket{{/if}} {{#if isRole}}role-item{{/if}} {{#if isPlaceholder}}placeholder{{/if}}">
+          {{/each}}
+        </div>
+        <div class="col-kda"><div>{{k}} / {{d}} / {{a}}</div><span class="kda-sub">{{kdaRatio}}</span></div>
+        <div class="col-damage"><div class="damage-num">{{totalDamage}}</div><div class="damage-bar-bg"><div class="damage-bar-fill" style="width: {{damagePercent}}%;"></div></div></div>
+        <div class="col-gold">{{gold}}</div>
+        <div class="col-cs">{{cs}}</div>
+        <div class="col-vision">{{vision}}</div>
+      </div>
+    {{/each}}
+  </div>
+
+  <div class="legend-footer">
+    <div class="legend-item">
+      <div class="legend-title">
+        <svg class="legend-icon" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        The Protector
+      </div>
+      <div class="legend-desc">Most Heals & Shields</div>
+    </div>
+
+    <div class="legend-item">
+      <div class="legend-title">
+        <svg class="legend-icon" viewBox="0 0 24 24"><path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z"/></svg>
+        Unstoppable
+      </div>
+      <div class="legend-desc">Largest Kill Spree</div>
+    </div>
+
+    <div class="legend-item">
+      <div class="legend-title">
+        <svg class="legend-icon" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg> 
+        Most Tanked
+      </div>
+      <div class="legend-desc">Dmg Taken + Mitigated</div>
+    </div>
+
+    <div class="legend-item">
+      <div class="legend-title">
+        <svg class="legend-icon" viewBox="0 0 24 24"><path d="M18 2h-4V0h-4v2H6v4h2v8H6v6h12v-6h-2V6h2z"/></svg> 
+        Objective Boss
+      </div>
+      <div class="legend-desc">Most Tower Dmg</div>
+    </div>
+
+    <div class="legend-item">
+      <div class="legend-title">
+        <svg class="legend-icon" viewBox="0 0 24 24"><path d="M12 2L10 6H6l2 4-2 4h4l2 4 2-4h4l-2-4 2-4h-4z"/></svg> 
+        CC King
+      </div>
+      <div class="legend-desc">Crowd Control Time</div>
+    </div>
+
+    <div class="legend-item">
+      <div class="legend-title">
+        <svg class="legend-icon" viewBox="0 0 24 24"><path d="M12 2c-4.42 0-8 3.58-8 8 0 4.42 8 10 8 10s8-5.58 8-10c0-4.42-3.58-8-8-8zm0 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM9 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm6 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg> 
+        Grey Screen
+      </div>
+      <div class="legend-desc">Time Spent Dead</div>
+    </div>
+  </div>
+
+</body>
+</html>
