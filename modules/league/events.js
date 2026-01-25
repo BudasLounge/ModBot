@@ -359,8 +359,12 @@ try {
 }
 
 let wikiAugmentData = {};
+const wikiAugmentDataLower = {};
 try {
   wikiAugmentData = require('./mayhem_wiki_data.json');
+  Object.keys(wikiAugmentData).forEach(k => {
+      wikiAugmentDataLower[k.toLowerCase()] = wikiAugmentData[k];
+  });
 } catch (e) {
   // Wiki data not yet fetched
 }
@@ -378,9 +382,11 @@ function buildAugmentDisplay(id) {
   const name = getAugmentName(id);
   
   let icon = null;
+  const wikiEntry = wikiAugmentData[name] || (name ? wikiAugmentDataLower[name.toLowerCase()] : null);
+  
   // If we have wiki data for this name, try to resolve the local icon
-  if (wikiAugmentData[name] && wikiAugmentData[name].icon) {
-    const iconName = wikiAugmentData[name].icon;
+  if (wikiEntry && wikiEntry.icon) {
+    const iconName = wikiEntry.icon;
     const fullPath = path.join(AUGMENT_ICON_DIR, iconName);
     if (fs.existsSync(fullPath)) {
       // Convert to file URI
@@ -390,7 +396,7 @@ function buildAugmentDisplay(id) {
 
   return {
     id,
-    name,
+    name: wikiEntry ? wikiEntry.name : name,
     short: (name || '').slice(0, 3).toUpperCase() || 'AUG',
     icon: icon, 
   };
@@ -870,6 +876,73 @@ async function handleMatchPayload(payload, client, uploaderInfos = [], placehold
 
     const matchedPlayers = await matchedPlayersPromise;
     logger.info('[LoL Match Ingest] Matched players fetched', { matchedPlayers: matchedPlayers.length });
+
+    // Handle Augment Identification (Mayhem)
+    if (isAramMayhem(payload)) {
+      const matchAugmentsData = { players: [] };
+      const teams = Array.isArray(payload.teams) ? payload.teams : [];
+      const payloadPlayers = teams.flatMap(t => t.players || []);
+
+      for (const dbPlayer of matchedPlayers) {
+        let p = null;
+        if (dbPlayer.puuid && dbPlayer.puuid !== 'none') {
+          p = payloadPlayers.find(pp => pp.puuid === dbPlayer.puuid);
+        }
+        if (!p && dbPlayer.league_name) {
+          const lowerDB = dbPlayer.league_name.trim().toLowerCase();
+          p = payloadPlayers.find(pp => {
+            const name = (pp.riotIdGameName || '').trim().toLowerCase();
+            const tag = (pp.riotIdTagLine || '').trim().toLowerCase();
+            const full = name && tag ? `${name}#${tag}` : name;
+            return full === lowerDB;
+          });
+        }
+
+        if (p) {
+          let ids = [];
+          if (Array.isArray(p.augments)) {
+            ids = p.augments;
+          } else {
+            const stats = p.stats || {};
+            // Try to grab from stats if not in top-level array
+            ids = [1, 2, 3, 4, 5, 6]
+              .map((i) => stats[`PLAYER_AUGMENT_${i}`])
+              .filter((v) => v !== undefined && v !== null && v !== 0);
+          }
+          
+          // Filter valid IDs
+          const validIds = ids.filter(id => (typeof id === 'number' && id > 0) || (typeof id === 'string' && id.length > 0));
+
+          if (validIds.length > 0) {
+            matchAugmentsData.players.push({
+              user_id: dbPlayer.user_id,
+              augments: validIds
+            });
+          }
+        }
+      }
+
+      if (matchAugmentsData.players.length > 0) {
+        recentMatchAugments.set(String(gameId), matchAugmentsData);
+        // Expire after 2 hours
+        setTimeout(() => recentMatchAugments.delete(String(gameId)), 2 * 60 * 60 * 1000);
+
+        try {
+          const row = new ActionRowBuilder()
+            .addComponents(
+              new ButtonBuilder()
+                .setCustomId(`LEAGUE_ID_AUGMENTS_${gameId}`)
+                .setLabel('Identify Augments')
+                .setStyle(ButtonStyle.Primary)
+            );
+          
+          await scoreboardMessage.edit({ components: [row] });
+          logger.info('[LoL Match Ingest] Added Identify Augments button', { gameId });
+        } catch (err) {
+          logger.error('[LoL Match Ingest] Failed to add Identify button', err);
+        }
+      }
+    }
 
     // TODO: Re-enable mention threads once we have a better UX; currently floods the sidebar.
     // await createMentionThread(scoreboardMessage, matchedPlayers, gameId, payload);
