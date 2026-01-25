@@ -389,8 +389,8 @@ function buildAugmentDisplay(id) {
     const iconName = wikiEntry.icon;
     const fullPath = path.join(AUGMENT_ICON_DIR, iconName);
     if (fs.existsSync(fullPath)) {
-      // Convert to file URI (Windows requires file:///)
-      icon = `file:///${fullPath.replace(/\\/g, '/')}`;
+      // Use URL module for cross-platform file URI generation (works on Linux & Windows)
+      icon = require('url').pathToFileURL(fullPath).href;
     }
   }
 
