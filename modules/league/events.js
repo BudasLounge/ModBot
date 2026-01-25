@@ -646,10 +646,57 @@ async function generateInfographicImage(payload, uploaderInfos) {
 
 
 /* =====================================================
+   Clash Adaptation
+===================================================== */
+
+function parseClashSummary(summary) {
+  const teamsMap = new Map();
+  const rawTeams = Array.isArray(summary.teams) ? summary.teams : [];
+  const rawPlayers = Array.isArray(summary.players) ? summary.players : [];
+
+  // Setup teams
+  for (const t of rawTeams) {
+    teamsMap.set(t.teamId, { ...t, players: [] });
+  }
+
+  // Distribute players
+  for (const p of rawPlayers) {
+    const team = teamsMap.get(p.teamId);
+    if (team) {
+      team.players.push(p);
+    }
+  }
+  
+  const teams = Array.from(teamsMap.values());
+  
+  return {
+    gameId: summary.matchId,
+    teams,
+    forfeit: summary.forfeit,
+    forfeitReason: summary.forfeitReason,
+    forfeitTeamId: summary.forfeitTeamId,
+    forfeitTeamIsPlayer: summary.forfeitTeamIsPlayer,
+    forfeitPlayers: summary.forfeitPlayers
+  };
+}
+
+function normalizeMatchPayload(payload) {
+  if (payload.clashSummary) {
+    const derived = parseClashSummary(payload.clashSummary);
+    return {
+      ...payload,
+      ...derived
+    };
+  }
+  return payload;
+}
+
+/* =====================================================
    Match ingest server
 ===================================================== */
 
-async function enqueueMatchPayload(payload, client) {
+async function enqueueMatchPayload(rawPayload, client) {
+  const payload = normalizeMatchPayload(rawPayload);
   const gameId = payload.gameId || payload.reportGameId;
 
   logger.info('[LoL Match Ingest] Enqueue match payload', { gameId });
