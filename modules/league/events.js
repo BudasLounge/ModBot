@@ -290,6 +290,44 @@ async function createMentionThread(parentMessage, matchedPlayers, gameId, payloa
 let cachedVersion = '14.3.1';
 let lastVersionFetch = 0;
 
+// Forfeit helpers
+function getForfeitDetails(payload) {
+  const isForfeit = Boolean(payload?.forfeit);
+  const reasonRaw = payload?.forfeitReason;
+  const reasonLabel = reasonRaw === 'early_surrender'
+    ? 'Early surrender'
+    : reasonRaw === 'surrender'
+      ? 'Surrender'
+      : 'Forfeit';
+
+  const teamId = payload?.forfeitTeamId || null;
+  const teamIsPlayer = Boolean(payload?.forfeitTeamIsPlayer);
+  const teamLabel = teamId === 100 ? 'Blue team' : teamId === 200 ? 'Red team' : 'Unknown team';
+
+  const forfeitingNames = Array.isArray(payload?.forfeitPlayers)
+    ? payload.forfeitPlayers
+        .map((p) => {
+          if (!p) return null;
+          if (p.riotIdTagLine) return `${p.riotIdGameName || p.summonerName || 'Unknown'}#${p.riotIdTagLine}`;
+          return p.riotIdGameName || p.summonerName || null;
+        })
+        .filter(Boolean)
+    : [];
+
+  if (isForfeit && forfeitingNames.length === 0) {
+    logger?.warn('[LoL Match Ingest] Forfeit flagged but no forfeitPlayers provided');
+  }
+
+  return {
+    isForfeit,
+    reasonLabel,
+    teamLabel,
+    teamId,
+    teamIsPlayer,
+    forfeitingNames,
+  };
+}
+
 async function getLatestDDVersion() {
   const now = Date.now();
   // Fetch only once every hour to be polite
@@ -325,6 +363,8 @@ function fixChampName(name) {
 ===================================================== */
 
 async function prepareScoreboardData(payload, uploaderInfos = []) {
+  const teams = Array.isArray(payload.teams) ? payload.teams : [];
+  const forfeit = getForfeitDetails(payload);
   const ver = await getLatestDDVersion();
   const CDN = `https://ddragon.leagueoflegends.com/cdn/${ver}/img`;
   const ITEM_CDN = `${CDN}/item`;
@@ -346,7 +386,7 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
   const spellMap = { 1:'SummonerBoost', 3:'SummonerExhaust', 4:'SummonerFlash', 6:'SummonerHaste', 7:'SummonerHeal', 11:'SummonerSmite', 12:'SummonerTeleport', 13:'SummonerMana', 14:'SummonerDot', 21:'SummonerBarrier', 32:'SummonerSnowball' };
   const runeMap = { 8000:'7201_Precision', 8100:'7200_Domination', 8200:'7202_Sorcery', 8300:'7203_Whimsy', 8400:'7204_Resolve', 40500:'7201_Precision', 41300:'7200_Domination' };
 
-  const allPlayers = payload.teams.flatMap(t => t.players);
+  const allPlayers = teams.flatMap((t) => t.players || []);
   const getStat = (p, key) => (p.stats && p.stats[key]) ? p.stats[key] : 0;
   
   const maxVals = {
@@ -453,8 +493,8 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
     };
   };
 
-  const t100 = payload.teams.find(t => t.teamId === 100) || { players: [] };
-  const t200 = payload.teams.find(t => t.teamId === 200) || { players: [] };
+  const t100 = teams.find((t) => t.teamId === 100) || { players: [] };
+  const t200 = teams.find((t) => t.teamId === 200) || { players: [] };
 
   const getTotals = (team) => ({
     k: team.players.reduce((a,b) => a + (b.stats.CHAMPIONS_KILLED||0), 0),
@@ -477,6 +517,10 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
     duration: `${Math.floor(payload.gameLength / 60)}m ${payload.gameLength % 60}s`,
     uploaderResult: anyUploaderWon ? "VICTORY" : "DEFEAT",
     resultClass: anyUploaderWon ? "victory" : "defeat",
+    forfeit: forfeit.isForfeit,
+    forfeitReason: forfeit.reasonLabel,
+    forfeitTeam: forfeit.teamLabel,
+    forfeitNames: forfeit.forfeitingNames.length ? forfeit.forfeitingNames.join(', ') : 'Unknown players',
     team100: t100.players.map(mapPlayer),
     t100Stats: getTotals(t100),
     t100Win: t100.isWinningTeam,
@@ -592,6 +636,21 @@ async function handleMatchPayload(payload, client, uploaderInfos = [], placehold
   const gameId = payload.gameId || payload.reportGameId || 'unknown';
   logger.info('[LoL Match Ingest] Payload received, generating infographic...', { gameId });
 
+  const forfeit = getForfeitDetails(payload);
+  const forfeitText = forfeit.isForfeit
+    ? `${forfeit.reasonLabel} by ${forfeit.teamLabel}${forfeit.forfeitingNames.length ? `: ${forfeit.forfeitingNames.join(', ')}` : ''}`
+    : '';
+
+  if (forfeit.isForfeit) {
+    logger.info('[LoL Match Ingest] Forfeit detected', {
+      gameId,
+      reason: forfeit.reasonLabel,
+      teamId: forfeit.teamId,
+      teamIsPlayer: forfeit.teamIsPlayer,
+      forfeitingCount: forfeit.forfeitingNames.length,
+    });
+  }
+
   if (!MATCH_WEBHOOK_CHANNEL) {
     logger.error('[LoL Match Ingest] MATCH_WEBHOOK_CHANNEL not configured');
     return;
@@ -613,10 +672,10 @@ async function handleMatchPayload(payload, client, uploaderInfos = [], placehold
     if (imageBuffer) {
       const attachment = new AttachmentBuilder(imageBuffer, { name: `match-${gameId}.png` });
       if (scoreboardMessage) {
-        await scoreboardMessage.edit({ content: '', files: [attachment] });
+        await scoreboardMessage.edit({ content: forfeitText, files: [attachment] });
         logger.info('[LoL Match Ingest] Infographic edited into placeholder.', { gameId });
       } else {
-        scoreboardMessage = await channel.send({ files: [attachment] });
+        scoreboardMessage = await channel.send({ content: forfeitText, files: [attachment] });
         logger.info('[LoL Match Ingest] Infographic sent (no placeholder).');
       }
     } else {
