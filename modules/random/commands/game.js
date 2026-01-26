@@ -86,8 +86,8 @@ module.exports = {
                 host_id: String(message.member.id),
                 starting_channel_id: String(voiceChannelId),
                 status: 'setup', // Initial status: 'setup', 'lobby_configured', 'running', 'ended'
-                num_teams: '0',
-                max_players: '0' // Default to 0 (unlimited), host needs to configure
+                num_teams: 0,
+                max_players: 0 // Default to 0 (unlimited), host needs to configure
             };
 
             this.logger.info(`Attempting to create game with data: ${JSON.stringify(newGameData)}`);
