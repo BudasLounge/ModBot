@@ -51,7 +51,7 @@ module.exports = {
                                 game_player_id: Number(playerToDelete.game_player_id)
                             });
                         } else {
-                             // Fallback if game_player_id is not directly in the list item (should be though)
+                            // Fallback if game_player_id is not directly in the list item (should be though)
                             var respTemp = await api.get("game_joining_player", {
                                 game_id: oldGameId,
                                 player_id: playerToDelete.player_id
@@ -137,6 +137,11 @@ module.exports = {
                     .setLabel('Setup Teams')
                     .setStyle(ButtonStyle.Primary),
                 new ButtonBuilder()
+                    .setCustomId(`GAME_HOST_SET_CAPTAINS-${newGameId}`)
+                    .setLabel('Set Captains')
+                    .setStyle(ButtonStyle.Secondary)
+                    .setDisabled(true), // Disabled until teams are configured
+                new ButtonBuilder()
                     .setCustomId(`GAME_HOST_MANAGE_PLAYERS-${newGameId}`)
                     .setLabel('Manage Players')
                     .setStyle(ButtonStyle.Secondary)
@@ -150,10 +155,25 @@ module.exports = {
                     .setLabel('Voice Controls')
                     .setStyle(ButtonStyle.Secondary),
                 new ButtonBuilder()
+                    .setCustomId(`GAME_HOST_START_PICKING-${newGameId}`)
+                    .setLabel('Start Draft')
+                    .setStyle(ButtonStyle.Success)
+                    .setDisabled(true), // Disabled until captains are set
+                new ButtonBuilder()
                     .setCustomId(`GAME_HOST_END-${newGameId}`)
                     .setLabel('End Game')
                     .setStyle(ButtonStyle.Danger),
             );
-        message.channel.send({ embeds: [gameMenuEmbed], components: [playerActionRow, hostSetupRow, hostControlRow] });
+
+        const captainActionRow = new ActionRowBuilder()
+            .addComponents(
+                new ButtonBuilder()
+                    .setCustomId(`GAME_CAPTAIN_PICK-${newGameId}`)
+                    .setLabel('🎯 Pick a Player')
+                    .setStyle(ButtonStyle.Success)
+                    .setDisabled(true), // Disabled until it's a captain's turn
+            );
+
+        message.channel.send({ embeds: [gameMenuEmbed], components: [playerActionRow, hostSetupRow, hostControlRow, captainActionRow] });
     }
 };

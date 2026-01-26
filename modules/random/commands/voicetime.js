@@ -2,8 +2,8 @@ module.exports = {
     name: 'voicetime',
     description: 'Prints a leaderboard of voice activity or manages voice time data.',
     syntax: 'voicetime [cleanup | diagnose]',
-    num_args: 0, 
-    args_to_lower: true, 
+    num_args: 0,
+    args_to_lower: true,
     needs_api: true,
     has_state: false,
     async execute(message, args, extra) {
@@ -15,7 +15,7 @@ module.exports = {
             this.logger.info(`[voicetime cleanup] User ${message.author.tag} initiated cleanup request for guild ${message.guild.id}`);
             const confirmId = `VOICE_CLEANUP_CONFIRM_${message.guild.id}`;
             const cancelId = `VOICE_CLEANUP_CANCEL_${message.guild.id}`;
-            
+
             const row = new ActionRowBuilder()
                 .addComponents(
                     new ButtonBuilder()
@@ -31,7 +31,7 @@ module.exports = {
             await message.reply({
                 content: '⚠️ **Warning!** You are about to delete ALL voice time tracking data for this server. This action is irreversible.\nAre you sure you want to proceed?',
                 components: [row],
-                ephemeral: true 
+                ephemeral: true
             });
             return;
 
@@ -96,7 +96,7 @@ module.exports = {
                         .setStyle(ButtonStyle.Danger)
                 )
             ];
-            
+
             await reply.edit({ content: report, components });
             return;
 
@@ -121,14 +121,14 @@ module.exports = {
                 return;
             }
 
-            const totalTime = new Map(); 
+            const totalTime = new Map();
             const currentTime = Math.floor(new Date().getTime() / 1000);
 
             for (const track of voiceTrackings) {
                 const { user_id, connect_time, disconnect_time } = track;
                 const connectTime = parseInt(connect_time, 10);
                 const rawDisconnectTime = parseInt(disconnect_time, 10);
-                
+
                 if (isNaN(connectTime)) {
                     this.logger.warn(`[voicetime] Invalid connect_time for track: ${JSON.stringify(track)}`);
                     continue;
@@ -143,7 +143,7 @@ module.exports = {
                     this.logger.warn(`[voicetime] Voice tracking entry missing user_id: ${JSON.stringify(track)}`);
                 }
             }
-            
+
             if (totalTime.size === 0) {
                 this.logger.info("[voicetime] No valid user voice time data to display after processing.");
                 message.channel.send({ content: "No voice time data could be processed for users." });
@@ -184,10 +184,11 @@ module.exports = {
 
             const timingFilters = new ActionRowBuilder()
                 .addComponents(
-                    new ButtonBuilder().setCustomId("VOICEnon-muted").setLabel("Non-muted times only").setStyle(ButtonStyle.Primary).setDisabled(false),
-                    new ButtonBuilder().setCustomId("VOICEmuted").setLabel("Muted times only").setStyle(ButtonStyle.Primary).setDisabled(false),
-                    new ButtonBuilder().setCustomId("VOICElonely").setLabel("Alone times only").setStyle(ButtonStyle.Primary).setDisabled(false),
-                    new ButtonBuilder().setCustomId("VOICEbottom").setLabel("Bottom Talkers").setStyle(ButtonStyle.Primary).setDisabled(false)
+                    new ButtonBuilder().setCustomId("VOICEtop").setLabel("Top All-Time").setStyle(ButtonStyle.Success).setDisabled(false),
+                    new ButtonBuilder().setCustomId("VOICEnon-muted").setLabel("Non-muted").setStyle(ButtonStyle.Primary).setDisabled(false),
+                    new ButtonBuilder().setCustomId("VOICEmuted").setLabel("Muted only").setStyle(ButtonStyle.Primary).setDisabled(false),
+                    new ButtonBuilder().setCustomId("VOICElonely").setLabel("Alone time").setStyle(ButtonStyle.Primary).setDisabled(false),
+                    new ButtonBuilder().setCustomId("VOICEbottom").setLabel("Bottom").setStyle(ButtonStyle.Primary).setDisabled(false)
                 );
 
             const timingFilters2 = new ActionRowBuilder()
@@ -200,7 +201,7 @@ module.exports = {
 
             message.channel.send({ components: [timingFilters, timingFilters2], embeds: [listEmbed] });
             this.logger.info("[voicetime] Sent initial Voice Leaderboard!");
-        } 
+        }
     },
     formatDuration(totalSeconds) {
         if (totalSeconds <= 0) return "0 seconds";
@@ -217,7 +218,7 @@ module.exports = {
         if (hours > 0) parts.push(hours + " " + (hours === 1 ? "hour" : "hours"));
         if (minutes > 0) parts.push(minutes + " " + (minutes === 1 ? "minute" : "minutes"));
         if (seconds > 0) parts.push(seconds + " " + (seconds === 1 ? "second" : "seconds"));
-        
+
         if (parts.length === 0) {
             return "0 seconds";
         }

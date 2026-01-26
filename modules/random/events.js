@@ -7,7 +7,11 @@ const {
     TextInputBuilder,
     EmbedBuilder,
     ButtonStyle,
-    TextInputStyle
+    TextInputStyle,
+    ChannelType,
+    StringSelectMenuBuilder,
+    UserSelectMenuBuilder,
+    PermissionFlagsBits
 } = require('discord.js');
 
 // Module-scoped logger, initialized in register_handlers
@@ -29,7 +33,7 @@ function formatDuration(totalSeconds) {
     if (hours > 0) parts.push(hours + " " + (hours === 1 ? "hour" : "hours"));
     if (minutes > 0) parts.push(minutes + " " + (minutes === 1 ? "minute" : "minutes"));
     if (seconds > 0) parts.push(seconds + " " + (seconds === 1 ? "second" : "seconds"));
-    
+
     if (parts.length === 0) { // This case handles input like 0.5 seconds becoming 0 seconds after floor
         return "0 seconds";
     }
@@ -145,7 +149,7 @@ async function generateVoiceLeaderboard(button, title, options) {
                     continue;
                 }
             }
-            
+
             const duration = Math.max(0, Math.floor(effectiveDisconnectTime - effectiveConnectTime));
 
             if (duration > 0) {
@@ -178,7 +182,7 @@ async function generateVoiceLeaderboard(button, title, options) {
         for (let i = 0; i < sortedEntries.length; i++) {
             const [key, totalSeconds] = sortedEntries[i];
             let displayName = `ID: ${key}`;
-            
+
             if (groupBy === 'channel') {
                 const channel = button.guild.channels.cache.get(key);
                 if (channel) displayName = channel.name;
@@ -195,7 +199,7 @@ async function generateVoiceLeaderboard(button, title, options) {
             listEmbed.addFields({ name: `${i + 1}. ${displayName}`, value: formatDuration(totalSeconds) });
         }
     }
-    
+
     const updatedComponents = button.message.components.map(row => {
         const newRow = new ActionRowBuilder();
         row.components.forEach(comp => {
@@ -213,14 +217,14 @@ async function generateVoiceLeaderboard(button, title, options) {
 // NEW: Handler for GAME_ button interactions
 async function handleGameButton(buttonInteraction, logger, localApi) {
     const customId = buttonInteraction.customId;
-    const parts = customId.split('-'); 
+    const parts = customId.split('-');
     if (parts.length < 2) {
         logger.warn(`[GAME_BTN] Invalid customId format: ${customId}`);
         await buttonInteraction.reply({ content: "Invalid button action.", ephemeral: true });
         return;
     }
 
-    const fullAction = parts[0]; 
+    const fullAction = parts[0];
     const gameIdString = parts[1]; // gameId is a string initially    
     const gameId = Number(gameIdString); // Convert to number
     if (isNaN(gameId)) {
@@ -317,13 +321,13 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
             const modal = new ModalBuilder()
                 .setCustomId(`GAME_MODAL_SETUP_TEAMS-${gameIdString}`)
                 .setTitle(`Team Setup for Game ID: ${gameIdString}`);
-            
+
             const numTeamsInput = new TextInputBuilder()
                 .setCustomId('numTeams')
-                .setLabel("Number of Teams (e.g., 2, 3)")
+                .setLabel("Number of Teams (2-4)")
                 .setStyle(TextInputStyle.Short)
                 .setRequired(true)
-                .setPlaceholder("Enter a number > 1");
+                .setPlaceholder("Enter 2, 3, or 4");
 
             const playersPerTeamInput = new TextInputBuilder()
                 .setCustomId('playersPerTeam')
@@ -332,15 +336,24 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
                 .setRequired(true)
                 .setValue(gameDetails.max_players !== undefined ? String(gameDetails.max_players) : '0')
                 .setPlaceholder("Enter a number >= 0");
-            
+
+            const pickingModeInput = new TextInputBuilder()
+                .setCustomId('pickingMode')
+                .setLabel("Picking Mode: 'turns' or 'freeforall'")
+                .setStyle(TextInputStyle.Short)
+                .setRequired(true)
+                .setValue('turns')
+                .setPlaceholder("turns = alternating, freeforall = any captain");
+
             const currentNumTeams = gameDetails.num_teams !== undefined ? String(gameDetails.num_teams) : '2';
             if (currentNumTeams !== '0') {
-                 numTeamsInput.setValue(currentNumTeams);
+                numTeamsInput.setValue(currentNumTeams);
             }
 
             modal.addComponents(
                 new ActionRowBuilder().addComponents(numTeamsInput),
-                new ActionRowBuilder().addComponents(playersPerTeamInput)
+                new ActionRowBuilder().addComponents(playersPerTeamInput),
+                new ActionRowBuilder().addComponents(pickingModeInput)
             );
             await buttonInteraction.showModal(modal);
             logger.info(`[GAME_BTN] Host ${userId} initiated team setup for game ${gameId}`);
@@ -355,8 +368,8 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
             logger.info(`[GAME_BTN_MANAGE_PLAYERS] Game ${gameId} details on entry: Status='${gameDetails.status}', NumTeams=${gameDetails.num_teams}`);
 
             if (gameDetails.status === 'setup' || !gameDetails.num_teams || gameDetails.num_teams === 0) {
-                 await buttonInteraction.reply({ content: "Teams need to be configured first. Use 'Setup Teams' / 'Reconfigure Teams'.", ephemeral: true });
-                 return;
+                await buttonInteraction.reply({ content: "Teams need to be configured first. Use 'Setup Teams' / 'Reconfigure Teams'.", ephemeral: true });
+                return;
             }
             try {
                 await buttonInteraction.deferReply({ ephemeral: true });
@@ -380,8 +393,9 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
                 for (const player of playersInLobby) {
                     const member = await buttonInteraction.guild.members.fetch(player.player_id).catch(() => null);
                     const playerName = member ? member.displayName : `User ID: ${player.player_id}`;
-                    if (player.team_id && player.team_id > 0 && player.team_id <= gameDetails.num_teams) {
-                        teamPlayers[player.team_id - 1].push(playerName);
+                    const playerTeam = parseInt(player.team, 10);
+                    if (!isNaN(playerTeam) && playerTeam > 0 && playerTeam <= gameDetails.num_teams) {
+                        teamPlayers[playerTeam - 1].push(playerName);
                     } else {
                         unassignedPlayers.push({ id: player.player_id, name: playerName, game_player_id: player.game_player_id });
                         unassignedPlayersDescription += `${playerName}\n`;
@@ -438,7 +452,7 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
             if (deployDisabled) {
                 deployButtonLabel += " (Setup Teams First)";
             }
-            
+
             const voiceControlRow = new ActionRowBuilder()
                 .addComponents(
                     new ButtonBuilder()
@@ -451,7 +465,7 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
                         .setStyle(ButtonStyle.Success)
                         .setDisabled(deployDisabled)
                 );
-            
+
             await buttonInteraction.reply({
                 content: `Voice Controls for Game ${gameId}:`,
                 components: [voiceControlRow],
@@ -487,7 +501,7 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
                 .setPlaceholder(`Enter a team number, or 0`)
                 .setStyle(TextInputStyle.Short)
                 .setRequired(true);
-            
+
             const playerActionRow = new ActionRowBuilder().addComponents(playerInput);
             const teamActionRow = new ActionRowBuilder().addComponents(teamInput);
             assignModal.addComponents(playerActionRow, teamActionRow);
@@ -501,7 +515,7 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
                 await buttonInteraction.reply({ content: "Only the host can do this.", ephemeral: true });
                 return;
             }
-            await buttonInteraction.deferReply({ephemeral: true});
+            await buttonInteraction.deferReply({ ephemeral: true });
 
             if (gameDetails.status !== 'lobby_configured' || !gameDetails.num_teams || gameDetails.num_teams === 0) {
                 await buttonInteraction.editReply({ content: "Teams must be configured and players assigned before deploying to voice channels." });
@@ -509,7 +523,7 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
             }
 
             try {
-                const playersResp = await localApi.get("game_joining_player", { game_id: gameId, _filter: "team_id IS NOT NULL AND team_id > 0", _limit: 100 });
+                const playersResp = await localApi.get("game_joining_player", { game_id: gameId, _filter: "team IS NOT NULL AND team > 0", _limit: 100 });
                 const playersToMove = playersResp.game_joining_players || [];
 
                 if (playersToMove.length === 0) {
@@ -521,15 +535,15 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
                 let failedCount = 0;
                 let channelsNotFound = new Set();
 
-                const teamVoiceChannelIds = []; 
+                const teamVoiceChannelIds = [];
                 for (let i = 1; i <= gameDetails.num_teams; i++) {
                     const channelName = `Team ${i}`;
-                    const voiceChannel = buttonInteraction.guild.channels.cache.find(ch => ch.name === channelName && ch.type === 'GUILD_VOICE');
+                    const voiceChannel = buttonInteraction.guild.channels.cache.find(ch => ch.name === channelName && ch.type === ChannelType.GuildVoice);
                     if (voiceChannel) {
-                        teamVoiceChannelIds[i-1] = voiceChannel.id;
+                        teamVoiceChannelIds[i - 1] = voiceChannel.id;
                     } else {
                         channelsNotFound.add(channelName);
-                        teamVoiceChannelIds[i-1] = null; // Mark as not found
+                        teamVoiceChannelIds[i - 1] = null; // Mark as not found
                     }
                 }
 
@@ -539,15 +553,16 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
                 }
 
                 for (const player of playersToMove) {
-                    if (!player.team_id || player.team_id <= 0 || player.team_id > gameDetails.num_teams) {
-                        logger.warn(`[GAME_VOICE_DEPLOY] Player ${player.player_id} has invalid team_id ${player.team_id}`);
+                    const playerTeam = parseInt(player.team, 10);
+                    if (isNaN(playerTeam) || playerTeam <= 0 || playerTeam > gameDetails.num_teams) {
+                        logger.warn(`[GAME_VOICE_DEPLOY] Player ${player.player_id} has invalid team ${player.team}`);
                         failedCount++;
                         continue;
                     }
-                    const targetChannelId = teamVoiceChannelIds[player.team_id - 1];
+                    const targetChannelId = teamVoiceChannelIds[playerTeam - 1];
                     if (!targetChannelId) {
-                        logger.warn(`[GAME_VOICE_DEPLOY] No channel configured for Team ${player.team_id} for player ${player.player_id}`);
-                        failedCount++; 
+                        logger.warn(`[GAME_VOICE_DEPLOY] No channel configured for Team ${playerTeam} for player ${player.player_id}`);
+                        failedCount++;
                         continue;
                     }
 
@@ -557,21 +572,21 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
                             await member.voice.setChannel(targetChannelId);
                             movedCount++;
                         } else if (member && member.voice && member.voice.channelId === targetChannelId) {
-                            movedCount++; 
-                        } else if (member && !member.voice.channelId){
+                            movedCount++;
+                        } else if (member && !member.voice.channelId) {
                             logger.info(`[GAME_VOICE_DEPLOY] Player ${player.player_id} not in a voice channel.`);
                             failedCount++;
                         }
                     } catch (moveError) {
                         failedCount++;
-                        logger.warn(`[GAME_VOICE_DEPLOY] Failed to move player ${player.player_id} to channel for Team ${player.team_id}: ${moveError.message}`);
+                        logger.warn(`[GAME_VOICE_DEPLOY] Failed to move player ${player.player_id} to channel for Team ${playerTeam}: ${moveError.message}`);
                     }
                 }
-                await buttonInteraction.editReply({ content: `Attempted to move players to team channels. Moved: ${movedCount}, Failed/Skipped: ${failedCount}.`});
+                await buttonInteraction.editReply({ content: `Attempted to move players to team channels. Moved: ${movedCount}, Failed/Skipped: ${failedCount}.` });
                 logger.info(`[GAME_VOICE_DEPLOY] Host ${userId} deployed teams for game ${gameId}. Moved: ${movedCount}, Failed: ${failedCount}`);
             } catch (error) {
                 logger.error(`[GAME_VOICE_DEPLOY] Error deploying teams for game ${gameId}: ${error.message || error}`);
-                await buttonInteraction.editReply({ content: "An error occurred while trying to move players to team channels."});
+                await buttonInteraction.editReply({ content: "An error occurred while trying to move players to team channels." });
             }
             break;
 
@@ -618,6 +633,210 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
             } catch (error) {
                 logger.error(`[GAME_BTN_END] Error ending game ${gameId} for host ${userId}: ${error.message || error}`);
                 await buttonInteraction.editReply({ content: "An error occurred while trying to end the game. Some cleanup may have failed. Please check logs.", components: [] });
+            }
+            break;
+
+        case "HOST_SET_CAPTAINS":
+            if (!isHost) {
+                await buttonInteraction.reply({ content: "Only the host can set captains.", ephemeral: true });
+                return;
+            }
+            if (gameDetails.status === 'setup' || !gameDetails.num_teams || gameDetails.num_teams === 0) {
+                await buttonInteraction.reply({ content: "Teams need to be configured first before setting captains.", ephemeral: true });
+                return;
+            }
+
+            // Use UserSelectMenu for better UX - one menu per team
+            const captainSelectRows = [];
+            for (let i = 1; i <= Math.min(gameDetails.num_teams, 4); i++) {
+                const userSelect = new UserSelectMenuBuilder()
+                    .setCustomId(`GAME_SELECT_CAPTAIN-${gameIdString}-${i}`)
+                    .setPlaceholder(`Select Captain for Team ${i}`)
+                    .setMinValues(1)
+                    .setMaxValues(1);
+                captainSelectRows.push(new ActionRowBuilder().addComponents(userSelect));
+            }
+
+            // Add confirm button
+            const confirmRow = new ActionRowBuilder()
+                .addComponents(
+                    new ButtonBuilder()
+                        .setCustomId(`GAME_CONFIRM_CAPTAINS-${gameIdString}`)
+                        .setLabel('✅ Confirm Captains')
+                        .setStyle(ButtonStyle.Success)
+                        .setDisabled(true), // Enabled after all captains selected
+                    new ButtonBuilder()
+                        .setCustomId(`GAME_CANCEL_CAPTAINS-${gameIdString}`)
+                        .setLabel('Cancel')
+                        .setStyle(ButtonStyle.Secondary)
+                );
+
+            await buttonInteraction.reply({
+                content: `**Select Captains for Game ${gameId}**\n\nUse the dropdown menus below to select a captain for each team. Once all teams have captains, click Confirm.`,
+                components: [...captainSelectRows, confirmRow],
+                ephemeral: true
+            });
+            logger.info(`[GAME_BTN] Host ${userId} opened captain selection for game ${gameId}`);
+            break;
+
+        case "HOST_START_PICKING":
+            if (!isHost) {
+                await buttonInteraction.reply({ content: "Only the host can start the draft.", ephemeral: true });
+                return;
+            }
+            try {
+                await buttonInteraction.deferReply({ ephemeral: true });
+
+                // Check if captains are set for all teams
+                const captainsResp = await localApi.get("game_joining_player", {
+                    game_id: gameId,
+                    captain: 'true',
+                    _limit: 10
+                });
+                const captains = captainsResp.game_joining_players || [];
+
+                if (captains.length < gameDetails.num_teams) {
+                    await buttonInteraction.editReply({ content: `Not all teams have captains. You have ${captains.length} captains but ${gameDetails.num_teams} teams. Please set all captains first.` });
+                    return;
+                }
+
+                // Create temporary voice channels for each team
+                const createdChannels = [];
+                const guild = buttonInteraction.guild;
+                const hostVoiceChannel = guild.members.cache.get(userId)?.voice?.channel;
+                const parentCategory = hostVoiceChannel?.parent || null;
+                const userLimit = gameDetails.max_players > 0 ? gameDetails.max_players : 10; // Default to 10 if unlimited
+
+                for (let i = 1; i <= gameDetails.num_teams; i++) {
+                    try {
+                        const channelName = `Game ${gameId} - Team ${i}`;
+                        // Check if channel already exists
+                        let existingChannel = guild.channels.cache.find(ch => ch.name === channelName && ch.type === ChannelType.GuildVoice);
+
+                        if (!existingChannel) {
+                            const newChannel = await guild.channels.create({
+                                name: channelName,
+                                type: ChannelType.GuildVoice,
+                                parent: parentCategory,
+                                userLimit: userLimit,
+                                reason: `Temporary team channel for Game ${gameId}`
+                            });
+                            createdChannels.push(newChannel);
+                            logger.info(`[GAME_START] Created voice channel '${channelName}' for game ${gameId}`);
+                        } else {
+                            createdChannels.push(existingChannel);
+                            logger.info(`[GAME_START] Using existing voice channel '${channelName}' for game ${gameId}`);
+                        }
+                    } catch (channelError) {
+                        logger.error(`[GAME_START] Failed to create channel for Team ${i}: ${channelError.message}`);
+                    }
+                }
+
+                // Update game status to 'picking' and set current_turn to 1
+                await localApi.put("game_joining_master", {
+                    game_id: gameId,
+                    status: 'picking',
+                    current_turn: 1
+                });
+
+                // Get unassigned players (exclude captains who are already on teams)
+                const unassignedResp = await localApi.get("game_joining_player", {
+                    game_id: gameId,
+                    _filter: "(team IS NULL OR team = '' OR team = '0') AND (captain IS NULL OR captain != 'true')",
+                    _limit: 100
+                });
+                const unassignedPlayers = unassignedResp.game_joining_players || [];
+
+                const team1Captain = captains.find(c => parseInt(c.team, 10) === 1);
+                let captainMention = team1Captain ? `<@${team1Captain.player_id}>` : "Team 1 Captain";
+
+                // Check picking mode
+                const isFreeForAll = gameDetails.game === 'freeforall';
+                const modeText = isFreeForAll ? "**Mode: Free-for-All** - Any captain can pick anytime!" : "**Mode: Turn-Based** - Captains alternate picks.";
+                const turnText = isFreeForAll ? "Any captain can pick!" : `It's ${captainMention}'s turn to pick.`;
+
+                await buttonInteraction.editReply({
+                    content: `🎯 **Draft Started!**\n\n${modeText}\n\n${turnText}\n${unassignedPlayers.length} players available.\n\n${createdChannels.length > 0 ? `Created ${createdChannels.length} temporary voice channels.` : ''}`
+                });
+
+                // Update the original message to enable captain pick button
+                const originalMessage = buttonInteraction.message;
+                if (originalMessage) {
+                    const pickingModeDisplay = isFreeForAll ? '🔥 Free-for-All' : '🔄 Turn-Based (Team 1)';
+                    const newEmbed = EmbedBuilder.from(originalMessage.embeds[0])
+                        .setDescription(`**DRAFT IN PROGRESS**\n\nPicking: ${pickingModeDisplay}\nPlayers Available: ${unassignedPlayers.length}`);
+
+                    const newComponents = originalMessage.components.map(apiActionRow => {
+                        const newRow = new ActionRowBuilder();
+                        apiActionRow.components.forEach(apiButton => {
+                            const buttonBuilder = ButtonBuilder.from(apiButton);
+                            // Enable captain pick button
+                            if (buttonBuilder.data.custom_id && buttonBuilder.data.custom_id.startsWith(`GAME_CAPTAIN_PICK-`)) {
+                                buttonBuilder.setDisabled(false);
+                            }
+                            // Disable start draft button
+                            if (buttonBuilder.data.custom_id && buttonBuilder.data.custom_id.startsWith(`GAME_HOST_START_PICKING-`)) {
+                                buttonBuilder.setDisabled(true);
+                            }
+                            newRow.addComponents(buttonBuilder);
+                        });
+                        return newRow;
+                    });
+                    await originalMessage.edit({ embeds: [newEmbed], components: newComponents });
+                }
+
+                logger.info(`[GAME_BTN] Host ${userId} started draft for game ${gameId}. Created ${createdChannels.length} team channels.`);
+            } catch (error) {
+                logger.error(`[GAME_BTN] Error starting draft for game ${gameId}: ${error.message || error}`);
+                await buttonInteraction.editReply({ content: "Error starting the draft. Please check logs." });
+            }
+            break;
+
+        case "CAPTAIN_PICK":
+            try {
+                // Check if this user is a captain
+                const playerCheckResp = await localApi.get("game_joining_player", {
+                    game_id: gameId,
+                    player_id: userId,
+                    _limit: 1
+                });
+                const playerRecord = playerCheckResp.game_joining_players?.[0];
+
+                if (!playerRecord || playerRecord.captain !== 'true') {
+                    await buttonInteraction.reply({ content: "Only team captains can pick players.", ephemeral: true });
+                    return;
+                }
+
+                const playerTeam = parseInt(playerRecord.team, 10);
+
+                // Check picking mode - only enforce turns in turn-based mode
+                const isFreeForAll = gameDetails.game === 'freeforall';
+                if (!isFreeForAll) {
+                    const currentTurn = parseInt(gameDetails.current_turn, 10) || 1;
+                    if (playerTeam !== currentTurn) {
+                        await buttonInteraction.reply({ content: `It's not your turn! Currently Team ${currentTurn}'s turn to pick.`, ephemeral: true });
+                        return;
+                    }
+                }
+
+                // Show modal to pick a player
+                const pickModal = new ModalBuilder()
+                    .setCustomId(`GAME_MODAL_CAPTAIN_PICK-${gameIdString}`)
+                    .setTitle(`Pick a Player - Team ${playerTeam}`);
+
+                const playerPickInput = new TextInputBuilder()
+                    .setCustomId('player_to_pick')
+                    .setLabel("Enter User ID or @mention of player")
+                    .setPlaceholder("User ID or @mention")
+                    .setStyle(TextInputStyle.Short)
+                    .setRequired(true);
+
+                pickModal.addComponents(new ActionRowBuilder().addComponents(playerPickInput));
+                await buttonInteraction.showModal(pickModal);
+                logger.info(`[GAME_BTN] Captain ${userId} (Team ${playerTeam}) opened pick modal for game ${gameId} (mode: ${isFreeForAll ? 'freeforall' : 'turns'})`);
+            } catch (error) {
+                logger.error(`[GAME_BTN] Error in CAPTAIN_PICK for game ${gameId}: ${error.message || error}`);
+                await buttonInteraction.reply({ content: "Error opening pick interface.", ephemeral: true });
             }
             break;
 
@@ -670,14 +889,26 @@ async function handleGameSetupTeamsModal(modalInteraction, logger, localApi) {
         }
 
         const updatePayload = {
-            gameId: gameId,
+            game_id: gameId,
             num_teams: parsedNumTeams,
             max_players: parsedMaxPlayers,
             status: 'lobby_configured'
         };
 
+        // Get picking mode (store in 'game' column - repurposed for mode)
+        let pickingMode = 'turns';
+        try {
+            const pickingModeInput = modalInteraction.fields.getTextInputValue('pickingMode');
+            if (pickingModeInput && (pickingModeInput.toLowerCase() === 'freeforall' || pickingModeInput.toLowerCase() === 'free')) {
+                pickingMode = 'freeforall';
+            }
+        } catch (e) {
+            // pickingMode field might not exist in older modals, default to 'turns'
+        }
+        updatePayload.game = pickingMode;
+
         await localApi.put("game_joining_master", updatePayload);
-        logger.info(`[GAME_MODAL_SETUP] Game ${gameId} updated by host ${userId}. New settings: Teams=${parsedNumTeams}, MaxPlayers=${parsedMaxPlayers}, Status=lobby_configured`);
+        logger.info(`[GAME_MODAL_SETUP] Game ${gameId} updated by host ${userId}. New settings: Teams=${parsedNumTeams}, MaxPlayers=${parsedMaxPlayers}, Mode=${pickingMode}, Status=lobby_configured`);
 
         // Fetch the original game message to update it
         const originalMessage = modalInteraction.message; // This should be the message with the buttons
@@ -686,24 +917,29 @@ async function handleGameSetupTeamsModal(modalInteraction, logger, localApi) {
             const gameDetailsForUpdate = await localApi.get("game_joining_master", { game_id: gameId });
             if (gameDetailsForUpdate && gameDetailsForUpdate.game_joining_masters && gameDetailsForUpdate.game_joining_masters[0]) {
                 const updatedGameData = gameDetailsForUpdate.game_joining_masters[0];
-                const newEmbed = EmbedBuilder.from(originalMessage.embeds[0]); // MODIFIED
-                
+                const newEmbed = EmbedBuilder.from(originalMessage.embeds[0]);
+
                 let teamsConfigured = updatedGameData.status === 'lobby_configured' && updatedGameData.num_teams > 0;
-                
-                newEmbed.setFields( // MODIFIED (original .fields = [] and .addField calls removed)
+                const modeDisplay = updatedGameData.game === 'freeforall' ? '🔥 Free-for-All' : '🔄 Turn-Based';
+
+                newEmbed.setFields(
                     { name: "Status", value: updatedGameData.status === 'setup' ? '⚙️ Setup (Waiting for Host)' : (updatedGameData.status === 'lobby_configured' ? '✅ Lobby Configured' : updatedGameData.status), inline: true },
                     { name: "Teams", value: teamsConfigured ? `${updatedGameData.num_teams}` : "Not Set", inline: true },
-                    { name: "Players/Team", value: teamsConfigured ? (updatedGameData.max_players === 0 ? "Unlimited" : `${updatedGameData.max_players}`) : "N/A", inline: true }
+                    { name: "Players/Team", value: teamsConfigured ? (updatedGameData.max_players === 0 ? "Unlimited" : `${updatedGameData.max_players}`) : "N/A", inline: true },
+                    { name: "Draft Mode", value: modeDisplay, inline: true }
                 );
 
-                const newComponents = originalMessage.components.map(apiActionRow => { // MODIFIED
-                    const newRow = new ActionRowBuilder(); // MODIFIED
-                    apiActionRow.components.forEach(apiButton => { // MODIFIED
-                        const buttonBuilder = ButtonBuilder.from(apiButton); // MODIFIED
-                        
+                const newComponents = originalMessage.components.map(apiActionRow => {
+                    const newRow = new ActionRowBuilder();
+                    apiActionRow.components.forEach(apiButton => {
+                        const buttonBuilder = ButtonBuilder.from(apiButton);
+
                         // Update button states based on 'teamsConfigured'
                         if (buttonBuilder.data.custom_id && buttonBuilder.data.custom_id.startsWith(`GAME_HOST_SETUP_TEAMS-${gameIdString}`)) {
                             buttonBuilder.setDisabled(teamsConfigured);
+                        }
+                        if (buttonBuilder.data.custom_id && buttonBuilder.data.custom_id.startsWith(`GAME_HOST_SET_CAPTAINS-${gameIdString}`)) {
+                            buttonBuilder.setDisabled(!teamsConfigured);
                         }
                         if (buttonBuilder.data.custom_id && buttonBuilder.data.custom_id.startsWith(`GAME_HOST_MANAGE_PLAYERS-${gameIdString}`)) {
                             buttonBuilder.setDisabled(!teamsConfigured);
@@ -719,7 +955,8 @@ async function handleGameSetupTeamsModal(modalInteraction, logger, localApi) {
                 logger.info(`[GAME_MODAL_SETUP] Original game message for game ${gameId} updated after team setup.`);
             }
         }
-        await modalInteraction.editReply({ content: `Game settings updated! Teams: ${parsedNumTeams}, Max Players/Team: ${parsedMaxPlayers === 0 ? "Unlimited" : parsedMaxPlayers}. You can now manage players and voice controls.` });
+        const modeText = pickingMode === 'freeforall' ? 'Free-for-All (any captain can pick anytime)' : 'Turn-Based (captains alternate)';
+        await modalInteraction.editReply({ content: `Game settings updated!\n• Teams: ${parsedNumTeams}\n• Max Players/Team: ${parsedMaxPlayers === 0 ? "Unlimited" : parsedMaxPlayers}\n• Draft Mode: ${modeText}\n\nYou can now set captains!` });
 
     } catch (error) {
         logger.error(`[GAME_MODAL_SETUP] Error processing team setup for game ${gameId}: ${error.message || error}`);
@@ -756,7 +993,7 @@ async function handleAssignPlayerModal(modalInteraction, logger, localApi) {
         }
         const gameDetails = gameResp.game_joining_masters[0];
         if (teamIdToAssignTo > gameDetails.num_teams) {
-             await modalInteraction.editReply({ content: `Invalid Team ID. This game only has ${gameDetails.num_teams} teams.` });
+            await modalInteraction.editReply({ content: `Invalid Team ID. This game only has ${gameDetails.num_teams} teams.` });
             return;
         }
 
@@ -767,9 +1004,9 @@ async function handleAssignPlayerModal(modalInteraction, logger, localApi) {
         }
         const gamePlayerId = playerResp.game_joining_players[0].game_player_id;
 
-        await localApi.put("game_joining_player", { 
+        await localApi.put("game_joining_player", {
             game_player_id: Number(gamePlayerId),
-            team_id: teamIdToAssignTo
+            team: String(teamIdToAssignTo)
         });
 
         logger.info(`[GAME_ASSIGN_MODAL] Host ${hostId} assigned player ${playerIdToAssign} (gp_id: ${gamePlayerId}) to team ${teamIdToAssignTo} in game ${gameId}.`);
@@ -781,11 +1018,276 @@ async function handleAssignPlayerModal(modalInteraction, logger, localApi) {
     }
 }
 
+// Handler for setting team captains
+async function handleSetCaptainsModal(modalInteraction, logger, localApi) {
+    const customId = modalInteraction.customId;
+    const gameIdString = customId.split('-')[1];
+    const gameId = Number(gameIdString);
+    const hostId = modalInteraction.user.id;
+
+    try {
+        await modalInteraction.deferReply({ ephemeral: true });
+
+        // Verify host and get game details
+        const gameResp = await localApi.get("game_joining_master", { game_id: gameId });
+        if (!gameResp || !gameResp.game_joining_masters || !gameResp.game_joining_masters[0]) {
+            await modalInteraction.editReply({ content: "Game not found." });
+            return;
+        }
+        const gameDetails = gameResp.game_joining_masters[0];
+
+        if (gameDetails.host_id !== hostId) {
+            await modalInteraction.editReply({ content: "Only the host can set captains." });
+            return;
+        }
+
+        const captainsSet = [];
+        const errors = [];
+
+        for (let i = 1; i <= gameDetails.num_teams; i++) {
+            const captainInput = modalInteraction.fields.getTextInputValue(`captain_team_${i}`);
+            if (!captainInput) continue;
+
+            // Extract user ID from mention or raw ID
+            let captainId = captainInput.replace(/[<@!>]/g, '').trim();
+
+            // Check if player is in the game
+            const playerResp = await localApi.get("game_joining_player", {
+                game_id: gameId,
+                player_id: captainId,
+                _limit: 1
+            });
+
+            if (!playerResp || !playerResp.game_joining_players || !playerResp.game_joining_players[0]) {
+                // Player not in lobby, add them
+                try {
+                    await localApi.post("game_joining_player", {
+                        game_id: gameId,
+                        player_id: captainId,
+                        team: String(i),
+                        captain: 'true'
+                    });
+                    captainsSet.push(`Team ${i}: <@${captainId}> (added to lobby)`);
+                } catch (addError) {
+                    errors.push(`Team ${i}: Failed to add <@${captainId}> - ${addError.message}`);
+                }
+            } else {
+                // Update existing player to be captain
+                const gamePlayerId = playerResp.game_joining_players[0].game_player_id;
+                try {
+                    await localApi.put("game_joining_player", {
+                        game_player_id: Number(gamePlayerId),
+                        team: String(i),
+                        captain: 'true'
+                    });
+                    captainsSet.push(`Team ${i}: <@${captainId}>`);
+                } catch (updateError) {
+                    errors.push(`Team ${i}: Failed to update <@${captainId}> - ${updateError.message}`);
+                }
+            }
+        }
+
+        let response = "**Captains Set:**\n" + captainsSet.join("\n");
+        if (errors.length > 0) {
+            response += "\n\n**Errors:**\n" + errors.join("\n");
+        }
+
+        // Enable the "Start Draft" button on the original message
+        const originalMessage = modalInteraction.message;
+        if (originalMessage && errors.length === 0) {
+            const newComponents = originalMessage.components.map(apiActionRow => {
+                const newRow = new ActionRowBuilder();
+                apiActionRow.components.forEach(apiButton => {
+                    const buttonBuilder = ButtonBuilder.from(apiButton);
+                    // Enable start picking button
+                    if (buttonBuilder.data.custom_id && buttonBuilder.data.custom_id.startsWith(`GAME_HOST_START_PICKING-`)) {
+                        buttonBuilder.setDisabled(false);
+                    }
+                    // Disable set captains button (already done)
+                    if (buttonBuilder.data.custom_id && buttonBuilder.data.custom_id.startsWith(`GAME_HOST_SET_CAPTAINS-`)) {
+                        buttonBuilder.setDisabled(true);
+                    }
+                    newRow.addComponents(buttonBuilder);
+                });
+                return newRow;
+            });
+            await originalMessage.edit({ components: newComponents });
+        }
+
+        await modalInteraction.editReply({ content: response });
+        logger.info(`[GAME_SET_CAPTAINS] Host ${hostId} set captains for game ${gameId}: ${captainsSet.join(', ')}`);
+
+    } catch (error) {
+        logger.error(`[GAME_SET_CAPTAINS] Error setting captains for game ${gameId}: ${error.message || error}`);
+        await modalInteraction.editReply({ content: "An error occurred while setting captains." });
+    }
+}
+
+// Handler for captain picking a player
+async function handleCaptainPickModal(modalInteraction, logger, localApi) {
+    const customId = modalInteraction.customId;
+    const gameIdString = customId.split('-')[1];
+    const gameId = Number(gameIdString);
+    const captainId = modalInteraction.user.id;
+
+    try {
+        await modalInteraction.deferReply({ ephemeral: true });
+
+        // Get game details
+        const gameResp = await localApi.get("game_joining_master", { game_id: gameId });
+        if (!gameResp || !gameResp.game_joining_masters || !gameResp.game_joining_masters[0]) {
+            await modalInteraction.editReply({ content: "Game not found." });
+            return;
+        }
+        const gameDetails = gameResp.game_joining_masters[0];
+
+        // Verify captain
+        const captainResp = await localApi.get("game_joining_player", {
+            game_id: gameId,
+            player_id: captainId,
+            _limit: 1
+        });
+        const captainRecord = captainResp.game_joining_players?.[0];
+
+        if (!captainRecord || captainRecord.captain !== 'true') {
+            await modalInteraction.editReply({ content: "You are not a captain." });
+            return;
+        }
+
+        const currentTurn = parseInt(gameDetails.current_turn, 10) || 1;
+        const captainTeam = parseInt(captainRecord.team, 10);
+
+        // Check picking mode - only enforce turns in turn-based mode
+        const isFreeForAll = gameDetails.game === 'freeforall';
+        if (!isFreeForAll && captainTeam !== currentTurn) {
+            await modalInteraction.editReply({ content: `It's not your turn! Currently Team ${currentTurn}'s turn.` });
+            return;
+        }
+
+        // Get the player to pick
+        const playerInput = modalInteraction.fields.getTextInputValue('player_to_pick');
+        const pickedPlayerId = playerInput.replace(/[<@!>]/g, '').trim();
+
+        // Find the player in the game (must be unassigned)
+        const playerResp = await localApi.get("game_joining_player", {
+            game_id: gameId,
+            player_id: pickedPlayerId,
+            _limit: 1
+        });
+
+        if (!playerResp || !playerResp.game_joining_players || !playerResp.game_joining_players[0]) {
+            await modalInteraction.editReply({ content: `Player <@${pickedPlayerId}> is not in the game lobby.` });
+            return;
+        }
+
+        const playerRecord = playerResp.game_joining_players[0];
+        const playerTeam = parseInt(playerRecord.team, 10);
+
+        if (!isNaN(playerTeam) && playerTeam > 0) {
+            await modalInteraction.editReply({ content: `<@${pickedPlayerId}> is already on Team ${playerTeam}!` });
+            return;
+        }
+
+        // Assign player to captain's team
+        await localApi.put("game_joining_player", {
+            game_player_id: Number(playerRecord.game_player_id),
+            team: String(captainTeam)
+        });
+
+        // Move player to team voice channel (try both naming conventions)
+        const guild = modalInteraction.guild;
+        const newChannelName = `Game ${gameId} - Team ${captainTeam}`;
+        const legacyChannelName = `Team ${captainTeam}`;
+        let voiceChannel = guild.channels.cache.find(ch => ch.name === newChannelName && ch.type === ChannelType.GuildVoice);
+        if (!voiceChannel) {
+            voiceChannel = guild.channels.cache.find(ch => ch.name === legacyChannelName && ch.type === ChannelType.GuildVoice);
+        }
+
+        let moveMessage = "";
+        if (voiceChannel) {
+            try {
+                const member = await guild.members.fetch(pickedPlayerId);
+                if (member && member.voice && member.voice.channelId) {
+                    await member.voice.setChannel(voiceChannel.id);
+                    moveMessage = ` and moved to ${voiceChannel.name}`;
+                } else {
+                    moveMessage = " (not in voice, couldn't move)";
+                }
+            } catch (moveError) {
+                logger.warn(`[CAPTAIN_PICK] Failed to move ${pickedPlayerId}: ${moveError.message}`);
+                moveMessage = " (failed to move to voice)";
+            }
+        } else {
+            moveMessage = " (no team voice channel found)";
+        }
+
+        // Advance turn to next team (only in turn-based mode)
+        let nextTurn = currentTurn;
+        if (!isFreeForAll) {
+            nextTurn = (currentTurn % gameDetails.num_teams) + 1;
+            await localApi.put("game_joining_master", {
+                game_id: gameId,
+                current_turn: nextTurn
+            });
+        }
+
+        // Check if there are still unassigned players
+        const unassignedResp = await localApi.get("game_joining_player", {
+            game_id: gameId,
+            _filter: "(team IS NULL OR team = '' OR team = '0') AND (captain IS NULL OR captain != 'true')",
+            _limit: 100
+        });
+        const remainingUnassigned = unassignedResp.game_joining_players || [];
+
+        // Update the original message
+        const originalMessage = modalInteraction.message;
+        if (originalMessage) {
+            let description;
+            if (remainingUnassigned.length === 0) {
+                description = `**DRAFT COMPLETE!**\n\nAll players have been assigned to teams.`;
+            } else if (isFreeForAll) {
+                description = `**DRAFT IN PROGRESS**\n\nPicking: 🔥 Free-for-All\nPlayers Available: ${remainingUnassigned.length}`;
+            } else {
+                description = `**DRAFT IN PROGRESS**\n\nPicking: 🔄 Turn-Based (Team ${nextTurn})\nPlayers Available: ${remainingUnassigned.length}`;
+            }
+
+            const newEmbed = EmbedBuilder.from(originalMessage.embeds[0])
+                .setDescription(description);
+
+            await originalMessage.edit({ embeds: [newEmbed] });
+        }
+
+        // Notify next captain (only in turn-based mode)
+        let nextTurnMsg = "";
+        if (!isFreeForAll && remainingUnassigned.length > 0) {
+            const nextCaptainResp = await localApi.get("game_joining_player", {
+                game_id: gameId,
+                captain: 'true',
+                _limit: 10
+            });
+            const nextCaptain = (nextCaptainResp.game_joining_players || []).find(c => parseInt(c.team, 10) === nextTurn);
+            if (nextCaptain) {
+                nextTurnMsg = `\n\nNext up: <@${nextCaptain.player_id}> (Team ${nextTurn})`;
+            }
+        }
+
+        await modalInteraction.editReply({
+            content: `✅ You picked <@${pickedPlayerId}> for Team ${captainTeam}${moveMessage}!${nextTurnMsg}`
+        });
+
+        logger.info(`[CAPTAIN_PICK] Captain ${captainId} picked ${pickedPlayerId} for Team ${captainTeam} in game ${gameId} (mode: ${isFreeForAll ? 'freeforall' : 'turns'})`);
+
+    } catch (error) {
+        logger.error(`[CAPTAIN_PICK] Error in captain pick for game ${gameId}: ${error.message || error}`);
+        await modalInteraction.editReply({ content: "An error occurred while picking the player." });
+    }
+}
+
 // Modified to handle different interaction types (buttons, modals)
 async function onInteractionCreate(interaction) {
     if (interaction.isButton()) {
         const buttonInteraction = interaction;
-        const guildId = buttonInteraction.guild ? buttonInteraction.guild.id : null; 
+        const guildId = buttonInteraction.guild ? buttonInteraction.guild.id : null;
 
         if (buttonInteraction.customId.startsWith("VOICE_CLEANUP_CONFIRM_")) {
             await buttonInteraction.deferUpdate();
@@ -797,7 +1299,7 @@ async function onInteractionCreate(interaction) {
             }
             try {
                 logger.info(`[BTN_CLEANUP_CONFIRM] Attempting to delete all voice data for guild ${targetGuildId}. Fetching records...`);
-                
+
                 const recordsToDeleteResp = await api.get("voice_tracking", {
                     discord_server_id: targetGuildId,
                     _limit: 10000000
@@ -821,7 +1323,7 @@ async function onInteractionCreate(interaction) {
 
                 let deletedCount = 0;
                 let failedCount = 0;
-                const chunkSize = 100; 
+                const chunkSize = 100;
 
                 for (let i = 0; i < recordsWithId.length; i += chunkSize) {
                     const chunk = recordsWithId.slice(i, i + chunkSize);
@@ -852,7 +1354,7 @@ async function onInteractionCreate(interaction) {
                 if (error.response && error.response.data && typeof error.response.data === 'string') {
                     errorMessage += `API Response: ${error.response.data.substring(0, 1000)}. `;
                 } else if (error.response && error.response.data) {
-                     errorMessage += "Check logs for API response details. ";
+                    errorMessage += "Check logs for API response details. ";
                 }
                 errorMessage += "Please check the logs.";
                 await buttonInteraction.editReply({ content: errorMessage, components: [] });
@@ -903,7 +1405,7 @@ async function onInteractionCreate(interaction) {
                         usersAffectedCount++;
                         // Sort sessions by connect_time descending (most recent first)
                         sessions.sort((a, b) => parseInt(b.connect_time, 10) - parseInt(a.connect_time, 10));
-                        
+
                         const sessionToKeep = sessions[0]; // Keep the most recent one
                         logger.info(`[BTN_FIX_ALL] User ${userId} has ${sessions.length} active sessions. Keeping ${sessionToKeep.voice_state_id} (connected at ${sessionToKeep.connect_time}).`);
 
@@ -993,8 +1495,160 @@ async function onInteractionCreate(interaction) {
         const modalInteraction = interaction;
         if (modalInteraction.customId.startsWith("GAME_MODAL_SETUP_TEAMS-")) {
             await handleGameSetupTeamsModal(modalInteraction, logger, api);
-        } else if (modalInteraction.customId.startsWith("GAME_MODAL_ASSIGN_PLAYER-")) {
+        } else if (modalInteraction.customId.startsWith("GAME_MODAL_SUBMIT_ASSIGN_PLAYER-")) {
             await handleAssignPlayerModal(modalInteraction, logger, api);
+        } else if (modalInteraction.customId.startsWith("GAME_MODAL_SET_CAPTAINS-")) {
+            await handleSetCaptainsModal(modalInteraction, logger, api);
+        } else if (modalInteraction.customId.startsWith("GAME_MODAL_CAPTAIN_PICK-")) {
+            await handleCaptainPickModal(modalInteraction, logger, api);
+        }
+    } else if (interaction.isUserSelectMenu()) {
+        // Handle captain selection dropdowns
+        const selectInteraction = interaction;
+        if (selectInteraction.customId.startsWith("GAME_SELECT_CAPTAIN-")) {
+            const parts = selectInteraction.customId.split('-');
+            const gameIdString = parts[1];
+            const teamNumber = parseInt(parts[2], 10);
+            const selectedUserId = selectInteraction.values[0];
+
+            // Store selection in the message content as a hidden tracker
+            // We'll parse this when user clicks Confirm
+            const currentContent = selectInteraction.message.content;
+
+            // Update content to track selections
+            let selections = {};
+            const selectionMatch = currentContent.match(/\[SELECTIONS:(.*?)\]/);
+            if (selectionMatch) {
+                try {
+                    selections = JSON.parse(selectionMatch[1]);
+                } catch (e) { }
+            }
+            selections[`team${teamNumber}`] = selectedUserId;
+
+            // Get game details to know total teams
+            const gameResp = await api.get("game_joining_master", { game_id: Number(gameIdString) });
+            const numTeams = gameResp?.game_joining_masters?.[0]?.num_teams || 2;
+
+            // Count how many teams have captains selected
+            const selectedCount = Object.keys(selections).length;
+            const allSelected = selectedCount >= numTeams;
+
+            // Build display text
+            let displayText = `**Select Captains for Game ${gameIdString}**\n\n`;
+            for (let i = 1; i <= numTeams; i++) {
+                const captainId = selections[`team${i}`];
+                displayText += `Team ${i}: ${captainId ? `<@${captainId}> ✅` : '(not selected)'}\n`;
+            }
+            displayText += `\n[SELECTIONS:${JSON.stringify(selections)}]`;
+
+            // Update confirm button state
+            const newComponents = selectInteraction.message.components.map(row => {
+                const newRow = new ActionRowBuilder();
+                row.components.forEach(comp => {
+                    if (comp.type === 2) { // Button
+                        const btn = ButtonBuilder.from(comp);
+                        if (btn.data.custom_id?.startsWith('GAME_CONFIRM_CAPTAINS-')) {
+                            btn.setDisabled(!allSelected);
+                        }
+                        newRow.addComponents(btn);
+                    } else if (comp.type === 5) { // UserSelect
+                        const select = UserSelectMenuBuilder.from(comp);
+                        // Show current selection
+                        const teamNum = parseInt(select.data.custom_id.split('-')[2], 10);
+                        if (selections[`team${teamNum}`]) {
+                            select.setPlaceholder(`Team ${teamNum}: Selected ✅`);
+                        }
+                        newRow.addComponents(select);
+                    }
+                });
+                return newRow;
+            });
+
+            await selectInteraction.update({ content: displayText, components: newComponents });
+        }
+    } else if (interaction.isButton()) {
+        // Check for confirm/cancel captains buttons that might come in as separate interaction
+        const btn = interaction;
+        if (btn.customId.startsWith("GAME_CONFIRM_CAPTAINS-")) {
+            const gameIdString = btn.customId.split('-')[1];
+            const gameId = Number(gameIdString);
+
+            await btn.deferUpdate();
+
+            // Parse selections from message content
+            const content = btn.message.content;
+            const selectionMatch = content.match(/\[SELECTIONS:(.*?)\]/);
+            if (!selectionMatch) {
+                await btn.followUp({ content: "Error: Could not find captain selections.", ephemeral: true });
+                return;
+            }
+
+            let selections;
+            try {
+                selections = JSON.parse(selectionMatch[1]);
+            } catch (e) {
+                await btn.followUp({ content: "Error parsing captain selections.", ephemeral: true });
+                return;
+            }
+
+            // Get game details
+            const gameResp = await api.get("game_joining_master", { game_id: gameId });
+            if (!gameResp?.game_joining_masters?.[0]) {
+                await btn.followUp({ content: "Game not found.", ephemeral: true });
+                return;
+            }
+            const gameDetails = gameResp.game_joining_masters[0];
+
+            // Save captains to database
+            const captainsSet = [];
+            for (let i = 1; i <= gameDetails.num_teams; i++) {
+                const captainId = selections[`team${i}`];
+                if (!captainId) continue;
+
+                // Check if player exists in game
+                const playerResp = await api.get("game_joining_player", {
+                    game_id: gameId,
+                    player_id: captainId,
+                    _limit: 1
+                });
+
+                if (playerResp?.game_joining_players?.[0]) {
+                    // Update existing player
+                    await api.put("game_joining_player", {
+                        game_player_id: Number(playerResp.game_joining_players[0].game_player_id),
+                        team: String(i),
+                        captain: 'true'
+                    });
+                } else {
+                    // Add new player as captain
+                    await api.post("game_joining_player", {
+                        game_id: gameId,
+                        player_id: captainId,
+                        team: String(i),
+                        captain: 'true'
+                    });
+                }
+                captainsSet.push(`Team ${i}: <@${captainId}>`);
+            }
+
+            // Update message to show success
+            await btn.editReply({
+                content: `✅ **Captains Set Successfully!**\n\n${captainsSet.join('\n')}\n\nYou can now click **Start Draft** to begin picking players!`,
+                components: []
+            });
+
+            // Enable Start Draft button on original game message
+            try {
+                const channel = btn.channel;
+                // Try to find and update the game message (this might not work if we don't have the message)
+                // The host will need to click Start Draft from the main game menu
+            } catch (e) {
+                logger.warn(`[CONFIRM_CAPTAINS] Could not update game message: ${e.message}`);
+            }
+
+            logger.info(`[CONFIRM_CAPTAINS] Captains set for game ${gameId}: ${captainsSet.join(', ')}`);
+        } else if (btn.customId.startsWith("GAME_CANCEL_CAPTAINS-")) {
+            await btn.update({ content: "Captain selection cancelled.", components: [] });
         }
     }
 }
@@ -1047,7 +1701,7 @@ async function userJoinsVoice(oldState, newState) {
                 } else {
                     closeReason = `User in new state (ch: ${newChannelId}, mute: ${newMuteState}), this session (id: ${session.voice_state_id}, ch: ${session.channel_id}, mute: ${session.selfmute}) is outdated/duplicate.`;
                 }
-                
+
                 if (closeReason) {
                     const originalConnectTime = parseInt(session.connect_time, 10);
                     let calculatedDisconnectTime = currentTime;
@@ -1058,7 +1712,7 @@ async function userJoinsVoice(oldState, newState) {
                     } else {
                         logger.warn(`[VSU] Session ${session.voice_state_id} for user ${userId} had an invalid connect_time: ${session.connect_time}. Using current time for disconnect.`);
                     }
-                    
+
                     logger.info(`[VSU] Closing session ${session.voice_state_id} for ${username} (${userId}). Reason: ${closeReason}. Setting disconnect_time to ${calculatedDisconnectTime}.`);
                     await api.put("voice_tracking", {
                         voice_state_id: parseInt(session.voice_state_id, 10),
