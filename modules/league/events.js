@@ -627,16 +627,18 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
     gameModeLabel = 'ARAM Mayhem';
   } else if (qt === 'CLASH' || payload.clashSummary) {
     gameModeLabel = 'Clash';
-  } else if (qt === 'RANKED_SOLO_5x5') {
-    gameModeLabel = 'Ranked Solo';
-  } else if (qt === 'RANKED_FLEX_SR') {
-    gameModeLabel = 'Ranked Flex';
-  } else if (qt === 'ARAM') {
+  } else if (qt.includes('RANKED')) {
+    if (qt.includes('SOLO')) gameModeLabel = 'Ranked Solo';
+    else if (qt.includes('FLEX')) gameModeLabel = 'Ranked Flex';
+    else gameModeLabel = 'Ranked Match';
+  } else if (qt === 'ARAM' || qt.includes('ARAM')) {
     gameModeLabel = 'ARAM';
-  } else if (qt === 'CHERRY') {
+  } else if (qt === 'CHERRY' || qt === 'ARENA') {
     gameModeLabel = 'Arena';
   } else if (qt.includes('NORMAL')) {
     gameModeLabel = 'Normal';
+  } else if (qt.includes('BOT')) {
+    gameModeLabel = 'Co-op vs AI';
   }
 
   return {
@@ -757,6 +759,13 @@ function normalizeMatchPayload(payload) {
     return {
       ...payload,
       ...derived
+    };
+  } else if (payload.rankedSummary) {
+    // If rankedSummary exists, ensure we have top-level queue info
+    return {
+      ...payload,
+      queueType: payload.queueType || payload.rankedSummary.queueType,
+      gameMode: payload.gameMode || payload.rankedSummary.gameMode
     };
   }
   return payload;
