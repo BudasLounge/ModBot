@@ -621,10 +621,22 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
 
   // Use clashSummary existence check or explicit queueType override where applicable
   let gameModeLabel = payload.gameMode || payload.queueType || 'LoL Match';
+  const qt = (payload.queueType || '').toUpperCase();
+
   if (isMayhem) {
     gameModeLabel = 'ARAM Mayhem';
-  } else if (payload.queueType === 'CLASH' || payload.clashSummary) {
+  } else if (qt === 'CLASH' || payload.clashSummary) {
     gameModeLabel = 'Clash';
+  } else if (qt === 'RANKED_SOLO_5x5') {
+    gameModeLabel = 'Ranked Solo';
+  } else if (qt === 'RANKED_FLEX_SR') {
+    gameModeLabel = 'Ranked Flex';
+  } else if (qt === 'ARAM') {
+    gameModeLabel = 'ARAM';
+  } else if (qt === 'CHERRY') {
+    gameModeLabel = 'Arena';
+  } else if (qt.includes('NORMAL')) {
+    gameModeLabel = 'Normal';
   }
 
   return {
