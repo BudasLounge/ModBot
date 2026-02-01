@@ -796,7 +796,7 @@ async function enqueueMatchPayload(rawPayload, client) {
   let existing = pendingMatches.get(key);
   // Lock the match entry immediately to avoid concurrent placeholders
   if (!existing) {
-    existing = { timer: null, payloads: [], placeholderMessage: null };
+    existing = { timer: null, payloads: [], placeholderMessage: null, placeholderPromise: null };
     pendingMatches.set(key, existing);
   }
 
@@ -807,19 +807,27 @@ async function enqueueMatchPayload(rawPayload, client) {
   existing.payloads.push(payload);
 
   // If this is the first payload in the window, post a placeholder message
-  if (!existing.placeholderMessage) {
-    try {
-      const channel = await client.channels.fetch(MATCH_WEBHOOK_CHANNEL);
-      if (channel) {
-        existing.placeholderMessage = await channel.send(`Receiving data from Match ${gameId}...`);
-        logger.info('[LoL Match Ingest] Posted placeholder message', { gameId, messageId: existing.placeholderMessage.id });
-      } else {
+  if (!existing.placeholderMessage && !existing.placeholderPromise) {
+    existing.placeholderPromise = (async () => {
+      try {
+        const channel = await client.channels.fetch(MATCH_WEBHOOK_CHANNEL);
+        if (channel) {
+          const msg = await channel.send(`Receiving data from Match ${gameId}...`);
+          existing.placeholderMessage = msg;
+          logger.info('[LoL Match Ingest] Posted placeholder message', { gameId, messageId: msg.id });
+          return msg;
+        }
         logger.warn('[LoL Match Ingest] Could not fetch channel for placeholder', { MATCH_WEBHOOK_CHANNEL });
+        return null;
+      } catch (err) {
+        existing.placeholderMessage = null;
+        logger.warn('[LoL Match Ingest] Failed to post placeholder message', { gameId, err: err?.message });
+        return null;
+      } finally {
+        // Release the promise so future matches can retry if needed
+        existing.placeholderPromise = existing.placeholderMessage ? Promise.resolve(existing.placeholderMessage) : null;
       }
-    } catch (err) {
-      existing.placeholderMessage = null;
-      logger.warn('[LoL Match Ingest] Failed to post placeholder message', { gameId, err: err?.message });
-    }
+    })();
   }
   existing.timer = setTimeout(async () => {
     try {
@@ -828,7 +836,7 @@ async function enqueueMatchPayload(rawPayload, client) {
 
       const latest = (bundle.payloads && bundle.payloads[bundle.payloads.length - 1]) || payload;
       const uploaderInfos = (bundle.payloads || []).map(getUploaderInfo).filter(Boolean);
-      const placeholderMessage = bundle.placeholderMessage;
+      const placeholderMessage = bundle.placeholderMessage || (bundle.placeholderPromise ? await bundle.placeholderPromise.catch(() => null) : null);
 
       logger.info('[LoL Match Ingest] Debounced payload bundle ready', {
         gameId,
