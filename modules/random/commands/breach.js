@@ -136,8 +136,10 @@ async function callGameAgent(userMessage, userId, logger, isRetry = false) {
     const data = await response.json();
 
     // Update conversation ID for memory persistence
-    if (data.conversation_id) {
+    if (data.conversation_id && gameState.conversationId !== data.conversation_id) {
         gameState.conversationId = data.conversation_id;
+        // Persist to file for redundancy (Bot Restart Recovery)
+        saveGameState();
     }
 
     if (logger) logger.info(`[BREACH_API] Game Agent responded. ConvoID: ${gameState.conversationId}`);
