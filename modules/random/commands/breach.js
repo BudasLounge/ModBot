@@ -405,9 +405,10 @@ async function triggerBreachSequence(message, logger) {
         // Filter out bot commands and status messages from analysis
         messagesArray = messagesArray.filter(msg => {
             const isBreachCommand = msg.content.trim().toLowerCase().startsWith(`${COMMAND_PREFIX}breach`);
+            const isGuessCommand = msg.content.trim().toLowerCase().startsWith(`${COMMAND_PREFIX}guess`);
             const isStatusEmbed = msg.embeds.length > 0 && msg.embeds[0].title === '🔐 Breach Game Status';
             const isSetSeasonReturn = msg.content.includes('✅ **Season count updated.**');
-            return !isBreachCommand && !isStatusEmbed && !isSetSeasonReturn;
+            return !isBreachCommand && !isGuessCommand && !isStatusEmbed && !isSetSeasonReturn;
         });
 
         const sanitizedLog = sanitizeChatHistory(messagesArray, message.client.user.id);

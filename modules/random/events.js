@@ -1468,7 +1468,7 @@ async function onInteractionCreate(interaction) {
                 .setStyle(TextInputStyle.Short)
                 .setPlaceholder('e.g., a grumpy pirate, a mysterious wizard, a sarcastic robot')
                 .setRequired(true)
-                .setMaxLength(100);
+                .setMaxLength(200);
 
             modal.addComponents(new ActionRowBuilder().addComponents(suggestionInput));
             await buttonInteraction.showModal(modal);
