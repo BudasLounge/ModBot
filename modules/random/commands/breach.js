@@ -229,23 +229,43 @@ function createSeasonEmbed(seasonNumber, personaName, isStart = true) {
 
 // ─── Main Handler: Process Chat Message ────────────────────────────────────────
 async function handleBreachGameMessage(message, logger) {
+    if (logger) logger.info(`[BREACH] handleBreachGameMessage called for channel ${message.channel.id}`);
+
     // Skip if not in the breach channel
-    if (message.channel.id !== BREACH_GAME_CHANNEL) return false;
+    if (message.channel.id !== BREACH_GAME_CHANNEL) {
+        if (logger) logger.info(`[BREACH] Skipped - not breach channel (expected: ${BREACH_GAME_CHANNEL})`);
+        return false;
+    }
 
     // Skip bot messages
-    if (message.author.bot) return false;
+    if (message.author.bot) {
+        if (logger) logger.info(`[BREACH] Skipped - bot message`);
+        return false;
+    }
 
     // Skip commands (they're handled separately)
-    if (message.content.startsWith(COMMAND_PREFIX)) return false;
+    if (message.content.startsWith(COMMAND_PREFIX)) {
+        if (logger) logger.info(`[BREACH] Skipped - is a command (prefix: ${COMMAND_PREFIX})`);
+        return false;
+    }
 
     // Check maintenance mode
     if (gameState.isMaintenanceMode) {
-        if (logger) logger.info(`[BREACH] Message ignored - game in maintenance mode`);
-        return true; // Handled (by ignoring)
+        if (logger) logger.info(`[BREACH] Game in maintenance mode - sending user feedback`);
+        try {
+            const reply = await message.reply({
+                content: '🔒 *The guard is currently in maintenance mode. Please wait for the game to resume.*',
+            });
+            // Auto-delete after 5 seconds for channel cleanliness
+            setTimeout(() => reply.delete().catch(() => { }), 5000);
+        } catch (e) {
+            if (logger) logger.warn(`[BREACH] Could not send maintenance message: ${e.message}`);
+        }
+        return true; // Handled
     }
 
     try {
-        if (logger) logger.info(`[BREACH] Processing message from ${message.author.id}: ${message.content.substring(0, 50)}...`);
+        if (logger) logger.info(`[BREACH] Processing message from ${message.author.id}: "${message.content.substring(0, 50)}..."`);
 
         // Call the Game Agent
         const reply = await callGameAgent(message.content, message.author.id, logger);
@@ -257,6 +277,7 @@ async function handleBreachGameMessage(message, logger) {
         return true;
     } catch (error) {
         if (logger) logger.error(`[BREACH] Error processing message: ${error.message}`);
+        if (logger) logger.error(`[BREACH] Stack: ${error.stack}`);
         await message.reply('*The guard seems distracted and doesn\'t respond...*');
         return true;
     }
@@ -414,6 +435,7 @@ module.exports = {
     startNewSeason,
     BREACH_GAME_CHANNEL,
     MODERATOR_ROLE_ID,
+    COMMAND_PREFIX,
 
     async execute(message, args, extra) {
         const subCommand = args[1]?.toLowerCase();

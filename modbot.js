@@ -138,7 +138,7 @@ client.on('messageCreate', (message) => {
 
     // ─── Breach Game Handler ───────────────────────────────────────────────────
     // Handle messages in the breach game channel (non-commands go to AI Guard)
-    if (breachGameChannelId && message.channel.id === breachGameChannelId && !message.content.startsWith(config.prefix)) {
+    if (breachGameChannelId && message.channel.id === breachGameChannelId) {
         let breachCommand;
         // Find the breach command to access its handler
         for (const module of modules.modules.values()) {
@@ -148,7 +148,19 @@ client.on('messageCreate', (message) => {
             }
         }
 
-        if (breachCommand && typeof breachCommand.handleBreachGameMessage === 'function') {
+        // Get the module prefix (from the breach command's module config)
+        const modulePrefix = breachCommand?.COMMAND_PREFIX || ',';
+
+        logger.info(`[BREACH_DEBUG] Channel: ${message.channel.id}, BreachChannel: ${breachGameChannelId}`);
+        logger.info(`[BREACH_DEBUG] Message: "${message.content.substring(0, 50)}", Prefix: "${modulePrefix}"`);
+        logger.info(`[BREACH_DEBUG] StartsWithPrefix: ${message.content.startsWith(modulePrefix)}`);
+
+        // If message starts with prefix, let command handler process it
+        if (message.content.startsWith(modulePrefix)) {
+            logger.info(`[BREACH_DEBUG] Detected command, passing to command handler`);
+            // Fall through to command handler below
+        } else if (breachCommand && typeof breachCommand.handleBreachGameMessage === 'function') {
+            // Non-command message - handle as breach game chat
             breachCommand.handleBreachGameMessage(message, logger)
                 .then(handled => {
                     if (handled) {
@@ -156,9 +168,9 @@ client.on('messageCreate', (message) => {
                     }
                 })
                 .catch(err => {
-                    logger.error(`Error in breach game handler: ${err}`);
+                    logger.error(`[BREACH] Error in breach game handler: ${err}`);
                 });
-            return; // Don't process further
+            return; // Don't process further - it's a chat message, not command
         } else {
             logger.warn('[BREACH] Breach command not found or handler missing');
         }
