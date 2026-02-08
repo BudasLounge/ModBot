@@ -642,10 +642,19 @@ module.exports = {
                     { name: 'Conversation ID', value: gameState.conversationId ? `\`${gameState.conversationId}\`` : 'None', inline: false }
                 );
 
-            await message.reply({
-                embeds: [secretEmbed],
-                ephemeral: true
-            });
+            try {
+                await message.author.send({
+                    embeds: [secretEmbed]
+                });
+                // Provide feedback in the channel that a DM was sent
+                await message.react('📩');
+            } catch (error) {
+                this.logger.warn(`[BREACH] Could not DM secrets to ${message.author.tag}: ${error.message}`);
+                await message.reply({
+                    content: '⚠️ I tried to DM you the classified intel, but your DMs are closed. Please enable DMs from this server and try again.',
+                    allowedMentions: { repliedUser: true }
+                });
+            }
         }
     }
 };
