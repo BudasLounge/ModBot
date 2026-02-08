@@ -174,7 +174,7 @@ async function callDetective(sanitizedLog, logger) {
             rawRule = 'No analysis available.';
         }
 
-        if (logger) logger.info(`[BREACH_API] Detective Generated Rule: "${rawRule.substring(0, 50)}..."`);
+        if (logger) logger.info(`[BREACH_API] Detective Generated Rule: "${rawRule}"`);
 
         return rawRule;
 
@@ -250,7 +250,7 @@ async function callDirector(winnerSuggestion, logger) {
             throw new Error('Director returned no persona data');
         }
 
-        if (logger) logger.info(`[BREACH_API] Raw output from Dify: ${rawOutput.substring(0, 500)}...`);
+        if (logger) logger.info(`[BREACH_API] Raw output from Dify: ${rawOutput}`);
 
         // 🧼 THE SCRUBBER (Critical Fix)
         // Remove <think>...</think> blocks (handling newlines with [\s\S])
@@ -347,7 +347,7 @@ async function handleBreachGameMessage(message, logger) {
     }
 
     try {
-        if (logger) logger.info(`[BREACH] Processing message from ${message.author.id}: "${message.content.substring(0, 50)}..."`);
+        if (logger) logger.info(`[BREACH] Processing message from ${message.author.id}: "${message.content}"`);
 
         // Call the Game Agent
         const reply = await callGameAgent(message.content, message.author.id, logger);
