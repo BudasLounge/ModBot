@@ -564,8 +564,10 @@ module.exports = {
                 return this.handleUnlock(message);
             case 'status':
                 return this.handleStatus(message);
+            case 'setseason':
+                return this.handleSetSeason(message, args);
             default:
-                return message.reply(`Usage: \`${COMMAND_PREFIX}breach <start|reset|lock|unlock|status>\` or \`${COMMAND_PREFIX}guess <word>\``);
+                return message.reply(`Usage: \`${COMMAND_PREFIX}breach <start|reset|lock|unlock|status|setseason>\` or \`${COMMAND_PREFIX}guess <word>\``);
         }
     },
 
@@ -687,5 +689,25 @@ module.exports = {
                 });
             }
         }
+    },
+
+    async handleSetSeason(message, args) {
+        // Check moderator permission
+        if (!isModerator(message.member)) {
+            return message.reply('❌ You need the Moderator role to use this command.');
+        }
+
+        const seasonNum = parseInt(args[2]);
+
+        if (isNaN(seasonNum)) {
+            return message.reply(`Usage: \`${COMMAND_PREFIX}breach setseason <number>\``);
+        }
+
+        const oldSeason = gameState.seasonNumber;
+        gameState.seasonNumber = seasonNum;
+        saveGameState();
+
+        this.logger.info(`[BREACH] Season manually set from ${oldSeason} to ${seasonNum} by ${message.author.id}`);
+        await message.reply(`✅ **Season count updated.**\nSeason changed from **${oldSeason}** to **${seasonNum}**.`);
     }
 };
