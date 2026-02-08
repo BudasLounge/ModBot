@@ -366,7 +366,18 @@ async function triggerBreachSequence(message, logger) {
         // 3. Fetch last 20 messages for analysis
         if (logger) logger.info(`[BREACH] Fetching chat history for analysis...`);
         const fetchedMessages = await channel.messages.fetch({ limit: 20 });
-        const messagesArray = Array.from(fetchedMessages.values()).reverse();
+        let messagesArray = Array.from(fetchedMessages.values()).reverse();
+
+        // Filter messages to only include the current season
+        // Look for the "✅ SYSTEM ONLINE" message which marks the start of the season
+        const systemOnlineIndex = messagesArray.findIndex(m => m.content.includes('✅ **SYSTEM ONLINE**'));
+
+        if (systemOnlineIndex !== -1) {
+            if (logger) logger.info(`[BREACH] Found season start at index ${systemOnlineIndex}. Filtering previous season messages...`);
+            // Keep only messages AFTER the system online message
+            messagesArray = messagesArray.slice(systemOnlineIndex + 1);
+        }
+
         const sanitizedLog = sanitizeChatHistory(messagesArray, message.client.user.id);
 
         if (logger) logger.info(`[BREACH] Sanitized ${messagesArray.length} messages for Detective`);
