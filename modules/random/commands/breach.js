@@ -607,7 +607,7 @@ module.exports = {
 
         // Initialize with a random persona
         await message.channel.send('🔄 **Initializing AI Security Breach Game...**');
-        await startNewSeason(message.channel, 'a mysterious and cryptic guardian', this.logger);
+        await startNewSeason(message.channel, '', this.logger);
     },
 
     async handleLock(message) {
