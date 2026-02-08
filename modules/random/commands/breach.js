@@ -95,8 +95,8 @@ async function generateNewPassword() {
 }
 
 // ─── API Helper: Call Game Agent (Chat) ────────────────────────────────────────
-async function callGameAgent(userMessage, userId, logger) {
-    if (logger) logger.info(`[BREACH_API] Calling Game Agent for user ${userId}`);
+async function callGameAgent(userMessage, userId, logger, isRetry = false) {
+    if (logger) logger.info(`[BREACH_API] Calling Game Agent for user ${userId} (Static: discord-community)${isRetry ? ' [RETRY]' : ''}`);
 
     const response = await fetch(`${DIFY_BASE_URL}/chat-messages`, {
         method: 'POST',
@@ -112,11 +112,23 @@ async function callGameAgent(userMessage, userId, logger) {
             query: userMessage,
             response_mode: 'blocking',
             conversation_id: gameState.conversationId || '',
-            user: `discord-${userId}`
+            user: 'discord-community' // Shared context for all players
         })
     });
 
     if (!response.ok) {
+        // Auto-Healing: Handle 404 (Conversation Not Found)
+        if (response.status === 404 && !isRetry) {
+            if (logger) logger.warn(`[BREACH_API] 404 Conversation Not Found. Resetting ID and retrying...`);
+
+            // Clear the invalid ID
+            gameState.conversationId = '';
+            saveGameState();
+
+            // Retry once with empty ID
+            return callGameAgent(userMessage, userId, logger, true);
+        }
+
         const errorText = await response.text();
         throw new Error(`Game Agent API error: ${response.status} - ${errorText}`);
     }
