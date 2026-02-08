@@ -1,3 +1,5 @@
+const { ChannelType } = require('discord.js');
+
 module.exports = {
   name: 'wipe_channel',
   description: 'Wipes all messages from a specified channel.',
@@ -20,16 +22,16 @@ module.exports = {
       return message.reply('Could not find that channel. Please check the ID.');
     }
 
-    if (channel.type !== 'GUILD_TEXT') {
+    if (channel.type !== ChannelType.GuildText) {
       return message.reply('This command can only be used on text channels.');
     }
 
     if (!message.guild.members.me.permissionsIn(channel).has('ManageMessages')) {
-        return message.reply('I do not have permission to delete messages in that channel.');
+      return message.reply('I do not have permission to delete messages in that channel.');
     }
-    
+
     if (!message.member.permissionsIn(channel).has('ManageMessages')) {
-        return message.reply('You do not have permission to delete messages in that channel.');
+      return message.reply('You do not have permission to delete messages in that channel.');
     }
 
     try {
