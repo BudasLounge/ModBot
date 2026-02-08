@@ -1447,6 +1447,62 @@ async function onInteractionCreate(interaction) {
                 await buttonInteraction.editReply({ content: "An error occurred while trying to fix ghost sessions. Please check the logs.", components: [] }); // MODIFIED: button -> buttonInteraction
             }
             return;
+            // ─── BREACH GAME BUTTON HANDLERS ───────────────────────────────────────────
+        } else if (buttonInteraction.customId.startsWith("BREACH_SUGGEST_PERSONA-")) {
+            // Winner clicked "Suggest Next Guard Personality" button
+            const winnerId = buttonInteraction.customId.split('-')[1];
+
+            // Only the winner can use this button
+            if (buttonInteraction.user.id !== winnerId) {
+                await buttonInteraction.reply({ content: "Only the breach winner can suggest a persona!", ephemeral: true });
+                return;
+            }
+
+            const modal = new ModalBuilder()
+                .setCustomId(`BREACH_PERSONA_MODAL-${winnerId}`)
+                .setTitle('Suggest Next Guard Personality');
+
+            const suggestionInput = new TextInputBuilder()
+                .setCustomId('personaSuggestion')
+                .setLabel('Guard Theme/Personality')
+                .setStyle(TextInputStyle.Short)
+                .setPlaceholder('e.g., a grumpy pirate, a mysterious wizard, a sarcastic robot')
+                .setRequired(true)
+                .setMaxLength(100);
+
+            modal.addComponents(new ActionRowBuilder().addComponents(suggestionInput));
+            await buttonInteraction.showModal(modal);
+            logger.info(`[BREACH] Winner ${winnerId} opened persona suggestion modal`);
+            return;
+
+        } else if (buttonInteraction.customId.startsWith("BREACH_SKIP_PERSONA-")) {
+            // Winner clicked "Skip (Random)" button
+            const winnerId = buttonInteraction.customId.split('-')[1];
+
+            // Only the winner can use this button
+            if (buttonInteraction.user.id !== winnerId) {
+                await buttonInteraction.reply({ content: "Only the breach winner can skip!", ephemeral: true });
+                return;
+            }
+
+            await buttonInteraction.deferUpdate();
+
+            // Find the breach command to call startNewSeason
+            let breachCommand = null;
+            try {
+                breachCommand = require('./commands/breach.js');
+            } catch (e) {
+                logger.error(`[BREACH] Could not load breach command: ${e.message}`);
+            }
+
+            if (breachCommand && typeof breachCommand.startNewSeason === 'function') {
+                await buttonInteraction.editReply({ content: "Generating random persona...", components: [] });
+                await breachCommand.startNewSeason(buttonInteraction.channel, null, logger);
+            } else {
+                await buttonInteraction.editReply({ content: "Error: Could not start new season.", components: [] });
+            }
+            return;
+
         } else if (buttonInteraction.customId.startsWith("GAME_")) {
             await handleGameButton(buttonInteraction, logger, api);
             return;
@@ -1501,6 +1557,35 @@ async function onInteractionCreate(interaction) {
             await handleSetCaptainsModal(modalInteraction, logger, api);
         } else if (modalInteraction.customId.startsWith("GAME_MODAL_CAPTAIN_PICK-")) {
             await handleCaptainPickModal(modalInteraction, logger, api);
+            // ─── BREACH GAME MODAL HANDLER ─────────────────────────────────────────────
+        } else if (modalInteraction.customId.startsWith("BREACH_PERSONA_MODAL-")) {
+            const winnerId = modalInteraction.customId.split('-')[1];
+
+            // Only the winner can submit
+            if (modalInteraction.user.id !== winnerId) {
+                await modalInteraction.reply({ content: "Only the breach winner can submit!", ephemeral: true });
+                return;
+            }
+
+            const suggestion = modalInteraction.fields.getTextInputValue('personaSuggestion');
+            logger.info(`[BREACH] Winner ${winnerId} suggested persona: "${suggestion}"`);
+
+            await modalInteraction.deferReply();
+
+            // Find the breach command to call startNewSeason
+            let breachCommand = null;
+            try {
+                breachCommand = require('./commands/breach.js');
+            } catch (e) {
+                logger.error(`[BREACH] Could not load breach command: ${e.message}`);
+            }
+
+            if (breachCommand && typeof breachCommand.startNewSeason === 'function') {
+                await modalInteraction.editReply({ content: `Generating new guard based on: **${suggestion}**...` });
+                await breachCommand.startNewSeason(modalInteraction.channel, suggestion, logger);
+            } else {
+                await modalInteraction.editReply({ content: "Error: Could not start new season." });
+            }
         }
     } else if (interaction.isUserSelectMenu()) {
         // Handle captain selection dropdowns

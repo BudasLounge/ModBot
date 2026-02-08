@@ -9,7 +9,7 @@ var axios = require('axios');
 var shell = require('shelljs');
 require('dotenv/config')
 
-const {Client, GatewayIntentBits, Discord, ActivityType} = require('discord.js');
+const { Client, GatewayIntentBits, Discord, ActivityType } = require('discord.js');
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages, GatewayIntentBits.DirectMessages, GatewayIntentBits.GuildBans, GatewayIntentBits.GuildInvites, GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.MessageContent] });
 var config = JSON.parse(fs.readFileSync('modbot.json'));
 
@@ -22,6 +22,9 @@ var logger = LogHandler.build_logger(__dirname + "/" + config.log_folder);
 
 // Define the list of channels for auto-chat
 const autoChatChannels = ['1373188051760709752']; // Replace with actual channel IDs
+
+// Breach Game Channel (from .env)
+const breachGameChannelId = process.env.BREACH_GAME_CHANNEL;
 
 var state_manager = new StateManager(logger);
 
@@ -36,18 +39,19 @@ logger.info("Event Registration Complete!");
 
 authClient();
 
-async function botInit () {
+async function botInit() {
     shell.exec('/home/bots/clean_logs.sh');
     logger.info("Logs older than 3 days have been cleaned");
     logger.info("I am ready!");
 
     var channel = await client.channels.fetch(config.default_channel);
-    
-    if(fs.existsSync("updated.txt")) {
-        channel.send({ content: config.startup_messages.update});
+
+    if (fs.existsSync("updated.txt")) {
+        channel.send({ content: config.startup_messages.update });
         fs.unlinkSync("updated.txt");
     } else {
-        channel.send({ content: config.startup_messages.restart});    }
+        channel.send({ content: config.startup_messages.restart });
+    }
     client.user.setActivity(config.bot_activity.name, { type: ActivityType.Playing });
 
     logger.info("Initialization of DnD scheduling messages starting...");
@@ -56,12 +60,12 @@ async function botInit () {
     const api = new APIClient();
 
     var respDNDCampaigns;
-    try{
-        respDNDCampaigns = await api.get("dnd_campaign",{
+    try {
+        respDNDCampaigns = await api.get("dnd_campaign", {
             active: true,
             _limit: 200
         })
-    }catch(err){
+    } catch (err) {
         logger.error(err.message);
     }
     const sessions = respDNDCampaigns.dnd_campaigns;
@@ -77,18 +81,18 @@ async function botInit () {
             existingJob.cancel();
         }
         // Schedule the job
-        schedule.scheduleJob(module, dateTime, async function() {
+        schedule.scheduleJob(module, dateTime, async function () {
             logger.info(`Sending message for session ${session.module}`);
             const guild = await client.guilds.fetch('650865972051312673');
-                if (!guild) {
-                    logger.error(`Guild not found for ID 650865972051312673`);
-                    return;
-                }
+            if (!guild) {
+                logger.error(`Guild not found for ID 650865972051312673`);
+                return;
+            }
             const channel = await guild.channels.resolve(schedule_channel);
             if (channel) {
-                var unixTimeStamp = Math.floor(new Date(session.next_session).getTime()/1000);
-                channel.send({content: "<@&"+session.role_id.toString()+">, the session starts <t:" + unixTimeStamp.toString() + ":R>"});
-            }else {
+                var unixTimeStamp = Math.floor(new Date(session.next_session).getTime() / 1000);
+                channel.send({ content: "<@&" + session.role_id.toString() + ">, the session starts <t:" + unixTimeStamp.toString() + ":R>" });
+            } else {
                 logger.error(`Channel not found for ID ${schedule_channel} in guild ${guild.id}`);
             }
         });
@@ -132,6 +136,34 @@ client.on('messageCreate', (message) => {
     // Check if the message is from a bot
     if (message.author.bot) return;
 
+    // ─── Breach Game Handler ───────────────────────────────────────────────────
+    // Handle messages in the breach game channel (non-commands go to AI Guard)
+    if (breachGameChannelId && message.channel.id === breachGameChannelId && !message.content.startsWith(config.prefix)) {
+        let breachCommand;
+        // Find the breach command to access its handler
+        for (const module of modules.modules.values()) {
+            if (module.commands && module.commands.has('breach')) {
+                breachCommand = module.commands.get('breach');
+                break;
+            }
+        }
+
+        if (breachCommand && typeof breachCommand.handleBreachGameMessage === 'function') {
+            breachCommand.handleBreachGameMessage(message, logger)
+                .then(handled => {
+                    if (handled) {
+                        logger.info('[BREACH] Message handled by breach game');
+                    }
+                })
+                .catch(err => {
+                    logger.error(`Error in breach game handler: ${err}`);
+                });
+            return; // Don't process further
+        } else {
+            logger.warn('[BREACH] Breach command not found or handler missing');
+        }
+    }
+
     // Check if the message is in an auto-chat channel and is not a command
     if (autoChatChannels.includes(message.channel.id) && !message.content.startsWith(config.prefix)) {
         let chatCommand;
@@ -149,8 +181,8 @@ client.on('messageCreate', (message) => {
             const args = message.content.split(' ');
             // The 'extra' object might be used by other commands, but chat.js doesn't seem to use it.
             // We'll pass an empty object for now.
-            const extra = {}; 
-            
+            const extra = {};
+
             // It's good practice to ensure the command has an execute function
             if (typeof chatCommand.execute === 'function') {
                 chatCommand.execute(message, args, extra)
