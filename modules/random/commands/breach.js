@@ -422,7 +422,9 @@ async function triggerBreachSequence(message, logger) {
             const isGuessCommand = msg.content.trim().toLowerCase().startsWith(`${COMMAND_PREFIX}guess`);
             const isStatusEmbed = msg.embeds.length > 0 && msg.embeds[0].title === '🔐 Breach Game Status';
             const isSetSeasonReturn = msg.content.includes('✅ **Season count updated.**');
-            return !isBreachCommand && !isGuessCommand && !isStatusEmbed && !isSetSeasonReturn;
+            const isMaintenanceModeOn = msg.content.includes('🔒 Game Locked');
+            const isMaintenanceModeOff = msg.content.includes('🔓 Game Unlocked');
+            return !isBreachCommand && !isGuessCommand && !isStatusEmbed && !isSetSeasonReturn && !isMaintenanceModeOn && !isMaintenanceModeOff;
         });
 
         const sanitizedLog = sanitizeChatHistory(messagesArray, message.client.user.id);
