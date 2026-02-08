@@ -32,9 +32,12 @@ const DATASET_ID = process.env.DATASET_ID;
 const BREACH_GAME_CHANNEL = process.env.BREACH_GAME_CHANNEL;
 const MODERATOR_ROLE_ID = '1139853603050373181';
 
-// ─── Global Game State ─────────────────────────────────────────────────────────
-const gameState = {
-    isMaintenanceMode: true,      // Start locked until !breach start
+// ─── State Persistence ─────────────────────────────────────────────────────────
+const STATE_FILE_PATH = path.join(__dirname, '..', 'breach_game_state.json');
+
+// Default game state
+const DEFAULT_STATE = {
+    isMaintenanceMode: true,      // Start locked until ,breach start
     secretWord: '',               // Current password
     personaInstruction: '',       // Current system prompt injection
     personaName: 'The Guard',     // Display name for current persona
@@ -43,6 +46,34 @@ const gameState = {
     currentSeasonStartMessageId: null,  // For reference
     seasonNumber: 0               // Track seasons
 };
+
+// Load state from file or use defaults
+function loadGameState() {
+    try {
+        if (fs.existsSync(STATE_FILE_PATH)) {
+            const data = fs.readFileSync(STATE_FILE_PATH, 'utf8');
+            const loaded = JSON.parse(data);
+            console.log(`[BREACH] Loaded game state from file: Season ${loaded.seasonNumber}, Guard: ${loaded.personaName}`);
+            return { ...DEFAULT_STATE, ...loaded };
+        }
+    } catch (error) {
+        console.error(`[BREACH] Error loading state file: ${error.message}`);
+    }
+    return { ...DEFAULT_STATE };
+}
+
+// Save state to file
+function saveGameState() {
+    try {
+        fs.writeFileSync(STATE_FILE_PATH, JSON.stringify(gameState, null, 2));
+        console.log(`[BREACH] Game state saved to file`);
+    } catch (error) {
+        console.error(`[BREACH] Error saving state file: ${error.message}`);
+    }
+}
+
+// ─── Global Game State (Persisted) ─────────────────────────────────────────────
+const gameState = loadGameState();
 
 // ─── Helper: Check Moderator Role ──────────────────────────────────────────────
 function isModerator(member) {
@@ -293,6 +324,7 @@ async function triggerBreachSequence(message, logger) {
     // 1. LOCK THE GAME
     gameState.isMaintenanceMode = true;
     gameState.winnerId = winnerId;
+    saveGameState();
 
     // 2. Announce the breach
     const breachEmbed = new EmbedBuilder()
@@ -400,6 +432,9 @@ async function startNewSeason(channel, winnerSuggestion, logger) {
         // 5. UNLOCK THE GAME
         gameState.isMaintenanceMode = false;
 
+        // 6. Save state to file
+        saveGameState();
+
         await channel.send(`✅ **SYSTEM ONLINE**\n\nNew Guard: **${gameState.personaName}**\n\n*The guard awaits your attempts...*`);
 
     } catch (error) {
@@ -413,6 +448,9 @@ async function startNewSeason(channel, winnerSuggestion, logger) {
         gameState.seasonNumber++;
         gameState.winnerId = null;
         gameState.isMaintenanceMode = false;
+
+        // Save fallback state
+        saveGameState();
 
         await channel.send(`⚠️ Error generating persona. Fallback guard activated.\n\n✅ **SYSTEM ONLINE** - Guard: **${gameState.personaName}**`);
     }
@@ -433,6 +471,7 @@ module.exports = {
     handleBreachGameMessage,
     triggerBreachSequence,
     startNewSeason,
+    saveGameState,
     BREACH_GAME_CHANNEL,
     MODERATOR_ROLE_ID,
     COMMAND_PREFIX,
@@ -448,6 +487,7 @@ module.exports = {
         // Handle !breach subcommands
         switch (subCommand) {
             case 'start':
+            case 'reset':  // Alias for start - creates new persona + password
                 return this.handleStart(message);
             case 'lock':
                 return this.handleLock(message);
@@ -456,7 +496,7 @@ module.exports = {
             case 'status':
                 return this.handleStatus(message);
             default:
-                return message.reply('Usage: `!breach <start|lock|unlock|status>` or `!guess <word>`');
+                return message.reply(`Usage: \`${COMMAND_PREFIX}breach <start|reset|lock|unlock|status>\` or \`${COMMAND_PREFIX}guess <word>\``);
         }
     },
 
@@ -512,6 +552,7 @@ module.exports = {
         }
 
         gameState.isMaintenanceMode = true;
+        saveGameState();
         this.logger.info(`[BREACH] Game LOCKED by ${message.author.id}`);
         await message.reply('🔒 **Game Locked.** The breach game is now in maintenance mode.');
     },
@@ -534,6 +575,7 @@ module.exports = {
 
         gameState.isMaintenanceMode = false;
         gameState.winnerId = null;
+        saveGameState();
         this.logger.info(`[BREACH] Game UNLOCKED by ${message.author.id}`);
         await message.reply('🔓 **Game Unlocked.** The breach game is now active!');
     },
