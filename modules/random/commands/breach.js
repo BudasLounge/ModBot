@@ -449,17 +449,17 @@ async function triggerBreachSequence(message, logger) {
                         content: `<@${winnerId}> didn't respond in time. Generating random persona...`,
                         components: []
                     });
-                    await startNewSeason(channel, null, logger);
+                    await startNewSeason(channel, '', logger);
                 } catch (e) {
                     if (logger) logger.error(`[BREACH] Error in timeout handler: ${e.message}`);
                 }
             }
-        }, 60000);
+        }, 180000);
 
     } catch (error) {
         if (logger) logger.error(`[BREACH] Error in breach sequence: ${error.message}`);
         await channel.send('⚠️ Error during breach analysis. Starting new season with random persona...');
-        await startNewSeason(channel, null, logger);
+        await startNewSeason(channel, '', logger);
     }
 }
 
