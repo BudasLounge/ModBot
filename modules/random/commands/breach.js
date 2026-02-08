@@ -591,14 +591,23 @@ module.exports = {
             )
             .setTimestamp();
 
-        // Only show password to moderators
-        if (isModerator(message.member)) {
-            statusEmbed.addFields(
-                { name: '🔑 Secret Word (Mod Only)', value: `\`${gameState.secretWord || 'Not set'}\``, inline: true },
-                { name: 'Conversation ID', value: gameState.conversationId ? `\`${gameState.conversationId.substring(0, 20)}...\`` : 'None', inline: true }
-            );
-        }
-
+        // Send standard status message
         await message.reply({ embeds: [statusEmbed] });
+
+        // If moderator, send a second ephemeral message with secrets
+        if (isModerator(message.member)) {
+            const secretEmbed = new EmbedBuilder()
+                .setColor('#000000')
+                .setTitle('🕵️ Classified Intel (Moderator Only)')
+                .addFields(
+                    { name: '🔑 Secret Word', value: `||${gameState.secretWord || 'Not set'}||`, inline: true },
+                    { name: 'Conversation ID', value: gameState.conversationId ? `\`${gameState.conversationId}\`` : 'None', inline: false }
+                );
+
+            await message.reply({
+                embeds: [secretEmbed],
+                ephemeral: true
+            });
+        }
     }
 };
