@@ -406,7 +406,8 @@ async function triggerBreachSequence(message, logger) {
         messagesArray = messagesArray.filter(msg => {
             const isBreachCommand = msg.content.trim().toLowerCase().startsWith(`${COMMAND_PREFIX}breach`);
             const isStatusEmbed = msg.embeds.length > 0 && msg.embeds[0].title === '🔐 Breach Game Status';
-            return !isBreachCommand && !isStatusEmbed;
+            const isSetSeasonReturn = msg.content.includes('✅ **Season count updated.**');
+            return !isBreachCommand && !isStatusEmbed && !isSetSeasonReturn;
         });
 
         const sanitizedLog = sanitizeChatHistory(messagesArray, message.client.user.id);
