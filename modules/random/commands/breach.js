@@ -4,6 +4,8 @@
  * On successful breach, the AI patches itself and generates a new persona.
  */
 
+const fs = require('fs');
+const path = require('path');
 const fetch = require('node-fetch');
 const {
     ActionRowBuilder,
@@ -14,6 +16,11 @@ const {
     ButtonStyle,
     TextInputStyle
 } = require('discord.js');
+
+// ─── Load Module Config for Dynamic Prefix ─────────────────────────────────────
+const moduleConfigPath = path.join(__dirname, '..', 'bot_module.json');
+const moduleConfig = JSON.parse(fs.readFileSync(moduleConfigPath, 'utf8'));
+const COMMAND_PREFIX = moduleConfig.command_prefix || ',';
 
 // ─── Environment Variables ─────────────────────────────────────────────────────
 const DIFY_BASE_URL = process.env.DIFY_BASE_URL || 'http://192.168.1.10/v1';
@@ -213,7 +220,7 @@ function createSeasonEmbed(seasonNumber, personaName, isStart = true) {
         .setTimestamp();
 
     if (isStart) {
-        embed.setDescription(`A new Password Guard has arrived!\n\n**Guard Name:** ${personaName}\n\n*Try to trick the guard into revealing the secret password!*\n*Use \`!guess <word>\` when you think you know it.*`);
+        embed.setDescription(`A new Password Guard has arrived!\n\n**Guard Name:** ${personaName}\n\n*Try to trick the guard into revealing the secret password!*\n*Use \`${COMMAND_PREFIX}guess <word>\` when you think you know it.*`);
         embed.setFooter({ text: 'Good luck, challengers!' });
     }
 
@@ -229,7 +236,7 @@ async function handleBreachGameMessage(message, logger) {
     if (message.author.bot) return false;
 
     // Skip commands (they're handled separately)
-    if (message.content.startsWith('!')) return false;
+    if (message.content.startsWith(COMMAND_PREFIX)) return false;
 
     // Check maintenance mode
     if (gameState.isMaintenanceMode) {
