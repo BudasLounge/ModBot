@@ -1,150 +1,201 @@
 const axios = require('axios');
 const fs = require('fs');
+const fsp = require('fs/promises');
 const path = require('path');
 
 const WIKI_URL = 'https://wiki.leagueoflegends.com/en-us/Module:MayhemAugmentData/data?action=raw';
 const OUTPUT_FILE = path.join(__dirname, 'mayhem_wiki_data.json');
 const ICON_DIR = path.join(__dirname, 'assets', 'mayhem');
+const AUGMENT_REGEX = /\["(?<name>[^"]+)"\]\s*=\s*\{(?<content>[\s\S]*?)\}(?=,\s*\["|$)/g;
+const TIER_REGEX = /\["tier"\]\s*=\s*"(?<tier>[^"]+)"/;
+const DESCRIPTION_REGEX = /\["description"\]\s*=\s*"(?<desc>.*?)"/;
+const ICON_SUFFIXES = ['augment.png', 'mayhem augment.png'];
+const NAME_VARIANT_RULES = [
+  { pattern: /:\s/g, replacement: ' ' },
+  { pattern: /:/g, replacement: '' }
+];
 
-if (!fs.existsSync(ICON_DIR)) {
-  fs.mkdirSync(ICON_DIR, { recursive: true });
+const httpClient = axios.create({ timeout: 30000 });
+
+function isNotFoundError(error) {
+  return error?.response?.status === 404;
 }
 
-async function downloadImage(filename) {
-  const safeFilename = filename.replace(/ /g, '_');
-  const imageUrl = `https://wiki.leagueoflegends.com/en-us/Special:Redirect/file/${encodeURIComponent(safeFilename)}`;
-  const filePath = path.join(ICON_DIR, filename);
+async function ensureIconDirectory() {
+  await fsp.mkdir(ICON_DIR, { recursive: true });
+}
 
-  if (fs.existsSync(filePath)) return; // Skip if exists
+function sanitizeLocalFilename(filename) {
+  return filename.replace(/[<>:"/\\|?*]/g, '_');
+}
 
-  try {
-    const response = await axios({
-      url: imageUrl,
-      method: 'GET',
-      responseType: 'stream'
-    });
+function normalizeWikiFilename(filename) {
+  return filename.replace(/ /g, '_');
+}
 
-    const writer = fs.createWriteStream(filePath);
-    response.data.pipe(writer);
+function extractTier(content) {
+  const tierMatch = content.match(TIER_REGEX);
+  return tierMatch ? tierMatch.groups.tier : 'Unknown';
+}
 
-    return new Promise((resolve, reject) => {
-      writer.on('finish', resolve);
-      writer.on('error', reject);
-    });
-  } catch (err) {
-    if (err.response && err.response.status === 404) {
-         console.warn(`Image not found on wiki: ${safeFilename}`);
-    } else {
-         console.warn(`Failed to download image: ${filename}`, err.message);
+function extractDescription(content) {
+  const descMatch = content.match(DESCRIPTION_REGEX);
+  const description = descMatch ? descMatch.groups.desc : '';
+  return description.replace(/\\"/g, '"');
+}
+
+function getDefaultIconName(augmentName) {
+  return `${augmentName} augment.png`;
+}
+
+function getNameVariants(augmentName) {
+  const variants = new Set([augmentName]);
+
+  for (const rule of NAME_VARIANT_RULES) {
+    const currentVariants = Array.from(variants);
+    for (const value of currentVariants) {
+      variants.add(value.replace(rule.pattern, rule.replacement));
     }
   }
+
+  return Array.from(variants);
+}
+
+function getIconCandidates(augmentName) {
+  const candidates = new Set([getDefaultIconName(augmentName)]);
+  const nameVariants = getNameVariants(augmentName);
+
+  for (const nameVariant of nameVariants) {
+    for (const suffix of ICON_SUFFIXES) {
+      candidates.add(`${nameVariant} ${suffix}`);
+    }
+  }
+
+  return Array.from(candidates);
+}
+
+async function downloadImage(filenames) {
+  const candidates = Array.from(new Set(Array.isArray(filenames) ? filenames : [filenames]));
+
+  for (const filename of candidates) {
+    const localFilename = sanitizeLocalFilename(filename);
+    const safeFilename = normalizeWikiFilename(filename);
+    const imageUrl = `https://wiki.leagueoflegends.com/en-us/Special:Redirect/file/${encodeURIComponent(safeFilename)}`;
+    const filePath = path.join(ICON_DIR, localFilename);
+
+    if (fs.existsSync(filePath)) return localFilename;
+
+    try {
+      const response = await httpClient({
+        url: imageUrl,
+        method: 'GET',
+        responseType: 'stream'
+      });
+
+      await new Promise((resolve, reject) => {
+        const writer = fs.createWriteStream(filePath);
+        response.data.pipe(writer);
+        writer.on('finish', resolve);
+        writer.on('error', reject);
+      });
+
+      return localFilename;
+    } catch (err) {
+      if (!isNotFoundError(err)) {
+        console.warn(`Failed to download image: ${filename}`, err.message);
+      }
+    }
+  }
+
+  const attempted = candidates.map(normalizeWikiFilename).join(', ');
+  console.warn(`Image not found on wiki: ${attempted}`);
+  return null;
+}
+
+async function fetchWikiData() {
+  console.log(`Fetching data from ${WIKI_URL}...`);
+  const response = await httpClient.get(WIKI_URL);
+  return response.data;
+}
+
+function parseAugments(rawLua) {
+  AUGMENT_REGEX.lastIndex = 0;
+  const augments = {};
+  const parsedEntries = [];
+  let match;
+
+  while ((match = AUGMENT_REGEX.exec(rawLua)) !== null) {
+    const name = match.groups.name;
+    const content = match.groups.content;
+    const tier = extractTier(content);
+    const description = extractDescription(content);
+    const iconCandidates = getIconCandidates(name);
+    const iconName = getDefaultIconName(name);
+
+    parsedEntries.push({
+      name,
+      tier,
+      description,
+      iconName,
+      iconCandidates
+    });
+
+    augments[name] = {
+      name,
+      tier,
+      icon: iconName,
+      description
+    };
+  }
+
+  return { augments, parsedEntries };
+}
+
+async function resolveAugmentIcons(augments, parsedEntries) {
+  for (const entry of parsedEntries) {
+    const resolvedIconName = await downloadImage(entry.iconCandidates) || entry.iconName;
+    augments[entry.name].icon = resolvedIconName;
+    process.stdout.write('.');
+  }
+}
+
+async function writeAugments(augments) {
+  await fsp.writeFile(OUTPUT_FILE, JSON.stringify(augments, null, 2));
 }
 
 async function fetchAndParseWiki() {
+  const rawLua = await fetchWikiData();
+  console.log('Parsing Lua table...');
+  const { augments, parsedEntries } = parseAugments(rawLua);
+
+  await resolveAugmentIcons(augments, parsedEntries);
+  console.log('\n');
+
+  const count = Object.keys(augments).length;
+  console.log(`Found ${count} augments.`);
+
+  await writeAugments(augments);
+  console.log(`Saved augment data to ${OUTPUT_FILE}`);
+}
+
+async function main() {
   try {
-    console.log(`Fetching data from ${WIKI_URL}...`);
-    const response = await axios.get(WIKI_URL);
-    const rawLua = response.data;
-
-    console.log('Parsing Lua table...');
-    
-    // Regex to match: ["Name"] = { ... }
-    const augmentRegex = /\["(?<name>[^"]+)"\]\s*=\s*\{(?<content>[\s\S]*?)\}(?=,\s*\["|$)/g;
-    
-    const augments = {};
-    let match;
-
-    while ((match = augmentRegex.exec(rawLua)) !== null) {
-      const name = match.groups.name;
-      const content = match.groups.content;
-
-      // Extract Tier
-      const tierMatch = content.match(/\["tier"\]\s*=\s*"(?<tier>[^"]+)"/);
-      const tier = tierMatch ? tierMatch.groups.tier : 'Unknown';
-
-      // Extract Description
-      const descMatch = content.match(/\["description"\]\s*=\s*"(?<desc>.*?)"/);
-      let description = descMatch ? descMatch.groups.desc : '';
-      description = description.replace(/\\"/g, '"');
-
-      // Generate Icon Filename
-      let iconName = `${name} augment.png`;
-      
-      // Handle known exceptions for filenames
-      const iconOverrides = {
-        "Escape Plan": "Escape Plan mayhem augment.png",
-        "Adamant": "Adamant mayhem augment.png",
-        "Fetch": "Fetch mayhem augment.png",
-        "Hat on a Hat": "Hat on a Hat mayhem augment.png",
-        "Mighty Shield": "Mighty Shield mayhem augment.png",
-        "Poltergeist": "Poltergeist mayhem augment.png",
-        "ReEnergize": "ReEnergize mayhem augment.png",
-        "Swift and Safe": "Swift and Safe mayhem augment.png",
-        "Transmute: Gold": "Transmute Gold augment.png",
-        "Upgrade Collector": "Upgrade Collector mayhem augment.png",
-        "Upgrade Cutlass": "Upgrade Cutlass mayhem augment.png",
-        "Upgrade Immolate": "Upgrade Immolate mayhem augment.png",
-        "Upgrade Zhonya's": "Upgrade Zhonya's mayhem augment.png",
-        "Wind Beneath Blade": "Wind Beneath Blade mayhem augment.png",
-        "Cheating": "Cheating mayhem augment.png",
-        "Critical Rhythm": "Critical Rhythm mayhem augment.png",
-        "Flash 2": "Flash 2 mayhem augment.png",
-        "Get Excited": "Get Excited mayhem augment.png",
-        "Nightstalking": "Nightstalking mayhem augment.png",
-        "Snowball Upgrade": "Snowball Upgrade mayhem augment.png",
-        "Spiritual Purification": "Spiritual Purification mayhem augment.png",
-        "Transmute: Prismatic": "Transmute Prismatic augment.png",
-        "Upgrade Hubris": "Upgrade Hubris mayhem augment.png",
-        "Upgrade Infinity Edge": "Upgrade Infinity Edge mayhem augment.png",
-        "Upgrade Sheen": "Upgrade Sheen mayhem augment.png",
-        "Vampirism": "Vampirism mayhem augment.png",
-        "I'm a Baby Kitty Where is Mama": "I'm a Baby Kitty Where is Mama mayhem augment.png",
-        "Biggest Snowball Ever": "Biggest Snowball Ever mayhem augment.png",
-        "Cruelty": "Cruelty mayhem augment.png",
-        "Empyrean Promise": "Empyrean Promise mayhem augment.png",
-        "Final Form": "Final Form mayhem augment.png",
-        "Gash": "Gash mayhem augment.png",
-        "Glass Cannon": "Glass Cannon mayhem augment.png",
-        "Goldrend": "Goldrend mayhem augment.png",
-        "King Me": "King Me mayhem augment.png",
-        "Laser Heal": "Laser Heal mayhem augment.png",
-        "Protein Shake": "Protein Shake mayhem augment.png",
-        "Quest: Sneakerhead": "Quest Sneakerhead mayhem augment.png",
-        "Quest: Steel Your Heart": "Quest Steel Your Heart augment.png",
-        "Quest: Urf's Champion": "Quest Urf's Champion augment.png",
-        "Quest: Wooglet's Witchcap": "Quest Wooglet's Witchcap augment.png",
-        "Snowball Roulette": "Snowball Roulette mayhem augment.png",
-        "Transmute: Chaos": "Transmute Chaos augment.png",
-        "Ultimate Awakening": "Ultimate Awakening mayhem augment.png",
-        "Upgrade Mikael's Blessing": "Upgrade Mikael's Blessing mayhem augment.png"
-      };
-
-      if (iconOverrides[name]) {
-        iconName = iconOverrides[name];
-      }
-
-      augments[name] = {
-        name: name,
-        tier: tier,
-        icon: iconName,
-        description: description
-      };
-      
-      // Download Icon
-      await downloadImage(iconName);
-      process.stdout.write('.');
-    }
-    console.log('\n');
-
-    const count = Object.keys(augments).length;
-    console.log(`Found ${count} augments.`);
-
-    fs.writeFileSync(OUTPUT_FILE, JSON.stringify(augments, null, 2));
-    console.log(`Saved augment data to ${OUTPUT_FILE}`);
-
+    await ensureIconDirectory();
+    await fetchAndParseWiki();
   } catch (error) {
-    console.error('Error fetching/parsing wiki data:', error);
+    console.error('Error fetching/parsing wiki data:', error?.message || error);
+    process.exitCode = 1;
   }
 }
 
-fetchAndParseWiki();
+if (require.main === module) {
+  main();
+}
+
+module.exports = {
+  fetchAndParseWiki,
+  parseAugments,
+  getIconCandidates,
+  sanitizeLocalFilename,
+  normalizeWikiFilename
+};
