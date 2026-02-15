@@ -8,6 +8,10 @@ const RIOT_API_KEY = process.env.RIOT_API_KEY;
 
 const MATCH_BASE = 'https://americas.api.riotgames.com/lol/match/v5/matches';
 const ACCOUNT_BASE = 'https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id';
+const RIOT_SHORT_LIMIT = 500;
+const RIOT_SHORT_WINDOW_MS = 10 * 1000;
+const RIOT_LONG_LIMIT = 30000;
+const RIOT_LONG_WINDOW_MS = 10 * 60 * 1000;
 
 if (!RIOT_API_KEY) {
   // Fail early in prod rather than silently returning empty data.
@@ -21,6 +25,48 @@ const http = axios.create({
 });
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+const riotShortWindowRequests = [];
+const riotLongWindowRequests = [];
+
+function pruneRequestWindow(requestWindow, windowMs, now) {
+  while (requestWindow.length > 0 && now - requestWindow[0] >= windowMs) {
+    requestWindow.shift();
+  }
+}
+
+async function acquireRiotRequestSlot(logger, context) {
+  while (true) {
+    const now = Date.now();
+    pruneRequestWindow(riotShortWindowRequests, RIOT_SHORT_WINDOW_MS, now);
+    pruneRequestWindow(riotLongWindowRequests, RIOT_LONG_WINDOW_MS, now);
+
+    const shortExceeded = riotShortWindowRequests.length >= RIOT_SHORT_LIMIT;
+    const longExceeded = riotLongWindowRequests.length >= RIOT_LONG_LIMIT;
+
+    if (!shortExceeded && !longExceeded) {
+      riotShortWindowRequests.push(now);
+      riotLongWindowRequests.push(now);
+      return;
+    }
+
+    const shortWaitMs = shortExceeded
+      ? Math.max(1, RIOT_SHORT_WINDOW_MS - (now - riotShortWindowRequests[0]))
+      : 0;
+    const longWaitMs = longExceeded
+      ? Math.max(1, RIOT_LONG_WINDOW_MS - (now - riotLongWindowRequests[0]))
+      : 0;
+    const waitMs = Math.max(shortWaitMs, longWaitMs);
+
+    logger.info('[wins2] Proactive Riot rate-limit pause', {
+      context,
+      waitMs,
+      shortWindowCount: riotShortWindowRequests.length,
+      longWindowCount: riotLongWindowRequests.length
+    });
+
+    await sleep(waitMs);
+  }
+}
 
 /* -------------------- TUNABLES (PROD KEY FRIENDLY) -------------------- */
 
@@ -150,6 +196,7 @@ async function resolvePuuid(username, logger) {
 
   logger.info(`[wins2] Resolving PUUID via Account-V1 for ${gameName}#${tag}`);
 
+  await acquireRiotRequestSlot(logger, 'account-by-riot-id');
   const res = await http.get(
     `${ACCOUNT_BASE}/${encodeURIComponent(gameName)}/${encodeURIComponent(tag)}`
   );
@@ -161,6 +208,7 @@ async function resolvePuuid(username, logger) {
 
 async function fetchMatchIdsPage(puuid, start, count, logger) {
   try {
+    await acquireRiotRequestSlot(logger, 'match-id-page');
     const res = await http.get(
       `${MATCH_BASE}/by-puuid/${puuid}/ids`,
       { params: { start, count } }
@@ -182,6 +230,7 @@ async function fetchMatchIdsPage(puuid, start, count, logger) {
 
 async function fetchMatch(matchId, logger) {
   try {
+    await acquireRiotRequestSlot(logger, 'match-details');
     return (await http.get(`${MATCH_BASE}/${matchId}`)).data;
   } catch (err) {
     if (err.response?.status === 429) {
