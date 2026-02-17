@@ -15,8 +15,7 @@ const STEAM_API_KEY = process.env.STEAM_API_KEY;
 const STEAM_RESOLVE_URL = 'https://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/';
 const STEAM_OWNED_GAMES_URL = 'https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/';
 const STEAM_APP_DETAILS_URL = 'https://store.steampowered.com/api/appdetails';
-
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+const APP_DETAILS_CONCURRENCY = 12;
 
 function toSteamProfileLink(steamId) {
     return `https://steamcommunity.com/profiles/${steamId}`;
@@ -142,7 +141,9 @@ function buildSessionEmbed(state) {
     const embed = new EmbedBuilder()
         .setColor('#c586b6')
         .setTitle('Steam Co-op Party Finder')
-        .setDescription('Use **Join with Steam Profile** to add yourself. Private/friends-only profiles are removed automatically.')
+        .setDescription(
+            `Use **Join with Steam Profile** to add yourself. Private/friends-only profiles are removed automatically.${state.isComputing ? '\n\n⏳ Computing common co-op games...' : ''}`
+        )
         .addFields(
             { name: `Participants (${state.participants.size})`, value: participantLines.join('\n') },
             { name: `Common Co-op Games (${state.commonCoopGames.length})`, value: gameLines.join('\n') }
@@ -152,31 +153,60 @@ function buildSessionEmbed(state) {
     return embed;
 }
 
-function buildButtons(sessionId, disableAll) {
+function buildButtons(sessionId, disableAll, isComputing = false) {
     return [
         new ActionRowBuilder().addComponents(
             new ButtonBuilder()
                 .setCustomId(`PLAY_JOIN_${sessionId}`)
                 .setLabel('Join with Steam Profile')
                 .setStyle(ButtonStyle.Primary)
-                .setDisabled(disableAll),
+                .setDisabled(disableAll || isComputing),
             new ButtonBuilder()
                 .setCustomId(`PLAY_LEAVE_${sessionId}`)
                 .setLabel('Leave Session')
                 .setStyle(ButtonStyle.Danger)
-                .setDisabled(disableAll),
+                .setDisabled(disableAll || isComputing),
             new ButtonBuilder()
                 .setCustomId(`PLAY_COMPUTE_${sessionId}`)
                 .setLabel('Find Common Co-op Games')
                 .setStyle(ButtonStyle.Success)
-                .setDisabled(disableAll),
+                .setDisabled(disableAll || isComputing),
             new ButtonBuilder()
                 .setCustomId(`PLAY_RNG_${sessionId}`)
                 .setLabel('RNG a Game')
                 .setStyle(ButtonStyle.Secondary)
-                .setDisabled(disableAll)
+                .setDisabled(disableAll || isComputing)
         )
     ];
+}
+
+async function collectCommonCoopGames(intersection, appNameMap, appDetailsCache, logger) {
+    const commonCoopGames = [];
+    const appIds = [...intersection];
+
+    let cursor = 0;
+    const workerCount = Math.min(APP_DETAILS_CONCURRENCY, appIds.length || 1);
+
+    async function worker() {
+        while (true) {
+            const idx = cursor;
+            cursor += 1;
+
+            if (idx >= appIds.length) {
+                return;
+            }
+
+            const appId = appIds[idx];
+            const coop = await isCoopGame(String(appId), appDetailsCache, logger);
+            if (coop) {
+                commonCoopGames.push({ id: appId, name: appNameMap.get(appId) || `App ${appId}` });
+            }
+        }
+    }
+
+    await Promise.all(Array.from({ length: workerCount }, () => worker()));
+    commonCoopGames.sort((a, b) => a.name.localeCompare(b.name));
+    return commonCoopGames;
 }
 
 module.exports = {
@@ -207,7 +237,7 @@ module.exports = {
 
         const botMessage = await message.channel.send({
             embeds: [buildSessionEmbed(state)],
-            components: buildButtons(sessionId, false)
+            components: buildButtons(sessionId, false, state.isComputing)
         });
 
         const collector = botMessage.createMessageComponentCollector({
@@ -262,7 +292,7 @@ module.exports = {
                         state.commonCoopGames = [];
                         state.lastRngPick = null;
 
-                        await botMessage.edit({ embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false) });
+                        await botMessage.edit({ embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) });
                         this.logger.info(`[play] Removed/blocked participant ${interaction.user.id}; profile private or inaccessible (steamId ${steamId})`);
                         await modalSubmit.editReply({ content: 'Your Steam games are not publicly visible to the API (private/friends-only). You were not added to the session.' });
                         return;
@@ -279,7 +309,7 @@ module.exports = {
                     state.commonCoopGames = [];
                     state.lastRngPick = null;
 
-                    await botMessage.edit({ embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false) });
+                    await botMessage.edit({ embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) });
                     this.logger.info(`[play] Added participant ${interaction.user.id} with steamId ${steamId} (${games.length} games)`);
                     await modalSubmit.editReply({ content: `Added! Linked Steam profile: ${toSteamProfileLink(steamId)}` });
                 } catch (error) {
@@ -306,7 +336,7 @@ module.exports = {
                 state.lastRngPick = null;
 
                 await interaction.deferUpdate();
-                await botMessage.edit({ embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false) });
+                await botMessage.edit({ embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) });
                 this.logger.info(`[play] Participant ${interaction.user.id} left session`);
                 await message.channel.send(`↩️ <@${interaction.user.id}> left the Steam co-op session.`);
                 return;
@@ -325,9 +355,11 @@ module.exports = {
 
                 state.isComputing = true;
                 await interaction.deferUpdate();
+                await botMessage.edit({ embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) });
                 this.logger.info(`[play] Computing common co-op games for ${state.participants.size} participants`);
 
                 try {
+                    const startedAt = Date.now();
                     const participantEntries = Array.from(state.participants.values());
                     const appNameMap = new Map();
 
@@ -344,20 +376,11 @@ module.exports = {
                         }
                     }
 
-                    const commonCoopGames = [];
-                    for (const appId of intersection) {
-                        const coop = await isCoopGame(String(appId), state.appDetailsCache, this.logger);
-                        if (coop) {
-                            commonCoopGames.push({ id: appId, name: appNameMap.get(appId) || `App ${appId}` });
-                        }
-                        await delay(120);
-                    }
-
-                    commonCoopGames.sort((a, b) => a.name.localeCompare(b.name));
-                    state.commonCoopGames = commonCoopGames;
+                    state.commonCoopGames = await collectCommonCoopGames(intersection, appNameMap, state.appDetailsCache, this.logger);
                     state.lastRngPick = null;
+                    state.isComputing = false;
 
-                    await botMessage.edit({ embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false) });
+                    await botMessage.edit({ embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) });
 
                     if (state.commonCoopGames.length > 0) {
                         const fullList = state.commonCoopGames.map((game, idx) => `${idx + 1}. ${game.name}`).join('\n');
@@ -372,12 +395,14 @@ module.exports = {
                         await message.channel.send('No common co-op games found for all joined participants.');
                     }
 
-                    this.logger.info(`[play] Compute finished. Shared games=${intersection.length}, co-op common=${state.commonCoopGames.length}`);
+                    const elapsed = Date.now() - startedAt;
+                    this.logger.info(`[play] Compute finished. Shared games=${intersection.length}, co-op common=${state.commonCoopGames.length}, elapsedMs=${elapsed}`);
                 } catch (error) {
                     this.logger.error(`[play] Error while computing games: ${error.message || error}`);
                     await interaction.followUp({ content: 'Failed to compute common co-op games. Check logs and try again.', ephemeral: true });
                 } finally {
                     state.isComputing = false;
+                    await botMessage.edit({ embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) });
                 }
 
                 return;
@@ -393,7 +418,7 @@ module.exports = {
                 state.lastRngPick = pick;
 
                 await interaction.deferUpdate();
-                await botMessage.edit({ embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false) });
+                await botMessage.edit({ embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) });
                 this.logger.info(`[play] RNG pick selected: ${pick.name} (${pick.id})`);
                 await message.channel.send(`🎲 RNG Pick: **${pick.name}**`);
             }
@@ -402,7 +427,7 @@ module.exports = {
         collector.on('end', async () => {
             this.logger.info('[play] Session collector ended, disabling buttons');
             try {
-                await botMessage.edit({ components: buildButtons(sessionId, true) });
+                await botMessage.edit({ components: buildButtons(sessionId, true, false) });
             } catch (error) {
                 this.logger.error(`[play] Failed to disable buttons on session end: ${error.message || error}`);
             }
