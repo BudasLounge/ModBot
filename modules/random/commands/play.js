@@ -15,7 +15,11 @@ const STEAM_API_KEY = process.env.STEAM_API_KEY;
 const STEAM_RESOLVE_URL = 'https://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/';
 const STEAM_OWNED_GAMES_URL = 'https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/';
 const STEAM_APP_DETAILS_URL = 'https://store.steampowered.com/api/appdetails';
-const APP_DETAILS_CONCURRENCY = 12;
+const APP_DETAILS_BATCH_SIZE = 25;
+const APP_DETAILS_MAX_RETRIES = 4;
+const APP_DETAILS_BASE_DELAY_MS = 1200;
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function toSteamProfileLink(steamId) {
     return `https://steamcommunity.com/profiles/${steamId}`;
@@ -99,27 +103,41 @@ async function fetchOwnedGames(steamId, logger) {
     }
 }
 
-async function isCoopGame(appId, appDetailsCache, logger) {
-    if (appDetailsCache.has(appId)) {
-        return appDetailsCache.get(appId);
+function chunkArray(items, size) {
+    const chunks = [];
+    for (let i = 0; i < items.length; i += size) {
+        chunks.push(items.slice(i, i + size));
     }
+    return chunks;
+}
 
+async function fetchAppDetailsBatch(appIds, logger, attempt = 1) {
     try {
         const response = await axios.get(STEAM_APP_DETAILS_URL, {
-            params: { appids: appId },
-            timeout: 20000
+            params: {
+                appids: appIds.join(','),
+                filters: 'categories,name'
+            },
+            headers: {
+                'User-Agent': 'ModBot/1.0 (Discord Bot; Steam Co-op Finder)'
+            },
+            timeout: 30000
         });
 
-        const payload = response?.data?.[appId];
-        const categories = payload?.data?.categories || [];
-        const coop = categories.some(category => /co\s*-?\s*op/i.test(String(category?.description || '')));
-
-        appDetailsCache.set(appId, coop);
-        return coop;
+        return response?.data || {};
     } catch (error) {
-        logger.error(`[play] Failed appdetails lookup for ${appId}: ${error.message || error}`);
-        appDetailsCache.set(appId, false);
-        return false;
+        const status = error?.response?.status;
+        const retryable = status === 429 || status === 403 || (status >= 500 && status < 600);
+
+        if (retryable && attempt < APP_DETAILS_MAX_RETRIES) {
+            const backoff = APP_DETAILS_BASE_DELAY_MS * Math.pow(2, attempt - 1);
+            logger.info(`[play] Appdetails batch retry ${attempt}/${APP_DETAILS_MAX_RETRIES - 1} for ${appIds.length} apps after ${backoff}ms (status ${status})`);
+            await sleep(backoff);
+            return fetchAppDetailsBatch(appIds, logger, attempt + 1);
+        }
+
+        logger.error(`[play] Appdetails batch failed for ${appIds.length} apps (status ${status || 'n/a'}): ${error.message || error}`);
+        return {};
     }
 }
 
@@ -181,30 +199,35 @@ function buildButtons(sessionId, disableAll, isComputing = false) {
 }
 
 async function collectCommonCoopGames(intersection, appNameMap, appDetailsCache, logger) {
-    const commonCoopGames = [];
-    const appIds = [...intersection];
+    const appIds = [...intersection].map((id) => Number(id)).filter(Number.isInteger);
+    const unknownAppIds = appIds.filter((appId) => !appDetailsCache.has(String(appId)));
+    const batches = chunkArray(unknownAppIds, APP_DETAILS_BATCH_SIZE);
 
-    let cursor = 0;
-    const workerCount = Math.min(APP_DETAILS_CONCURRENCY, appIds.length || 1);
+    logger.info(`[play] Checking co-op categories for ${appIds.length} apps (${unknownAppIds.length} uncached across ${batches.length} batches)`);
 
-    async function worker() {
-        while (true) {
-            const idx = cursor;
-            cursor += 1;
+    for (let i = 0; i < batches.length; i++) {
+        const batch = batches[i];
+        const batchData = await fetchAppDetailsBatch(batch, logger);
 
-            if (idx >= appIds.length) {
-                return;
-            }
+        for (const appId of batch) {
+            const payload = batchData?.[String(appId)] || batchData?.[appId];
+            const categories = payload?.data?.categories || [];
+            const coop = categories.some((category) => /co\s*-?\s*op/i.test(String(category?.description || '')));
+            appDetailsCache.set(String(appId), coop);
+        }
 
-            const appId = appIds[idx];
-            const coop = await isCoopGame(String(appId), appDetailsCache, logger);
-            if (coop) {
-                commonCoopGames.push({ id: appId, name: appNameMap.get(appId) || `App ${appId}` });
-            }
+        if (i < batches.length - 1) {
+            await sleep(250);
         }
     }
 
-    await Promise.all(Array.from({ length: workerCount }, () => worker()));
+    const commonCoopGames = [];
+    for (const appId of appIds) {
+        if (appDetailsCache.get(String(appId))) {
+            commonCoopGames.push({ id: appId, name: appNameMap.get(appId) || `App ${appId}` });
+        }
+    }
+
     commonCoopGames.sort((a, b) => a.name.localeCompare(b.name));
     return commonCoopGames;
 }
