@@ -6,7 +6,8 @@ const {
     TextInputBuilder,
     TextInputStyle,
     ButtonStyle,
-    EmbedBuilder
+    EmbedBuilder,
+    ComponentType
 } = require('discord.js');
 
 const STEAM_API_KEY = process.env.STEAM_API_KEY;
@@ -205,6 +206,7 @@ module.exports = {
         });
 
         const collector = botMessage.createMessageComponentCollector({
+            componentType: ComponentType.Button,
             time: 30 * 60 * 1000
         });
 
@@ -222,12 +224,14 @@ module.exports = {
 
                 const input = new TextInputBuilder()
                     .setCustomId('steam_profile')
-                    .setLabel('Steam profile URL, vanity, or SteamID64')
                     .setStyle(TextInputStyle.Short)
                     .setRequired(true)
                     .setPlaceholder('https://steamcommunity.com/id/yourname');
 
-                modal.addComponents(new ActionRowBuilder().addComponents(input));
+                modal.addLabelComponents((label) => label
+                    .setLabel('Steam profile URL, vanity, or SteamID64')
+                    .setTextInputComponent(input)
+                );
                 await interaction.showModal(modal);
 
                 try {
@@ -274,7 +278,7 @@ module.exports = {
                     this.logger.info(`[play] Added participant ${interaction.user.id} with steamId ${steamId} (${games.length} games)`);
                     await modalSubmit.editReply({ content: `Added! Linked Steam profile: ${toSteamProfileLink(steamId)}` });
                 } catch (error) {
-                    if (error?.code === 'InteractionCollectorError') {
+                    if (error?.name === 'Error' && (error?.message || '').toLowerCase().includes('time')) {
                         this.logger.info(`[play] Modal timed out for ${interaction.user.id}`);
                         return;
                     }
