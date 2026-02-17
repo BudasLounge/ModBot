@@ -21,6 +21,8 @@ const APP_DETAILS_MAX_RETRIES = 3;
 const APP_DETAILS_REQUEST_DELAY_MS = 1600;
 const APP_DETAILS_RATE_LIMIT_BACKOFF_MS = 5 * 60 * 1000;
 const GAME_LIST_PAGE_SIZE = 15;
+const SESSION_COLLECTOR_TIME_MS = 2 * 60 * 60 * 1000;
+const PAGINATOR_COLLECTOR_TIME_MS = 15 * 60 * 1000;
 const MODERATOR_ROLE_NAME = 'Moderator';
 const MODERATOR_ROLE_ID = '1139853603050373181';
 
@@ -332,6 +334,39 @@ function hasFullTagMetadata(entry) {
         && Array.isArray(entry.tags);
 }
 
+function toRelativeTimestamp(unixSeconds) {
+    return `<t:${Math.floor(unixSeconds)}:R>`;
+}
+
+function buildFieldValue(lines, emptyFallback = 'None', maxLength = 1024) {
+    if (!Array.isArray(lines) || lines.length === 0) {
+        return emptyFallback;
+    }
+
+    const output = [];
+    let length = 0;
+
+    for (const line of lines) {
+        const normalized = String(line || '');
+        const addLength = normalized.length + (output.length > 0 ? 1 : 0);
+        if (length + addLength > maxLength) {
+            const remaining = lines.length - output.length;
+            if (remaining > 0) {
+                const suffix = `...and ${remaining} more`;
+                if (length + suffix.length + 1 <= maxLength) {
+                    output.push(suffix);
+                }
+            }
+            break;
+        }
+
+        output.push(normalized);
+        length += addLength;
+    }
+
+    return output.length > 0 ? output.join('\n') : emptyFallback;
+}
+
 function buildSessionEmbed(state) {
     const participantLines = state.participants.size === 0
         ? ['No one has joined yet.']
@@ -354,10 +389,12 @@ function buildSessionEmbed(state) {
             `Use **Join with Steam Profile** to add yourself. Private/friends-only profiles are removed automatically.${state.isComputing ? '\n\n⏳ Computing common co-op games...' : ''}${state.computeProgress ? `\nProgress: ${state.computeProgress.processed}/${state.computeProgress.total}` : ''}${state.computeNote ? `\n\n⚠️ ${state.computeNote}` : ''}`
         )
         .addFields(
-            { name: `Participants (${state.participants.size})`, value: participantLines.join('\n') },
-            { name: `Common Co-op Games (${state.commonCoopGames.length})`, value: gameLines.join('\n') }
+            { name: `Participants (${state.participants.size})`, value: buildFieldValue(participantLines, 'No one has joined yet.') },
+            { name: `Common Co-op Games (${state.commonCoopGames.length})`, value: buildFieldValue(gameLines, 'None yet.') }
         )
-        .setFooter({ text: state.lastRngPick ? `Last RNG pick: ${state.lastRngPick.name}` : 'No RNG pick yet' });
+        .setFooter({
+            text: `${state.lastRngPick ? `Last RNG pick: ${state.lastRngPick.name}` : 'No RNG pick yet'} • Session expires ${toRelativeTimestamp(state.sessionExpiresUnix)}`
+        });
 
     return embed;
 }
@@ -389,7 +426,7 @@ function buildButtons(sessionId, disableAll, isComputing = false) {
     ];
 }
 
-function buildGamePageEmbed(title, games, page, pageSize) {
+function buildGamePageEmbed(title, games, page, pageSize, expiresUnix) {
     const totalPages = Math.max(1, Math.ceil(games.length / pageSize));
     const safePage = Math.min(Math.max(page, 0), totalPages - 1);
     const start = safePage * pageSize;
@@ -402,7 +439,7 @@ function buildGamePageEmbed(title, games, page, pageSize) {
         .setColor('#c586b6')
         .setTitle(title)
         .setDescription(description)
-        .setFooter({ text: `Page ${safePage + 1}/${totalPages} • ${games.length} game(s)` });
+        .setFooter({ text: `Page ${safePage + 1}/${totalPages} • ${games.length} game(s) • Expires ${toRelativeTimestamp(expiresUnix)}` });
 }
 
 function buildGamePageButtons(pagerId, page, totalPages) {
@@ -429,9 +466,10 @@ async function sendPaginatedGameList(channel, games, title, logger) {
     const totalPages = Math.max(1, Math.ceil(games.length / GAME_LIST_PAGE_SIZE));
     let currentPage = 0;
     const pagerId = `${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
+    const expiresUnix = Math.floor((Date.now() + PAGINATOR_COLLECTOR_TIME_MS) / 1000);
 
     const listMessage = await channel.send({
-        embeds: [buildGamePageEmbed(title, games, currentPage, GAME_LIST_PAGE_SIZE)],
+        embeds: [buildGamePageEmbed(title, games, currentPage, GAME_LIST_PAGE_SIZE, expiresUnix)],
         components: buildGamePageButtons(pagerId, currentPage, totalPages)
     });
 
@@ -441,7 +479,7 @@ async function sendPaginatedGameList(channel, games, title, logger) {
 
     const collector = listMessage.createMessageComponentCollector({
         componentType: ComponentType.Button,
-        time: 15 * 60 * 1000
+        time: PAGINATOR_COLLECTOR_TIME_MS
     });
 
     collector.on('collect', async (interaction) => {
@@ -456,7 +494,7 @@ async function sendPaginatedGameList(channel, games, title, logger) {
         }
 
         await interaction.update({
-            embeds: [buildGamePageEmbed(title, games, currentPage, GAME_LIST_PAGE_SIZE)],
+            embeds: [buildGamePageEmbed(title, games, currentPage, GAME_LIST_PAGE_SIZE, expiresUnix)],
             components: buildGamePageButtons(pagerId, currentPage, totalPages)
         });
     });
@@ -478,10 +516,30 @@ async function sendPaginatedGameList(channel, games, title, logger) {
     });
 }
 
+async function safeEditMessage(message, payload, logger, context = 'edit', attempts = 2) {
+    let lastError = null;
+    for (let i = 1; i <= attempts; i++) {
+        try {
+            await message.edit(payload);
+            return true;
+        } catch (error) {
+            lastError = error;
+            logger.error(`[play] Message ${context} failed (attempt ${i}/${attempts}): ${error.message || error}`);
+            if (i < attempts) {
+                await sleep(500 * i);
+            }
+        }
+    }
+
+    logger.error(`[play] Message ${context} failed after ${attempts} attempts: ${lastError?.message || lastError}`);
+    return false;
+}
+
 async function collectCommonCoopGames(intersection, appNameMap, appDetailsCache, logger, onProgress) {
     const appIds = [...intersection].map((id) => Number(id)).filter(Number.isInteger);
     const cacheFile = loadSteamCache(logger);
     const cacheApps = cacheFile.apps || {};
+    const uncachedAppIds = [];
     const stats = {
         total: appIds.length,
         cachedHits: 0,
@@ -500,6 +558,7 @@ async function collectCommonCoopGames(intersection, appNameMap, appDetailsCache,
             stats.cachedHits += 1;
         } else {
             stats.uncached += 1;
+            uncachedAppIds.push(appId);
         }
     }
 
@@ -510,12 +569,22 @@ async function collectCommonCoopGames(intersection, appNameMap, appDetailsCache,
         await onProgress(processed, appIds.length);
     }
 
-    let blockedBy403 = false;
-    for (const appId of appIds) {
-        const key = String(appId);
-        if (appDetailsCache.has(key)) {
-            continue;
+    if (uncachedAppIds.length === 0) {
+        const commonCoopGames = [];
+        for (const appId of appIds) {
+            if (appDetailsCache.get(String(appId))) {
+                commonCoopGames.push({ id: appId, name: appNameMap.get(appId) || `App ${appId}` });
+            }
         }
+
+        commonCoopGames.sort((a, b) => a.name.localeCompare(b.name));
+        return { games: commonCoopGames, stats, fallbackUsed: false };
+    }
+
+    let blockedBy403 = false;
+    let cacheDirty = false;
+    for (const appId of uncachedAppIds) {
+        const key = String(appId);
 
         const lookup = await fetchSingleAppDetails(appId, logger);
 
@@ -538,6 +607,8 @@ async function collectCommonCoopGames(intersection, appNameMap, appDetailsCache,
             if (typeof onProgress === 'function') {
                 await onProgress(processed, appIds.length);
             }
+
+            await sleep(APP_DETAILS_REQUEST_DELAY_MS);
             continue;
         }
 
@@ -553,6 +624,7 @@ async function collectCommonCoopGames(intersection, appNameMap, appDetailsCache,
                 tags: tagPayload.tags,
                 updatedAt: Date.now()
             };
+            cacheDirty = true;
             stats.successfulLookups += 1;
         } else if (payload && payload.success === false) {
             appDetailsCache.set(key, false);
@@ -564,6 +636,7 @@ async function collectCommonCoopGames(intersection, appNameMap, appDetailsCache,
                 tags: [],
                 updatedAt: Date.now()
             };
+            cacheDirty = true;
             stats.successfulLookups += 1;
         }
 
@@ -575,8 +648,10 @@ async function collectCommonCoopGames(intersection, appNameMap, appDetailsCache,
         await sleep(APP_DETAILS_REQUEST_DELAY_MS);
     }
 
-    cacheFile.apps = cacheApps;
-    saveSteamCache(cacheFile, logger);
+    if (cacheDirty) {
+        cacheFile.apps = cacheApps;
+        saveSteamCache(cacheFile, logger);
+    }
 
     const commonCoopGames = [];
     for (const appId of appIds) {
@@ -841,6 +916,28 @@ module.exports = {
 
         this.logger.info(`[play] Starting Steam co-op session in guild ${message.guild?.id || 'DM'} by user ${message.author.id}`);
 
+        const sessionUserCache = loadSteamUserCache(this.logger);
+        const sessionUserMap = sessionUserCache.users || {};
+        const getSessionSavedProfile = (discordUserId) => sessionUserMap[String(discordUserId)] || null;
+        const saveSessionProfile = (discordUserId, steamId, rawInput) => {
+            sessionUserMap[String(discordUserId)] = {
+                steamId: String(steamId),
+                profileUrl: toSteamProfileLink(String(steamId)),
+                lastInput: String(rawInput || '').trim(),
+                updatedAt: Date.now()
+            };
+            sessionUserCache.users = sessionUserMap;
+            saveSteamUserCache(sessionUserCache, this.logger);
+        };
+        const removeSessionProfile = (discordUserId) => {
+            const key = String(discordUserId);
+            if (Object.prototype.hasOwnProperty.call(sessionUserMap, key)) {
+                delete sessionUserMap[key];
+                sessionUserCache.users = sessionUserMap;
+                saveSteamUserCache(sessionUserCache, this.logger);
+            }
+        };
+
         const sessionId = `${message.id}_${Date.now()}`;
         const state = {
             participants: new Map(),
@@ -849,7 +946,8 @@ module.exports = {
             appDetailsCache: new Map(),
             isComputing: false,
             computeNote: null,
-            computeProgress: null
+            computeProgress: null,
+            sessionExpiresUnix: Math.floor((Date.now() + SESSION_COLLECTOR_TIME_MS) / 1000)
         };
 
         const botMessage = await message.channel.send({
@@ -857,23 +955,23 @@ module.exports = {
             components: buildButtons(sessionId, false, state.isComputing)
         });
 
-        const authorSavedProfile = getSavedSteamProfileForUser(message.author.id, this.logger);
+        const authorSavedProfile = getSessionSavedProfile(message.author.id);
         if (authorSavedProfile && authorSavedProfile.steamId) {
             this.logger.info(`[play] Attempting auto-join for author ${message.author.id} using saved profile ${authorSavedProfile.steamId}`);
             const autoJoin = await addParticipantFromSteamId(state, message.author.id, authorSavedProfile.steamId, this.logger);
             if (autoJoin.ok) {
-                await botMessage.edit({ embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) });
+                await safeEditMessage(botMessage, { embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) }, this.logger, 'auto-join update');
                 await message.channel.send(`Auto-added <@${message.author.id}> using saved Steam profile.`);
                 this.logger.info(`[play] Auto-join succeeded for ${message.author.id} (${autoJoin.gameCount} games)`);
             } else {
-                removeSavedSteamProfileForUser(message.author.id, this.logger);
+                removeSessionProfile(message.author.id);
                 this.logger.warn(`[play] Auto-join failed for ${message.author.id}; saved profile removed.`);
             }
         }
 
         const collector = botMessage.createMessageComponentCollector({
             componentType: ComponentType.Button,
-            time: 30 * 60 * 1000
+            time: SESSION_COLLECTOR_TIME_MS
         });
 
         collector.on('collect', async (interaction) => {
@@ -884,7 +982,7 @@ module.exports = {
             if (interaction.customId.startsWith('PLAY_JOIN_')) {
                 this.logger.info(`[play] Join button clicked by ${interaction.user.id}`);
 
-                const savedProfile = getSavedSteamProfileForUser(interaction.user.id, this.logger);
+                const savedProfile = getSessionSavedProfile(interaction.user.id);
                 if (savedProfile && savedProfile.steamId) {
                     this.logger.info(`[play] Found saved Steam profile for ${interaction.user.id}: ${savedProfile.steamId}`);
                     const savedJoin = await addParticipantFromSteamId(state, interaction.user.id, savedProfile.steamId, this.logger);
@@ -894,13 +992,13 @@ module.exports = {
                             content: `Using your saved Steam profile: ${savedProfile.profileUrl || toSteamProfileLink(savedProfile.steamId)}`,
                             ephemeral: true
                         });
-                        await botMessage.edit({ embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) });
+                        await safeEditMessage(botMessage, { embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) }, this.logger, 'saved join update');
                         this.logger.info(`[play] Added participant ${interaction.user.id} with saved steamId ${savedProfile.steamId} (${savedJoin.gameCount} games)`);
                         return;
                     }
 
                     this.logger.warn(`[play] Saved profile for ${interaction.user.id} is no longer usable. Removing cache entry.`);
-                    removeSavedSteamProfileForUser(interaction.user.id, this.logger);
+                    removeSessionProfile(interaction.user.id);
                 }
 
                 const modal = new ModalBuilder()
@@ -939,17 +1037,17 @@ module.exports = {
                     const joined = await addParticipantFromSteamId(state, interaction.user.id, steamId, this.logger);
                     if (!joined.ok) {
                         state.participants.delete(interaction.user.id);
-                        removeSavedSteamProfileForUser(interaction.user.id, this.logger);
+                        removeSessionProfile(interaction.user.id);
 
-                        await botMessage.edit({ embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) });
+                        await safeEditMessage(botMessage, { embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) }, this.logger, 'modal join private profile update');
                         this.logger.info(`[play] Removed/blocked participant ${interaction.user.id}; profile private or inaccessible (steamId ${steamId})`);
                         await modalSubmit.editReply({ content: 'Your Steam games are not publicly visible to the API (private/friends-only). You were not added to the session.' });
                         return;
                     }
 
-                    upsertSavedSteamProfileForUser(interaction.user.id, steamId, rawProfile, this.logger);
+                    saveSessionProfile(interaction.user.id, steamId, rawProfile);
 
-                    await botMessage.edit({ embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) });
+                    await safeEditMessage(botMessage, { embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) }, this.logger, 'modal join success update');
                     this.logger.info(`[play] Added participant ${interaction.user.id} with steamId ${steamId} (${joined.gameCount} games)`);
                     await modalSubmit.editReply({ content: `Added! Linked Steam profile: ${toSteamProfileLink(steamId)}` });
                 } catch (error) {
@@ -978,7 +1076,7 @@ module.exports = {
                 state.computeProgress = null;
 
                 await interaction.deferUpdate();
-                await botMessage.edit({ embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) });
+                await safeEditMessage(botMessage, { embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) }, this.logger, 'leave update');
                 this.logger.info(`[play] Participant ${interaction.user.id} left session`);
                 await message.channel.send(`↩️ <@${interaction.user.id}> left the Steam co-op session.`);
                 return;
@@ -998,7 +1096,7 @@ module.exports = {
                 state.isComputing = true;
                 state.computeProgress = { processed: 0, total: 0 };
                 await interaction.deferUpdate();
-                await botMessage.edit({ embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) });
+                await safeEditMessage(botMessage, { embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) }, this.logger, 'compute start update');
                 this.logger.info(`[play] Computing common co-op games for ${state.participants.size} participants`);
 
                 try {
@@ -1038,7 +1136,7 @@ module.exports = {
                             const shouldUpdateMessage = processed === total || (now - lastProgressEditAt >= 12000);
                             if (shouldUpdateMessage) {
                                 lastProgressEditAt = now;
-                                await botMessage.edit({ embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) });
+                                await safeEditMessage(botMessage, { embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) }, this.logger, 'compute progress update');
                             }
                         }
                     );
@@ -1050,7 +1148,7 @@ module.exports = {
                     state.computeProgress = null;
                     state.isComputing = false;
 
-                    await botMessage.edit({ embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) });
+                    await safeEditMessage(botMessage, { embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) }, this.logger, 'compute complete update');
 
                     if (state.commonCoopGames.length > 0) {
                         const listTitle = result.fallbackUsed
@@ -1069,7 +1167,7 @@ module.exports = {
                 } finally {
                     state.isComputing = false;
                     state.computeProgress = null;
-                    await botMessage.edit({ embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) });
+                    await safeEditMessage(botMessage, { embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) }, this.logger, 'compute finally restore');
                 }
 
                 return;
@@ -1085,14 +1183,14 @@ module.exports = {
                 state.lastRngPick = pick;
 
                 await interaction.deferUpdate();
-                await botMessage.edit({ embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) });
+                await safeEditMessage(botMessage, { embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) }, this.logger, 'rng update');
                 this.logger.info(`[play] RNG pick selected: ${pick.name} (${pick.id})`);
                 await message.channel.send(`🎲 RNG Pick: **${pick.name}**`);
             }
         });
 
-        collector.on('end', async () => {
-            this.logger.info('[play] Session collector ended, disabling buttons');
+        collector.on('end', async (_collected, reason) => {
+            this.logger.info(`[play] Session collector ended (reason=${reason}), disabling buttons`);
             try {
                 await botMessage.edit({ components: buildButtons(sessionId, true, false) });
             } catch (error) {
