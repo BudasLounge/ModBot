@@ -161,6 +161,11 @@ function buildButtons(sessionId, disableAll) {
                 .setStyle(ButtonStyle.Primary)
                 .setDisabled(disableAll),
             new ButtonBuilder()
+                .setCustomId(`PLAY_LEAVE_${sessionId}`)
+                .setLabel('Leave Session')
+                .setStyle(ButtonStyle.Danger)
+                .setDisabled(disableAll),
+            new ButtonBuilder()
                 .setCustomId(`PLAY_COMPUTE_${sessionId}`)
                 .setLabel('Find Common Co-op Games')
                 .setStyle(ButtonStyle.Success)
@@ -178,7 +183,7 @@ module.exports = {
     name: 'play',
     description: 'Create a Steam co-op lobby, find common co-op games, and RNG a pick',
     syntax: 'play',
-    num_args: 1,
+    num_args: 0,
     args_to_lower: false,
     needs_api: false,
     has_state: false,
@@ -289,14 +294,32 @@ module.exports = {
                 return;
             }
 
+            if (interaction.customId.startsWith('PLAY_LEAVE_')) {
+                const hadParticipant = state.participants.delete(interaction.user.id);
+
+                if (!hadParticipant) {
+                    await interaction.reply({ content: 'You are not currently in this session.', ephemeral: true });
+                    return;
+                }
+
+                state.commonCoopGames = [];
+                state.lastRngPick = null;
+
+                await interaction.deferUpdate();
+                await botMessage.edit({ embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false) });
+                this.logger.info(`[play] Participant ${interaction.user.id} left session`);
+                await message.channel.send(`↩️ <@${interaction.user.id}> left the Steam co-op session.`);
+                return;
+            }
+
             if (interaction.customId.startsWith('PLAY_COMPUTE_')) {
                 if (state.isComputing) {
                     await interaction.reply({ content: 'Already computing common co-op games. Please wait.', ephemeral: true });
                     return;
                 }
 
-                if (state.participants.size < 2) {
-                    await interaction.reply({ content: 'Need at least 2 valid participants before computing common games.', ephemeral: true });
+                if (state.participants.size < 1) {
+                    await interaction.reply({ content: 'No participants yet. Join the session first.', ephemeral: true });
                     return;
                 }
 
