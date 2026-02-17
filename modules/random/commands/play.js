@@ -1,4 +1,6 @@
 const axios = require('axios');
+const fs = require('fs');
+const path = require('path');
 const {
     ActionRowBuilder,
     ButtonBuilder,
@@ -15,9 +17,14 @@ const STEAM_API_KEY = process.env.STEAM_API_KEY;
 const STEAM_RESOLVE_URL = 'https://api.steampowered.com/ISteamUser/ResolveVanityURL/v0001/';
 const STEAM_OWNED_GAMES_URL = 'https://api.steampowered.com/IPlayerService/GetOwnedGames/v0001/';
 const STEAM_APP_DETAILS_URL = 'https://store.steampowered.com/api/appdetails';
-const APP_DETAILS_BATCH_SIZE = 25;
-const APP_DETAILS_MAX_RETRIES = 4;
-const APP_DETAILS_BASE_DELAY_MS = 1200;
+const APP_DETAILS_MAX_RETRIES = 3;
+const APP_DETAILS_REQUEST_DELAY_MS = 1600;
+const APP_DETAILS_RATE_LIMIT_BACKOFF_MS = 5 * 60 * 1000;
+const MODERATOR_ROLE_NAME = 'Moderator';
+const MODERATOR_ROLE_ID = '1139853603050373181';
+
+const STEAM_CACHE_DIR = path.join(__dirname, '..', 'steamCache');
+const STEAM_CACHE_FILE = path.join(STEAM_CACHE_DIR, 'appdetails-cache.json');
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -103,19 +110,72 @@ async function fetchOwnedGames(steamId, logger) {
     }
 }
 
-function chunkArray(items, size) {
-    const chunks = [];
-    for (let i = 0; i < items.length; i += size) {
-        chunks.push(items.slice(i, i + size));
+function ensureCacheDir(logger) {
+    try {
+        if (!fs.existsSync(STEAM_CACHE_DIR)) {
+            fs.mkdirSync(STEAM_CACHE_DIR, { recursive: true });
+            logger.info(`[play] Created cache directory: ${STEAM_CACHE_DIR}`);
+        }
+    } catch (error) {
+        logger.error(`[play] Failed to ensure cache directory: ${error.message || error}`);
     }
-    return chunks;
 }
 
-async function fetchAppDetailsBatch(appIds, logger, attempt = 1) {
+function hasModeratorAccess(message) {
+    const member = message.member;
+    if (!member || !member.roles || !member.roles.cache) {
+        return false;
+    }
+
+    return member.roles.cache.some((role) => role.id === MODERATOR_ROLE_ID || role.name === MODERATOR_ROLE_NAME);
+}
+
+function loadSteamCache(logger) {
+    ensureCacheDir(logger);
+
+    try {
+        if (!fs.existsSync(STEAM_CACHE_FILE)) {
+            const initial = {
+                version: 1,
+                updatedAt: Date.now(),
+                apps: {}
+            };
+            fs.writeFileSync(STEAM_CACHE_FILE, JSON.stringify(initial, null, 2), 'utf8');
+            logger.info(`[play] Initialized new Steam cache file: ${STEAM_CACHE_FILE}`);
+            return initial;
+        }
+
+        const raw = fs.readFileSync(STEAM_CACHE_FILE, 'utf8');
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== 'object' || typeof parsed.apps !== 'object' || parsed.apps === null) {
+            throw new Error('Invalid cache shape');
+        }
+        return parsed;
+    } catch (error) {
+        logger.error(`[play] Failed reading Steam cache; rebuilding. Error: ${error.message || error}`);
+        return {
+            version: 1,
+            updatedAt: Date.now(),
+            apps: {}
+        };
+    }
+}
+
+function saveSteamCache(cache, logger) {
+    try {
+        ensureCacheDir(logger);
+        cache.updatedAt = Date.now();
+        fs.writeFileSync(STEAM_CACHE_FILE, JSON.stringify(cache, null, 2), 'utf8');
+    } catch (error) {
+        logger.error(`[play] Failed writing Steam cache: ${error.message || error}`);
+    }
+}
+
+async function fetchSingleAppDetails(appId, logger, attempt = 1) {
     try {
         const response = await axios.get(STEAM_APP_DETAILS_URL, {
             params: {
-                appids: appIds.join(','),
+                appids: String(appId),
                 filters: 'categories,name'
             },
             headers: {
@@ -127,24 +187,41 @@ async function fetchAppDetailsBatch(appIds, logger, attempt = 1) {
         return {
             ok: true,
             status: response?.status || 200,
-            data: response?.data || {}
+            data: response?.data || {},
+            rateLimited: false,
+            blocked: false
         };
     } catch (error) {
         const status = error?.response?.status;
-        const retryable = status === 429 || status === 403 || (status >= 500 && status < 600);
+        const retryable = status === 429 || (status >= 500 && status < 600);
 
-        if (retryable && attempt < APP_DETAILS_MAX_RETRIES) {
-            const backoff = APP_DETAILS_BASE_DELAY_MS * Math.pow(2, attempt - 1);
-            logger.info(`[play] Appdetails batch retry ${attempt}/${APP_DETAILS_MAX_RETRIES - 1} for ${appIds.length} apps after ${backoff}ms (status ${status})`);
-            await sleep(backoff);
-            return fetchAppDetailsBatch(appIds, logger, attempt + 1);
+        if (status === 403) {
+            logger.error(`[play] Appdetails forbidden (403) for app ${appId}. Steam likely blocked further store access from this IP.`);
+            return {
+                ok: false,
+                status,
+                data: {},
+                rateLimited: false,
+                blocked: true
+            };
         }
 
-        logger.error(`[play] Appdetails batch failed for ${appIds.length} apps (status ${status || 'n/a'}): ${error.message || error}`);
+        if (retryable && attempt < APP_DETAILS_MAX_RETRIES) {
+            const backoff = status === 429
+                ? APP_DETAILS_RATE_LIMIT_BACKOFF_MS
+                : (APP_DETAILS_REQUEST_DELAY_MS * Math.pow(2, attempt));
+            logger.info(`[play] Appdetails retry ${attempt}/${APP_DETAILS_MAX_RETRIES - 1} for app ${appId} after ${backoff}ms (status ${status})`);
+            await sleep(backoff);
+            return fetchSingleAppDetails(appId, logger, attempt + 1);
+        }
+
+        logger.error(`[play] Appdetails failed for app ${appId} (status ${status || 'n/a'}): ${error.message || error}`);
         return {
             ok: false,
             status: status || 0,
-            data: {}
+            data: {},
+            rateLimited: status === 429,
+            blocked: false
         };
     }
 }
@@ -208,54 +285,79 @@ function buildButtons(sessionId, disableAll, isComputing = false) {
 
 async function collectCommonCoopGames(intersection, appNameMap, appDetailsCache, logger) {
     const appIds = [...intersection].map((id) => Number(id)).filter(Number.isInteger);
-    const unknownAppIds = appIds.filter((appId) => !appDetailsCache.has(String(appId)));
-    const batches = chunkArray(unknownAppIds, APP_DETAILS_BATCH_SIZE);
+    const cacheFile = loadSteamCache(logger);
+    const cacheApps = cacheFile.apps || {};
     const stats = {
         total: appIds.length,
-        uncached: unknownAppIds.length,
-        batches: batches.length,
-        failedBatches: 0,
+        cachedHits: 0,
+        uncached: 0,
+        failedLookups: 0,
         status403: 0,
         status429: 0,
         successfulLookups: 0
     };
 
-    logger.info(`[play] Checking co-op categories for ${appIds.length} apps (${unknownAppIds.length} uncached across ${batches.length} batches)`);
+    for (const appId of appIds) {
+        const key = String(appId);
+        const cached = cacheApps[key];
+        if (cached && typeof cached.coop === 'boolean') {
+            appDetailsCache.set(key, cached.coop);
+            stats.cachedHits += 1;
+        } else {
+            stats.uncached += 1;
+        }
+    }
 
-    for (let i = 0; i < batches.length; i++) {
-        const batch = batches[i];
-        const batchResp = await fetchAppDetailsBatch(batch, logger);
-        const batchData = batchResp.data;
+    logger.info(`[play] Checking co-op categories for ${appIds.length} apps (${stats.cachedHits} cache hits, ${stats.uncached} uncached)`);
 
-        if (!batchResp.ok) {
-            stats.failedBatches += 1;
-            if (batchResp.status === 403) stats.status403 += 1;
-            if (batchResp.status === 429) stats.status429 += 1;
+    let blockedBy403 = false;
+    for (const appId of appIds) {
+        const key = String(appId);
+        if (appDetailsCache.has(key)) {
             continue;
         }
 
-        for (const appId of batch) {
-            const payload = batchData?.[String(appId)] || batchData?.[appId];
+        const lookup = await fetchSingleAppDetails(appId, logger);
 
-            if (!payload) {
-                continue;
+        if (!lookup.ok) {
+            stats.failedLookups += 1;
+            if (lookup.status === 403) {
+                stats.status403 += 1;
+                blockedBy403 = true;
+                break;
             }
-
-            if (payload.success === true && payload.data) {
-                const categories = payload.data.categories || [];
-                const coop = categories.some((category) => /co\s*-?\s*op/i.test(String(category?.description || '')));
-                appDetailsCache.set(String(appId), coop);
-                stats.successfulLookups += 1;
-            } else if (payload.success === false) {
-                appDetailsCache.set(String(appId), false);
-                stats.successfulLookups += 1;
+            if (lookup.status === 429) {
+                stats.status429 += 1;
             }
+            continue;
         }
 
-        if (i < batches.length - 1) {
-            await sleep(250);
+        const payload = lookup.data?.[key] || lookup.data?.[appId];
+        if (payload && payload.success === true && payload.data) {
+            const categories = payload.data.categories || [];
+            const coop = categories.some((category) => /co\s*-?\s*op/i.test(String(category?.description || '')));
+            appDetailsCache.set(key, coop);
+            cacheApps[key] = {
+                coop,
+                name: payload.data.name || appNameMap.get(appId) || `App ${appId}`,
+                updatedAt: Date.now()
+            };
+            stats.successfulLookups += 1;
+        } else if (payload && payload.success === false) {
+            appDetailsCache.set(key, false);
+            cacheApps[key] = {
+                coop: false,
+                name: appNameMap.get(appId) || `App ${appId}`,
+                updatedAt: Date.now()
+            };
+            stats.successfulLookups += 1;
         }
+
+        await sleep(APP_DETAILS_REQUEST_DELAY_MS);
     }
+
+    cacheFile.apps = cacheApps;
+    saveSteamCache(cacheFile, logger);
 
     const commonCoopGames = [];
     for (const appId of appIds) {
@@ -264,7 +366,7 @@ async function collectCommonCoopGames(intersection, appNameMap, appDetailsCache,
         }
     }
 
-    const hardBlocked = stats.status403 > 0 && stats.failedBatches >= Math.ceil(stats.batches * 0.6);
+    const hardBlocked = blockedBy403 || (stats.status403 > 0 && stats.successfulLookups === 0);
     let fallbackUsed = false;
     if (commonCoopGames.length === 0 && hardBlocked && appIds.length > 0) {
         fallbackUsed = true;
@@ -281,15 +383,144 @@ async function collectCommonCoopGames(intersection, appNameMap, appDetailsCache,
 module.exports = {
     name: 'play',
     description: 'Create a Steam co-op lobby, find common co-op games, and RNG a pick',
-    syntax: 'play',
+    syntax: 'play | play cache [help|stats|clear|remove <appid>|set <appid> <true|false> [name...]]',
     num_args: 0,
     args_to_lower: false,
     needs_api: false,
     has_state: false,
-    async execute(message) {
+    async execute(message, args) {
         if (!STEAM_API_KEY) {
             this.logger.error('[play] Missing STEAM_API_KEY in environment');
             await message.channel.send('Missing STEAM API key. Set `STEAM_API_KEY` in your `.env`.');
+            return;
+        }
+
+        const cmdArgs = Array.isArray(args) ? args : [];
+        if (cmdArgs.length > 1 && String(cmdArgs[1]).toLowerCase() === 'cache') {
+            if (!hasModeratorAccess(message)) {
+                this.logger.warn(`[play] Cache command denied for user ${message.author.id} (missing Moderator role)`);
+                await message.channel.send('Only users with the Moderator role can manage the Steam cache.');
+                return;
+            }
+
+            const action = String(cmdArgs[2] || 'stats').toLowerCase();
+            const cache = loadSteamCache(this.logger);
+            const appEntries = Object.entries(cache.apps || {});
+
+            if (action === 'help') {
+                const helpEmbed = new EmbedBuilder()
+                    .setColor('#c586b6')
+                    .setTitle('Steam Cache Tools - Help')
+                    .setDescription('Moderator-only cache controls for the `play` command. These tools let you inspect and manipulate cached Steam co-op tag results.')
+                    .addFields(
+                        {
+                            name: 'Access',
+                            value: `Requires role **${MODERATOR_ROLE_NAME}** (ID: ${MODERATOR_ROLE_ID})`
+                        },
+                        {
+                            name: 'Commands',
+                            value: [
+                                '`play cache help` - Show this help embed',
+                                '`play cache stats` - Show cache totals and last update time',
+                                '`play cache clear` - Remove all cached app entries',
+                                '`play cache remove <appid>` - Remove one app from cache',
+                                '`play cache set <appid> <true|false> [name...]` - Manually set co-op value'
+                            ].join('\n')
+                        },
+                        {
+                            name: 'Examples',
+                            value: [
+                                '`play cache stats`',
+                                '`play cache remove 440`',
+                                '`play cache set 620 true Portal 2`',
+                                '`play cache set 730 false Counter-Strike 2`'
+                            ].join('\n')
+                        },
+                        {
+                            name: 'Status Output Meaning',
+                            value: [
+                                '**Total apps**: Number of cached AppIDs',
+                                '**Co-op true**: Cached as co-op',
+                                '**Co-op false**: Cached as not co-op',
+                                '**Last updated**: Last time cache file changed',
+                                '**Compute fallback warning**: Steam Store lookup blocked; showing shared games for current run'
+                            ].join('\n')
+                        },
+                        {
+                            name: 'How Compute Uses Cache',
+                            value: 'The command checks local cache first. Only uncached apps are looked up from Steam Store, then written back to cache on successful lookups.'
+                        }
+                    )
+                    .setFooter({ text: 'Tip: Use cache set/remove to correct bad or missing tag data quickly.' });
+
+                this.logger.info(`[play] Cache help requested by ${message.author.id}`);
+                await message.channel.send({ embeds: [helpEmbed] });
+                return;
+            }
+
+            if (action === 'stats') {
+                const total = appEntries.length;
+                const coopCount = appEntries.filter(([, value]) => value && value.coop === true).length;
+                const nonCoopCount = appEntries.filter(([, value]) => value && value.coop === false).length;
+                const updated = cache.updatedAt ? new Date(cache.updatedAt).toISOString() : 'unknown';
+                this.logger.info(`[play] Cache stats requested by ${message.author.id}: total=${total}, coop=${coopCount}, nonCoop=${nonCoopCount}`);
+                await message.channel.send(`Steam cache stats:\n• Total apps: ${total}\n• Co-op true: ${coopCount}\n• Co-op false: ${nonCoopCount}\n• Last updated: ${updated}`);
+                return;
+            }
+
+            if (action === 'clear') {
+                cache.apps = {};
+                saveSteamCache(cache, this.logger);
+                this.logger.info(`[play] Cache cleared by ${message.author.id}`);
+                await message.channel.send('Steam cache cleared.');
+                return;
+            }
+
+            if (action === 'remove') {
+                const appIdRaw = String(cmdArgs[3] || '');
+                const appId = Number(appIdRaw);
+                if (!Number.isInteger(appId) || appId <= 0) {
+                    await message.channel.send('Usage: play cache remove <appid>');
+                    return;
+                }
+
+                const key = String(appId);
+                const existed = Object.prototype.hasOwnProperty.call(cache.apps || {}, key);
+                if (existed) {
+                    delete cache.apps[key];
+                    saveSteamCache(cache, this.logger);
+                    this.logger.info(`[play] Cache app ${appId} removed by ${message.author.id}`);
+                    await message.channel.send(`Removed app ${appId} from Steam cache.`);
+                } else {
+                    await message.channel.send(`App ${appId} was not present in cache.`);
+                }
+                return;
+            }
+
+            if (action === 'set') {
+                const appIdRaw = String(cmdArgs[3] || '');
+                const coopRaw = String(cmdArgs[4] || '').toLowerCase();
+                const appId = Number(appIdRaw);
+
+                if (!Number.isInteger(appId) || appId <= 0 || (coopRaw !== 'true' && coopRaw !== 'false')) {
+                    await message.channel.send('Usage: play cache set <appid> <true|false> [name...]');
+                    return;
+                }
+
+                const manualName = cmdArgs.length > 5 ? cmdArgs.slice(5).join(' ').trim() : '';
+                cache.apps[String(appId)] = {
+                    coop: coopRaw === 'true',
+                    name: manualName || cache.apps[String(appId)]?.name || `App ${appId}`,
+                    updatedAt: Date.now(),
+                    source: 'manual'
+                };
+                saveSteamCache(cache, this.logger);
+                this.logger.info(`[play] Cache app ${appId} set by ${message.author.id} to coop=${coopRaw}`);
+                await message.channel.send(`Set cache for app ${appId} to co-op=${coopRaw}.`);
+                return;
+            }
+
+            await message.channel.send('Usage: play cache [stats|clear|remove <appid>|set <appid> <true|false> [name...]]');
             return;
         }
 
@@ -473,7 +704,7 @@ module.exports = {
                     }
 
                     const elapsed = Date.now() - startedAt;
-                    this.logger.info(`[play] Compute finished. Shared games=${intersection.length}, co-op common=${state.commonCoopGames.length}, successfulLookups=${result.stats.successfulLookups}, failedBatches=${result.stats.failedBatches}, status403=${result.stats.status403}, status429=${result.stats.status429}, fallbackUsed=${result.fallbackUsed}, elapsedMs=${elapsed}`);
+                    this.logger.info(`[play] Compute finished. Shared games=${intersection.length}, co-op common=${state.commonCoopGames.length}, cacheHits=${result.stats.cachedHits}, uncached=${result.stats.uncached}, successfulLookups=${result.stats.successfulLookups}, failedLookups=${result.stats.failedLookups}, status403=${result.stats.status403}, status429=${result.stats.status429}, fallbackUsed=${result.fallbackUsed}, elapsedMs=${elapsed}`);
                 } catch (error) {
                     this.logger.error(`[play] Error while computing games: ${error.message || error}`);
                     await interaction.followUp({ content: 'Failed to compute common co-op games. Check logs and try again.', ephemeral: true });
