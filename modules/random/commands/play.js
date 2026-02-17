@@ -124,7 +124,11 @@ async function fetchAppDetailsBatch(appIds, logger, attempt = 1) {
             timeout: 30000
         });
 
-        return response?.data || {};
+        return {
+            ok: true,
+            status: response?.status || 200,
+            data: response?.data || {}
+        };
     } catch (error) {
         const status = error?.response?.status;
         const retryable = status === 429 || status === 403 || (status >= 500 && status < 600);
@@ -137,7 +141,11 @@ async function fetchAppDetailsBatch(appIds, logger, attempt = 1) {
         }
 
         logger.error(`[play] Appdetails batch failed for ${appIds.length} apps (status ${status || 'n/a'}): ${error.message || error}`);
-        return {};
+        return {
+            ok: false,
+            status: status || 0,
+            data: {}
+        };
     }
 }
 
@@ -160,7 +168,7 @@ function buildSessionEmbed(state) {
         .setColor('#c586b6')
         .setTitle('Steam Co-op Party Finder')
         .setDescription(
-            `Use **Join with Steam Profile** to add yourself. Private/friends-only profiles are removed automatically.${state.isComputing ? '\n\n⏳ Computing common co-op games...' : ''}`
+            `Use **Join with Steam Profile** to add yourself. Private/friends-only profiles are removed automatically.${state.isComputing ? '\n\n⏳ Computing common co-op games...' : ''}${state.computeNote ? `\n\n⚠️ ${state.computeNote}` : ''}`
         )
         .addFields(
             { name: `Participants (${state.participants.size})`, value: participantLines.join('\n') },
@@ -202,18 +210,46 @@ async function collectCommonCoopGames(intersection, appNameMap, appDetailsCache,
     const appIds = [...intersection].map((id) => Number(id)).filter(Number.isInteger);
     const unknownAppIds = appIds.filter((appId) => !appDetailsCache.has(String(appId)));
     const batches = chunkArray(unknownAppIds, APP_DETAILS_BATCH_SIZE);
+    const stats = {
+        total: appIds.length,
+        uncached: unknownAppIds.length,
+        batches: batches.length,
+        failedBatches: 0,
+        status403: 0,
+        status429: 0,
+        successfulLookups: 0
+    };
 
     logger.info(`[play] Checking co-op categories for ${appIds.length} apps (${unknownAppIds.length} uncached across ${batches.length} batches)`);
 
     for (let i = 0; i < batches.length; i++) {
         const batch = batches[i];
-        const batchData = await fetchAppDetailsBatch(batch, logger);
+        const batchResp = await fetchAppDetailsBatch(batch, logger);
+        const batchData = batchResp.data;
+
+        if (!batchResp.ok) {
+            stats.failedBatches += 1;
+            if (batchResp.status === 403) stats.status403 += 1;
+            if (batchResp.status === 429) stats.status429 += 1;
+            continue;
+        }
 
         for (const appId of batch) {
             const payload = batchData?.[String(appId)] || batchData?.[appId];
-            const categories = payload?.data?.categories || [];
-            const coop = categories.some((category) => /co\s*-?\s*op/i.test(String(category?.description || '')));
-            appDetailsCache.set(String(appId), coop);
+
+            if (!payload) {
+                continue;
+            }
+
+            if (payload.success === true && payload.data) {
+                const categories = payload.data.categories || [];
+                const coop = categories.some((category) => /co\s*-?\s*op/i.test(String(category?.description || '')));
+                appDetailsCache.set(String(appId), coop);
+                stats.successfulLookups += 1;
+            } else if (payload.success === false) {
+                appDetailsCache.set(String(appId), false);
+                stats.successfulLookups += 1;
+            }
         }
 
         if (i < batches.length - 1) {
@@ -228,8 +264,18 @@ async function collectCommonCoopGames(intersection, appNameMap, appDetailsCache,
         }
     }
 
+    const hardBlocked = stats.status403 > 0 && stats.failedBatches >= Math.ceil(stats.batches * 0.6);
+    let fallbackUsed = false;
+    if (commonCoopGames.length === 0 && hardBlocked && appIds.length > 0) {
+        fallbackUsed = true;
+        logger.warn('[play] Steam Store appdetails appears blocked (403-heavy). Falling back to shared games list for this run.');
+        for (const appId of appIds) {
+            commonCoopGames.push({ id: appId, name: appNameMap.get(appId) || `App ${appId}` });
+        }
+    }
+
     commonCoopGames.sort((a, b) => a.name.localeCompare(b.name));
-    return commonCoopGames;
+    return { games: commonCoopGames, stats, fallbackUsed };
 }
 
 module.exports = {
@@ -255,7 +301,8 @@ module.exports = {
             commonCoopGames: [],
             lastRngPick: null,
             appDetailsCache: new Map(),
-            isComputing: false
+            isComputing: false,
+            computeNote: null
         };
 
         const botMessage = await message.channel.send({
@@ -331,6 +378,7 @@ module.exports = {
 
                     state.commonCoopGames = [];
                     state.lastRngPick = null;
+                    state.computeNote = null;
 
                     await botMessage.edit({ embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) });
                     this.logger.info(`[play] Added participant ${interaction.user.id} with steamId ${steamId} (${games.length} games)`);
@@ -357,6 +405,7 @@ module.exports = {
 
                 state.commonCoopGames = [];
                 state.lastRngPick = null;
+                state.computeNote = null;
 
                 await interaction.deferUpdate();
                 await botMessage.edit({ embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) });
@@ -399,8 +448,12 @@ module.exports = {
                         }
                     }
 
-                    state.commonCoopGames = await collectCommonCoopGames(intersection, appNameMap, state.appDetailsCache, this.logger);
+                    const result = await collectCommonCoopGames(intersection, appNameMap, state.appDetailsCache, this.logger);
+                    state.commonCoopGames = result.games;
                     state.lastRngPick = null;
+                    state.computeNote = result.fallbackUsed
+                        ? 'Steam blocked category lookups; showing shared games (unfiltered) for this run.'
+                        : null;
                     state.isComputing = false;
 
                     await botMessage.edit({ embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) });
@@ -409,9 +462,10 @@ module.exports = {
                         const fullList = state.commonCoopGames.map((game, idx) => `${idx + 1}. ${game.name}`).join('\n');
                         const chunks = fullList.match(/[\s\S]{1,1800}/g) || [];
                         for (let i = 0; i < chunks.length; i++) {
+                            const title = result.fallbackUsed ? 'Shared Games (Fallback)' : 'Common Co-op Games';
                             const header = i === 0
-                                ? `**Common Co-op Games (${state.commonCoopGames.length}):**\n`
-                                : `**Common Co-op Games (cont. ${i + 1}/${chunks.length}):**\n`;
+                                ? `**${title} (${state.commonCoopGames.length}):**\n`
+                                : `**${title} (cont. ${i + 1}/${chunks.length}):**\n`;
                             await message.channel.send(`${header}${chunks[i]}`);
                         }
                     } else {
@@ -419,7 +473,7 @@ module.exports = {
                     }
 
                     const elapsed = Date.now() - startedAt;
-                    this.logger.info(`[play] Compute finished. Shared games=${intersection.length}, co-op common=${state.commonCoopGames.length}, elapsedMs=${elapsed}`);
+                    this.logger.info(`[play] Compute finished. Shared games=${intersection.length}, co-op common=${state.commonCoopGames.length}, successfulLookups=${result.stats.successfulLookups}, failedBatches=${result.stats.failedBatches}, status403=${result.stats.status403}, status429=${result.stats.status429}, fallbackUsed=${result.fallbackUsed}, elapsedMs=${elapsed}`);
                 } catch (error) {
                     this.logger.error(`[play] Error while computing games: ${error.message || error}`);
                     await interaction.followUp({ content: 'Failed to compute common co-op games. Check logs and try again.', ephemeral: true });
