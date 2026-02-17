@@ -26,6 +26,7 @@ const MODERATOR_ROLE_ID = '1139853603050373181';
 
 const STEAM_CACHE_DIR = path.join(__dirname, '..', 'steamCache');
 const STEAM_CACHE_FILE = path.join(STEAM_CACHE_DIR, 'appdetails-cache.json');
+const STEAM_USER_CACHE_FILE = path.join(STEAM_CACHE_DIR, 'user-profiles-cache.json');
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -169,6 +170,72 @@ function saveSteamCache(cache, logger) {
         fs.writeFileSync(STEAM_CACHE_FILE, JSON.stringify(cache, null, 2), 'utf8');
     } catch (error) {
         logger.error(`[play] Failed writing Steam cache: ${error.message || error}`);
+    }
+}
+
+function loadSteamUserCache(logger) {
+    ensureCacheDir(logger);
+
+    try {
+        if (!fs.existsSync(STEAM_USER_CACHE_FILE)) {
+            const initial = {
+                version: 1,
+                updatedAt: Date.now(),
+                users: {}
+            };
+            fs.writeFileSync(STEAM_USER_CACHE_FILE, JSON.stringify(initial, null, 2), 'utf8');
+            logger.info(`[play] Initialized new user cache file: ${STEAM_USER_CACHE_FILE}`);
+            return initial;
+        }
+
+        const raw = fs.readFileSync(STEAM_USER_CACHE_FILE, 'utf8');
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== 'object' || typeof parsed.users !== 'object' || parsed.users === null) {
+            throw new Error('Invalid user cache shape');
+        }
+        return parsed;
+    } catch (error) {
+        logger.error(`[play] Failed reading user cache; rebuilding. Error: ${error.message || error}`);
+        return {
+            version: 1,
+            updatedAt: Date.now(),
+            users: {}
+        };
+    }
+}
+
+function saveSteamUserCache(cache, logger) {
+    try {
+        ensureCacheDir(logger);
+        cache.updatedAt = Date.now();
+        fs.writeFileSync(STEAM_USER_CACHE_FILE, JSON.stringify(cache, null, 2), 'utf8');
+    } catch (error) {
+        logger.error(`[play] Failed writing user cache: ${error.message || error}`);
+    }
+}
+
+function getSavedSteamProfileForUser(discordUserId, logger) {
+    const cache = loadSteamUserCache(logger);
+    return cache.users[String(discordUserId)] || null;
+}
+
+function upsertSavedSteamProfileForUser(discordUserId, steamId, rawInput, logger) {
+    const cache = loadSteamUserCache(logger);
+    cache.users[String(discordUserId)] = {
+        steamId: String(steamId),
+        profileUrl: toSteamProfileLink(String(steamId)),
+        lastInput: String(rawInput || '').trim(),
+        updatedAt: Date.now()
+    };
+    saveSteamUserCache(cache, logger);
+}
+
+function removeSavedSteamProfileForUser(discordUserId, logger) {
+    const cache = loadSteamUserCache(logger);
+    const key = String(discordUserId);
+    if (Object.prototype.hasOwnProperty.call(cache.users, key)) {
+        delete cache.users[key];
+        saveSteamUserCache(cache, logger);
     }
 }
 
@@ -532,10 +599,31 @@ async function collectCommonCoopGames(intersection, appNameMap, appDetailsCache,
     return { games: commonCoopGames, stats, fallbackUsed };
 }
 
+async function addParticipantFromSteamId(state, userId, steamId, logger) {
+    const games = await fetchOwnedGames(steamId, logger);
+    if (!games) {
+        return { ok: false, reason: 'private_or_unavailable' };
+    }
+
+    state.participants.set(userId, {
+        userId,
+        steamId,
+        gameCount: games.length,
+        ownedGames: new Set(games.map(game => Number(game.appid)).filter(Number.isInteger)),
+        appNameMap: new Map(games.map(game => [Number(game.appid), game.name]))
+    });
+
+    state.commonCoopGames = [];
+    state.lastRngPick = null;
+    state.computeNote = null;
+    state.computeProgress = null;
+    return { ok: true, gameCount: games.length };
+}
+
 module.exports = {
     name: 'play',
     description: 'Create a Steam co-op lobby, find common co-op games, and RNG a pick',
-    syntax: 'play | play cache [help|stats|clear|remove <appid>|set <appid> <true|false> [name...]]',
+    syntax: 'play | play cache [help|stats|clear|remove <appid>|set <appid> <true|false> [name...]|userstats|userclear|userremove <discordUserId>|userset <discordUserId> <steamUrlOrId>]',
     num_args: 0,
     args_to_lower: false,
     needs_api: false,
@@ -576,7 +664,11 @@ module.exports = {
                                 '`play cache stats` - Show cache totals and last update time',
                                 '`play cache clear` - Remove all cached app entries',
                                 '`play cache remove <appid>` - Remove one app from cache',
-                                '`play cache set <appid> <true|false> [name...]` - Manually set co-op value'
+                                '`play cache set <appid> <true|false> [name...]` - Manually set co-op value',
+                                '`play cache userstats` - Show saved Discord->Steam profile mappings',
+                                '`play cache userclear` - Remove all saved user profile mappings',
+                                '`play cache userremove <discordUserId>` - Remove one saved user profile',
+                                '`play cache userset <discordUserId> <steamUrlOrId>` - Set/update one saved user profile'
                             ].join('\n')
                         },
                         {
@@ -585,7 +677,9 @@ module.exports = {
                                 '`play cache stats`',
                                 '`play cache remove 440`',
                                 '`play cache set 620 true Portal 2`',
-                                '`play cache set 730 false Counter-Strike 2`'
+                                '`play cache set 730 false Counter-Strike 2`',
+                                '`play cache userstats`',
+                                '`play cache userset 185223223892377611 https://steamcommunity.com/profiles/76561198119805734`'
                             ].join('\n')
                         },
                         {
@@ -675,7 +769,73 @@ module.exports = {
                 return;
             }
 
-            await message.channel.send('Usage: play cache [stats|clear|remove <appid>|set <appid> <true|false> [name...]]');
+            if (action === 'userstats') {
+                const userCache = loadSteamUserCache(this.logger);
+                const users = Object.entries(userCache.users || {});
+                const updated = userCache.updatedAt ? new Date(userCache.updatedAt).toISOString() : 'unknown';
+                this.logger.info(`[play] User cache stats requested by ${message.author.id}: users=${users.length}`);
+
+                if (users.length === 0) {
+                    await message.channel.send(`User profile cache is empty.\nLast updated: ${updated}`);
+                    return;
+                }
+
+                const preview = users.slice(0, 10).map(([discordId, data]) => `• ${discordId} -> ${data?.steamId || 'unknown'}`).join('\n');
+                const extra = users.length > 10 ? `\n...and ${users.length - 10} more` : '';
+                await message.channel.send(`User profile cache stats:\n• Total users: ${users.length}\n• Last updated: ${updated}\n\n${preview}${extra}`);
+                return;
+            }
+
+            if (action === 'userclear') {
+                const userCache = loadSteamUserCache(this.logger);
+                userCache.users = {};
+                saveSteamUserCache(userCache, this.logger);
+                this.logger.info(`[play] User cache cleared by ${message.author.id}`);
+                await message.channel.send('User profile cache cleared.');
+                return;
+            }
+
+            if (action === 'userremove') {
+                const rawDiscordUserId = String(cmdArgs[3] || '').replace(/[<@!>]/g, '').trim();
+                if (!/^\d{5,25}$/.test(rawDiscordUserId)) {
+                    await message.channel.send('Usage: play cache userremove <discordUserId>');
+                    return;
+                }
+
+                const userCache = loadSteamUserCache(this.logger);
+                if (Object.prototype.hasOwnProperty.call(userCache.users || {}, rawDiscordUserId)) {
+                    delete userCache.users[rawDiscordUserId];
+                    saveSteamUserCache(userCache, this.logger);
+                    this.logger.info(`[play] User cache entry removed for ${rawDiscordUserId} by ${message.author.id}`);
+                    await message.channel.send(`Removed saved Steam profile for Discord user ${rawDiscordUserId}.`);
+                } else {
+                    await message.channel.send(`No saved Steam profile found for Discord user ${rawDiscordUserId}.`);
+                }
+                return;
+            }
+
+            if (action === 'userset') {
+                const rawDiscordUserId = String(cmdArgs[3] || '').replace(/[<@!>]/g, '').trim();
+                const profileInput = String(cmdArgs[4] || '').trim();
+
+                if (!/^\d{5,25}$/.test(rawDiscordUserId) || !profileInput) {
+                    await message.channel.send('Usage: play cache userset <discordUserId> <steamUrlOrId>');
+                    return;
+                }
+
+                const steamId = await resolveSteamId(profileInput, this.logger);
+                if (!steamId) {
+                    await message.channel.send('Could not resolve that Steam profile input.');
+                    return;
+                }
+
+                upsertSavedSteamProfileForUser(rawDiscordUserId, steamId, profileInput, this.logger);
+                this.logger.info(`[play] User cache entry set for ${rawDiscordUserId} by ${message.author.id} -> ${steamId}`);
+                await message.channel.send(`Saved Steam profile for Discord user ${rawDiscordUserId}: ${toSteamProfileLink(steamId)}`);
+                return;
+            }
+
+            await message.channel.send('Usage: play cache [help|stats|clear|remove <appid>|set <appid> <true|false> [name...]|userstats|userclear|userremove <discordUserId>|userset <discordUserId> <steamUrlOrId>]');
             return;
         }
 
@@ -697,6 +857,20 @@ module.exports = {
             components: buildButtons(sessionId, false, state.isComputing)
         });
 
+        const authorSavedProfile = getSavedSteamProfileForUser(message.author.id, this.logger);
+        if (authorSavedProfile && authorSavedProfile.steamId) {
+            this.logger.info(`[play] Attempting auto-join for author ${message.author.id} using saved profile ${authorSavedProfile.steamId}`);
+            const autoJoin = await addParticipantFromSteamId(state, message.author.id, authorSavedProfile.steamId, this.logger);
+            if (autoJoin.ok) {
+                await botMessage.edit({ embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) });
+                await message.channel.send(`Auto-added <@${message.author.id}> using saved Steam profile.`);
+                this.logger.info(`[play] Auto-join succeeded for ${message.author.id} (${autoJoin.gameCount} games)`);
+            } else {
+                removeSavedSteamProfileForUser(message.author.id, this.logger);
+                this.logger.warn(`[play] Auto-join failed for ${message.author.id}; saved profile removed.`);
+            }
+        }
+
         const collector = botMessage.createMessageComponentCollector({
             componentType: ComponentType.Button,
             time: 30 * 60 * 1000
@@ -709,6 +883,25 @@ module.exports = {
 
             if (interaction.customId.startsWith('PLAY_JOIN_')) {
                 this.logger.info(`[play] Join button clicked by ${interaction.user.id}`);
+
+                const savedProfile = getSavedSteamProfileForUser(interaction.user.id, this.logger);
+                if (savedProfile && savedProfile.steamId) {
+                    this.logger.info(`[play] Found saved Steam profile for ${interaction.user.id}: ${savedProfile.steamId}`);
+                    const savedJoin = await addParticipantFromSteamId(state, interaction.user.id, savedProfile.steamId, this.logger);
+
+                    if (savedJoin.ok) {
+                        await interaction.reply({
+                            content: `Using your saved Steam profile: ${savedProfile.profileUrl || toSteamProfileLink(savedProfile.steamId)}`,
+                            ephemeral: true
+                        });
+                        await botMessage.edit({ embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) });
+                        this.logger.info(`[play] Added participant ${interaction.user.id} with saved steamId ${savedProfile.steamId} (${savedJoin.gameCount} games)`);
+                        return;
+                    }
+
+                    this.logger.warn(`[play] Saved profile for ${interaction.user.id} is no longer usable. Removing cache entry.`);
+                    removeSavedSteamProfileForUser(interaction.user.id, this.logger);
+                }
 
                 const modal = new ModalBuilder()
                     .setCustomId(`PLAY_MODAL_${sessionId}_${interaction.user.id}`)
@@ -743,11 +936,10 @@ module.exports = {
                         return;
                     }
 
-                    const games = await fetchOwnedGames(steamId, this.logger);
-                    if (!games) {
+                    const joined = await addParticipantFromSteamId(state, interaction.user.id, steamId, this.logger);
+                    if (!joined.ok) {
                         state.participants.delete(interaction.user.id);
-                        state.commonCoopGames = [];
-                        state.lastRngPick = null;
+                        removeSavedSteamProfileForUser(interaction.user.id, this.logger);
 
                         await botMessage.edit({ embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) });
                         this.logger.info(`[play] Removed/blocked participant ${interaction.user.id}; profile private or inaccessible (steamId ${steamId})`);
@@ -755,21 +947,10 @@ module.exports = {
                         return;
                     }
 
-                    state.participants.set(interaction.user.id, {
-                        userId: interaction.user.id,
-                        steamId,
-                        gameCount: games.length,
-                        ownedGames: new Set(games.map(game => Number(game.appid)).filter(Number.isInteger)),
-                        appNameMap: new Map(games.map(game => [Number(game.appid), game.name]))
-                    });
-
-                    state.commonCoopGames = [];
-                    state.lastRngPick = null;
-                    state.computeNote = null;
-                    state.computeProgress = null;
+                    upsertSavedSteamProfileForUser(interaction.user.id, steamId, rawProfile, this.logger);
 
                     await botMessage.edit({ embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) });
-                    this.logger.info(`[play] Added participant ${interaction.user.id} with steamId ${steamId} (${games.length} games)`);
+                    this.logger.info(`[play] Added participant ${interaction.user.id} with steamId ${steamId} (${joined.gameCount} games)`);
                     await modalSubmit.editReply({ content: `Added! Linked Steam profile: ${toSteamProfileLink(steamId)}` });
                 } catch (error) {
                     if (error?.name === 'Error' && (error?.message || '').toLowerCase().includes('time')) {
