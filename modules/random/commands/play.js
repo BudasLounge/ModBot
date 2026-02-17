@@ -386,15 +386,13 @@ function buildSessionEmbed(state) {
         .setColor('#c586b6')
         .setTitle('Steam Co-op Party Finder')
         .setDescription(
-            `Use **Join with Steam Profile** to add yourself. Private/friends-only profiles are removed automatically.${state.isComputing ? '\n\n⏳ Computing common co-op games...' : ''}${state.computeProgress ? `\nProgress: ${state.computeProgress.processed}/${state.computeProgress.total}` : ''}${state.computeNote ? `\n\n⚠️ ${state.computeNote}` : ''}`
+            `Use **Join with Steam Profile** to add yourself. Private/friends-only profiles are removed automatically.${state.isComputing ? '\n\n⏳ Computing common co-op games...' : ''}${state.computeProgress ? `\nProgress: ${state.computeProgress.processed}/${state.computeProgress.total}` : ''}${state.computeNote ? `\n\n⚠️ ${state.computeNote}` : ''}${state.sessionClosed ? '\n\n🛑 Session closed: no participants remain.' : `\n\nSession expires ${toRelativeTimestamp(state.sessionExpiresUnix)}`}`
         )
         .addFields(
             { name: `Participants (${state.participants.size})`, value: buildFieldValue(participantLines, 'No one has joined yet.') },
             { name: `Common Co-op Games (${state.commonCoopGames.length})`, value: buildFieldValue(gameLines, 'None yet.') }
         )
-        .setFooter({
-            text: `${state.lastRngPick ? `Last RNG pick: ${state.lastRngPick.name}` : 'No RNG pick yet'} • Session expires ${toRelativeTimestamp(state.sessionExpiresUnix)}`
-        });
+        .setFooter({ text: state.lastRngPick ? `Last RNG pick: ${state.lastRngPick.name}` : 'No RNG pick yet' });
 
     return embed;
 }
@@ -418,12 +416,64 @@ function buildButtons(sessionId, disableAll, isComputing = false) {
                 .setStyle(ButtonStyle.Success)
                 .setDisabled(disableAll || isComputing),
             new ButtonBuilder()
-                .setCustomId(`PLAY_RNG_${sessionId}`)
-                .setLabel('RNG a Game')
+                .setCustomId(`PLAY_RNG_ANY_${sessionId}`)
+                .setLabel('RNG Any Game')
+                .setStyle(ButtonStyle.Secondary)
+                .setDisabled(disableAll || isComputing)
+        ),
+        new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+                .setCustomId(`PLAY_RNG_NEW_${sessionId}`)
+                .setLabel('RNG New Game')
+                .setStyle(ButtonStyle.Secondary)
+                .setDisabled(disableAll || isComputing),
+            new ButtonBuilder()
+                .setCustomId(`PLAY_RNG_FAMILIAR_${sessionId}`)
+                .setLabel('RNG Familiar Game')
                 .setStyle(ButtonStyle.Secondary)
                 .setDisabled(disableAll || isComputing)
         )
     ];
+}
+
+function annotateGamesWithAveragePlaytime(games, participantsMap) {
+    const participants = Array.from(participantsMap.values());
+    const denominator = Math.max(1, participants.length);
+
+    return games.map((game) => {
+        let totalMinutes = 0;
+        for (const participant of participants) {
+            const playedMinutes = participant.playtimeMap?.get(game.id) || 0;
+            totalMinutes += playedMinutes;
+        }
+
+        return {
+            ...game,
+            avgMinutes: totalMinutes / denominator,
+            avgHours: (totalMinutes / denominator) / 60
+        };
+    });
+}
+
+function pickRngGame(games, mode) {
+    if (!games || games.length === 0) {
+        return null;
+    }
+
+    if (mode === 'any') {
+        const pick = games[Math.floor(Math.random() * games.length)];
+        return { pick, poolSize: games.length };
+    }
+
+    const sorted = [...games].sort((a, b) => (a.avgMinutes || 0) - (b.avgMinutes || 0));
+    const quartileSize = Math.max(1, Math.ceil(sorted.length * 0.25));
+
+    const pool = mode === 'new'
+        ? sorted.slice(0, quartileSize)
+        : sorted.slice(sorted.length - quartileSize);
+
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    return { pick, poolSize: pool.length };
 }
 
 function buildGamePageEmbed(title, games, page, pageSize, expiresUnix) {
@@ -435,11 +485,13 @@ function buildGamePageEmbed(title, games, page, pageSize, expiresUnix) {
         .map((game, index) => `${start + index + 1}. ${game.name}`)
         .join('\n') || 'No games found.';
 
+    const finalDescription = `${description}\n\nExpires ${toRelativeTimestamp(expiresUnix)}`;
+
     return new EmbedBuilder()
         .setColor('#c586b6')
         .setTitle(title)
-        .setDescription(description)
-        .setFooter({ text: `Page ${safePage + 1}/${totalPages} • ${games.length} game(s) • Expires ${toRelativeTimestamp(expiresUnix)}` });
+        .setDescription(finalDescription)
+        .setFooter({ text: `Page ${safePage + 1}/${totalPages} • ${games.length} game(s)` });
 }
 
 function buildGamePageButtons(pagerId, page, totalPages) {
@@ -533,6 +585,33 @@ async function safeEditMessage(message, payload, logger, context = 'edit', attem
 
     logger.error(`[play] Message ${context} failed after ${attempts} attempts: ${lastError?.message || lastError}`);
     return false;
+}
+
+async function closeSessionIfEmpty(state, botMessage, collector, logger, reason) {
+    if (state.participants.size !== 0 || !state.hadParticipantsEver || state.sessionClosed) {
+        return false;
+    }
+
+    state.isComputing = false;
+    state.computeProgress = null;
+    state.computeNote = 'Session ended because no participants remain.';
+    state.sessionClosed = true;
+
+    await safeEditMessage(
+        botMessage,
+        { embeds: [buildSessionEmbed(state)], components: [] },
+        logger,
+        `close empty session (${reason})`
+    );
+
+    try {
+        collector.stop('no-participants');
+    } catch (error) {
+        logger.error(`[play] Failed to stop collector on empty session: ${error.message || error}`);
+    }
+
+    logger.info(`[play] Session closed due to zero participants (${reason})`);
+    return true;
 }
 
 async function collectCommonCoopGames(intersection, appNameMap, appDetailsCache, logger, onProgress) {
@@ -685,13 +764,19 @@ async function addParticipantFromSteamId(state, userId, steamId, logger) {
         steamId,
         gameCount: games.length,
         ownedGames: new Set(games.map(game => Number(game.appid)).filter(Number.isInteger)),
-        appNameMap: new Map(games.map(game => [Number(game.appid), game.name]))
+        appNameMap: new Map(games.map(game => [Number(game.appid), game.name])),
+        playtimeMap: new Map(games.map(game => [
+            Number(game.appid),
+            Number.isFinite(Number(game.playtime_forever)) ? Number(game.playtime_forever) : 0
+        ]))
     });
 
     state.commonCoopGames = [];
     state.lastRngPick = null;
     state.computeNote = null;
     state.computeProgress = null;
+    state.hadParticipantsEver = true;
+    state.sessionClosed = false;
     return { ok: true, gameCount: games.length };
 }
 
@@ -947,7 +1032,9 @@ module.exports = {
             isComputing: false,
             computeNote: null,
             computeProgress: null,
-            sessionExpiresUnix: Math.floor((Date.now() + SESSION_COLLECTOR_TIME_MS) / 1000)
+            sessionExpiresUnix: Math.floor((Date.now() + SESSION_COLLECTOR_TIME_MS) / 1000),
+            hadParticipantsEver: false,
+            sessionClosed: false
         };
 
         const botMessage = await message.channel.send({
@@ -1040,6 +1127,7 @@ module.exports = {
                         removeSessionProfile(interaction.user.id);
 
                         await safeEditMessage(botMessage, { embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) }, this.logger, 'modal join private profile update');
+                        await closeSessionIfEmpty(state, botMessage, collector, this.logger, 'join-private-profile');
                         this.logger.info(`[play] Removed/blocked participant ${interaction.user.id}; profile private or inaccessible (steamId ${steamId})`);
                         await modalSubmit.editReply({ content: 'Your Steam games are not publicly visible to the API (private/friends-only). You were not added to the session.' });
                         return;
@@ -1079,10 +1167,16 @@ module.exports = {
                 await safeEditMessage(botMessage, { embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) }, this.logger, 'leave update');
                 this.logger.info(`[play] Participant ${interaction.user.id} left session`);
                 await message.channel.send(`↩️ <@${interaction.user.id}> left the Steam co-op session.`);
+                await closeSessionIfEmpty(state, botMessage, collector, this.logger, 'leave');
                 return;
             }
 
             if (interaction.customId.startsWith('PLAY_COMPUTE_')) {
+                if (!state.participants.has(interaction.user.id)) {
+                    await interaction.reply({ content: 'Only joined participants can use this button. Click **Join with Steam Profile** first.', ephemeral: true });
+                    return;
+                }
+
                 if (state.isComputing) {
                     await interaction.reply({ content: 'Already computing common co-op games. Please wait.', ephemeral: true });
                     return;
@@ -1140,7 +1234,7 @@ module.exports = {
                             }
                         }
                     );
-                    state.commonCoopGames = result.games;
+                    state.commonCoopGames = annotateGamesWithAveragePlaytime(result.games, state.participants);
                     state.lastRngPick = null;
                     state.computeNote = result.fallbackUsed
                         ? 'Steam blocked category lookups; showing shared games (unfiltered) for this run.'
@@ -1174,18 +1268,40 @@ module.exports = {
             }
 
             if (interaction.customId.startsWith('PLAY_RNG_')) {
+                if (!state.participants.has(interaction.user.id)) {
+                    await interaction.reply({ content: 'Only joined participants can use this button. Click **Join with Steam Profile** first.', ephemeral: true });
+                    return;
+                }
+
                 if (state.commonCoopGames.length === 0) {
                     await interaction.reply({ content: 'No common co-op games yet. Click **Find Common Co-op Games** first.', ephemeral: true });
                     return;
                 }
 
-                const pick = state.commonCoopGames[Math.floor(Math.random() * state.commonCoopGames.length)];
+                let mode = 'any';
+                if (interaction.customId.startsWith('PLAY_RNG_NEW_')) {
+                    mode = 'new';
+                } else if (interaction.customId.startsWith('PLAY_RNG_FAMILIAR_')) {
+                    mode = 'familiar';
+                }
+
+                const rngResult = pickRngGame(state.commonCoopGames, mode);
+                if (!rngResult || !rngResult.pick) {
+                    await interaction.reply({ content: 'Could not pick a game right now. Please try again.', ephemeral: true });
+                    return;
+                }
+
+                const pick = rngResult.pick;
                 state.lastRngPick = pick;
 
                 await interaction.deferUpdate();
                 await safeEditMessage(botMessage, { embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) }, this.logger, 'rng update');
-                this.logger.info(`[play] RNG pick selected: ${pick.name} (${pick.id})`);
-                await message.channel.send(`🎲 RNG Pick: **${pick.name}**`);
+                this.logger.info(`[play] RNG pick selected (mode=${mode}, pool=${rngResult.poolSize}): ${pick.name} (${pick.id}), avgHours=${(pick.avgHours || 0).toFixed(2)}`);
+
+                const modeLabel = mode === 'new'
+                    ? 'RNG New Game'
+                    : (mode === 'familiar' ? 'RNG Familiar Game' : 'RNG Any Game');
+                await message.channel.send(`🎲 **${modeLabel}** Pick: **${pick.name}** (group avg ${(pick.avgHours || 0).toFixed(1)}h)`);
             }
         });
 
