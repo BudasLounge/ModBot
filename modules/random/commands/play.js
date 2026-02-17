@@ -20,6 +20,7 @@ const STEAM_APP_DETAILS_URL = 'https://store.steampowered.com/api/appdetails';
 const APP_DETAILS_MAX_RETRIES = 3;
 const APP_DETAILS_REQUEST_DELAY_MS = 1600;
 const APP_DETAILS_RATE_LIMIT_BACKOFF_MS = 5 * 60 * 1000;
+const GAME_LIST_PAGE_SIZE = 15;
 const MODERATOR_ROLE_NAME = 'Moderator';
 const MODERATOR_ROLE_ID = '1139853603050373181';
 
@@ -281,6 +282,95 @@ function buildButtons(sessionId, disableAll, isComputing = false) {
                 .setDisabled(disableAll || isComputing)
         )
     ];
+}
+
+function buildGamePageEmbed(title, games, page, pageSize) {
+    const totalPages = Math.max(1, Math.ceil(games.length / pageSize));
+    const safePage = Math.min(Math.max(page, 0), totalPages - 1);
+    const start = safePage * pageSize;
+    const pageItems = games.slice(start, start + pageSize);
+    const description = pageItems
+        .map((game, index) => `${start + index + 1}. ${game.name}`)
+        .join('\n') || 'No games found.';
+
+    return new EmbedBuilder()
+        .setColor('#c586b6')
+        .setTitle(title)
+        .setDescription(description)
+        .setFooter({ text: `Page ${safePage + 1}/${totalPages} • ${games.length} game(s)` });
+}
+
+function buildGamePageButtons(pagerId, page, totalPages) {
+    const isFirst = page <= 0;
+    const isLast = page >= totalPages - 1;
+
+    return [
+        new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+                .setCustomId(`PLAY_PAGE_PREV_${pagerId}`)
+                .setLabel('Previous')
+                .setStyle(ButtonStyle.Secondary)
+                .setDisabled(isFirst),
+            new ButtonBuilder()
+                .setCustomId(`PLAY_PAGE_NEXT_${pagerId}`)
+                .setLabel('Next')
+                .setStyle(ButtonStyle.Secondary)
+                .setDisabled(isLast)
+        )
+    ];
+}
+
+async function sendPaginatedGameList(channel, games, title, logger) {
+    const totalPages = Math.max(1, Math.ceil(games.length / GAME_LIST_PAGE_SIZE));
+    let currentPage = 0;
+    const pagerId = `${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
+
+    const listMessage = await channel.send({
+        embeds: [buildGamePageEmbed(title, games, currentPage, GAME_LIST_PAGE_SIZE)],
+        components: buildGamePageButtons(pagerId, currentPage, totalPages)
+    });
+
+    if (totalPages <= 1) {
+        return;
+    }
+
+    const collector = listMessage.createMessageComponentCollector({
+        componentType: ComponentType.Button,
+        time: 15 * 60 * 1000
+    });
+
+    collector.on('collect', async (interaction) => {
+        if (!interaction.customId.endsWith(pagerId)) {
+            return;
+        }
+
+        if (interaction.customId.startsWith('PLAY_PAGE_PREV_')) {
+            currentPage = Math.max(0, currentPage - 1);
+        } else if (interaction.customId.startsWith('PLAY_PAGE_NEXT_')) {
+            currentPage = Math.min(totalPages - 1, currentPage + 1);
+        }
+
+        await interaction.update({
+            embeds: [buildGamePageEmbed(title, games, currentPage, GAME_LIST_PAGE_SIZE)],
+            components: buildGamePageButtons(pagerId, currentPage, totalPages)
+        });
+    });
+
+    collector.on('end', async () => {
+        try {
+            await listMessage.edit({
+                components: buildGamePageButtons(pagerId, currentPage, totalPages).map((row) => {
+                    const disabledRow = new ActionRowBuilder();
+                    row.components.forEach((component) => {
+                        disabledRow.addComponents(ButtonBuilder.from(component).setDisabled(true));
+                    });
+                    return disabledRow;
+                })
+            });
+        } catch (error) {
+            logger.error(`[play] Failed to disable paginator buttons: ${error.message || error}`);
+        }
+    });
 }
 
 async function collectCommonCoopGames(intersection, appNameMap, appDetailsCache, logger, onProgress) {
@@ -736,15 +826,10 @@ module.exports = {
                     await botMessage.edit({ embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) });
 
                     if (state.commonCoopGames.length > 0) {
-                        const fullList = state.commonCoopGames.map((game, idx) => `${idx + 1}. ${game.name}`).join('\n');
-                        const chunks = fullList.match(/[\s\S]{1,1800}/g) || [];
-                        for (let i = 0; i < chunks.length; i++) {
-                            const title = result.fallbackUsed ? 'Shared Games (Fallback)' : 'Common Co-op Games';
-                            const header = i === 0
-                                ? `**${title} (${state.commonCoopGames.length}):**\n`
-                                : `**${title} (cont. ${i + 1}/${chunks.length}):**\n`;
-                            await message.channel.send(`${header}${chunks[i]}`);
-                        }
+                        const listTitle = result.fallbackUsed
+                            ? `Shared Games (Fallback) - ${state.commonCoopGames.length}`
+                            : `Common Co-op Games - ${state.commonCoopGames.length}`;
+                        await sendPaginatedGameList(message.channel, state.commonCoopGames, listTitle, this.logger);
                     } else {
                         await message.channel.send('No common co-op games found for all joined participants.');
                     }
