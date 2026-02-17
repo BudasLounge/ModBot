@@ -177,7 +177,7 @@ async function fetchSingleAppDetails(appId, logger, attempt = 1) {
         const response = await axios.get(STEAM_APP_DETAILS_URL, {
             params: {
                 appids: String(appId),
-                filters: 'categories,name'
+                filters: 'categories,genres,name'
             },
             headers: {
                 'User-Agent': 'ModBot/1.0 (Discord Bot; Steam Co-op Finder)'
@@ -225,6 +225,44 @@ async function fetchSingleAppDetails(appId, logger, attempt = 1) {
             blocked: false
         };
     }
+}
+
+function normalizeTagString(value) {
+    return String(value || '').trim().toLowerCase();
+}
+
+function buildTagPayloadFromAppData(appData) {
+    const categories = Array.isArray(appData?.categories)
+        ? appData.categories.map((entry) => String(entry?.description || '').trim()).filter(Boolean)
+        : [];
+    const genres = Array.isArray(appData?.genres)
+        ? appData.genres.map((entry) => String(entry?.description || '').trim()).filter(Boolean)
+        : [];
+
+    const normalizedSet = new Set();
+    for (const tag of [...categories, ...genres]) {
+        const normalized = normalizeTagString(tag);
+        if (normalized) {
+            normalizedSet.add(normalized);
+        }
+    }
+
+    const tags = [...normalizedSet];
+    const coop = tags.some((tag) => tag.includes('co-op') || tag.includes('coop'));
+
+    return {
+        coop,
+        categories,
+        genres,
+        tags
+    };
+}
+
+function hasFullTagMetadata(entry) {
+    return !!entry
+        && Array.isArray(entry.categories)
+        && Array.isArray(entry.genres)
+        && Array.isArray(entry.tags);
 }
 
 function buildSessionEmbed(state) {
@@ -390,7 +428,7 @@ async function collectCommonCoopGames(intersection, appNameMap, appDetailsCache,
     for (const appId of appIds) {
         const key = String(appId);
         const cached = cacheApps[key];
-        if (cached && typeof cached.coop === 'boolean') {
+        if (cached && typeof cached.coop === 'boolean' && hasFullTagMetadata(cached)) {
             appDetailsCache.set(key, cached.coop);
             stats.cachedHits += 1;
         } else {
@@ -438,12 +476,14 @@ async function collectCommonCoopGames(intersection, appNameMap, appDetailsCache,
 
         const payload = lookup.data?.[key] || lookup.data?.[appId];
         if (payload && payload.success === true && payload.data) {
-            const categories = payload.data.categories || [];
-            const coop = categories.some((category) => /co\s*-?\s*op/i.test(String(category?.description || '')));
-            appDetailsCache.set(key, coop);
+            const tagPayload = buildTagPayloadFromAppData(payload.data);
+            appDetailsCache.set(key, tagPayload.coop);
             cacheApps[key] = {
-                coop,
+                coop: tagPayload.coop,
                 name: payload.data.name || appNameMap.get(appId) || `App ${appId}`,
+                categories: tagPayload.categories,
+                genres: tagPayload.genres,
+                tags: tagPayload.tags,
                 updatedAt: Date.now()
             };
             stats.successfulLookups += 1;
@@ -452,6 +492,9 @@ async function collectCommonCoopGames(intersection, appNameMap, appDetailsCache,
             cacheApps[key] = {
                 coop: false,
                 name: appNameMap.get(appId) || `App ${appId}`,
+                categories: [],
+                genres: [],
+                tags: [],
                 updatedAt: Date.now()
             };
             stats.successfulLookups += 1;
@@ -557,7 +600,7 @@ module.exports = {
                         },
                         {
                             name: 'How Compute Uses Cache',
-                            value: 'The command checks local cache first. Only uncached apps are looked up from Steam Store, then written back to cache on successful lookups.'
+                            value: 'The command checks local cache first. Only uncached apps are looked up from Steam Store, then written back to cache on successful lookups. Each cache entry stores `name`, `coop`, `categories`, `genres`, and normalized `tags` for future searching.'
                         }
                     )
                     .setFooter({ text: 'Tip: Use cache set/remove to correct bad or missing tag data quickly.' });
@@ -620,6 +663,9 @@ module.exports = {
                 cache.apps[String(appId)] = {
                     coop: coopRaw === 'true',
                     name: manualName || cache.apps[String(appId)]?.name || `App ${appId}`,
+                    categories: cache.apps[String(appId)]?.categories || [],
+                    genres: cache.apps[String(appId)]?.genres || [],
+                    tags: cache.apps[String(appId)]?.tags || [],
                     updatedAt: Date.now(),
                     source: 'manual'
                 };
