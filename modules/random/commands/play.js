@@ -245,7 +245,7 @@ function buildSessionEmbed(state) {
         .setColor('#c586b6')
         .setTitle('Steam Co-op Party Finder')
         .setDescription(
-            `Use **Join with Steam Profile** to add yourself. Private/friends-only profiles are removed automatically.${state.isComputing ? '\n\n⏳ Computing common co-op games...' : ''}${state.computeNote ? `\n\n⚠️ ${state.computeNote}` : ''}`
+            `Use **Join with Steam Profile** to add yourself. Private/friends-only profiles are removed automatically.${state.isComputing ? '\n\n⏳ Computing common co-op games...' : ''}${state.computeProgress ? `\nProgress: ${state.computeProgress.processed}/${state.computeProgress.total}` : ''}${state.computeNote ? `\n\n⚠️ ${state.computeNote}` : ''}`
         )
         .addFields(
             { name: `Participants (${state.participants.size})`, value: participantLines.join('\n') },
@@ -283,7 +283,7 @@ function buildButtons(sessionId, disableAll, isComputing = false) {
     ];
 }
 
-async function collectCommonCoopGames(intersection, appNameMap, appDetailsCache, logger) {
+async function collectCommonCoopGames(intersection, appNameMap, appDetailsCache, logger, onProgress) {
     const appIds = [...intersection].map((id) => Number(id)).filter(Number.isInteger);
     const cacheFile = loadSteamCache(logger);
     const cacheApps = cacheFile.apps || {};
@@ -310,6 +310,11 @@ async function collectCommonCoopGames(intersection, appNameMap, appDetailsCache,
 
     logger.info(`[play] Checking co-op categories for ${appIds.length} apps (${stats.cachedHits} cache hits, ${stats.uncached} uncached)`);
 
+    let processed = stats.cachedHits;
+    if (typeof onProgress === 'function') {
+        await onProgress(processed, appIds.length);
+    }
+
     let blockedBy403 = false;
     for (const appId of appIds) {
         const key = String(appId);
@@ -324,10 +329,19 @@ async function collectCommonCoopGames(intersection, appNameMap, appDetailsCache,
             if (lookup.status === 403) {
                 stats.status403 += 1;
                 blockedBy403 = true;
+                processed += 1;
+                if (typeof onProgress === 'function') {
+                    await onProgress(processed, appIds.length);
+                }
                 break;
             }
             if (lookup.status === 429) {
                 stats.status429 += 1;
+            }
+
+            processed += 1;
+            if (typeof onProgress === 'function') {
+                await onProgress(processed, appIds.length);
             }
             continue;
         }
@@ -351,6 +365,11 @@ async function collectCommonCoopGames(intersection, appNameMap, appDetailsCache,
                 updatedAt: Date.now()
             };
             stats.successfulLookups += 1;
+        }
+
+        processed += 1;
+        if (typeof onProgress === 'function') {
+            await onProgress(processed, appIds.length);
         }
 
         await sleep(APP_DETAILS_REQUEST_DELAY_MS);
@@ -533,7 +552,8 @@ module.exports = {
             lastRngPick: null,
             appDetailsCache: new Map(),
             isComputing: false,
-            computeNote: null
+            computeNote: null,
+            computeProgress: null
         };
 
         const botMessage = await message.channel.send({
@@ -610,6 +630,7 @@ module.exports = {
                     state.commonCoopGames = [];
                     state.lastRngPick = null;
                     state.computeNote = null;
+                    state.computeProgress = null;
 
                     await botMessage.edit({ embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) });
                     this.logger.info(`[play] Added participant ${interaction.user.id} with steamId ${steamId} (${games.length} games)`);
@@ -637,6 +658,7 @@ module.exports = {
                 state.commonCoopGames = [];
                 state.lastRngPick = null;
                 state.computeNote = null;
+                state.computeProgress = null;
 
                 await interaction.deferUpdate();
                 await botMessage.edit({ embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) });
@@ -657,6 +679,7 @@ module.exports = {
                 }
 
                 state.isComputing = true;
+                state.computeProgress = { processed: 0, total: 0 };
                 await interaction.deferUpdate();
                 await botMessage.edit({ embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) });
                 this.logger.info(`[play] Computing common co-op games for ${state.participants.size} participants`);
@@ -679,12 +702,35 @@ module.exports = {
                         }
                     }
 
-                    const result = await collectCommonCoopGames(intersection, appNameMap, state.appDetailsCache, this.logger);
+                    let lastProgressEditAt = Date.now();
+                    let lastLoggedCount = -1;
+                    const result = await collectCommonCoopGames(
+                        intersection,
+                        appNameMap,
+                        state.appDetailsCache,
+                        this.logger,
+                        async (processed, total) => {
+                            state.computeProgress = { processed, total };
+
+                            if (processed - lastLoggedCount >= 25 || processed === total) {
+                                this.logger.info(`[play] Compute progress ${processed}/${total}`);
+                                lastLoggedCount = processed;
+                            }
+
+                            const now = Date.now();
+                            const shouldUpdateMessage = processed === total || (now - lastProgressEditAt >= 12000);
+                            if (shouldUpdateMessage) {
+                                lastProgressEditAt = now;
+                                await botMessage.edit({ embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) });
+                            }
+                        }
+                    );
                     state.commonCoopGames = result.games;
                     state.lastRngPick = null;
                     state.computeNote = result.fallbackUsed
                         ? 'Steam blocked category lookups; showing shared games (unfiltered) for this run.'
                         : null;
+                    state.computeProgress = null;
                     state.isComputing = false;
 
                     await botMessage.edit({ embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) });
@@ -710,6 +756,7 @@ module.exports = {
                     await interaction.followUp({ content: 'Failed to compute common co-op games. Check logs and try again.', ephemeral: true });
                 } finally {
                     state.isComputing = false;
+                    state.computeProgress = null;
                     await botMessage.edit({ embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) });
                 }
 
