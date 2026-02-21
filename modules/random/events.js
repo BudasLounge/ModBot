@@ -339,11 +339,11 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
 
             const pickingModeInput = new TextInputBuilder()
                 .setCustomId('pickingMode')
-                .setLabel("Picking Mode: 'turns' or 'freeforall'")
+                .setLabel("Team Assignment Mode: turns/freeforall/manual")
                 .setStyle(TextInputStyle.Short)
                 .setRequired(true)
-                .setValue('turns')
-                .setPlaceholder("turns = alternating, freeforall = any captain");
+                .setValue(gameDetails.game && ['turns', 'freeforall', 'manual'].includes(String(gameDetails.game).toLowerCase()) ? String(gameDetails.game).toLowerCase() : 'turns')
+                .setPlaceholder("turns = alternating, freeforall = any captain, manual = host assigns");
 
             const currentNumTeams = gameDetails.num_teams !== undefined ? String(gameDetails.num_teams) : '2';
             if (currentNumTeams !== '0') {
@@ -384,7 +384,7 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
                 const embed = new EmbedBuilder()
                     .setTitle(`Manage Players for Game ${gameId}`)
                     .setColor("#c586b6")
-                    .setDescription("Assign players to teams. This is a basic interface.");
+                    .setDescription(gameDetails.game === 'manual' ? "Manual assignment mode is enabled. Host can place players directly onto teams." : "Assign players to teams. This is a basic interface.");
 
                 let unassignedPlayersDescription = "**Unassigned Players:**\n";
                 const unassignedPlayers = [];
@@ -404,7 +404,7 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
                 if (unassignedPlayers.length === 0) {
                     unassignedPlayersDescription = "**All players are currently assigned to a team.**\n";
                 }
-                embed.addField("Lobby Status", unassignedPlayersDescription);
+                embed.addFields({ name: "Lobby Status", value: unassignedPlayersDescription });
 
                 for (let i = 0; i < gameDetails.num_teams; i++) {
                     let teamDescription = `**Team ${i + 1} Players:**\n`;
@@ -413,7 +413,7 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
                     } else {
                         teamDescription += "No players assigned yet.\n";
                     }
-                    embed.addField(`Team ${i + 1}`, teamDescription, true);
+                    embed.addFields({ name: `Team ${i + 1}`, value: teamDescription, inline: true });
                 }
 
                 const components = [];
@@ -423,7 +423,11 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
                         new ButtonBuilder()
                             .setCustomId(`GAME_HOST_ASSIGN_PLAYER_MODAL-${gameIdString}`)
                             .setLabel('Assign/Move Player')
-                            .setStyle(ButtonStyle.Primary)
+                            .setStyle(ButtonStyle.Primary),
+                        new ButtonBuilder()
+                            .setCustomId(`GAME_HOST_AUTO_BALANCE-${gameIdString}`)
+                            .setLabel('Auto Balance Teams')
+                            .setStyle(ButtonStyle.Success)
                     );
                     components.push(assignPlayerRow);
                 }
@@ -508,6 +512,92 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
 
             await buttonInteraction.showModal(assignModal);
             logger.info(`[GAME_BTN] Host ${userId} opened assign player modal for game ${gameId}`);
+            break;
+
+        case "HOST_AUTO_BALANCE":
+            if (!isHost) {
+                await buttonInteraction.reply({ content: "Only the host can auto-balance teams.", ephemeral: true });
+                return;
+            }
+            if (gameDetails.status === 'setup' || !gameDetails.num_teams || gameDetails.num_teams === 0) {
+                await buttonInteraction.reply({ content: "Teams need to be configured first. Use 'Setup Teams'.", ephemeral: true });
+                return;
+            }
+            try {
+                await buttonInteraction.deferReply({ ephemeral: true });
+                const playersResp = await localApi.get("game_joining_player", { game_id: gameId, _limit: 500 });
+                const playersInLobby = playersResp.game_joining_players || [];
+
+                if (playersInLobby.length === 0) {
+                    await buttonInteraction.editReply({ content: "No players in the lobby to auto-balance." });
+                    return;
+                }
+
+                const shuffledPlayers = [...playersInLobby];
+                for (let i = shuffledPlayers.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    const temp = shuffledPlayers[i];
+                    shuffledPlayers[i] = shuffledPlayers[j];
+                    shuffledPlayers[j] = temp;
+                }
+
+                const numTeams = Number(gameDetails.num_teams);
+                const maxPlayersPerTeam = Number(gameDetails.max_players);
+                const teamCounts = new Array(numTeams).fill(0);
+                const teamSlots = maxPlayersPerTeam > 0 ? new Array(numTeams).fill(maxPlayersPerTeam) : null;
+                let unassignedCount = 0;
+
+                let nextTeamIndex = 0;
+                for (const player of shuffledPlayers) {
+                    let assignedTeam = 0;
+
+                    if (!teamSlots) {
+                        assignedTeam = (nextTeamIndex % numTeams) + 1;
+                        nextTeamIndex++;
+                    } else {
+                        for (let attempts = 0; attempts < numTeams; attempts++) {
+                            const candidateTeam = (nextTeamIndex + attempts) % numTeams;
+                            if (teamSlots[candidateTeam] > 0) {
+                                assignedTeam = candidateTeam + 1;
+                                teamSlots[candidateTeam]--;
+                                nextTeamIndex = (candidateTeam + 1) % numTeams;
+                                break;
+                            }
+                        }
+                    }
+
+                    await localApi.put("game_joining_player", {
+                        game_player_id: Number(player.game_player_id),
+                        team: String(assignedTeam),
+                        captain: 'false'
+                    });
+
+                    if (assignedTeam > 0) {
+                        teamCounts[assignedTeam - 1]++;
+                    } else {
+                        unassignedCount++;
+                    }
+                }
+
+                const teamSummary = teamCounts
+                    .map((count, idx) => `Team ${idx + 1}: ${count}`)
+                    .join(' | ');
+                const capNote = maxPlayersPerTeam > 0
+                    ? ` Team cap applied: ${maxPlayersPerTeam}/team.`
+                    : '';
+
+                await buttonInteraction.editReply({
+                    content: `✅ Auto-balance complete. ${teamSummary}${unassignedCount > 0 ? ` | Unassigned: ${unassignedCount}` : ''}.${capNote} Click 'Manage Players' to review.`
+                });
+                logger.info(`[GAME_BTN_AUTO_BALANCE] Host ${userId} auto-balanced game ${gameId}. ${teamSummary}. Unassigned=${unassignedCount}. MaxPerTeam=${maxPlayersPerTeam}`);
+            } catch (error) {
+                logger.error(`[GAME_BTN_AUTO_BALANCE] Error auto-balancing game ${gameId}: ${error.message || error}`);
+                if (!buttonInteraction.replied && !buttonInteraction.deferred) {
+                    await buttonInteraction.reply({ content: "Error auto-balancing teams.", ephemeral: true });
+                } else {
+                    await buttonInteraction.editReply({ content: "Error auto-balancing teams." });
+                }
+            }
             break;
 
         case "HOST_VOICE_DEPLOY_TEAMS":
@@ -641,6 +731,10 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
                 await buttonInteraction.reply({ content: "Only the host can set captains.", ephemeral: true });
                 return;
             }
+            if (gameDetails.game === 'manual') {
+                await buttonInteraction.reply({ content: "Manual assignment mode is enabled. Use 'Manage Players' to assign both teams directly.", ephemeral: true });
+                return;
+            }
             if (gameDetails.status === 'setup' || !gameDetails.num_teams || gameDetails.num_teams === 0) {
                 await buttonInteraction.reply({ content: "Teams need to be configured first before setting captains.", ephemeral: true });
                 return;
@@ -682,6 +776,10 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
         case "HOST_START_PICKING":
             if (!isHost) {
                 await buttonInteraction.reply({ content: "Only the host can start the draft.", ephemeral: true });
+                return;
+            }
+            if (gameDetails.game === 'manual') {
+                await buttonInteraction.reply({ content: "Manual assignment mode is enabled. Assign players using 'Manage Players' and then use Voice Controls to move teams.", ephemeral: true });
                 return;
             }
             try {
@@ -794,6 +892,10 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
 
         case "CAPTAIN_PICK":
             try {
+                if (gameDetails.game === 'manual') {
+                    await buttonInteraction.reply({ content: "Captain draft picks are disabled in manual assignment mode.", ephemeral: true });
+                    return;
+                }
                 // Check if this user is a captain
                 const playerCheckResp = await localApi.get("game_joining_player", {
                     game_id: gameId,
@@ -901,6 +1003,8 @@ async function handleGameSetupTeamsModal(modalInteraction, logger, localApi) {
             const pickingModeInput = modalInteraction.fields.getTextInputValue('pickingMode');
             if (pickingModeInput && (pickingModeInput.toLowerCase() === 'freeforall' || pickingModeInput.toLowerCase() === 'free')) {
                 pickingMode = 'freeforall';
+            } else if (pickingModeInput && (pickingModeInput.toLowerCase() === 'manual' || pickingModeInput.toLowerCase() === 'host' || pickingModeInput.toLowerCase() === 'assign')) {
+                pickingMode = 'manual';
             }
         } catch (e) {
             // pickingMode field might not exist in older modals, default to 'turns'
@@ -920,7 +1024,8 @@ async function handleGameSetupTeamsModal(modalInteraction, logger, localApi) {
                 const newEmbed = EmbedBuilder.from(originalMessage.embeds[0]);
 
                 let teamsConfigured = updatedGameData.status === 'lobby_configured' && updatedGameData.num_teams > 0;
-                const modeDisplay = updatedGameData.game === 'freeforall' ? '🔥 Free-for-All' : '🔄 Turn-Based';
+                const isManualMode = updatedGameData.game === 'manual';
+                const modeDisplay = isManualMode ? '🛠️ Manual Host Assignment' : (updatedGameData.game === 'freeforall' ? '🔥 Free-for-All' : '🔄 Turn-Based');
 
                 newEmbed.setFields(
                     { name: "Status", value: updatedGameData.status === 'setup' ? '⚙️ Setup (Waiting for Host)' : (updatedGameData.status === 'lobby_configured' ? '✅ Lobby Configured' : updatedGameData.status), inline: true },
@@ -939,13 +1044,19 @@ async function handleGameSetupTeamsModal(modalInteraction, logger, localApi) {
                             buttonBuilder.setDisabled(teamsConfigured);
                         }
                         if (buttonBuilder.data.custom_id && buttonBuilder.data.custom_id.startsWith(`GAME_HOST_SET_CAPTAINS-${gameIdString}`)) {
-                            buttonBuilder.setDisabled(!teamsConfigured);
+                            buttonBuilder.setDisabled(!teamsConfigured || isManualMode);
                         }
                         if (buttonBuilder.data.custom_id && buttonBuilder.data.custom_id.startsWith(`GAME_HOST_MANAGE_PLAYERS-${gameIdString}`)) {
                             buttonBuilder.setDisabled(!teamsConfigured);
                         }
                         if (buttonBuilder.data.custom_id && buttonBuilder.data.custom_id.startsWith(`GAME_HOST_VOICE_CONTROL-${gameIdString}`)) {
                             buttonBuilder.setDisabled(!teamsConfigured);
+                        }
+                        if (buttonBuilder.data.custom_id && buttonBuilder.data.custom_id.startsWith(`GAME_HOST_START_PICKING-${gameIdString}`)) {
+                            buttonBuilder.setDisabled(!teamsConfigured || isManualMode);
+                        }
+                        if (buttonBuilder.data.custom_id && buttonBuilder.data.custom_id.startsWith(`GAME_CAPTAIN_PICK-${gameIdString}`)) {
+                            buttonBuilder.setDisabled(true);
                         }
                         newRow.addComponents(buttonBuilder);
                     });
@@ -955,8 +1066,13 @@ async function handleGameSetupTeamsModal(modalInteraction, logger, localApi) {
                 logger.info(`[GAME_MODAL_SETUP] Original game message for game ${gameId} updated after team setup.`);
             }
         }
-        const modeText = pickingMode === 'freeforall' ? 'Free-for-All (any captain can pick anytime)' : 'Turn-Based (captains alternate)';
-        await modalInteraction.editReply({ content: `Game settings updated!\n• Teams: ${parsedNumTeams}\n• Max Players/Team: ${parsedMaxPlayers === 0 ? "Unlimited" : parsedMaxPlayers}\n• Draft Mode: ${modeText}\n\nYou can now set captains!` });
+        const modeText = pickingMode === 'freeforall'
+            ? 'Free-for-All (any captain can pick anytime)'
+            : (pickingMode === 'manual' ? 'Manual (host assigns players directly to teams)' : 'Turn-Based (captains alternate)');
+        const nextStepText = pickingMode === 'manual'
+            ? "Use Manage Players to assign both teams, then Voice Controls to move players."
+            : "You can now set captains!";
+        await modalInteraction.editReply({ content: `Game settings updated!\n• Teams: ${parsedNumTeams}\n• Max Players/Team: ${parsedMaxPlayers === 0 ? "Unlimited" : parsedMaxPlayers}\n• Draft Mode: ${modeText}\n\n${nextStepText}` });
 
     } catch (error) {
         logger.error(`[GAME_MODAL_SETUP] Error processing team setup for game ${gameId}: ${error.message || error}`);
@@ -978,10 +1094,11 @@ async function handleAssignPlayerModal(modalInteraction, logger, localApi) {
     try {
         await modalInteraction.deferReply({ ephemeral: true });
 
-        const playerIdToAssign = modalInteraction.fields.getTextInputValue('playerToAssign');
+        const playerIdInput = modalInteraction.fields.getTextInputValue('playerToAssign');
+        const playerIdToAssign = playerIdInput.replace(/[<@!>]/g, '').trim();
         const teamIdToAssignTo = parseInt(modalInteraction.fields.getTextInputValue('teamIdToAssign'), 10);
 
-        if (!playerIdToAssign || isNaN(teamIdToAssignTo) || teamIdToAssignTo <= 0) {
+        if (!playerIdToAssign || !/^\d+$/.test(playerIdToAssign) || isNaN(teamIdToAssignTo) || teamIdToAssignTo < 0) {
             await modalInteraction.editReply({ content: "Invalid player ID or team ID provided." });
             return;
         }
@@ -1004,13 +1121,23 @@ async function handleAssignPlayerModal(modalInteraction, logger, localApi) {
         }
         const gamePlayerId = playerResp.game_joining_players[0].game_player_id;
 
-        await localApi.put("game_joining_player", {
+        const updatePayload = {
             game_player_id: Number(gamePlayerId),
             team: String(teamIdToAssignTo)
-        });
+        };
+
+        if (teamIdToAssignTo === 0) {
+            updatePayload.captain = 'false';
+        }
+
+        await localApi.put("game_joining_player", updatePayload);
 
         logger.info(`[GAME_ASSIGN_MODAL] Host ${hostId} assigned player ${playerIdToAssign} (gp_id: ${gamePlayerId}) to team ${teamIdToAssignTo} in game ${gameId}.`);
-        await modalInteraction.editReply({ content: `Successfully assigned player to Team ${teamIdToAssignTo}. Click 'Manage Players' again to see updates.` });
+        await modalInteraction.editReply({
+            content: teamIdToAssignTo === 0
+                ? "Successfully unassigned player from teams. Click 'Manage Players' again to see updates."
+                : `Successfully assigned player to Team ${teamIdToAssignTo}. Click 'Manage Players' again to see updates.`
+        });
 
     } catch (error) {
         logger.error(`[GAME_ASSIGN_MODAL] Error assigning player in game ${gameId}: ${error.message || error}`);

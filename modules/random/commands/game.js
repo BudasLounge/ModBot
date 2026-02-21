@@ -115,7 +115,7 @@ module.exports = {
             .setDescription("Use the buttons below to manage your game.")
             .addFields(
                 { name: "Player Actions", value: "Players can join or leave the game lobby." },
-                { name: "Host Actions", value: "As the host, you can configure teams, manage players, control voice channels, and end the game." }
+                { name: "Host Actions", value: "As the host, you can configure teams and mode (turn-based, free-for-all, or manual assignment), manage players, control voice channels, and end the game." }
             )
             .setFooter({ text: "Some host actions are disabled until prerequisites are met (e.g., team setup)." });
 
@@ -135,7 +135,7 @@ module.exports = {
             .addComponents(
                 new ButtonBuilder()
                     .setCustomId(`GAME_HOST_SETUP_TEAMS-${newGameId}`)
-                    .setLabel('Setup Teams')
+                    .setLabel('Setup Teams / Mode')
                     .setStyle(ButtonStyle.Primary),
                 new ButtonBuilder()
                     .setCustomId(`GAME_HOST_SET_CAPTAINS-${newGameId}`)
