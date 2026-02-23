@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-const DDRAGON_VERSIONS_URL = 'https://ddragon.leagueoflegends.com/api/versions.json';
+const MERAKI_CHAMPIONS_INDEX_URL = 'https://cdn.merakianalytics.com/riot/lol/resources/latest/en-US/champions/';
 const ROLE_ORDER = ['top', 'jg', 'mid', 'adc', 'sup'];
 
 function normalizeChampionName(name) {
@@ -66,7 +66,41 @@ function inferRolesFromTags(tags) {
   return { role_primary, role_secondary };
 }
 
+function inferRolesFromPositions(positions) {
+  const normalizedPositions = Array.isArray(positions) ? positions : [];
+  const mapped = normalizedPositions
+    .map((position) => {
+      switch (position) {
+      case 'TOP': return 'top';
+      case 'JUNGLE': return 'jg';
+      case 'MIDDLE': return 'mid';
+      case 'BOTTOM': return 'adc';
+      case 'UTILITY': return 'sup';
+      default: return null;
+      }
+    })
+    .filter(Boolean);
+
+  const unique = Array.from(new Set(mapped));
+  if (!unique.length) {
+    return null;
+  }
+
+  const sorted = unique.sort((a, b) => ROLE_ORDER.indexOf(a) - ROLE_ORDER.indexOf(b));
+  const role_primary = sorted[0] || 'mid';
+  const role_secondary = sorted.find((role) => role !== role_primary) || 'top';
+  return { role_primary, role_secondary };
+}
+
 function inferDamageType(championData) {
+  const adaptiveType = (championData?.adaptiveType || '').toUpperCase();
+  if (adaptiveType === 'MAGIC_DAMAGE') {
+    return 'ap';
+  }
+  if (adaptiveType === 'PHYSICAL_DAMAGE') {
+    return 'ad';
+  }
+
   const attack = Number(championData?.info?.attack || 0);
   const magic = Number(championData?.info?.magic || 0);
 
@@ -85,8 +119,8 @@ function inferDamageType(championData) {
   return 'ad';
 }
 
-function buildChampionJsonUrl(version, championId) {
-  return `https://ddragon.leagueoflegends.com/cdn/${version}/data/en_US/champion/${championId}.json`;
+function buildChampionJsonUrl(championFileName) {
+  return `${MERAKI_CHAMPIONS_INDEX_URL}${championFileName}`;
 }
 
 function chunkLines(lines, maxCharsPerChunk) {
@@ -113,33 +147,61 @@ function chunkLines(lines, maxCharsPerChunk) {
 }
 
 async function fetchLatestChampionDataset(logger) {
-  logger.info('[new_champ] Fetching Data Dragon versions');
-  const versionResponse = await axios.get(DDRAGON_VERSIONS_URL, { timeout: 15000 });
-  const latestVersion = versionResponse?.data?.[0];
-  if (!latestVersion) {
-    throw new Error('Could not determine latest Data Dragon version');
+  logger.info('[new_champ] Fetching Meraki champion index');
+  const indexResponse = await axios.get(MERAKI_CHAMPIONS_INDEX_URL, { timeout: 30000 });
+  const indexHtml = String(indexResponse?.data || '');
+
+  const fileMatches = Array.from(indexHtml.matchAll(/href="([A-Za-z0-9]+\.json)"/g));
+  const championFiles = Array.from(new Set(fileMatches.map((m) => m[1])));
+  if (!championFiles.length) {
+    throw new Error('Could not parse champion files from Meraki index');
   }
 
-  logger.info('[new_champ] Fetching Data Dragon champion dataset', { version: latestVersion });
-  const championsResponse = await axios.get(
-    `https://ddragon.leagueoflegends.com/cdn/${latestVersion}/data/en_US/champion.json`,
-    { timeout: 30000 }
-  );
+  logger.info('[new_champ] Fetching Meraki champion JSON files', { count: championFiles.length });
+  const champions = [];
+  const batchSize = 12;
 
-  const championMap = championsResponse?.data?.data;
-  if (!championMap || typeof championMap !== 'object') {
-    throw new Error('Champion dataset was empty or malformed');
+  for (let i = 0; i < championFiles.length; i += batchSize) {
+    const batch = championFiles.slice(i, i + batchSize);
+    const batchResults = await Promise.all(
+      batch.map(async (fileName) => {
+        const url = buildChampionJsonUrl(fileName);
+        try {
+          const championResponse = await axios.get(url, { timeout: 30000 });
+          const championData = championResponse?.data;
+          if (!championData || !championData.name) {
+            logger.info('[new_champ] Skipping malformed Meraki champion payload', { fileName });
+            return null;
+          }
+          return {
+            ...championData,
+            _sourceUrl: url,
+            _sourceFile: fileName
+          };
+        } catch (error) {
+          logger.error('[new_champ] Failed to fetch Meraki champion file', { fileName, error: error?.message || error });
+          return null;
+        }
+      })
+    );
+
+    for (const result of batchResults) {
+      if (!result) {
+        continue;
+      }
+      champions.push(result);
+    }
   }
 
   return {
-    version: latestVersion,
-    champions: Object.values(championMap)
+    source: 'meraki-latest',
+    champions
   };
 }
 
 module.exports = {
   name: 'new_champ',
-  description: 'Sync champions from Data Dragon or add one manually',
+  description: 'Sync champions from source or add one manually',
   syntax: 'new_champ [sync|dryrun|preview|champion name]',
   num_args: 0,
   args_to_lower: false,
@@ -153,18 +215,18 @@ module.exports = {
     var inputValue = args.slice(1).join(' ').trim();
     const mode = (args[1] || '').toLowerCase();
     const isDryRun = mode === 'dryrun' || mode === 'preview';
-    const shouldSyncFromDataDragon = !inputValue || mode === 'sync' || mode === 'auto' || isDryRun;
+    const shouldSyncFromSource = !inputValue || mode === 'sync' || mode === 'auto' || isDryRun;
 
-    if (shouldSyncFromDataDragon) {
-      this.logger.info('[new_champ] Starting automatic Data Dragon sync', { isDryRun });
-      message.channel.send({ content: isDryRun ? 'Running Data Dragon dry run (no DB changes). This can take a minute...' : 'Syncing champions from Data Dragon. This can take a minute...' });
+    if (shouldSyncFromSource) {
+      this.logger.info('[new_champ] Starting automatic Meraki sync', { isDryRun });
+      message.channel.send({ content: isDryRun ? 'Running Meraki dry run (no DB changes). This can take a minute...' : 'Syncing champions from Meraki. This can take a minute...' });
 
       let dataset;
       try {
         dataset = await fetchLatestChampionDataset(this.logger);
       } catch (error) {
-        this.logger.error('[new_champ] Failed fetching Data Dragon dataset', { error: error?.message || error });
-        message.channel.send({ content: 'I could not fetch Data Dragon right now. Please try again later.' });
+        this.logger.error('[new_champ] Failed fetching Meraki dataset', { error: error?.message || error });
+        message.channel.send({ content: 'I could not fetch Meraki right now. Please try again later.' });
         return;
       }
 
@@ -213,15 +275,16 @@ module.exports = {
         if (existingByNormalized.has(normalizedName)) {
           normalizedMatchCount += 1;
           this.logger.info('[new_champ] Found normalized name match (likely punctuation/casing mismatch)', {
-            datadragonName: championName,
+            merakiName: championName,
             dbName: existingByNormalized.get(normalizedName)?.name
           });
           continue;
         }
 
+        const inferredFromPositions = inferRolesFromPositions(champion?.positions);
         const tags = Array.isArray(champion?.tags) ? champion.tags : [];
-        const inferredRoles = inferRolesFromTags(tags);
-        const championJsonUrl = buildChampionJsonUrl(dataset.version, champion.id);
+        const inferredRoles = inferredFromPositions || inferRolesFromTags(tags);
+        const championJsonUrl = champion?._sourceUrl || buildChampionJsonUrl(champion?._sourceFile || `${champion?.key || championName}.json`);
         const payload = {
           name: championName,
           role_primary: inferredRoles.role_primary,
@@ -249,7 +312,7 @@ module.exports = {
           }
         } catch (error) {
           const serverError = error?.response?.data?.error || error?.response || error?.message || error;
-          this.logger.error('[new_champ] Failed creating champion from Data Dragon', {
+          this.logger.error('[new_champ] Failed creating champion from source dataset', {
             champion: championName,
             payload,
             error: serverError
@@ -259,10 +322,10 @@ module.exports = {
         }
       }
 
-      this.logger.info('[new_champ] Data Dragon sync finished', {
-        version: dataset.version,
+      this.logger.info('[new_champ] Source sync finished', {
+        source: dataset.source,
         isDryRun,
-        totalFromDataDragon: dataset.champions.length,
+        totalFromMeraki: dataset.champions.length,
         wouldAddCount,
         addedCount,
         alreadyExistsCount,
@@ -271,7 +334,7 @@ module.exports = {
       });
 
       const failurePreview = failedNames.slice(0, 10).join(', ');
-      let responseText = `${isDryRun ? 'Data Dragon dry run complete' : 'Data Dragon sync complete'} (v${dataset.version}).\n`;
+      let responseText = `${isDryRun ? 'Meraki dry run complete' : 'Meraki sync complete'} (${dataset.source}).\n`;
       if (isDryRun) {
         responseText += `Would add: ${wouldAddCount}\n`;
       } else {
@@ -281,7 +344,7 @@ module.exports = {
       responseText += `Matched by normalized name (special chars/case): ${normalizedMatchCount}\n`;
       responseText += `Failed: ${failedCount}`;
       if (isDryRun && previewRows.length) {
-        responseText += `\nSample rows (name | role_primary | role_secondary | ad_ap | datadragon_json):\n${previewRows.join('\n')}`;
+        responseText += `\nSample rows (name | role_primary | role_secondary | ad_ap | meraki_json):\n${previewRows.join('\n')}`;
       }
       if (failurePreview) {
         responseText += `\nFirst failures: ${failurePreview}`;
@@ -290,10 +353,10 @@ module.exports = {
       message.channel.send({ content: responseText });
 
       if (isDryRun && wouldAddChampionLinks.length) {
-        this.logger.info('[new_champ] Sending dry run Data Dragon links', { linkCount: wouldAddChampionLinks.length });
+        this.logger.info('[new_champ] Sending dry run Meraki links', { linkCount: wouldAddChampionLinks.length });
         const linkChunks = chunkLines(wouldAddChampionLinks, 1800);
         for (let i = 0; i < linkChunks.length; i++) {
-          const header = i === 0 ? 'Data Dragon JSON links for champions that would be added:\n' : '';
+          const header = i === 0 ? 'Meraki JSON links for champions that would be added:\n' : '';
           await message.channel.send({ content: `${header}${linkChunks[i]}` });
         }
       }
@@ -312,7 +375,7 @@ module.exports = {
         this.logger.info('[new_champ] Captured manual champion name', { name: state.data.get('name').data });
         message.channel.send({ content: 'Okay, the champion is named: ' + state.data.get('name').data + '. Next, put in the primary role.' });
       } else {
-        message.channel.send({ content: 'To add a new champion manually, start with ,new_champ [champion name]. To auto-sync Data Dragon, run ,new_champ sync. For a no-write preview, run ,new_champ dryrun' });
+        message.channel.send({ content: 'To add a new champion manually, start with ,new_champ [champion name]. To auto-sync Meraki, run ,new_champ sync. For a no-write preview, run ,new_champ dryrun' });
       }
     } else if (!state.data.has('prim_role')) {
       if (inputValue) {
