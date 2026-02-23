@@ -94,11 +94,13 @@ function inferRolesFromPositions(positions) {
 }
 
 function inferDamageTypeFromCDragon(championData) {
-  const damageType = (championData?.playstyleInfo?.damageType || '').toLowerCase();
-  if (damageType === 'kmagic') {
+  const rawDamageType = (championData?.playstyleInfo?.damageType || '').toLowerCase();
+  const damageType = rawDamageType.replace(/^k/, '');
+
+  if (damageType === 'magic') {
     return 'ap';
   }
-  if (damageType === 'kphysical') {
+  if (damageType === 'physical') {
     return 'ad';
   }
 
