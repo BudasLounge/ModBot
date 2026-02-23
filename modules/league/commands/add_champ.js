@@ -3,11 +3,6 @@ const axios = require('axios');
 const DDRAGON_VERSIONS_URL = 'https://ddragon.leagueoflegends.com/api/versions.json';
 const ROLE_ORDER = ['top', 'jg', 'mid', 'adc', 'sup'];
 
-const ROLE_OVERRIDES = {
-  'Aurelion Sol': { role_primary: 'mid', role_secondary: 'top' },
-  'Nunu & Willump': { role_primary: 'jg', role_secondary: 'mid' }
-};
-
 function normalizeChampionName(name) {
   return (name || '')
     .normalize('NFKD')
@@ -16,11 +11,7 @@ function normalizeChampionName(name) {
     .toLowerCase();
 }
 
-function inferRolesFromTags(championName, tags) {
-  if (ROLE_OVERRIDES[championName]) {
-    return ROLE_OVERRIDES[championName];
-  }
-
+function inferRolesFromTags(tags) {
   const scores = {
     top: 0,
     jg: 0,
@@ -92,6 +83,33 @@ function inferDamageType(championData) {
   }
 
   return 'ad';
+}
+
+function buildChampionJsonUrl(version, championId) {
+  return `https://ddragon.leagueoflegends.com/cdn/${version}/data/en_US/champion/${championId}.json`;
+}
+
+function chunkLines(lines, maxCharsPerChunk) {
+  const chunks = [];
+  let currentChunk = '';
+
+  for (const line of lines) {
+    const nextValue = currentChunk ? `${currentChunk}\n${line}` : line;
+    if (nextValue.length > maxCharsPerChunk) {
+      if (currentChunk) {
+        chunks.push(currentChunk);
+      }
+      currentChunk = line;
+    } else {
+      currentChunk = nextValue;
+    }
+  }
+
+  if (currentChunk) {
+    chunks.push(currentChunk);
+  }
+
+  return chunks;
 }
 
 async function fetchLatestChampionDataset(logger) {
@@ -178,6 +196,7 @@ module.exports = {
       const failedNames = [];
       let wouldAddCount = 0;
       const previewRows = [];
+      const wouldAddChampionLinks = [];
 
       for (const champion of dataset.champions) {
         const championName = (champion?.name || '').trim();
@@ -201,7 +220,8 @@ module.exports = {
         }
 
         const tags = Array.isArray(champion?.tags) ? champion.tags : [];
-        const inferredRoles = inferRolesFromTags(championName, tags);
+        const inferredRoles = inferRolesFromTags(tags);
+        const championJsonUrl = buildChampionJsonUrl(dataset.version, champion.id);
         const payload = {
           name: championName,
           role_primary: inferredRoles.role_primary,
@@ -211,8 +231,9 @@ module.exports = {
 
         if (isDryRun) {
           wouldAddCount += 1;
+          wouldAddChampionLinks.push(`${payload.name}: ${championJsonUrl}`);
           if (previewRows.length < 15) {
-            previewRows.push(`${payload.name} | ${payload.role_primary} | ${payload.role_secondary} | ${payload.ad_ap}`);
+            previewRows.push(`${payload.name} | ${payload.role_primary} | ${payload.role_secondary} | ${payload.ad_ap} | ${championJsonUrl}`);
           }
           continue;
         }
@@ -260,13 +281,23 @@ module.exports = {
       responseText += `Matched by normalized name (special chars/case): ${normalizedMatchCount}\n`;
       responseText += `Failed: ${failedCount}`;
       if (isDryRun && previewRows.length) {
-        responseText += `\nSample rows (name | role_primary | role_secondary | ad_ap):\n${previewRows.join('\n')}`;
+        responseText += `\nSample rows (name | role_primary | role_secondary | ad_ap | datadragon_json):\n${previewRows.join('\n')}`;
       }
       if (failurePreview) {
         responseText += `\nFirst failures: ${failurePreview}`;
       }
 
       message.channel.send({ content: responseText });
+
+      if (isDryRun && wouldAddChampionLinks.length) {
+        this.logger.info('[new_champ] Sending dry run Data Dragon links', { linkCount: wouldAddChampionLinks.length });
+        const linkChunks = chunkLines(wouldAddChampionLinks, 1800);
+        for (let i = 0; i < linkChunks.length; i++) {
+          const header = i === 0 ? 'Data Dragon JSON links for champions that would be added:\n' : '';
+          await message.channel.send({ content: `${header}${linkChunks[i]}` });
+        }
+      }
+
       state.delete = true;
       return;
     }
