@@ -282,6 +282,7 @@ module.exports = {
       let skippedDoomBotCount = 0;
       const previewRows = [];
       const wouldAddChampionLinks = [];
+      const addedRows = [];
 
       for (const champion of dataset.champions) {
         const championName = (champion?.name || '').trim();
@@ -334,6 +335,9 @@ module.exports = {
           const createResponse = await api.post('league_champion', payload);
           if (createResponse?.ok === true) {
             addedCount += 1;
+            if (addedRows.length < 12) {
+              addedRows.push(`${payload.name} | ${payload.role_primary} | ${payload.role_secondary} | ${payload.ad_ap} | ${championJsonUrl}`);
+            }
           } else {
             failedCount += 1;
             failedNames.push(championName);
@@ -372,10 +376,15 @@ module.exports = {
       }
       responseText += `Already in DB (exact): ${alreadyExistsCount}\n`;
       responseText += `Matched by normalized name (special chars/case): ${normalizedMatchCount}\n`;
-      responseText += `Skipped Doom Bots: ${skippedDoomBotCount}\n`;
       responseText += `Failed: ${failedCount}`;
       if (isDryRun && previewRows.length) {
         responseText += `\nSample rows (name | role_primary | role_secondary | ad_ap | cdragon_json):\n${previewRows.join('\n')}`;
+      }
+      if (!isDryRun && addedRows.length) {
+        responseText += `\nAdded champions (name | role_primary | role_secondary | ad_ap | cdragon_json):\n${addedRows.join('\n')}`;
+        if (addedCount > addedRows.length) {
+          responseText += `\n...and ${addedCount - addedRows.length} more added champion(s).`;
+        }
       }
       if (failurePreview) {
         responseText += `\nFirst failures: ${failurePreview}`;
