@@ -94,7 +94,7 @@ function inferRolesFromPositions(positions) {
 }
 
 function inferDamageTypeFromCDragon(championData) {
-  const rawDamageType = (championData?.playstyleInfo?.damageType || '').toLowerCase();
+  const rawDamageType = (championData?.tacticalInfo?.damageType || '').toLowerCase();
   const damageType = rawDamageType.replace(/^k/, '');
 
   if (damageType === 'magic') {
