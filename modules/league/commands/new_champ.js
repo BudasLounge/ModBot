@@ -2,6 +2,7 @@ const axios = require('axios');
 
 const CDRAGON_SUMMARY_URL = 'https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-summary.json';
 const ROLE_ORDER = ['top', 'jg', 'mid', 'adc', 'sup'];
+const DISCORD_MESSAGE_MAX_CHARS = 1800;
 
 function normalizeChampionName(name) {
   return (name || '')
@@ -113,6 +114,12 @@ function buildChampionJsonUrl(championId) {
   return `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champions/${championId}.json`;
 }
 
+function isDoomBotChampion(championData) {
+  const id = Number(championData?.id || 0);
+  const name = String(championData?.name || '');
+  return /^doom bot\s+/i.test(name) || (id >= 66600 && id <= 66699);
+}
+
 function chunkLines(lines, maxCharsPerChunk) {
   const chunks = [];
   let currentChunk = '';
@@ -136,6 +143,16 @@ function chunkLines(lines, maxCharsPerChunk) {
   return chunks;
 }
 
+async function sendChunkedMessage(channel, content) {
+  const text = String(content || '');
+  const lines = text.split('\n');
+  const chunks = chunkLines(lines, DISCORD_MESSAGE_MAX_CHARS);
+
+  for (const chunk of chunks) {
+    await channel.send({ content: chunk });
+  }
+}
+
 async function fetchLatestChampionDataset(logger) {
   logger.info('[new_champ] Fetching CDragon champion summary');
   const summaryResponse = await axios.get(CDRAGON_SUMMARY_URL, { timeout: 30000 });
@@ -146,6 +163,7 @@ async function fetchLatestChampionDataset(logger) {
   }
 
   championsList = championsList.filter((championSummary) => Number(championSummary?.id) > 0);
+  championsList = championsList.filter((championSummary) => !isDoomBotChampion(championSummary));
   logger.info('[new_champ] Fetching CDragon champion JSON files', { count: championsList.length });
 
   const champions = [];
@@ -259,12 +277,19 @@ module.exports = {
       let failedCount = 0;
       const failedNames = [];
       let wouldAddCount = 0;
+      let skippedDoomBotCount = 0;
       const previewRows = [];
       const wouldAddChampionLinks = [];
 
       for (const champion of dataset.champions) {
         const championName = (champion?.name || '').trim();
         if (!championName) {
+          continue;
+        }
+
+        if (isDoomBotChampion(champion)) {
+          skippedDoomBotCount += 1;
+          this.logger.info('[new_champ] Skipping Doom Bot champion', { id: champion?.id, name: championName });
           continue;
         }
 
@@ -328,6 +353,7 @@ module.exports = {
         source: dataset.source,
         isDryRun,
         totalFromSource: dataset.champions.length,
+        skippedDoomBotCount,
         wouldAddCount,
         addedCount,
         alreadyExistsCount,
@@ -344,6 +370,7 @@ module.exports = {
       }
       responseText += `Already in DB (exact): ${alreadyExistsCount}\n`;
       responseText += `Matched by normalized name (special chars/case): ${normalizedMatchCount}\n`;
+      responseText += `Skipped Doom Bots: ${skippedDoomBotCount}\n`;
       responseText += `Failed: ${failedCount}`;
       if (isDryRun && previewRows.length) {
         responseText += `\nSample rows (name | role_primary | role_secondary | ad_ap | cdragon_json):\n${previewRows.join('\n')}`;
@@ -352,14 +379,23 @@ module.exports = {
         responseText += `\nFirst failures: ${failurePreview}`;
       }
 
-      message.channel.send({ content: responseText });
+      try {
+        await sendChunkedMessage(message.channel, responseText);
+      } catch (error) {
+        this.logger.error('[new_champ] Failed sending summary message', { error: error?.message || error });
+      }
 
       if (isDryRun && wouldAddChampionLinks.length) {
         this.logger.info('[new_champ] Sending dry run source links', { source: 'communitydragon', linkCount: wouldAddChampionLinks.length });
         const linkChunks = chunkLines(wouldAddChampionLinks, 1800);
         for (let i = 0; i < linkChunks.length; i++) {
           const header = i === 0 ? 'CommunityDragon JSON links for champions that would be added:\n' : '';
-          await message.channel.send({ content: `${header}${linkChunks[i]}` });
+          try {
+            await message.channel.send({ content: `${header}${linkChunks[i]}` });
+          } catch (error) {
+            this.logger.error('[new_champ] Failed sending dry run source links chunk', { error: error?.message || error, chunkIndex: i });
+            break;
+          }
         }
       }
 
