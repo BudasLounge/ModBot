@@ -465,6 +465,35 @@ function isRankedDraftEligible(ddItem, binItem, stringEntries) {
     return true;
 }
 
+// ─── Token minifier ───────────────────────────────────────────────────────────
+
+/**
+ * Minify an item stats string to reduce token usage for LLM payloads.
+ * Abbreviates verbose stat names and cleans up loose syntax.
+ * @param {string} itemString
+ * @returns {string}
+ */
+function minifyItem(itemString) {
+    let cleaned = itemString;
+
+    // Abbreviate verbose stats to save tokens
+    cleaned = cleaned
+        .replace(/Attack Damage/gi, 'AD')
+        .replace(/Ability Power/gi, 'AP')
+        .replace(/Ability Haste/gi, 'AH')
+        .replace(/Magic Resist/gi, 'MR')
+        .replace(/Move Speed/gi, 'MS')
+        .replace(/Attack Speed/gi, 'AS')
+        .replace(/Critical Strike Chance/gi, 'Crit')
+        .replace(/Health Regen/gi, 'HP Regen')
+        .replace(/Mana Regen/gi, 'MP Regen');
+
+    // Clean up loose syntax
+    cleaned = cleaned.replace(/\|/g, '-').replace(/\s+/g, ' ').trim();
+
+    return cleaned;
+}
+
 // ─── Main export ────────────────────────────────────────────────────────────────
 
 /**
@@ -543,7 +572,7 @@ async function buildItemsToon(encodeToon, logger) {
             return {
                 name: ddItem?.name || cdItem?.name || `Item ${id}`,
                 cost: ddItem?.gold?.total ?? cdItem?.priceTotal ?? 0,
-                stats: hybridDescription
+                stats: minifyItem(hybridDescription)
             };
         })
         .filter(Boolean);
