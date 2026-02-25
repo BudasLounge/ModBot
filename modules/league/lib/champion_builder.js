@@ -644,7 +644,15 @@ function formatNumericList(values) {
         : [];
 
     if (nums.length === 0) return null;
-    return nums.map(v => Number(v.toFixed(3))).join('/');
+    return collapseIfUniform(nums.map(v => Number(v.toFixed(3))).join('/'));
+}
+
+// If all slash-separated values are identical, collapse to a single value.
+function collapseIfUniform(slashStr) {
+    if (typeof slashStr !== 'string') return slashStr;
+    const parts = slashStr.split('/');
+    if (parts.length <= 1) return slashStr;
+    return parts.every(p => p === parts[0]) ? parts[0] : slashStr;
 }
 
 function extractDescriptionTokens(description) {
@@ -764,7 +772,7 @@ async function buildChampionToon(championName, encodeToon, logger) {
             // 1. Cooldowns
             if (obj.mSpell.cooldownTime && Array.isArray(obj.mSpell.cooldownTime)) {
                 const cds = obj.mSpell.cooldownTime.slice(1, 6).map(v => Number(v.toFixed(2)));
-                if (cds.some(v => v !== 0)) mathDump += `COOLDOWNS: [${cds.join('/')}] | `;
+                if (cds.some(v => v !== 0)) mathDump += `COOLDOWNS: [${collapseIfUniform(cds.join('/'))}] | `;
             }
 
             // 2. Base Values & Ratios
@@ -783,7 +791,7 @@ async function buildChampionToon(championName, encodeToon, logger) {
                 }
             });
 
-            const varStrings = Object.entries(variables).map(([name, values]) => `${name}: [${values}]`);
+            const varStrings = Object.entries(variables).map(([name, values]) => `${name}: [${collapseIfUniform(values)}]`);
             if (varStrings.length > 0) mathDump += `VALUES: ${varStrings.join(', ')} | `;
 
             // 3. TRANSLATE FORMULAS

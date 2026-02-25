@@ -104,6 +104,21 @@ function isHashToken(token) {
     return typeof token === 'string' && /^\{[0-9a-f]{8}\}$/i.test(token);
 }
 
+// Riot's bin format uses FNV-1a 32-bit (lowercase) hashes for field name references.
+// CDragon resolves mDataValues[].mName to human-readable strings but leaves
+// NamedDataValueCalculationPart.mDataValue as unresolved hashes when the name
+// isn't in the hash dictionary. We pre-index each DataValue under its hashed form
+// so those cross-references resolve correctly.
+function fnv1a32(str) {
+    let hash = 0x811c9dc5;
+    const lower = str.toLowerCase();
+    for (let i = 0; i < lower.length; i++) {
+        hash ^= lower.charCodeAt(i);
+        hash = Math.imul(hash, 0x01000193) >>> 0;
+    }
+    return '{' + hash.toString(16).padStart(8, '0') + '}';
+}
+
 function sanitizeTokenName(token, fallback = 'Value') {
     if (!token) return fallback;
     if (isHashToken(token)) return fallback;
@@ -133,10 +148,11 @@ function parseItemCalculation(calc, dataValues, calculations, seen = new Set()) 
     }
 
     if (calc.__type === 'NamedDataValueCalculationPart') {
+        // Check dataValues first — supports both human-readable names and pre-indexed hash keys.
+        if (dataValues[calc.mDataValue] !== undefined)
+            return formatNumber(dataValues[calc.mDataValue]);
         if (isHashToken(calc.mDataValue)) return 'UnknownValue';
-        return dataValues[calc.mDataValue] !== undefined
-            ? formatNumber(dataValues[calc.mDataValue])
-            : calc.mDataValue;
+        return calc.mDataValue;
     }
 
     if (calc.__type === 'StatByNamedDataValueCalculationPart') {
@@ -271,6 +287,10 @@ function buildItemResolver(binItem) {
         if (dataValue?.mName && typeof dataValue.mValue === 'number') {
             dataValues[dataValue.mName] = dataValue.mValue;
             resolver[dataValue.mName.toLowerCase()] = dataValue.mValue;
+            // Pre-index by the FNV-1a hash of the name so that NamedDataValueCalculationPart
+            // entries that reference the field by hash (unresolved by CDragon) still resolve.
+            const nameHash = fnv1a32(dataValue.mName);
+            dataValues[nameHash] = dataValue.mValue;
         }
     }
 
