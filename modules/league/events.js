@@ -610,6 +610,65 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
     gold: (team.players.reduce((a,b) => a + (b.stats.GOLD_EARNED||0), 0) / 1000).toFixed(1) + 'k'
   });
 
+  // Build badge winners for the visual awards section
+  const formatK = (n) => n >= 1000 ? (n / 1000).toFixed(1) + 'k' : String(n);
+  const findWinnerName = (statFn) => {
+    if (!allPlayers.length) return 'Unknown';
+    const winner = allPlayers.reduce((best, p) => statFn(p) > statFn(best) ? p : best, allPlayers[0]);
+    return winner ? (winner.summonerName || winner.riotIdGameName || 'Unknown') : 'Unknown';
+  };
+
+  const badgeWinners = [
+    {
+      icon: ICONS.HEART,
+      title: 'The Protector',
+      desc: 'Most Heals & Shields',
+      winnerName: findWinnerName(p => getStat(p, 'TOTAL_HEAL_ON_TEAMMATES') + getStat(p, 'TOTAL_DAMAGE_SHIELDED_ON_TEAMMATES')),
+      value: formatK(maxVals.protector),
+      show: maxVals.protector > 1000
+    },
+    {
+      icon: ICONS.FIRE,
+      title: 'Unstoppable',
+      desc: 'Largest Kill Spree',
+      winnerName: findWinnerName(p => getStat(p, 'LARGEST_KILLING_SPREE')),
+      value: maxVals.spree + ' kill spree',
+      show: maxVals.spree >= 3
+    },
+    {
+      icon: ICONS.SHIELD,
+      title: 'Most Tanked',
+      desc: 'Dmg Taken + Mitigated',
+      winnerName: findWinnerName(p => getStat(p, 'TOTAL_DAMAGE_TAKEN') + getStat(p, 'TOTAL_DAMAGE_SELF_MITIGATED')),
+      value: formatK(maxVals.tank),
+      show: maxVals.tank > 0
+    },
+    {
+      icon: ICONS.TOWER,
+      title: 'Objective Boss',
+      desc: 'Most Tower Dmg',
+      winnerName: findWinnerName(p => getStat(p, 'TOTAL_DAMAGE_DEALT_TO_TURRETS')),
+      value: formatK(maxVals.turret),
+      show: maxVals.turret > 0
+    },
+    {
+      icon: ICONS.CC,
+      title: 'CC King',
+      desc: 'Crowd Control Time',
+      winnerName: findWinnerName(p => getStat(p, 'TIME_CCING_OTHERS')),
+      value: maxVals.cc + 's',
+      show: maxVals.cc > 0
+    },
+    {
+      icon: ICONS.SKULL,
+      title: 'Grey Screen',
+      desc: 'Time Spent Dead',
+      winnerName: findWinnerName(p => getStat(p, 'TOTAL_TIME_SPENT_DEAD')),
+      value: maxVals.dead + 's',
+      show: maxVals.dead > 0
+    }
+  ];
+
   let anyUploaderWon = false;
   if (uploaderInfos.length > 0) {
     anyUploaderWon = uploaderInfos.some(u => u.result === 'Win');
@@ -657,7 +716,8 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
     t100Win: t100.isWinningTeam,
     team200: t200.players.map(mapPlayer),
     t200Stats: getTotals(t200),
-    t200Win: t200.isWinningTeam
+    t200Win: t200.isWinningTeam,
+    badgeWinners
   };
 }
 

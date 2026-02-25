@@ -9,7 +9,7 @@
     
     body {
       width: 1350px;
-      height: 980px; /* Taller for footer descriptions */
+      height: 1065px;
       background-color: #010a13;
       font-family: 'Roboto', sans-serif;
       color: #a09b8c;
@@ -85,6 +85,49 @@
     .col-gold { text-align: right; color: #c8aa6e; font-size: 14px; padding-right: 20px; font-weight: 500; }
     .col-cs { text-align: right; color: #939a9e; font-size: 14px; padding-right: 20px; }
     .col-vision { text-align: center; color: #939a9e; font-size: 14px; }
+
+    /* --- BADGE AWARDS SECTION --- */
+    .badge-awards {
+      display: flex;
+      gap: 8px;
+      margin: 10px 0 0 0;
+    }
+    .award-card {
+      flex: 1;
+      background: #0f1216;
+      border: 1px solid #1e2328;
+      border-top: 2px solid #c8aa6e;
+      border-radius: 4px;
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+    .award-card.award-hidden { opacity: 0; pointer-events: none; }
+    .award-icon { flex-shrink: 0; }
+    .award-icon svg { width: 22px; height: 22px; fill: #c8aa6e; display: block; }
+    .award-info { overflow: hidden; display: flex; flex-direction: column; gap: 1px; }
+    .award-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #c8aa6e;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .award-winner {
+      font-size: 13px;
+      color: #fff;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .award-value {
+      font-size: 11px;
+      color: #5c9ebf;
+    }
 
     /* --- DETAILED FOOTER --- */
     .legend-footer {
@@ -220,6 +263,19 @@
         <div class="col-cs">{{cs}}</div>
         <div class="col-vision">{{vision}}</div>
       </div>
+    {{/each}}
+  </div>
+
+  <div class="badge-awards">
+    {{#each badgeWinners}}
+    <div class="award-card{{#unless show}} award-hidden{{/unless}}">
+      <div class="award-icon">{{{icon}}}</div>
+      <div class="award-info">
+        <div class="award-label">{{title}}</div>
+        <div class="award-winner">{{winnerName}}</div>
+        <div class="award-value">{{value}}</div>
+      </div>
+    </div>
     {{/each}}
   </div>
 
