@@ -4,6 +4,7 @@ let encodeToon = null;
 try {
     ({ encode: encodeToon } = require('@toon-format/toon'));
 } catch (error) {
+    console.error("Detailed Load Error:", error);
     encodeToon = null;
 }
 
