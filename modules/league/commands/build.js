@@ -201,6 +201,15 @@ function extractWorkflowText(workflowData) {
     return `Workflow completed, but no text output was returned. Raw output keys: ${Object.keys(outputs).join(', ') || 'none'}`;
 }
 
+function stripThinkingBlocks(text) {
+    return String(text || '')
+        .replace(/<thinking>[\s\S]*?<\/thinking>/gi, ' ')
+        .replace(/<think>[\s\S]*?<\/think>/gi, ' ')
+        .replace(/^\s*think\s*>/i, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
 module.exports = {
     name: 'build',
     description: 'Generate champion + item toon payloads and send them to the LoL theorycraft workflow',
@@ -280,7 +289,17 @@ module.exports = {
             await statusMessage.edit({ content: `Payloads ready. Sending to theorycraft workflow for **${match.name}**...` });
 
             const workflowData = await sendWorkflowRequest(workflowPayload, message.author.id, this.logger);
-            const workflowText = extractWorkflowText(workflowData);
+            let workflowText = extractWorkflowText(workflowData);
+            const sanitizedWorkflowText = stripThinkingBlocks(workflowText);
+
+            if (sanitizedWorkflowText !== workflowText) {
+                this.logger.info('[build] Sanitized thinking tags from workflow response', {
+                    beforeLength: workflowText.length,
+                    afterLength: sanitizedWorkflowText.length
+                });
+            }
+
+            workflowText = sanitizedWorkflowText;
 
             const chunks = splitForDiscord(workflowText, 1900);
             await statusMessage.edit({ content: `Theorycraft build received for **${match.name}** (${buildType}).` });
