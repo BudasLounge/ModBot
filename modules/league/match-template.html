@@ -104,7 +104,6 @@
       gap: 10px;
       min-width: 0;
     }
-    .award-card.award-hidden { opacity: 0; pointer-events: none; }
     .award-icon { flex-shrink: 0; }
     .award-icon svg { width: 22px; height: 22px; fill: #c8aa6e; display: block; }
     .award-info { overflow: hidden; display: flex; flex-direction: column; gap: 1px; }
@@ -268,7 +267,7 @@
 
   <div class="badge-awards">
     {{#each badgeWinners}}
-    <div class="award-card{{#unless show}} award-hidden{{/unless}}">
+    <div class="award-card">
       <div class="award-icon">{{{icon}}}</div>
       <div class="award-info">
         <div class="award-label">{{title}}</div>

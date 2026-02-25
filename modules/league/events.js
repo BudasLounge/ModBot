@@ -624,48 +624,42 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
       title: 'The Protector',
       desc: 'Most Heals & Shields',
       winnerName: findWinnerName(p => getStat(p, 'TOTAL_HEAL_ON_TEAMMATES') + getStat(p, 'TOTAL_DAMAGE_SHIELDED_ON_TEAMMATES')),
-      value: formatK(maxVals.protector),
-      show: maxVals.protector > 1000
+      value: formatK(maxVals.protector)
     },
     {
       icon: ICONS.FIRE,
       title: 'Unstoppable',
       desc: 'Largest Kill Spree',
       winnerName: findWinnerName(p => getStat(p, 'LARGEST_KILLING_SPREE')),
-      value: maxVals.spree + ' kill spree',
-      show: maxVals.spree >= 3
+      value: maxVals.spree + ' kill spree'
     },
     {
       icon: ICONS.SHIELD,
       title: 'Most Tanked',
       desc: 'Dmg Taken + Mitigated',
       winnerName: findWinnerName(p => getStat(p, 'TOTAL_DAMAGE_TAKEN') + getStat(p, 'TOTAL_DAMAGE_SELF_MITIGATED')),
-      value: formatK(maxVals.tank),
-      show: maxVals.tank > 0
+      value: formatK(maxVals.tank)
     },
     {
       icon: ICONS.TOWER,
       title: 'Objective Boss',
       desc: 'Most Tower Dmg',
       winnerName: findWinnerName(p => getStat(p, 'TOTAL_DAMAGE_DEALT_TO_TURRETS')),
-      value: formatK(maxVals.turret),
-      show: maxVals.turret > 0
+      value: formatK(maxVals.turret)
     },
     {
       icon: ICONS.CC,
       title: 'CC King',
       desc: 'Crowd Control Time',
       winnerName: findWinnerName(p => getStat(p, 'TIME_CCING_OTHERS')),
-      value: maxVals.cc + 's',
-      show: maxVals.cc > 0
+      value: maxVals.cc + 's'
     },
     {
       icon: ICONS.SKULL,
       title: 'Grey Screen',
       desc: 'Time Spent Dead',
       winnerName: findWinnerName(p => getStat(p, 'TOTAL_TIME_SPENT_DEAD')),
-      value: maxVals.dead + 's',
-      show: maxVals.dead > 0
+      value: maxVals.dead + 's'
     }
   ];
 
