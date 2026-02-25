@@ -285,7 +285,7 @@ module.exports = {
                 championToonLength: championToon.length,
                 itemsToonLength: itemsToon.length
             });
-            await statusMessage.edit({ content: `Payloads ready. Sending to theorycraft workflow for **${match.name}**...` });
+            await statusMessage.edit({ content: `Let me cook for **${match.name}**... this might take a minute.` });
 
             const workflowData = await sendWorkflowRequest(workflowPayload, message.author.id, this.logger);
             let workflowText = extractWorkflowText(workflowData);
