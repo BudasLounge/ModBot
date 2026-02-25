@@ -455,12 +455,17 @@ async function getLatestDDVersion() {
 
 function fixChampName(name) {
   if (!name) return 'Unknown';
+  // Normalize curly/smart apostrophes to straight apostrophe first
+  const normalized = name.replace(/[\u2018\u2019\u02BC]/g, "'");
   const map = {
     'Wukong': 'MonkeyKing', 'Renata Glasc': 'Renata', 'Bel\'Veth': 'Belveth',
     'Kog\'Maw': 'KogMaw', 'Rek\'Sai': 'RekSai', 'Dr. Mundo': 'DrMundo',
     'Nunu & Willump': 'Nunu', 'Fiddlesticks': 'Fiddlesticks', 'LeBlanc': 'Leblanc',
+    // Apostrophe champs where stripping leaves wrong capitalisation vs DDragon filenames
+    'Cho\'Gath': 'Chogath', 'Kai\'Sa': 'Kaisa', 'Kha\'Zix': 'Khazix',
+    'Vel\'Koz': 'Velkoz', 'Nunu & Willump': 'Nunu',
   };
-  return map[name] || name.replace(/[' .]/g, '');
+  return map[normalized] || normalized.replace(/[' .&]/g, '');
 }
 
 /* =====================================================
