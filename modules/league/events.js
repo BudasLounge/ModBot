@@ -24,6 +24,10 @@ const api = new ApiClient();
 // Key: gameId, Value: { players: [{ user_id, augments: [id1, id2...] }] }
 const recentMatchAugments = new Map();
 
+// Cache for full match payload to support "Show More Stats" (5-min TTL)
+// Key: gameId (string), Value: { payload, uploaderInfos }
+const recentMatchData = new Map();
+
 // File path for persistent Augment ID->Name mapping
 const AUGMENT_ID_FILE = path.join(__dirname, 'augment_ids.json');
 
@@ -1027,21 +1031,40 @@ async function handleMatchPayload(payload, client, uploaderInfos = [], placehold
         recentMatchAugments.set(String(gameId), matchAugmentsData);
         // Expire after 2 hours
         setTimeout(() => recentMatchAugments.delete(String(gameId)), 2 * 60 * 60 * 1000);
+      }
+    }
 
-        try {
-          const row = new ActionRowBuilder()
-            .addComponents(
-              new ButtonBuilder()
-                .setCustomId(`LEAGUE_ID_AUGMENTS_${gameId}`)
-                .setLabel('Identify Augments')
-                .setStyle(ButtonStyle.Primary)
-            );
-          
-          await scoreboardMessage.edit({ components: [row] });
-          logger.info('[LoL Match Ingest] Added Identify Augments button', { gameId });
-        } catch (err) {
-          logger.error('[LoL Match Ingest] Failed to add Identify button', err);
+    // Cache full payload for "Show More Stats" button (5-min TTL)
+    recentMatchData.set(String(gameId), { payload, uploaderInfos });
+    setTimeout(() => recentMatchData.delete(String(gameId)), 5 * 60 * 1000);
+    logger.info('[LoL Match Ingest] Cached match data for Show More Stats', { gameId });
+
+    // Build combined button row: always "Show More Stats", plus "Identify Augments" for Mayhem
+    if (scoreboardMessage) {
+      try {
+        const augmentsData = recentMatchAugments.get(String(gameId));
+        const row = new ActionRowBuilder();
+
+        if (augmentsData) {
+          row.addComponents(
+            new ButtonBuilder()
+              .setCustomId(`LEAGUE_ID_AUGMENTS_${gameId}`)
+              .setLabel('Identify Augments')
+              .setStyle(ButtonStyle.Primary)
+          );
         }
+
+        row.addComponents(
+          new ButtonBuilder()
+            .setCustomId(`LEAGUE_MORE_STATS_${gameId}`)
+            .setLabel('Show More Stats')
+            .setStyle(ButtonStyle.Secondary)
+        );
+
+        await scoreboardMessage.edit({ components: [row] });
+        logger.info('[LoL Match Ingest] Added match buttons', { gameId, augments: !!augmentsData });
+      } catch (err) {
+        logger.error('[LoL Match Ingest] Failed to add match buttons', err);
       }
     }
 
@@ -1237,6 +1260,21 @@ async function fetchRanksNA(puuid, summonerName) {
 
 
 /* =====================================================
+   Show More Stats Handler  (Part 2 — populate this)
+===================================================== */
+
+/**
+ * Called when a user clicks "Show More Stats" on a match post.
+ * @param {import('discord.js').ButtonInteraction} interaction - already deferred (ephemeral)
+ * @param {object} payload   - full normalised match payload
+ * @param {Array}  uploaderInfos - uploader info array
+ */
+async function handleMoreStatsInteraction(interaction, payload, uploaderInfos) {
+  // Stub — Part 2 will replace this body with real stat panels.
+  await interaction.editReply({ content: 'More detailed stats are coming soon!' });
+}
+
+/* =====================================================
    Interaction Handler
 ===================================================== */
 
@@ -1278,6 +1316,21 @@ async function onInteraction(interaction) {
       );
 
       await interaction.showModal(modal);
+      return;
+    }
+
+    if (interaction.customId.startsWith('LEAGUE_MORE_STATS_')) {
+      const gameId = interaction.customId.replace('LEAGUE_MORE_STATS_', '');
+      const cached = recentMatchData.get(gameId);
+
+      if (!cached) {
+        return interaction.reply({ content: 'Match data has expired (5-minute window). Re-upload to refresh.', ephemeral: true });
+      }
+
+      await interaction.deferReply({ ephemeral: true });
+
+      // Part 2 will populate this — for now hand off to the stats builder
+      await handleMoreStatsInteraction(interaction, cached.payload, cached.uploaderInfos);
       return;
     }
 
