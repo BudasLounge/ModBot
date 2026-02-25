@@ -203,10 +203,9 @@ function extractWorkflowText(workflowData) {
 
 function stripThinkingBlocks(text) {
     return String(text || '')
-        .replace(/<thinking>[\s\S]*?<\/thinking>/gi, ' ')
-        .replace(/<think>[\s\S]*?<\/think>/gi, ' ')
-        .replace(/^\s*think\s*>/i, ' ')
-        .replace(/\s+/g, ' ')
+        .replace(/<thinking>[\s\S]*?<\/thinking>/gi, '')
+        .replace(/<think>[\s\S]*?<\/think>/gi, '')
+        .replace(/^\s*think\s*>/i, '')
         .trim();
 }
 
