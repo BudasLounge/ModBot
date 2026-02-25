@@ -43,8 +43,9 @@ function parseCalculation(calc) {
 
     const statMap = {
         1: 'Armor', 2: 'Attack Damage', 3: 'Ability Power',
-        4: 'Armor', 5: 'Magic Resist', 6: 'Health',
-        7: 'Max Health', 8: 'Bonus Health', 9: 'Bonus AD', 11: 'Max Mana', 12: 'Bonus Health'
+        4: 'Attack Speed', 5: 'Magic Resist', 6: 'Health',
+        7: 'Max Health', 8: 'Bonus Health', 9: 'Bonus AD', 11: 'Max Mana', 12: 'Max Health',
+        18: 'Life Steal'
     };
 
     if (calc.__type === 'GameCalculationModified') {
@@ -101,7 +102,10 @@ function parseCalculation(calc) {
     }
 
     if (calc.__type === 'StatByCoefficientCalculationPart') {
-        const stat = statMap[calc.mStat] || 'Ability Power';
+        const baseStat = statMap[calc.mStat] || 'Ability Power';
+        // mStatFormula: 1 = Base, 2 = Bonus, 0/undefined = Total
+        const prefix = calc.mStatFormula === 2 ? 'Bonus ' : calc.mStatFormula === 1 ? 'Base ' : '';
+        const stat = prefix + baseStat;
         const coeff = Number(calc.mCoefficient.toFixed(3));
         return `(${coeff} * ${stat})`;
     }
@@ -327,14 +331,15 @@ function statIdToLabel(statId) {
         1: 'Armor',
         2: 'AttackDamage',
         3: 'AbilityPower',
-        4: 'Armor',
+        4: 'AttackSpeed',
         5: 'MagicResist',
         6: 'Health',
         7: 'MaxHealth',
         8: 'BonusHealth',
         9: 'BonusAD',
         11: 'MaxMana',
-        12: 'BonusHealth'
+        12: 'MaxHealth',
+        18: 'LifeSteal'
     };
     return statMap[statId] || `Stat${statId}`;
 }
