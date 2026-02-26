@@ -7,7 +7,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       width: 1400px; /* Width for Mayhem tempalte */
-      height: 980px; /* Reduced height to keep it compact */
+      height: 1065px; /* Reduced height to keep it compact */
       background-color: #010a13;
       font-family: 'Roboto', 'Noto Sans JP', 'Noto Sans KR', 'Noto Sans SC', sans-serif;
       color: #a09b8c;
@@ -101,6 +101,48 @@
     .col-cs { text-align: right; color: #939a9e; font-size: 13px; padding-right: 15px; }
     
     /* Removed col-vision */
+
+    /* --- BADGE AWARDS SECTION --- */
+    .badge-awards {
+      display: flex;
+      gap: 8px;
+      margin: 10px 0 0 0;
+    }
+    .award-card {
+      flex: 1;
+      background: #0f1216;
+      border: 1px solid #1e2328;
+      border-top: 2px solid #c8aa6e;
+      border-radius: 4px;
+      padding: 8px 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+    .award-icon { flex-shrink: 0; }
+    .award-icon svg { width: 22px; height: 22px; fill: #c8aa6e; display: block; }
+    .award-info { overflow: hidden; display: flex; flex-direction: column; gap: 1px; }
+    .award-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #c8aa6e;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .award-winner {
+      font-size: 13px;
+      color: #fff;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .award-value {
+      font-size: 11px;
+      color: #5c9ebf;
+    }
 
     .legend-footer { position: absolute; bottom: 20px; left: 0; right: 0; display: flex; justify-content: center; gap: 30px; color: #939a9e; border-top: 1px solid #1e2328; padding-top: 15px; width: 90%; margin: 0 auto; }
     .legend-item { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; font-size: 12px; }
@@ -240,6 +282,19 @@
         </div>
 
       </div>
+    {{/each}}
+  </div>
+
+  <div class="badge-awards">
+    {{#each badgeWinners}}
+    <div class="award-card">
+      <div class="award-icon">{{{icon}}}</div>
+      <div class="award-info">
+        <div class="award-label">{{title}}</div>
+        <div class="award-winner">{{winnerName}}</div>
+        <div class="award-value">{{value}}</div>
+      </div>
+    </div>
     {{/each}}
   </div>
 
