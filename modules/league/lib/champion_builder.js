@@ -45,7 +45,7 @@ function parseCalculation(calc) {
         1: 'Armor', 2: 'Attack Damage', 3: 'Ability Power',
         4: 'Attack Speed', 5: 'Magic Resist', 6: 'Health',
         7: 'Max Health', 8: 'Bonus Health', 9: 'Bonus AD', 11: 'Max Mana', 12: 'Max Health',
-        18: 'Life Steal'
+        18: 'Life Steal', 29: 'Lethality'
     };
 
     if (calc.__type === 'GameCalculationModified') {
@@ -339,7 +339,8 @@ function statIdToLabel(statId) {
         9: 'BonusAD',
         11: 'MaxMana',
         12: 'MaxHealth',
-        18: 'LifeSteal'
+        18: 'LifeSteal',
+		29: 'Lethality'
     };
     return statMap[statId] || `Stat${statId}`;
 }
