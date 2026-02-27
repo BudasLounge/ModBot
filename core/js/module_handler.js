@@ -410,25 +410,38 @@ class ModuleHandler {
         }
 
         const rest = new REST({ version: '10' }).setToken(token);
-        try {
-            this.logger.info('[SlashCommands] Registering ' + commandsPayload.length + ' slash commands...');
-            if (config.slash_guild_id) {
-                // Guild-specific registration — propagates instantly (recommended for development)
-                await rest.put(
-                    Routes.applicationGuildCommands(client.user.id, config.slash_guild_id),
-                    { body: commandsPayload }
-                );
-                this.logger.info('[SlashCommands] Registered ' + commandsPayload.length + ' commands to guild ' + config.slash_guild_id);
-            } else {
-                // Global registration — takes up to 1 hour to propagate
+
+        // Support both slash_guild_ids (array) and legacy slash_guild_id (string)
+        const guildIds = config.slash_guild_ids
+            ? (Array.isArray(config.slash_guild_ids) ? config.slash_guild_ids : [config.slash_guild_ids])
+            : (config.slash_guild_id ? [config.slash_guild_id] : []);
+
+        if (guildIds.length > 0) {
+            // Register to each guild individually — propagates instantly
+            this.logger.info('[SlashCommands] Registering ' + commandsPayload.length + ' commands to ' + guildIds.length + ' guild(s)...');
+            for (const guildId of guildIds) {
+                try {
+                    await rest.put(
+                        Routes.applicationGuildCommands(client.user.id, guildId),
+                        { body: commandsPayload }
+                    );
+                    this.logger.info('[SlashCommands] Registered ' + commandsPayload.length + ' commands to guild ' + guildId);
+                } catch (err) {
+                    this.logger.error('[SlashCommands] Registration failed for guild ' + guildId + ': ' + err.message);
+                }
+            }
+        } else {
+            // No guild IDs — fall back to global registration (up to 1 hour propagation)
+            try {
+                this.logger.info('[SlashCommands] No guild IDs configured — registering ' + commandsPayload.length + ' commands globally...');
                 await rest.put(
                     Routes.applicationCommands(client.user.id),
                     { body: commandsPayload }
                 );
                 this.logger.info('[SlashCommands] Registered ' + commandsPayload.length + ' commands globally');
+            } catch (err) {
+                this.logger.error('[SlashCommands] Global registration failed: ' + err.message);
             }
-        } catch (err) {
-            this.logger.error('[SlashCommands] Registration failed: ' + err.message);
         }
     }
 
