@@ -544,6 +544,19 @@ class ModuleHandler {
             this.logger.error('[SlashCommands] Module-enabled check error: ' + err.message);
         }
 
+        // ── Defer the reply immediately to avoid the 3-second timeout ─────────
+        // This keeps the interaction alive for up to 15 minutes while the command runs.
+        // InteractionAdapter._respond already calls followUp() when deferred, so
+        // existing commands that call message.channel.send() or message.reply() work unchanged.
+        // Set no_defer: true on a command to opt out (e.g. if it handles its own deferral).
+        if (!current_command.no_defer) {
+            try {
+                await interaction.deferReply();
+            } catch (deferErr) {
+                this.logger.error('[SlashCommands] deferReply failed for /' + slashName + ': ' + deferErr.message);
+            }
+        }
+
         // ── Build positional args[] from interaction options ────────────────────
         // args[0] = command name (backward compat with code checking args[0])
         var args = [current_command.name];

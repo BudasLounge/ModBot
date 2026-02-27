@@ -70,8 +70,12 @@ class InteractionAdapter {
             payload = { content: payload };
         }
         try {
-            if (this._interaction.replied || this._interaction.deferred) {
+            if (this._interaction.replied) {
+                // Already sent a real reply — send additional messages as follow-ups
                 return await this._interaction.followUp(payload);
+            } else if (this._interaction.deferred) {
+                // Deferred but not yet replied — editReply replaces the "thinking…" indicator
+                return await this._interaction.editReply(payload);
             } else {
                 return await this._interaction.reply(payload);
             }
