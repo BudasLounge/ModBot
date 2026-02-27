@@ -3,6 +3,7 @@ var api = new ApiClient();
 const { EmbedBuilder, PermissionsBitField } = require('discord.js');
 
 async function onButtonClick(button){
+if (!button.isButton() && !button.isSelectMenu()) return;
 if (button.isButton() || button.isSelectMenu()){
     if(!(button.customId.substring(0,4)==="BETS")) return;
     button.channel.send(button.customId.substring(0,4))

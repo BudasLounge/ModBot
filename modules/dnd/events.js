@@ -3,6 +3,7 @@ var api = new ApiClient();
 const {ActionRowBuilder, ButtonBuilder, EmbedBuilder, SelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ButtonStyle} = require('discord.js');
 
 async function onButtonClick(button){
+    if (!button.isButton()) return;
     if(!(button.customId.substr(0,3)==="DND")) return;
     if (button.isButton()){
         button.customId = button.customId.slice(3)

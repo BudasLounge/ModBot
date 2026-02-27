@@ -4,6 +4,7 @@ const {ActionRowBuilder, ButtonBuilder, EmbedBuilder, SelectMenuBuilder, ModalBu
 const axios = require('axios');
 
 async function onButtonClick(button){
+    if (!button.isButton() && !button.isModalSubmit()) return;
     if((button.member.roles.cache.find(r => r.id === "586313447965327365" || button.user.id === "185223223892377611" || button.user.id === "195677170432081920") && button.customId=="MINE-SERVERCREATOR")){
         const modal = new ModalBuilder()
         .setCustomId('MCSERVERCREATORMODAL')
