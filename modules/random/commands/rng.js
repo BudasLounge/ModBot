@@ -8,6 +8,9 @@ module.exports = {
     args_to_lower: false,
     needs_api: false,
     has_state: false,
+    options: [
+        { name: 'args', description: 'Max number, range (e.g. 5 20), or dice notation (e.g. 2d6)', type: 'STRING', required: false },
+    ],
     async execute(message, args, extra) {
         const usageText = 'Usage: `,rng` | `,rng 20` | `,rng 5 20` | `,rng 2d6`';
         const rawArgs = args.slice(1).filter(part => part !== undefined && part !== null && part.toString().trim().length > 0);

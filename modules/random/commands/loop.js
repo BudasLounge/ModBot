@@ -6,6 +6,12 @@ module.exports = {
     args_to_lower: true,
     needs_api: false,
     has_state: false,
+    options: [
+        { name: 'start',     description: 'Start number',    type: 'INTEGER', required: true  },
+        { name: 'end',       description: 'End number',      type: 'INTEGER', required: true  },
+        { name: 'interval',  description: 'Step/interval',   type: 'INTEGER', required: true  },
+        { name: 'separator', description: 'Output separator', type: 'STRING',  required: false },
+    ],
     async execute(message, args, extra) {
         this.logger.info("Here are the variables: start: " + args[1]+"  end: " + args[2] +"  interval: "+args[3]+"  separator: "+ args[4]);
         var start = parseInt(args[1]);

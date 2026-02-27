@@ -6,6 +6,9 @@ module.exports = {
     args_to_lower: false,
     needs_api: true,
     has_state: false,
+    options: [
+        { name: 'message', description: 'Message to speak aloud', type: 'STRING', required: true },
+    ],
     async execute(message, args, extra) {
         var api = extra.api;
         const moment = require('moment');

@@ -6,6 +6,10 @@ module.exports = {
     args_to_lower: true,
     needs_api: true,
     has_state: false,
+    options: [
+        { name: 'user',      description: 'The user to remove the role from', type: 'USER',   required: true },
+        { name: 'role_name', description: 'Name of the role to remove',       type: 'STRING', required: true },
+    ],
     async execute(message, args, extra) {
         var api = extra.api;
         var respAdminID = "";

@@ -6,6 +6,9 @@ module.exports = {
     args_to_lower: true,
     needs_api: true,
     has_state: false,
+    options: [
+        { name: 'word', description: 'Word to delete from the allowed list', type: 'STRING', required: true },
+    ],
     async execute(message, args, extra) {
         var api = extra.api;
         if(message.author.id === "185223223892377611"){

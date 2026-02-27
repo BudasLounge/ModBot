@@ -6,6 +6,9 @@ module.exports = {
     args_to_lower: true,
     needs_api: true,
     has_state: false,
+    options: [
+        { name: 'option', description: 'Enter `dm` to also register as a DM', type: 'STRING', required: false },
+    ],
     async execute(message, args, extra) {
         var api = extra.api;
         var respFound;

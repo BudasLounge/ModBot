@@ -36,6 +36,8 @@ module.exports = {
     args_to_lower: false,
     needs_api: false,
     has_state: false,
+    no_slash: true,
+    options: [],
     async execute(message, args, extra) {
         if (message.author.bot) return;
         try {

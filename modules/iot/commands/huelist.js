@@ -9,6 +9,7 @@ module.exports = {
   args_to_lower: true,
   needs_api: false,
   has_state: false,
+  options: [],
   async execute(message, args, extra) {
     const token = fs.readFileSync('../hue_token.txt', 'utf-8').trim();
     const lightResp = await axios.get(`http://192.168.1.58/api/${token}/lights`);

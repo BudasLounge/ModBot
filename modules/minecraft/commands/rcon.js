@@ -10,6 +10,10 @@ module.exports = {
     args_to_lower: true, // arguments should be lower case
     needs_api: true, // if this command needs access to the API
     has_state: false, // if this command uses the state engine
+    options: [
+        { name: 'server_name', description: 'Minecraft server short name', type: 'STRING', required: true },
+        { name: 'command',     description: 'RCON / server command',       type: 'STRING', required: true },
+    ],
     async execute(message, args, extra) {
         const api = extra.api;
 

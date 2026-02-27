@@ -6,9 +6,15 @@ module.exports = {
     args_to_lower: false,
     needs_api: true,
     has_state: false,
+    options: [
+        { name: 'user', description: "View a user's custom champion pool",     type: 'USER',   required: false },
+        { name: 'role', description: 'Filter by role',                        type: 'STRING', required: false, choices: ['mid', 'top', 'adc', 'sup', 'jg'] },
+    ],
     async execute(message, args, extra) {
         var api = extra.api;
         var roles = ["mid", "top", "adc", "sup", "jg"];
+        // Slash command compat: if USER arg absent but role arg present, treat as args[1]
+        if (!args[1] && args[2]) { args[1] = args[2]; args[2] = null; }
         this.logger.info("[rando] Execute called", { userId: message.member?.id, argsLength: args.length });
         if (args[1]) {
         this.logger.info("[rando] Primary argument detected", { arg1: args[1] });

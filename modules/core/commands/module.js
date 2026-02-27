@@ -6,6 +6,10 @@ module.exports = {
     args_to_lower: true,
     needs_api: true,
     has_state: false,
+    options: [
+        { name: 'action',      description: 'Action to perform',  type: 'STRING', required: true,  choices: ['enable', 'disable', 'status'] },
+        { name: 'module_name', description: 'Name of the module', type: 'STRING', required: true  },
+    ],
     async execute(message, args, extra) {
         var api = extra.api;
 

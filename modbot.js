@@ -37,12 +37,32 @@ event_registry.discover_event_handlers(modules);
 
 logger.info("Event Registration Complete!");
 
+// ─── Slash Command Interaction Handler ─────────────────────────────────────────
+// ChatInputCommand (slash) interactions are routed to module_handler.
+// Button / modal / select interactions continue to be handled by each module's
+// events.js file, which registers its own interactionCreate listeners via the EventRegistry.
+client.on('interactionCreate', async (interaction) => {
+    if (!interaction.isChatInputCommand()) return; // let module event handlers deal with non-slash interactions
+    try {
+        await modules.handle_slash_command(interaction);
+    } catch (err) {
+        logger.error('[interactionCreate] Unhandled error: ' + err.message);
+    }
+});
+
 authClient();
 
 async function botInit() {
     shell.exec('/home/bots/clean_logs.sh');
     logger.info("Logs older than 3 days have been cleaned");
     logger.info("I am ready!");
+
+    // Register slash commands with Discord API
+    try {
+        await modules.register_slash_commands(client);
+    } catch (err) {
+        logger.error('[SlashCommands] Startup registration failed: ' + err.message);
+    }
 
     var channel = await client.channels.fetch(config.default_channel);
 

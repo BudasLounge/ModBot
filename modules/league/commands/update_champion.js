@@ -6,6 +6,11 @@ module.exports = {
     args_to_lower: false,
     needs_api: true,
     has_state: false,
+    options: [
+        { name: 'champion_name', description: 'Name of the champion to update', type: 'STRING', required: true },
+        { name: 'field',         description: 'Field to edit',                  type: 'STRING', required: true },
+        { name: 'new_value',     description: 'New value for the field',        type: 'STRING', required: true },
+    ],
     async execute(message, args, extra) {
         var api = extra.api;
         const Discord = require('discord.js');

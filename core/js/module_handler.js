@@ -1,6 +1,7 @@
 var fs = require('fs');
 var APIClient = require('./APIClient.js');
 var Discord = require('discord.js');
+const { REST, Routes, SlashCommandBuilder } = require('discord.js');
 
 /**
  * @external Discord
@@ -56,6 +57,7 @@ var Discord = require('discord.js');
  * @property {boolean} args_to_lower - All arguments passed with this command will be converted to lowercase before the command runs if this is true.
  * @property {boolean} needs_api - Whether this command makes use of the integrated RESTful API. If true, an instance of APIClient will be passed as 'extra.api' in the {@link Command#execute} function.
  * @property {boolean} has_state - Whether this command makes use of the {@link StateManager}. If true, the {@link ModuleHandler} will automatically build a state and pass it via 'extra.state' in the {@link Command#execute} function.
+ * @property {Array<{name:string, description:string, type:string, required:boolean, choices:string[]}>} [options] - Slash command option definitions. Each entry maps to a Discord slash command option and also populates the positional args[] array at runtime. Supported types: STRING, INTEGER, NUMBER, BOOLEAN, USER, CHANNEL, ROLE. If omitted or empty, the command accepts no options. Set `no_slash: true` on the command object to exclude it from slash command registration entirely.
  * @property {function(external:Discord.Message, string[], Object)} execute - The function that executes the command. This is where all of the command's logic ultimately lies. The array of arguments includes the name of the command itself as the first argument. The 'extra' object has properties that vary: 'extra.api' if {@link Command#needs_api} is true, 'extra.state' if {@link Command#has_state} is true, 'extra.module_handler' if this is a core module ({@link ModuleConfig#is_core} is true).
  */
 
@@ -317,6 +319,295 @@ class ModuleHandler {
     invalid_syntax(current_module, command, message) {
         var prefix = current_module.config.command_prefix;
         message.channel.send("Not enough arguments! Syntax: `" + prefix + current_module.commands.get(command).syntax + "`");
+    }
+
+    // ─── Slash Command Support ──────────────────────────────────────────────────
+
+    /**
+     * Registers all slash commands with Discord's API. Should be called once when the bot is ready.
+     *
+     * Reads the bot token from the modbot.json token_file path. Registers commands to a specific
+     * guild if `slash_guild_id` is set in modbot.json (instant propagation, good for development),
+     * or globally if omitted (up to 1 hour propagation).
+     *
+     * Commands can opt out of slash registration by setting `no_slash: true` on their export object.
+     * Commands with duplicate names across modules are automatically disambiguated by prepending
+     * the module name (e.g., `ping` in admin and dnd becomes `admin_ping` and `dnd_ping`).
+     *
+     * @param {external:Discord~Client} client - The Discord.js Client instance (must be logged in).
+     */
+    async register_slash_commands(client) {
+        var config = JSON.parse(fs.readFileSync(this.program_path + '/modbot.json'));
+        var token;
+        try {
+            token = fs.readFileSync(config.token_file).toString().replace(/\s+/g, '');
+        } catch (err) {
+            this.logger.error('[SlashCommands] Could not read token file: ' + err.message);
+            return;
+        }
+
+        const commandsPayload = [];
+        /** @type {Map<string, {module_name: string, command_name: string}>} */
+        const registeredNames = new Map(); // slashName → {module_name, command_name}
+
+        for (var [module_name, current_module] of this.modules) {
+            for (var [cmd_name, command] of current_module.commands) {
+                // Allow commands to opt out of slash registration
+                if (command.no_slash) {
+                    this.logger.info('[SlashCommands] Skipping (no_slash): ' + cmd_name);
+                    continue;
+                }
+
+                // Build a safe slash command name (lowercase, letters/numbers/underscores/hyphens only)
+                var slashName = command.name.toLowerCase().replace(/[^a-z0-9_-]/g, '_').substring(0, 32);
+
+                // Resolve name conflicts by prepending the module name
+                if (registeredNames.has(slashName)) {
+                    var conflictInfo = registeredNames.get(slashName);
+                    // Also rename the original entry if it's from a different module
+                    if (conflictInfo.module_name !== module_name) {
+                        // Re-key the original entry with its prefixed name if not already prefixed
+                        if (!conflictInfo.renamed) {
+                            var origCmd = this.modules.get(conflictInfo.module_name).commands.get(conflictInfo.command_name);
+                            var origPrefixed = (conflictInfo.module_name + '_' + origCmd._resolved_slash_name).substring(0, 32);
+                            origCmd._resolved_slash_name = origPrefixed;
+                            // Update the payload entry
+                            var existingIdx = commandsPayload.findIndex(c => c.name === slashName);
+                            if (existingIdx !== -1) {
+                                commandsPayload[existingIdx].name = origPrefixed;
+                            }
+                            conflictInfo.renamed = true;
+                            registeredNames.set(origPrefixed, conflictInfo);
+                        }
+                        slashName = (module_name + '_' + slashName).substring(0, 32);
+                        this.logger.info('[SlashCommands] Name conflict resolved: ' + command.name + ' → ' + slashName + ' (module: ' + module_name + ')');
+                    }
+                }
+
+                command._resolved_slash_name = slashName;
+                registeredNames.set(slashName, { module_name, command_name: cmd_name });
+
+                // Build SlashCommandBuilder
+                var description = (command.description || 'No description provided').substring(0, 100);
+                const builder = new SlashCommandBuilder()
+                    .setName(slashName)
+                    .setDescription(description);
+
+                // Add options from command's options array
+                if (command.options && command.options.length > 0) {
+                    for (var opt of command.options) {
+                        try {
+                            this._add_slash_option(builder, opt);
+                        } catch (optErr) {
+                            this.logger.error('[SlashCommands] Option error for ' + slashName + ' (' + opt.name + '): ' + optErr.message);
+                        }
+                    }
+                }
+
+                commandsPayload.push(builder.toJSON());
+                this.logger.info('[SlashCommands] Queued: /' + slashName);
+            }
+        }
+
+        const rest = new REST({ version: '10' }).setToken(token);
+        try {
+            this.logger.info('[SlashCommands] Registering ' + commandsPayload.length + ' slash commands...');
+            if (config.slash_guild_id) {
+                // Guild-specific registration — propagates instantly (recommended for development)
+                await rest.put(
+                    Routes.applicationGuildCommands(client.user.id, config.slash_guild_id),
+                    { body: commandsPayload }
+                );
+                this.logger.info('[SlashCommands] Registered ' + commandsPayload.length + ' commands to guild ' + config.slash_guild_id);
+            } else {
+                // Global registration — takes up to 1 hour to propagate
+                await rest.put(
+                    Routes.applicationCommands(client.user.id),
+                    { body: commandsPayload }
+                );
+                this.logger.info('[SlashCommands] Registered ' + commandsPayload.length + ' commands globally');
+            }
+        } catch (err) {
+            this.logger.error('[SlashCommands] Registration failed: ' + err.message);
+        }
+    }
+
+    /**
+     * Helper: adds a single option to a {@link SlashCommandBuilder} based on a command option descriptor.
+     *
+     * @param {SlashCommandBuilder} builder
+     * @param {{name:string, description:string, type:string, required:boolean, choices:string[]}} opt
+     */
+    _add_slash_option(builder, opt) {
+        const optName = opt.name.toLowerCase().replace(/[^a-z0-9_-]/g, '_').substring(0, 32);
+        const optDesc = ((opt.description || opt.name) + '').substring(0, 100);
+        const isRequired = opt.required === true;
+
+        switch ((opt.type || 'STRING').toUpperCase()) {
+            case 'STRING':
+                builder.addStringOption(o => {
+                    o.setName(optName).setDescription(optDesc).setRequired(isRequired);
+                    if (opt.choices && opt.choices.length > 0) {
+                        o.addChoices(...opt.choices.map(c => ({ name: c, value: c })));
+                    }
+                    return o;
+                });
+                break;
+            case 'INTEGER':
+                builder.addIntegerOption(o => o.setName(optName).setDescription(optDesc).setRequired(isRequired));
+                break;
+            case 'NUMBER':
+                builder.addNumberOption(o => o.setName(optName).setDescription(optDesc).setRequired(isRequired));
+                break;
+            case 'BOOLEAN':
+                builder.addBooleanOption(o => o.setName(optName).setDescription(optDesc).setRequired(isRequired));
+                break;
+            case 'USER':
+                builder.addUserOption(o => o.setName(optName).setDescription(optDesc).setRequired(isRequired));
+                break;
+            case 'CHANNEL':
+                builder.addChannelOption(o => o.setName(optName).setDescription(optDesc).setRequired(isRequired));
+                break;
+            case 'ROLE':
+                builder.addRoleOption(o => o.setName(optName).setDescription(optDesc).setRequired(isRequired));
+                break;
+            default:
+                builder.addStringOption(o => o.setName(optName).setDescription(optDesc).setRequired(isRequired));
+        }
+    }
+
+    /**
+     * Handles an incoming slash (ChatInputCommand) interaction. Looks up the matching command
+     * by its `_resolved_slash_name`, builds the positional `args[]` array from the interaction options,
+     * wraps the interaction in an {@link InteractionAdapter}, then calls the command's execute function.
+     *
+     * Options of type USER populate `args[N]` with `<@userId>` for backward compat with code that
+     * checks for `@` in the argument string. The actual User/Member objects are available via
+     * `adapter.mentions.users.first()` and `adapter.mentions.members.first()`.
+     *
+     * @param {import('discord.js').ChatInputCommandInteraction} interaction
+     */
+    async handle_slash_command(interaction) {
+        const InteractionAdapter = require('./interaction_adapter.js');
+        var api = new APIClient();
+        const slashName = interaction.commandName;
+
+        this.logger.info('[SlashCommands] Incoming: /' + slashName + ' from ' + interaction.user.id);
+
+        let current_module = null;
+        let current_command = null;
+
+        // Locate the command by its resolved slash name
+        outer: for (var [module_name, mod] of this.modules) {
+            for (var [cmd_name, cmd] of mod.commands) {
+                if (cmd._resolved_slash_name === slashName) {
+                    current_module = mod;
+                    current_command = cmd;
+                    break outer;
+                }
+            }
+        }
+
+        if (!current_command) {
+            this.logger.warn('[SlashCommands] No command found for: ' + slashName);
+            await interaction.reply({ content: "Sorry, I couldn't find that command!", ephemeral: true });
+            return;
+        }
+
+        // ── Module-enabled check (mirrors handle_command logic) ────────────────
+        try {
+            var respModule = await api.get('module', { name: current_module.config.name });
+            if (respModule.modules.length > 0) {
+                var respEnabled = await api.get('enabled_module', {
+                    server_id: interaction.guildId,
+                    module_id: parseInt(respModule.modules[0].module_id)
+                });
+                if (respEnabled.enabled_modules.length === 0) {
+                    await interaction.reply({ content: 'That module is disabled on this server!', ephemeral: true });
+                    return;
+                }
+            }
+        } catch (err) {
+            this.logger.error('[SlashCommands] Module-enabled check error: ' + err.message);
+        }
+
+        // ── Build positional args[] from interaction options ────────────────────
+        // args[0] = command name (backward compat with code checking args[0])
+        var args = [current_command.name];
+        var firstUser = null;
+        var firstMember = null;
+
+        if (current_command.options && current_command.options.length > 0) {
+            for (var opt of current_command.options) {
+                const optName = opt.name.toLowerCase().replace(/[^a-z0-9_-]/g, '_').substring(0, 32);
+                const optType = (opt.type || 'STRING').toUpperCase();
+
+                if (optType === 'USER') {
+                    var user = interaction.options.getUser(optName);
+                    var member = interaction.options.getMember(optName);
+                    if (!firstUser && user) { firstUser = user; firstMember = member; }
+                    // Use mention string so backward-compat code checking args[N].includes('@') works
+                    args.push(user ? '<@' + user.id + '>' : null);
+                } else if (optType === 'INTEGER') {
+                    var intVal = interaction.options.getInteger(optName);
+                    args.push(intVal !== null && intVal !== undefined ? String(intVal) : null);
+                } else if (optType === 'NUMBER') {
+                    var numVal = interaction.options.getNumber(optName);
+                    args.push(numVal !== null && numVal !== undefined ? String(numVal) : null);
+                } else if (optType === 'BOOLEAN') {
+                    var boolVal = interaction.options.getBoolean(optName);
+                    args.push(boolVal !== null && boolVal !== undefined ? String(boolVal) : null);
+                } else {
+                    var strVal = interaction.options.getString(optName);
+                    args.push(strVal !== null && strVal !== undefined ? strVal : null);
+                }
+            }
+        }
+
+        if (current_command.args_to_lower) {
+            for (var i = 1; i < args.length; i++) {
+                if (args[i]) args[i] = args[i].toLowerCase();
+            }
+        }
+
+        // ── Build extra and adapter, then execute ──────────────────────────────
+        var adapter = new InteractionAdapter(interaction, firstUser, firstMember, this.logger);
+        var extra = {};
+
+        if (current_module.config.is_core) {
+            extra.module_handler = this;
+        }
+
+        if (current_command.has_state) {
+            var state = await this.state_manager.get_state(
+                interaction.user.id,
+                current_module.config.name + ':' + current_command.name
+            );
+            extra.state = state;
+        }
+
+        if (current_command.needs_api) {
+            extra.api = api;
+        }
+
+        try {
+            this.logger.info('[SlashCommands] Executing /' + slashName + ' for user ' + interaction.user.id);
+            await current_command.execute(adapter, args, extra);
+        } catch (err) {
+            this.logger.error('[SlashCommands] Error in /' + slashName + ': ' + err.message);
+            try {
+                const errPayload = { content: 'An error occurred while executing this command.', ephemeral: true };
+                if (interaction.replied || interaction.deferred) {
+                    await interaction.followUp(errPayload);
+                } else {
+                    await interaction.reply(errPayload);
+                }
+            } catch (_) { /* ignore reply failure */ }
+        }
+
+        if (current_command.has_state) {
+            this.state_manager.save_state(extra.state);
+        }
     }
 }
 

@@ -8,6 +8,10 @@ module.exports = {
     args_to_lower: true, // Convert args to lowercase
     needs_api: true,
     has_state: false,
+    options: [
+        { name: 'server_short_name', description: 'Short name of the server', type: 'STRING', required: true },
+        { name: 'action',            description: 'Action to perform',         type: 'STRING', required: true, choices: ['start', 'stop', 'restart'] },
+    ],
     async execute(message, args, extra) {
         const api = extra.api;
 

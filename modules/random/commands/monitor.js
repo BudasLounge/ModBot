@@ -8,6 +8,9 @@ module.exports = {
     args_to_lower: false, // Arguments should preserve case (URLs are case-sensitive)
     needs_api: true, // This command needs access to the internet
     has_state: false, // Not using a state engine
+    options: [
+        { name: 'product_url', description: 'Best Buy product URL to monitor', type: 'STRING', required: true },
+    ],
     async execute(message, args, extra) {
         const productUrl = args[1];
 

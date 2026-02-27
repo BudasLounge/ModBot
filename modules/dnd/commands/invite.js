@@ -6,6 +6,10 @@ module.exports = {
     args_to_lower: true,
     needs_api: true,
     has_state: false,
+    options: [
+        { name: 'player',        description: 'The player to invite', type: 'USER',   required: true },
+        { name: 'campaign_name', description: 'Name of the campaign', type: 'STRING', required: true },
+    ],
     async execute(message, args, extra) {
         if(!args[2]){
             await message.reply({content: "You did not enter enough information, try this:\n,invite [@player] [name of campaign]"})

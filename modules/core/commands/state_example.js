@@ -6,6 +6,9 @@ module.exports = {
   args_to_lower: false, //Disabled to preserve capitalization of user input. This is not required.
   needs_api: false, //Disabled because this command doesn't call the API
   has_state: true, //This is what tells the system that we want to use the state system
+  options: [
+    { name: 'name', description: 'Your name (optional)', type: 'STRING', required: false },
+  ],
   async execute(message, args, extra) {
     if(!extra.hasOwnProperty("state")) return;
     var state = extra.state;

@@ -171,6 +171,10 @@ module.exports = {
     args_to_lower: false,
     needs_api: false,
     has_state: false,
+    options: [
+        { name: 'champion_name', description: 'Champion name', type: 'STRING', required: true },
+        { name: 'build_type',    description: 'Type of build', type: 'STRING', required: true },
+    ],
 
     // Debug access for build2
     __debug: {

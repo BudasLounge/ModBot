@@ -6,6 +6,9 @@ module.exports = {
     args_to_lower: false,
     needs_api: true,
     has_state: false,
+    options: [
+        { name: 'filter', description: 'Filter modules by status', type: 'STRING', required: false, choices: ['enabled', 'disabled', 'all'] },
+    ],
     async execute(message, args, extra) {
         var api = extra.api;
         var mod_handler = extra.module_handler;

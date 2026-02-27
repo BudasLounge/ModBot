@@ -6,6 +6,10 @@ module.exports = {
     args_to_lower: true,//if the arguments should be lower case
     needs_api: true,//if this command needs access to the api
     has_state: false,//if this command uses the state engine
+    options: [
+        { name: 'amount', description: 'Amount or percentage to bet', type: 'STRING', required: true },
+        { name: 'reason', description: 'Reason for the bet',          type: 'STRING', required: true },
+    ],
     async execute(message, args, extra) {
         const moment = require('moment');
         const { EmbedBuilder, StringSelectMenuBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');

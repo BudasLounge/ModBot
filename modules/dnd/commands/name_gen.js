@@ -6,6 +6,11 @@ module.exports = {
     args_to_lower: false,//if the arguments should be lower case
     needs_api: false,//if this command needs access to the api
     has_state: false,//if this command uses the state engine
+    options: [
+        { name: 'count',     description: 'Number of words to generate', type: 'INTEGER', required: true  },
+        { name: 'min_chars', description: 'Minimum characters per word', type: 'INTEGER', required: false },
+        { name: 'max_chars', description: 'Maximum characters per word', type: 'INTEGER', required: false },
+    ],
     async execute(message, args, extra) {
         const {performance} = require('perf_hooks');
         const {Util} = require('discord.js');

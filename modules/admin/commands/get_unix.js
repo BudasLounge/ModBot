@@ -6,6 +6,10 @@ module.exports = {
     args_to_lower: false,//if the arguments should be lower case
     needs_api: true,//if this command needs access to the api
     has_state: false,//if this command uses the state engine
+    options: [
+        { name: 'date', description: 'Date portion in YYYY-MM-DD format',     type: 'STRING', required: true },
+        { name: 'time', description: 'Time portion in HH:MM:SS format',       type: 'STRING', required: true },
+    ],
     async execute(message, args, extra) {
         if(!args[1] || !args[2]){
             message.channel.send({ content: "Please enter a datetime stamp for this command!\nYYYY-MM-DD HH:MM:SS time stamp"});

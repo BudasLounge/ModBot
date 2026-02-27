@@ -6,6 +6,13 @@ module.exports = {
     args_to_lower: true,
     needs_api: false,
     has_state: false,
+    options: [
+        { name: 'state',    description: 'Turn the light on or off',       type: 'STRING',  required: true,  choices: ['on', 'off'] },
+        { name: 'light_id', description: 'Hue light ID number',            type: 'INTEGER', required: true  },
+        { name: 'r',        description: 'Red channel value (0-255)',      type: 'INTEGER', required: false },
+        { name: 'g',        description: 'Green channel value (0-255)',    type: 'INTEGER', required: false },
+        { name: 'b',        description: 'Blue channel value (0-255)',     type: 'INTEGER', required: false },
+    ],
     async execute(message, args, extra) {
 
         const moment = require('moment');

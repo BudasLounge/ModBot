@@ -6,6 +6,9 @@ module.exports = {
     args_to_lower: false,
     needs_api: false,
     has_state: false,
+    options: [
+        { name: 'number', description: 'SCP number to look up', type: 'INTEGER', required: false },
+    ],
     async execute(message, args, extra) {
         if(args[1]){
             if(args[1]>99){

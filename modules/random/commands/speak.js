@@ -9,6 +9,9 @@ module.exports = {
     args_to_lower: false,//if the arguments should be lower case
     needs_api: true,//if this command needs access to the api
     has_state: false,//if this command uses the state engine
+    options: [
+        { name: 'message', description: 'Message for the bot to speak aloud', type: 'STRING', required: true },
+    ],
     voiceConnection: null,
     audioPlayer: null,
     audioQueue: [],

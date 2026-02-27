@@ -13,6 +13,9 @@ module.exports = {
     args_to_lower: true,
     needs_api: false,
     has_state: false,
+    options: [
+        { name: 'word', description: 'Word to guess as the secret password', type: 'STRING', required: true },
+    ],
 
     async execute(message, args, extra) {
         // Only work in breach channel

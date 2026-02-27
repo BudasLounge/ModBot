@@ -552,6 +552,9 @@ module.exports = {
     args_to_lower: true,
     needs_api: false,
     has_state: false,
+    options: [
+        { name: 'action', description: 'Action to perform', type: 'STRING', required: false, choices: ['start', 'lock', 'unlock', 'status'] },
+    ],
 
     // Expose for external access
     gameState,

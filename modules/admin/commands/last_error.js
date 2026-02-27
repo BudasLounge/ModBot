@@ -6,6 +6,7 @@ module.exports = {
     args_to_lower: true,
     needs_api: false,
     has_state: false,
+    options: [],
     async execute(message, args, extra) {
         //const log_wipe = spawn("find ~/ModBot/logs -mtime +1 -exec rm {} \;");
     }

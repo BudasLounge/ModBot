@@ -6,6 +6,9 @@ module.exports = {
     args_to_lower: true,
     needs_api: true,
     has_state: false,
+    options: [
+        { name: 'server_name', description: 'Name of the server', type: 'STRING', required: true },
+    ],
     async execute(message, args, extra) {
         const { performance } = require('perf_hooks');
         const perfStart = performance.now();

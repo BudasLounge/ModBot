@@ -6,6 +6,9 @@ module.exports = {
     args_to_lower: true,
     needs_api: true,
     has_state: false,
+    options: [
+        { name: 'subcommand', description: 'Optional subcommand', type: 'STRING', required: false, choices: ['cleanup', 'diagnose'] },
+    ],
     async execute(message, args, extra) {
         const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
         const api = extra.api;

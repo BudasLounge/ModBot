@@ -8,6 +8,10 @@ module.exports = {
     args_to_lower: false,
     needs_api: true,
     has_state: false,
+    options: [
+        { name: 'date', description: 'Session date in YYYY-MM-DD format', type: 'STRING', required: false },
+        { name: 'time', description: 'Session time in HH:MM:SS format',  type: 'STRING', required: false },
+    ],
     async execute(message, args, extra) {
         const api = extra.api;
         const logger = this.logger;

@@ -6,6 +6,10 @@ module.exports = {
     args_to_lower: false,//if the arguments should be lower case
     needs_api: true,//if this command needs access to the api
     has_state: false,//if this command uses the state engine
+    options: [
+        { name: 'action', description: 'add, drop, or clear', type: 'STRING', required: false, choices: ['add', 'drop', 'clear'] },
+        { name: 'item',   description: 'Name of the item',   type: 'STRING', required: false },
+    ],
     async execute(message, args, extra) {
         const fs = require('fs');
         const groceryList = 'groceryList.txt';

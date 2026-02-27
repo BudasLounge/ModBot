@@ -788,6 +788,9 @@ module.exports = {
     args_to_lower: false,
     needs_api: false,
     has_state: false,
+    options: [
+        { name: 'command', description: 'Optional subcommand (e.g. leave)', type: 'STRING', required: false },
+    ],
     async execute(message, args) {
         if (!STEAM_API_KEY) {
             this.logger.error('[play] Missing STEAM_API_KEY in environment');

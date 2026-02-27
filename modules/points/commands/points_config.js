@@ -6,6 +6,10 @@ module.exports = {
     args_to_lower: true,//if the arguments should be lower case
     needs_api: true,//if this command needs access to the api
     has_state: false,//if this command uses the state engine
+    options: [
+        { name: 'item',      description: 'Config item to change', type: 'STRING', required: false },
+        { name: 'new_value', description: 'New value',             type: 'STRING', required: false },
+    ],
     async execute(message, args, extra) {
         var api = extra.api;
         var respAdminID = "";

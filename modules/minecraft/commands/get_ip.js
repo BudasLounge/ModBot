@@ -6,6 +6,9 @@ module.exports = {
     args_to_lower: true,
     needs_api: true,
     has_state: false,
+    options: [
+        { name: 'server_name', description: 'Short name of the server', type: 'STRING', required: true },
+    ],
     async execute(message, args, extra) {
         var api = extra.api;
 

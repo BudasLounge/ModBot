@@ -6,6 +6,9 @@ module.exports = {
     args_to_lower: true,
     needs_api: true,
     has_state: false,
+    options: [
+        { name: 'toggle', description: 'Turn LFG on or off', type: 'STRING', required: false, choices: ['on', 'off'] },
+    ],
     async execute(message, args, extra) {
 
         if(args[1] == "on"){

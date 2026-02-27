@@ -6,6 +6,9 @@ module.exports = {
     args_to_lower: true,
     needs_api: false,
     has_state: false,
+    options: [
+        { name: 'role_name', description: 'Name of the role to list members of', type: 'STRING', required: true },
+    ],
     async execute(message, args, extra) {
         const { EmbedBuilder } = require('discord.js');
         role = message.guild.roles.cache.find(role => role.name.toLowerCase().trim() === args[1]);

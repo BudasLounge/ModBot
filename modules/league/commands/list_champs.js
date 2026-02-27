@@ -6,8 +6,14 @@ module.exports = {
     args_to_lower: false,
     needs_api: true,
     has_state: false,
+    options: [
+        { name: 'user',     description: "View another user's approved champions",  type: 'USER',   required: false },
+        { name: 'champion', description: 'Look up a specific champion by name',     type: 'STRING', required: false },
+    ],
     async execute(message, args, extra) {
         var api = extra.api;
+        // Slash command compat: if USER arg absent but STRING arg present, treat as args[1]
+        if (!args[1] && args[2]) { args[1] = args[2]; args[2] = null; }
         function splitMessageByLine(content, maxLength) {
             var lines = content.split('\n');
             var chunks = [];

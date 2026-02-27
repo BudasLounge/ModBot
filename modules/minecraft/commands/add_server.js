@@ -6,6 +6,16 @@ module.exports = {
     args_to_lower: true,
     needs_api: true,
     has_state: false,
+    options: [
+        { name: 'display_name',    description: 'Display name',         type: 'STRING',  required: true  },
+        { name: 'short_name',      description: 'Short identifier name', type: 'STRING',  required: true  },
+        { name: 'server_ip',       description: 'Server IP or hostname', type: 'STRING',  required: true  },
+        { name: 'port',            description: 'Server port',           type: 'INTEGER', required: true  },
+        { name: 'status_api_port', description: 'Status API port',       type: 'INTEGER', required: true  },
+        { name: 'numeric_ip',      description: 'Numeric IP address',    type: 'STRING',  required: true  },
+        { name: 'mc_version',      description: 'Minecraft version',     type: 'STRING',  required: false },
+        { name: 'pack_version',    description: 'Modpack version',       type: 'STRING',  required: false },
+    ],
     async execute(message, args, extra) {
         var api = extra.api;
 

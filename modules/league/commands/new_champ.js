@@ -229,6 +229,9 @@ module.exports = {
   args_to_lower: false,
   needs_api: true,
   has_state: true,
+  options: [
+    { name: 'action', description: 'sync, dryrun, preview, or a champion name to add manually', type: 'STRING', required: false },
+  ],
   async execute(message, args, extra) {
     this.logger.info('[new_champ] Execute called', { userId: message.member?.id, argsLength: args.length });
 

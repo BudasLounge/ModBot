@@ -8,6 +8,11 @@ module.exports = {
   args_to_lower: true,
   needs_api: true,
   has_state: false,
+  options: [
+    { name: 'server_name', description: 'Server short name, or "help" for instructions', type: 'STRING', required: true  },
+    { name: 'field',       description: 'Field to update',                               type: 'STRING', required: false },
+    { name: 'new_value',   description: 'New value for the field',                       type: 'STRING', required: false },
+  ],
   
   async execute(message, args, extra) {
     const api = extra.api;

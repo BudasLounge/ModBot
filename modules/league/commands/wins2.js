@@ -517,6 +517,10 @@ module.exports = {
   args_to_lower: true,
   needs_api: true,
   has_state: false,
+  options: [
+    { name: 'summoner_name', description: 'Summoner name',                             type: 'STRING',  required: true  },
+    { name: 'game_count',   description: 'Number of games to look back (up to 1000)', type: 'INTEGER', required: false },
+  ],
   async execute(message, args) {
     args.shift();
 

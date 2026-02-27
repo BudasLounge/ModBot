@@ -8,6 +8,7 @@ module.exports = {
   args_to_lower: false,
   needs_api: false,
   has_state: false,
+  options: [],
 
   async execute(message) {
     const row = new ActionRowBuilder().addComponents(

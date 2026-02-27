@@ -6,6 +6,7 @@ module.exports = {
     args_to_lower: false,
     needs_api: false,
     has_state: false,
+    options: [],
     execute(message, args, extra) {
         message.channel.send({ content: 'D&D Pong.'});
     }

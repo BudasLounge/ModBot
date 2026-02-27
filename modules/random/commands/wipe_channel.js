@@ -8,6 +8,9 @@ module.exports = {
   args_to_lower: false,
   needs_api: false,
   has_state: false,
+  options: [
+    { name: 'channel_id', description: 'ID of the channel to wipe', type: 'STRING', required: true },
+  ],
   async execute(message, args, extra) {
     if (message.author.bot) return;
 

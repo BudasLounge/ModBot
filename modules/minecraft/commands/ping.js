@@ -6,6 +6,7 @@ module.exports = {
     args_to_lower: false,
     needs_api: false,
     has_state: false,
+    options: [],
     async execute(message, args, extra) { // Added async
         await message.channel.send({ content: 'Minecraft Pong.'}); // Added await
     }
