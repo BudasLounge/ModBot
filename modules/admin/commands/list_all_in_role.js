@@ -39,12 +39,25 @@ module.exports = {
 			role = message.guild.roles.cache.find(role => role.name.toLowerCase() === messageString.trim());
 		}
 		if (!role) return message.reply("There is not such a role!");
+
+		// Fetch all members to ensure caching is complete
+		try {
+			await message.guild.members.fetch();
+		} catch (e) {
+			console.error("Failed to fetch guild members:", e);
+		}
+
 		for (let j = counter; j >= 0; j--) {
 			args.shift();
 		}
+
+		let userList = message.guild.roles.cache.get(role.id).members.map(m => m.user.username).join("\n");
+		if (userList.length > 4000) userList = userList.substring(0, 4000) + "\n...and more";
+		if (userList.trim() === "") userList = "None";
+
 		const ListEmbed = new EmbedBuilder()
 			.setTitle('Users with the ' + role.name + ' role:')
-			.setDescription(message.guild.roles.cache.get(role.id).members.map(m => m.user.username) + "\n");
+			.setDescription(userList);
 		message.channel.send({ embeds: [ListEmbed] });
 	}
 };
