@@ -27,6 +27,7 @@ class InteractionAdapter {
         this._firstUser = firstUser || null;
         this._firstMember = firstMember || null;
         this._logger = logger;
+        this._hasEditedDeferredReply = false;
 
         /** @type {import('discord.js').User} message.author equivalent */
         this.author = interaction.user;
@@ -75,7 +76,12 @@ class InteractionAdapter {
                 return await this._interaction.followUp(payload);
             } else if (this._interaction.deferred) {
                 // Deferred but not yet replied — editReply replaces the "thinking…" indicator
-                return await this._interaction.editReply(payload);
+                if (!this._hasEditedDeferredReply) {
+                    this._hasEditedDeferredReply = true;
+                    return await this._interaction.editReply(payload);
+                } else {
+                    return await this._interaction.followUp(payload);
+                }
             } else {
                 return await this._interaction.reply(payload);
             }
