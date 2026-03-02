@@ -9,11 +9,36 @@ module.exports = {
   needs_api: true,
   has_state: false,
   options: [
-    { name: 'server_name', description: 'Server short name, or "help" for instructions', type: 'STRING', required: true  },
-    { name: 'field',       description: 'Field to update',                               type: 'STRING', required: false },
-    { name: 'new_value',   description: 'New value for the field',                       type: 'STRING', required: false },
+    { name: 'server_name', description: 'Server short name', type: 'STRING', required: true, autocomplete: true },
+    {
+      name: 'field', description: 'Field to update', type: 'STRING', required: true, choices: [
+        'display_name', 'short_name', 'server_ip', 'numeric_ip', 'port',
+        'status_api_port', 'rcon_port', 'mc_version', 'pack_version', 'url',
+        'backend_ip', 'whitelist',
+      ]
+    },
+    { name: 'new_value', description: 'New value for the field', type: 'STRING', required: true },
   ],
-  
+  async autocomplete(interaction) {
+    const APIClient = require('../../../core/js/APIClient.js');
+    const api = new APIClient();
+    try {
+      const resp = await api.get('minecraft_server', { _limit: 25 });
+      const servers = (resp.minecraft_servers || []);
+      const focusedValue = interaction.options.getFocused().toLowerCase();
+      const filtered = servers.filter(s =>
+        s.short_name.toLowerCase().includes(focusedValue) ||
+        s.display_name.toLowerCase().includes(focusedValue)
+      );
+      await interaction.respond(
+        filtered.slice(0, 25).map(s => ({ name: s.display_name, value: s.short_name }))
+      );
+    } catch (err) {
+      console.error('[updatesl autocomplete] Error fetching servers:', err.message);
+      await interaction.respond([]);
+    }
+  },
+
   async execute(message, args, extra) {
     const api = extra.api;
 
@@ -40,27 +65,28 @@ module.exports = {
           { name: 'url', value: 'URL for the modpack' }
         )
         .setFooter({ text: 'Usage: updatesl [server name] [field] [new value]' });
-      
+
       return message.channel.send({ embeds: [helpEmbed] });
     }
 
     // Not enough arguments
     if (args.length < 4) {
-      return message.channel.send({ 
-        content: 'Not enough arguments. Use `updatesl help` to see available fields and proper syntax.' 
+      return message.channel.send({
+        content: 'Not enough arguments. Use `updatesl help` to see available fields and proper syntax.'
       });
     }
 
     const [shortName, fieldToUpdate, newValue] = args.slice(1);
 
     // Define allowed fields for update
-    const allowedFields = ['short_name', 'display_name', 'server_ip', 'numeric_ip', 
-                          'port', 'status_api_port', 'mc_version', 'pack_version', 'url'];
-    
+    const allowedFields = ['short_name', 'display_name', 'server_ip', 'numeric_ip',
+      'port', 'status_api_port', 'rcon_port', 'mc_version', 'pack_version',
+      'url', 'backend_ip', 'whitelist'];
+
     // Check if the field is valid
     if (!allowedFields.includes(fieldToUpdate)) {
-      return message.channel.send({ 
-        content: `Invalid field: "${fieldToUpdate}". Use \`updatesl help\` to see available fields.` 
+      return message.channel.send({
+        content: `Invalid field: "${fieldToUpdate}". Use \`updatesl help\` to see available fields.`
       });
     }
 
@@ -101,7 +127,7 @@ module.exports = {
 • **MC Version**: ${updatedServer.mc_version}
 • **Pack Version**: ${updatedServer.pack_version}
 • **Pack Version**: ${updatedServer.url}
-`;        const embed = new EmbedBuilder()
+`; const embed = new EmbedBuilder()
           .setColor('#f92f03')
           .setTitle(`Field Updated: ${fieldToUpdate}`)
           .setDescription(changedInfo)
