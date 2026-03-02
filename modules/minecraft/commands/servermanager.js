@@ -9,9 +9,28 @@ module.exports = {
     needs_api: true,
     has_state: false,
     options: [
-        { name: 'server_short_name', description: 'Short name of the server', type: 'STRING', required: true },
-        { name: 'action',            description: 'Action to perform',         type: 'STRING', required: true, choices: ['start', 'stop', 'restart'] },
+        { name: 'server_short_name', description: 'Short name of the server', type: 'STRING', required: true, autocomplete: true },
+        { name: 'action', description: 'Action to perform', type: 'STRING', required: true, choices: ['start', 'stop', 'restart'] },
     ],
+    async autocomplete(interaction) {
+        const APIClient = require('../../../core/js/APIClient.js');
+        const api = new APIClient();
+        try {
+            const resp = await api.get('minecraft_server', { _limit: 25 });
+            const servers = (resp.minecraft_servers || []);
+            const focusedValue = interaction.options.getFocused().toLowerCase();
+            const filtered = servers.filter(s =>
+                s.short_name.toLowerCase().includes(focusedValue) ||
+                s.display_name.toLowerCase().includes(focusedValue)
+            );
+            await interaction.respond(
+                filtered.slice(0, 25).map(s => ({ name: s.display_name, value: s.short_name }))
+            );
+        } catch (err) {
+            console.error('[servermanager autocomplete] Error fetching servers:', err.message);
+            await interaction.respond([]);
+        }
+    },
     async execute(message, args, extra) {
         const api = extra.api;
 
@@ -25,7 +44,7 @@ module.exports = {
         const action = args[2];
 
         if (!serverShortName || !action) {
-             return message.reply({ content: `Invalid syntax. Usage: \`${this.syntax}\`` });
+            return message.reply({ content: `Invalid syntax. Usage: \`${this.syntax}\`` });
         }
 
         const validActions = ['start', 'stop', 'restart'];
@@ -56,7 +75,7 @@ module.exports = {
         }
 
         // Use the validated serverDetails.short_name for the service name
-        const serviceName = `${serverDetails.short_name}.service`; 
+        const serviceName = `${serverDetails.short_name}.service`;
         const commandToExecute = `sudo systemctl ${action} ${serviceName}`;
 
         this.logger.info(`Servermanager: User ${message.author.tag} attempting to execute: ${commandToExecute}`);
