@@ -7,66 +7,68 @@ module.exports = {
     needs_api: true,
     has_state: false,
     options: [
-        { name: 'user',      description: 'The user to assign the role to', type: 'USER',   required: true  },
-        { name: 'role_name', description: 'Name of the role to assign',     type: 'STRING', required: true  },
+        { name: 'user', description: 'The user to assign the role to', type: 'USER', required: true },
+        { name: 'role_name', description: 'Name of the role to assign', type: 'ROLE', required: true },
     ],
     async execute(message, args, extra) {
         var api = extra.api;
         var respAdminID = "";
-        try{
-            respAdminID = await api.get("discord_server",{
-                server_id:message.guild.id
+        try {
+            respAdminID = await api.get("discord_server", {
+                server_id: message.guild.id
             });
-        }catch(err){
+        } catch (err) {
             this.logger.error(err.message);
         }
-        if(respAdminID.discord_servers[0]){
-            if(respAdminID.discord_servers[0].admin_role_id === ""){
-                message.channel.send({ content: "This command requires an admin role but no main admin role has been selected for this server."});
+        if (respAdminID.discord_servers[0]) {
+            if (respAdminID.discord_servers[0].admin_role_id === "") {
+                message.channel.send({ content: "This command requires an admin role but no main admin role has been selected for this server." });
                 return;
             }
-            else if(!message.member.roles.cache.has(respAdminID.discord_servers[0].admin_role_id)){
-                message.channel.send({ content: "You do not have permission to use this command."});
+            else if (!message.member.roles.cache.has(respAdminID.discord_servers[0].admin_role_id)) {
+                message.channel.send({ content: "You do not have permission to use this command." });
                 return;
             }
-        }else{
-            message.channel.send({ content: "This command requires an admin role but no main admin role has been selected for this server."});
+        } else {
+            message.channel.send({ content: "This command requires an admin role but no main admin role has been selected for this server." });
             return;
         }
         const { EmbedBuilder } = require('discord.js');
         var strLength = 0;
-		var messageString = "";
-		var role = "";
-		var counter = 0;
+        var messageString = "";
+        var role = message.guild.roles.cache.get(args[2] ? args[2].replace(/[<@&>]/g, '') : null); // Fast path if ID is provided
+        var counter = 0;
         var member = message.mentions.members.first();
-		for(let i=2;i<args.length;i++){
-			//Manages current string length of arguments combined
-			strLength += args[i].length;
-			messageString += args[i];
-			//Check to see if a role exists using that begins with the collective messageString
-			role = message.guild.roles.cache.find(role => role.name.toLowerCase().includes(messageString));
-			if(!role){
-				//If role not found then return to string from previous iteration
-				messageString = messageString.substring(0, strLength - args[i].length - 1);
-				break;
-			}
-			//Add space
-			messageString += " ";
-			strLength ++;
-		counter++;
-		}
-        try{
+        if (!role) {
+            for (let i = 2; i < args.length; i++) {
+                //Manages current string length of arguments combined
+                strLength += args[i].length;
+                messageString += args[i];
+                //Check to see if a role exists using that begins with the collective messageString
+                role = message.guild.roles.cache.find(role => role.name.toLowerCase().includes(messageString));
+                if (!role) {
+                    //If role not found then return to string from previous iteration
+                    messageString = messageString.substring(0, strLength - args[i].length - 1);
+                    break;
+                }
+                //Add space
+                messageString += " ";
+                strLength++;
+                counter++;
+            }
             role = message.guild.roles.cache.find(role => role.name.toLowerCase() === messageString.trim());
+        }
+        try {
             member.roles.add(role.id);
         }
-        catch(err){
+        catch (err) {
             this.logger.error(err.message);
-            message.channel.send({ content: "Role adding failed!"});
+            message.channel.send({ content: "Role adding failed!" });
             return;
         }
         const ListEmbed = new EmbedBuilder()
-        .setTitle(`Made this edit to ${member.user.username}:`)
-        .setDescription("Added role: "+role.name);
-        message.channel.send({ embeds: [ListEmbed]});
-    } 
+            .setTitle(`Made this edit to ${member.user.username}:`)
+            .setDescription("Added role: " + role.name);
+        message.channel.send({ embeds: [ListEmbed] });
+    }
 }

@@ -7,8 +7,27 @@ module.exports = {
     needs_api: true,
     has_state: false,
     options: [
-        { name: 'server_name', description: 'Name of the server', type: 'STRING', required: true },
+        { name: 'server_name', description: 'Name of the server', type: 'STRING', required: true, autocomplete: true },
     ],
+    async autocomplete(interaction) {
+        const APIClient = require('../../../core/js/APIClient.js');
+        const api = new APIClient();
+        try {
+            const resp = await api.get('minecraft_server', { _limit: 25 });
+            const servers = (resp.minecraft_servers || []);
+            const focusedValue = interaction.options.getFocused().toLowerCase();
+            const filtered = servers.filter(s =>
+                s.short_name.toLowerCase().includes(focusedValue) ||
+                s.display_name.toLowerCase().includes(focusedValue)
+            );
+            await interaction.respond(
+                filtered.slice(0, 25).map(s => ({ name: s.display_name, value: s.short_name }))
+            );
+        } catch (err) {
+            console.error('[status autocomplete] Error fetching servers:', err.message);
+            await interaction.respond([]);
+        }
+    },
     async execute(message, args, extra) {
         const { performance } = require('perf_hooks');
         const perfStart = performance.now();
@@ -36,26 +55,26 @@ module.exports = {
 
                 try {
                     const response = await pinger.pingWithPromise(server.backend_ip, server.port);
-                    
+
                     if (response) {
                         ListEmbed.addFields(
                             { name: "Status:", value: "✅ **ONLINE**", inline: true },
                             { name: "Players:", value: `${response.players.online}/${response.players.max}`, inline: true }
                         );
-                        
+
                         if (response.version) {
                             ListEmbed.addFields({ name: "Version:", value: response.version.name, inline: true });
                         }
-                        
+
                         if (response.motd && response.motd.clean) {
                             ListEmbed.addFields({ name: "MOTD:", value: response.motd.clean });
                         }
-                        
+
                         // Handle player list with special character escaping
                         if (response.players.online > 0 && response.players.sample) {
                             const SensitiveCharacters = ['\\', '*', '_', '~', '`', '|', '>'];
                             let playersList = "";
-                            
+
                             for (const player of response.players.sample) {
                                 let escapedName = player.name;
                                 for (const unsafe of SensitiveCharacters) {
@@ -63,14 +82,14 @@ module.exports = {
                                 }
                                 playersList += `- ${escapedName}\n`;
                             }
-                           
+
                             ListEmbed.addFields({ name: "Players Online:", value: playersList || "No player information available" });
                         } else if (response.players.online > 0) {
                             ListEmbed.addFields({ name: "Players Online:", value: "Players are online, but names couldn't be retrieved" });
                         } else {
                             ListEmbed.addFields({ name: "Players Online:", value: "No players currently online" });
                         }
-                        
+
                         if (response.favicon) {
                             ListEmbed.setThumbnail("attachment://server-icon.png");
                         }
@@ -87,20 +106,20 @@ module.exports = {
                     );
                     ListEmbed.setDescription("Server appears to be offline or not responding");
                 }
-                
+
                 const perfTime = ((performance.now() - perfStart) / 1000).toFixed(2);
                 ListEmbed.setFooter({ text: `Response time: ${perfTime} seconds` });
-                
+
                 message.channel.send({ embeds: [ListEmbed] });
             } else {
-                message.channel.send({ 
-                    content: "Sorry, couldn't find a server with that shortname, try ,listmc for a list of all servers." 
+                message.channel.send({
+                    content: "Sorry, couldn't find a server with that shortname, try ,listmc for a list of all servers."
                 });
             }
         } catch (error) {
             this.logger.error(error);
-            message.channel.send({ 
-                content: `Error getting server information: ${error.message}` 
+            message.channel.send({
+                content: `Error getting server information: ${error.message}`
             });
         }
     }

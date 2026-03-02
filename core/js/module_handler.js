@@ -585,6 +585,12 @@ class ModuleHandler {
                 } else if (optType === 'BOOLEAN') {
                     var boolVal = interaction.options.getBoolean(optName);
                     args.push(boolVal !== null && boolVal !== undefined ? String(boolVal) : null);
+                } else if (optType === 'CHANNEL') {
+                    var channelVal = interaction.options.getChannel(optName);
+                    args.push(channelVal ? channelVal.id : null);
+                } else if (optType === 'ROLE') {
+                    var roleVal = interaction.options.getRole(optName);
+                    args.push(roleVal ? roleVal.id : null);
                 } else {
                     var strVal = interaction.options.getString(optName);
                     args.push(strVal !== null && strVal !== undefined ? strVal : null);

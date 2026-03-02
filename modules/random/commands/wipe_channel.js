@@ -9,7 +9,7 @@ module.exports = {
   needs_api: false,
   has_state: false,
   options: [
-    { name: 'channel_id', description: 'ID of the channel to wipe', type: 'STRING', required: true },
+    { name: 'channel_id', description: 'ID of the channel to wipe', type: 'CHANNEL', required: true },
   ],
   async execute(message, args, extra) {
     if (message.author.bot) return;

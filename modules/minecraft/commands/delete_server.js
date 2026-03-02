@@ -7,8 +7,27 @@ module.exports = {
     needs_api: true,
     has_state: false,
     options: [
-        { name: 'server_name', description: 'Short name or display name of the server', type: 'STRING', required: true },
+        { name: 'server_name', description: 'Short name or display name of the server', type: 'STRING', required: true, autocomplete: true },
     ],
+    async autocomplete(interaction) {
+        const APIClient = require('../../../core/js/APIClient.js');
+        const api = new APIClient();
+        try {
+            const resp = await api.get('minecraft_server', { _limit: 25 });
+            const servers = (resp.minecraft_servers || []);
+            const focusedValue = interaction.options.getFocused().toLowerCase();
+            const filtered = servers.filter(s =>
+                s.short_name.toLowerCase().includes(focusedValue) ||
+                s.display_name.toLowerCase().includes(focusedValue)
+            );
+            await interaction.respond(
+                filtered.slice(0, 25).map(s => ({ name: s.display_name, value: s.short_name }))
+            );
+        } catch (err) {
+            console.error('[delete_server autocomplete] Error fetching servers:', err.message);
+            await interaction.respond([]);
+        }
+    },
     async execute(message, args, extra) {
         const { api } = extra;
 
@@ -53,18 +72,18 @@ module.exports = {
         try {
             const respDelete = await api.delete("minecraft_server", { short_name: server.short_name });
             if (respDelete.ok) {
-                return message.channel.send({ 
-                    content: `${server.display_name} has been successfully deleted.` 
+                return message.channel.send({
+                    content: `${server.display_name} has been successfully deleted.`
                 });
             } else {
-                return message.channel.send({ 
-                    content: "Failed to delete the server. Please try again." 
+                return message.channel.send({
+                    content: "Failed to delete the server. Please try again."
                 });
             }
         } catch (deleteError) {
             console.error("Error deleting server:", deleteError);
-            return message.channel.send({ 
-                content: "An error occurred while deleting the server." 
+            return message.channel.send({
+                content: "An error occurred while deleting the server."
             });
         }
     }
