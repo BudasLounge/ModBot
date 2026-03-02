@@ -11,9 +11,28 @@ module.exports = {
     needs_api: true, // if this command needs access to the API
     has_state: false, // if this command uses the state engine
     options: [
-        { name: 'server_name', description: 'Minecraft server short name', type: 'STRING', required: true },
-        { name: 'command',     description: 'RCON / server command',       type: 'STRING', required: true },
+        { name: 'server_name', description: 'Minecraft server short name', type: 'STRING', required: true, autocomplete: true },
+        { name: 'command', description: 'RCON / server command', type: 'STRING', required: true },
     ],
+    async autocomplete(interaction) {
+        const APIClient = require('../../../core/js/APIClient.js');
+        const api = new APIClient();
+        try {
+            const resp = await api.get('minecraft_server', { _limit: 25 });
+            const servers = (resp.minecraft_servers || []);
+            const focusedValue = interaction.options.getFocused().toLowerCase();
+            const filtered = servers.filter(s =>
+                s.short_name.toLowerCase().includes(focusedValue) ||
+                s.display_name.toLowerCase().includes(focusedValue)
+            );
+            await interaction.respond(
+                filtered.slice(0, 25).map(s => ({ name: s.display_name, value: s.short_name }))
+            );
+        } catch (err) {
+            console.error('[rcon autocomplete] Error fetching servers:', err.message);
+            await interaction.respond([]);
+        }
+    },
     async execute(message, args, extra) {
         const api = extra.api;
 
@@ -76,16 +95,16 @@ module.exports = {
         const command = args.slice(2).join(' ');
         var conn;
         // Establish RCON connection
-            conn = new Rcon(server.backend_ip, server.rcon_port, password);
-        
+        conn = new Rcon(server.backend_ip, server.rcon_port, password);
+
 
 
         // RCON connection events
-        conn.on('auth', function() {
+        conn.on('auth', function () {
             console.log('RCON authenticated.');
             console.log('Sending command:', command);
             conn.send(command);
-        }).on('response', function(str) {
+        }).on('response', function (str) {
             console.log('RCON response:', str);
             message.channel.send({
                 embeds: [
@@ -94,10 +113,10 @@ module.exports = {
                         .setDescription(`Command executed successfully:\n${str}`)
                 ]
             });
-        }).on('error', function(err) {
+        }).on('error', function (err) {
             console.error('RCON error:', err);
             message.reply({ content: `An RCON error occurred: ${err.message}` });
-        }).on('end', function() {
+        }).on('end', function () {
             console.log('RCON connection closed.');
             conn.disconnect(); // Close connection gracefully without exiting the process
         });

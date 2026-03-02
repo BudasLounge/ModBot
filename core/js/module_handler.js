@@ -105,15 +105,15 @@ class ModuleHandler {
 
         this.logger.info("Discovering Modules in: " + modules_folder + " ...");
         var module_folders = fs.readdirSync(modules_folder, { withFileTypes: true });
-        for(var folder of module_folders) { //Iterate all folders in modules directory
-            if(folder.isDirectory() && fs.existsSync(modules_folder + "/" + folder.name + "/bot_module.json")) {
+        for (var folder of module_folders) { //Iterate all folders in modules directory
+            if (folder.isDirectory() && fs.existsSync(modules_folder + "/" + folder.name + "/bot_module.json")) {
                 var module_config = JSON.parse(fs.readFileSync(modules_folder + "/" + folder.name + "/bot_module.json")); //Load module config if found
                 var the_module = {
                     config: module_config,
                     location: modules_folder + "/" + folder.name + "/"
                 };
 
-                if(the_module.config.enabled) {
+                if (the_module.config.enabled) {
                     this.modules.set(the_module.config.name, the_module); //Add module to this ModuleHandler
                 } else {
                     this.disabled_modules.set(the_module.config.name, the_module);
@@ -133,7 +133,7 @@ class ModuleHandler {
      */
     discover_commands() {
 
-        for(var current_module_name of Array.from(this.modules.keys())) {
+        for (var current_module_name of Array.from(this.modules.keys())) {
             var current_module = this.modules.get(current_module_name);
             current_module.commands = new Discord.Collection();
 
@@ -149,19 +149,19 @@ class ModuleHandler {
             }
         }
 
-        if(this.modules.size > 0) {
+        if (this.modules.size > 0) {
             this.logger.info("Discovered " + this.modules.size + " active module(s) and " + this.disabled_modules.size + " inactive module(s):");
-            for(var current_module_name of Array.from(this.modules.keys())) {
+            for (var current_module_name of Array.from(this.modules.keys())) {
                 this.logger.info("  + " + this.modules.get(current_module_name).config.display_name + " (" + this.modules.get(current_module_name).commands.size + " commands)");
             }
 
-            for(var current_module_name of Array.from(this.disabled_modules.keys())) {
+            for (var current_module_name of Array.from(this.disabled_modules.keys())) {
                 this.logger.info("  - " + this.disabled_modules.get(current_module_name).config.display_name);
             }
         } else {
             this.logger.warn("No active modules found! Please enable at least one module for this bot to have any purpose!");
             this.logger.info("Discovered " + this.disabled_modules.size + " inactive modules:");
-            for(var current_module_name of Array.from(this.disabled_modules.keys())) {
+            for (var current_module_name of Array.from(this.disabled_modules.keys())) {
                 this.logger.info("  - " + this.disabled_modules.get(current_module_name).config.display_name);
             }
         }
@@ -190,7 +190,7 @@ class ModuleHandler {
     async handle_command(message) {
         this.logger.info("Got command: " + message.content);
         var api = new APIClient();
-        if(message.author.bot) return; //Ignore messages from bots
+        if (message.author.bot) return; //Ignore messages from bots
 
         var command_args = message.content.split(" ");
 
@@ -198,16 +198,16 @@ class ModuleHandler {
         var current_command;
 
         //This block is for when the user runs the command in the form '//module:command'
-        if(command_args[0].startsWith("//") && command_args[0].includes(":")) {
+        if (command_args[0].startsWith("//") && command_args[0].includes(":")) {
             var spec_module = command_args[0].substring(2, command_args[0].indexOf(":"));
             var spec_command = command_args[0].substring(command_args[0].indexOf(":") + 1);
-            if(this.modules.has(spec_module)) { //Specified module exists
+            if (this.modules.has(spec_module)) { //Specified module exists
                 current_module = this.modules.get(spec_module);
                 var respModule = await api.get('module', {
                     name: current_module.config.name
                 });
 
-                if(respModule.modules.length == 0) { //Module exists in ModBot, but not in database
+                if (respModule.modules.length == 0) { //Module exists in ModBot, but not in database
                     message.channel.send("Sorry, the database does not contain a record of the module: " + spec_module);
                     return;
                 }
@@ -217,12 +217,12 @@ class ModuleHandler {
                     module_id: parseInt(respModule.modules[0].module_id)
                 });
 
-                if(respEnabled.enabled_modules.length == 0) { //The module is not enabled for the server this message came from
+                if (respEnabled.enabled_modules.length == 0) { //The module is not enabled for the server this message came from
                     message.channel.send("That module is disabled on this server!");
                     return;
                 }
 
-                if(current_module.commands.has(spec_command)) { //Command exists in this module
+                if (current_module.commands.has(spec_command)) { //Command exists in this module
                     current_command = current_module.commands.get(spec_command);
                 } else { //Command specified does not exist in the specified module
                     message.channel.send("The module '" + spec_module + "' has no command '" + spec_command + "'.");
@@ -236,19 +236,19 @@ class ModuleHandler {
             var found_command = false;
             var matched_prefix = false;
 
-            for(var current_module_name of Array.from(this.modules.keys())) { //Iterate all modules
+            for (var current_module_name of Array.from(this.modules.keys())) { //Iterate all modules
                 current_module = this.modules.get(current_module_name);
 
-                if(message.content.startsWith(current_module.config.command_prefix)) { //This module's command prefix matches the one used
+                if (message.content.startsWith(current_module.config.command_prefix)) { //This module's command prefix matches the one used
                     matched_prefix = true;
                     var command_name = command_args[0].substring(current_module.config.command_prefix.length);
 
-                    if(current_module.commands.has(command_name)) { //The current module has a command with the specified name
+                    if (current_module.commands.has(command_name)) { //The current module has a command with the specified name
                         var respModule = await api.get('module', {
                             name: current_module.config.name
                         });
 
-                        if(respModule.modules.length == 0) { //Module exists in ModBot, but not in database
+                        if (respModule.modules.length == 0) { //Module exists in ModBot, but not in database
                             continue;
                         }
 
@@ -257,7 +257,7 @@ class ModuleHandler {
                             module_id: parseInt(respModule.modules[0].module_id)
                         });
 
-                        if(respEnabled.enabled_modules.length == 0) { //Module is not enabled on this server
+                        if (respEnabled.enabled_modules.length == 0) { //Module is not enabled on this server
                             continue;
                         }
 
@@ -269,39 +269,39 @@ class ModuleHandler {
                 }
             }
 
-            if(matched_prefix && !found_command) {
+            if (matched_prefix && !found_command) {
                 message.channel.send("Sorry, I couldn't find that command! Try ,commands or ,help for a list of all commands!");
                 return;
-            } else if(!matched_prefix) {
+            } else if (!matched_prefix) {
                 return;
             }
         }
 
-        if(command_args.length - 1 >= current_command.num_args) { //Command contains at least the required number of arguments
-            if(current_command.args_to_lower) { //If set in command, make all arguments lowercase
-                for(var i=0; i < command_args.length; i++) {
+        if (command_args.length - 1 >= current_command.num_args) { //Command contains at least the required number of arguments
+            if (current_command.args_to_lower) { //If set in command, make all arguments lowercase
+                for (var i = 0; i < command_args.length; i++) {
                     command_args[i] = command_args[i].toLowerCase();
                 }
             }
-            
+
             var extra = {}; //This will contain all of the extra variables that a command may need, based on its configuration
 
-            if(current_module.config.is_core) { //If this module is a core module, it gains access to this ModuleHandler
+            if (current_module.config.is_core) { //If this module is a core module, it gains access to this ModuleHandler
                 extra.module_handler = this;
             }
 
-            if(current_command.has_state) { //If command uses state system, must grab the state
+            if (current_command.has_state) { //If command uses state system, must grab the state
                 var state = await this.state_manager.get_state(message.author.id, current_module.config.name + ":" + current_command.name);
                 extra.state = state;
             }
 
-            if(current_command.needs_api) { //If command needs to access the API, we pass it here
+            if (current_command.needs_api) { //If command needs to access the API, we pass it here
                 extra.api = api;
             }
 
             await current_command.execute(message, command_args, extra); //NOTE: ALL command execute functions MUST be async!
 
-            if(current_command.has_state) { //If this command used the state system, we must save any changes to the state
+            if (current_command.has_state) { //If this command used the state system, we must save any changes to the state
                 this.state_manager.save_state(extra.state);
             }
         } else { //Not enough arguments provided
@@ -462,6 +462,8 @@ class ModuleHandler {
                     o.setName(optName).setDescription(optDesc).setRequired(isRequired);
                     if (opt.choices && opt.choices.length > 0) {
                         o.addChoices(...opt.choices.map(c => ({ name: c, value: c })));
+                    } else if (opt.autocomplete) {
+                        o.setAutocomplete(true);
                     }
                     return o;
                 });
@@ -633,6 +635,37 @@ class ModuleHandler {
 
         if (current_command.has_state) {
             this.state_manager.save_state(extra.state);
+        }
+    }
+    /**
+     * Handles an autocomplete interaction by finding the matching command and
+     * calling its autocomplete() function (if defined).
+     *
+     * @param {import('discord.js').AutocompleteInteraction} interaction
+     */
+    async handle_autocomplete(interaction) {
+        const slashName = interaction.commandName;
+        let current_command = null;
+
+        outer: for (var [, mod] of this.modules) {
+            for (var [, cmd] of mod.commands) {
+                if (cmd._resolved_slash_name === slashName) {
+                    current_command = cmd;
+                    break outer;
+                }
+            }
+        }
+
+        if (!current_command || typeof current_command.autocomplete !== 'function') {
+            try { await interaction.respond([]); } catch (_) { }
+            return;
+        }
+
+        try {
+            await current_command.autocomplete(interaction);
+        } catch (err) {
+            this.logger.error('[SlashCommands] Autocomplete error for /' + slashName + ': ' + err.message);
+            try { await interaction.respond([]); } catch (_) { }
         }
     }
 }

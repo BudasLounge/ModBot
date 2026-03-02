@@ -42,6 +42,14 @@ logger.info("Event Registration Complete!");
 // Button / modal / select interactions continue to be handled by each module's
 // events.js file, which registers its own interactionCreate listeners via the EventRegistry.
 client.on('interactionCreate', async (interaction) => {
+    if (interaction.isAutocomplete()) {
+        try {
+            await modules.handle_autocomplete(interaction);
+        } catch (err) {
+            logger.error('[interactionCreate] Autocomplete error: ' + err.message);
+        }
+        return;
+    }
     if (!interaction.isChatInputCommand()) return; // let module event handlers deal with non-slash interactions
     try {
         await modules.handle_slash_command(interaction);
