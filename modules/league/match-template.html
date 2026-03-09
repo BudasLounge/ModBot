@@ -23,6 +23,25 @@
     .victory { color: #0acbe6; text-shadow: 0 0 10px rgba(10, 203, 230, 0.3); }
     .defeat { color: #e84057; text-shadow: 0 0 10px rgba(232, 64, 87, 0.3); }
     .meta-info { text-align: right; font-size: 16px; color: #939a9e; }
+    .ranked-strip {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin: 2px 0 12px 0;
+      padding: 6px 10px;
+      background: #0f1216;
+      border: 1px solid #1e2328;
+      border-left: 3px solid #c8aa6e;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+    .ranked-queue { color: #c8aa6e; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+    .ranked-current { color: #939a9e; font-weight: 500; }
+    .ranked-divider { color: #5c5b57; }
+    .ranked-delta { font-weight: 700; }
+    .ranked-delta-up { color: #0acbe6; }
+    .ranked-delta-down { color: #e84057; }
+    .ranked-delta-neutral { color: #939a9e; }
 
     .table-header {
       display: grid;
@@ -173,6 +192,15 @@
     <div class="outcome {{resultClass}}">{{uploaderResult}}</div>
     <div class="meta-info">{{gameMode}} • {{duration}}</div>
   </div>
+
+  {{#if hasRankedLp}}
+    <div class="ranked-strip">
+      <span class="ranked-queue">{{rankedQueueLabel}}</span>
+      <span class="ranked-current">{{rankedCurrent}}</span>
+      <span class="ranked-divider">•</span>
+      <span class="ranked-delta {{rankedDeltaClass}}">{{rankedDelta}}</span>
+    </div>
+  {{/if}}
 
   {{#if forfeit}}
     <div class="forfeit-banner">

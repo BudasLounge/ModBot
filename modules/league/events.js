@@ -354,6 +354,84 @@ function isSRGame(payload) {
   return mode === 'CLASSIC' || qt.includes('RANKED') || qt === 'CLASH' || qt.includes('NORMAL') || qt === 'DRAFT';
 }
 
+function extractRankedLpInfo(payload) {
+  const hasRankedPayload = Boolean(payload?.isRanked || payload?.rankedSummary || payload?.rankedLpChange);
+  if (!hasRankedPayload) {
+    return {
+      hasRankedLp: false,
+      rankedQueueLabel: null,
+      rankedCurrent: null,
+      rankedDelta: null,
+      rankedDeltaClass: 'ranked-delta-neutral'
+    };
+  }
+
+  const top = payload?.rankedLpChange || null;
+  const summary = payload?.rankedSummary || null;
+  const change = top || summary?.rankedChange || null;
+
+  const pick = (...vals) => vals.find(v => v !== undefined && v !== null && v !== '');
+  const toNum = (v) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  };
+
+  const queueRaw = String(pick(change?.queueType, summary?.queueType, payload?.queueType, '')).toUpperCase();
+  const rankedQueueLabel = queueRaw.includes('FLEX')
+    ? 'Ranked Flex'
+    : queueRaw.includes('SOLO')
+      ? 'Ranked Solo'
+      : 'Ranked';
+
+  const tier = pick(change?.tier, summary?.tier, change?.currentTier, summary?.currentTier);
+  const division = pick(
+    change?.rank,
+    change?.division,
+    summary?.rank,
+    summary?.division,
+    change?.currentRank,
+    summary?.currentRank
+  );
+  const lp = toNum(pick(
+    change?.lp,
+    change?.leaguePoints,
+    change?.currentLp,
+    change?.currentLP,
+    summary?.lp,
+    summary?.leaguePoints,
+    summary?.currentLp,
+    summary?.currentLP
+  ));
+
+  const delta = toNum(pick(
+    change?.lpChange,
+    change?.lpDelta,
+    change?.deltaLp,
+    change?.deltaLP,
+    change?.change,
+    summary?.lpChange,
+    summary?.lpDelta
+  ));
+
+  const rankParts = [tier, division].filter(Boolean);
+  const rankedCurrent = rankParts.length
+    ? `${rankParts.join(' ')}${lp !== null ? ` ${lp} LP` : ''}`
+    : (lp !== null ? `${lp} LP` : 'Rank unavailable');
+
+  const rankedDelta = delta !== null ? `${delta >= 0 ? '+' : ''}${delta} LP` : 'LP change unavailable';
+  const rankedDeltaClass = delta === null
+    ? 'ranked-delta-neutral'
+    : (delta >= 0 ? 'ranked-delta-up' : 'ranked-delta-down');
+
+  return {
+    hasRankedLp: true,
+    rankedQueueLabel,
+    rankedCurrent,
+    rankedDelta,
+    rankedDeltaClass
+  };
+}
+
 const AUGMENT_NAME_MAP = {
   // Populate with known ID->name pairs as they become available.
 };
@@ -486,6 +564,7 @@ function fixChampName(name) {
 async function prepareScoreboardData(payload, uploaderInfos = []) {
   const teams = Array.isArray(payload.teams) ? payload.teams : [];
   const isMayhem = isAramMayhem(payload);
+  const rankedLpInfo = extractRankedLpInfo(payload);
   const forfeit = getForfeitDetails(payload);
   const ver = await getLatestDDVersion();
   const CDN = `https://ddragon.leagueoflegends.com/cdn/${ver}/img`;
@@ -727,7 +806,8 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
     team200: t200.players.map(mapPlayer),
     t200Stats: getTotals(t200),
     t200Win: t200.isWinningTeam,
-    badgeWinners
+    badgeWinners,
+    ...rankedLpInfo
   };
 }
 
@@ -933,6 +1013,7 @@ async function handleMatchPayload(payload, client, uploaderInfos = [], placehold
   logger.info('[LoL Match Ingest] Payload received, generating infographic...', { gameId });
 
   const forfeit = getForfeitDetails(payload);
+  const rankedInfo = extractRankedLpInfo(payload);
   const forfeitText = forfeit.isForfeit
     ? `${forfeit.reasonLabel} by ${forfeit.teamLabel}${forfeit.forfeitingNames.length ? `: ${forfeit.forfeitingNames.join(', ')}` : ''}`
     : '';
@@ -944,6 +1025,15 @@ async function handleMatchPayload(payload, client, uploaderInfos = [], placehold
       teamId: forfeit.teamId,
       teamIsPlayer: forfeit.teamIsPlayer,
       forfeitingCount: forfeit.forfeitingNames.length,
+    });
+  }
+
+  if (rankedInfo.hasRankedLp) {
+    logger.info('[LoL Match Ingest] Ranked LP payload detected', {
+      gameId,
+      queue: rankedInfo.rankedQueueLabel,
+      current: rankedInfo.rankedCurrent,
+      delta: rankedInfo.rankedDelta,
     });
   }
 
