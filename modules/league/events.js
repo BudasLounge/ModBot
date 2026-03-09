@@ -1034,9 +1034,9 @@ async function handleMatchPayload(payload, client, uploaderInfos = [], placehold
       }
     }
 
-    // Cache full payload for "Show More Stats" button (5-min TTL)
-    recentMatchData.set(String(gameId), { payload, uploaderInfos });
-    setTimeout(() => recentMatchData.delete(String(gameId)), 5 * 60 * 1000);
+    // Cache full payload for "Show More Stats" button (30-min TTL)
+    recentMatchData.set(String(gameId), { payload, uploaderInfos, matchedPlayers });
+    setTimeout(() => recentMatchData.delete(String(gameId)), 30 * 60 * 1000);
     logger.info('[LoL Match Ingest] Cached match data for Show More Stats', { gameId });
 
     // Build combined button row: always "Show More Stats", plus "Identify Augments" for Mayhem
@@ -1260,18 +1260,255 @@ async function fetchRanksNA(puuid, summonerName) {
 
 
 /* =====================================================
-   Show More Stats Handler  (Part 2 — populate this)
+   Per-Player Stats Data + Image Generation
 ===================================================== */
+
+async function preparePlayerStatsData(player, payload, allPlayers) {
+  const stats = player.stats || {};
+  const isMayhem = isAramMayhem(payload);
+  const ver = await getLatestDDVersion();
+  const CDN = `https://ddragon.leagueoflegends.com/cdn/${ver}/img`;
+  const ITEM_CDN = `${CDN}/item`;
+  const SPELL_CDN = `${CDN}/spell`;
+
+  const spellMap = {
+    1:'SummonerBoost', 3:'SummonerExhaust', 4:'SummonerFlash',
+    6:'SummonerHaste', 7:'SummonerHeal', 11:'SummonerSmite',
+    12:'SummonerTeleport', 13:'SummonerMana', 14:'SummonerDot',
+    21:'SummonerBarrier', 32:'SummonerSnowball'
+  };
+
+  const k = stats.CHAMPIONS_KILLED || 0;
+  const d = stats.NUM_DEATHS || 0;
+  const a = stats.ASSISTS || 0;
+  const kdaRatio = d === 0 ? '\u221e' : ((k + a) / d).toFixed(2) + ':1';
+
+  const teams = Array.isArray(payload.teams) ? payload.teams : [];
+  const myTeam = teams.find(t => t.teamId === player.teamId) || {};
+  const isWinner = Boolean(myTeam.isWinningTeam);
+  const teamLabel = player.teamId === 100 ? 'Blue' : 'Red';
+  const teamBarClass = player.teamId === 100 ? 'bar-blue' : 'bar-red';
+
+  // Items
+  const itemIds = [0,1,2,3,4,5,6].map(i =>
+    (player.items && player.items[i] != null) ? player.items[i] : (stats[`ITEM${i}`] || 0)
+  );
+  const displayItems = [
+    ...itemIds.slice(0, 6).map(id => ({ url: id ? `${ITEM_CDN}/${id}.png` : null, isPlaceholder: !id })),
+    { url: itemIds[6] ? `${ITEM_CDN}/${itemIds[6]}.png` : null, isPlaceholder: !itemIds[6], isTrinket: true }
+  ];
+
+  const augments = isMayhem ? extractPlayerAugments(player) : [];
+
+  const s1Name = spellMap[player.spell1Id] || 'SummonerFlash';
+  const s2Name = spellMap[player.spell2Id] || 'SummonerFlash';
+  const champKey = fixChampName(player.championName || '');
+  const championIcon = `${CDN}/champion/${champKey}.png`;
+
+  // Bar percentages relative to game max
+  const maxDmg  = Math.max(...allPlayers.map(p => (p.stats || {}).TOTAL_DAMAGE_DEALT_TO_CHAMPIONS || 0), 1);
+  const maxTaken = Math.max(...allPlayers.map(p => (p.stats || {}).TOTAL_DAMAGE_TAKEN || 0), 1);
+  const myDmg   = stats.TOTAL_DAMAGE_DEALT_TO_CHAMPIONS || 0;
+  const myTaken = stats.TOTAL_DAMAGE_TAKEN || 0;
+
+  const fmtN = (n) => (n || 0).toLocaleString();
+
+  const timeDead = stats.TOTAL_TIME_SPENT_DEAD || 0;
+  const timeDeadFmt = timeDead >= 60
+    ? `${Math.floor(timeDead / 60)}m ${timeDead % 60}s`
+    : `${timeDead}s`;
+  const gameLength = payload.gameLength || 1;
+  const isHighDeathTime = timeDead > gameLength * 0.25;
+
+  const multiKillLabels = ['\u2014', '\u2014', 'Double Kill', 'Triple Kill', 'Quadra Kill', 'Penta Kill'];
+  const lmk = stats.LARGEST_MULTI_KILL || 0;
+  const largestMultiKillLabel = (lmk >= 2 && lmk <= 5) ? multiKillLabels[lmk] : (lmk > 5 ? `${lmk}x Kill` : '\u2014');
+
+  const wins = player.wins || 0;
+  const losses = player.losses || 0;
+  const totalGames = wins + losses;
+  const winRate = totalGames > 0 ? Math.round((wins / totalGames) * 100) + '%' : 'N/A';
+
+  const qt = (payload.queueType || '').toUpperCase();
+  let gameModeLabel = payload.gameMode || payload.queueType || 'LoL Match';
+  if (isMayhem) gameModeLabel = 'ARAM Mayhem';
+  else if (qt === 'CLASH' || payload.clashSummary) gameModeLabel = 'Clash';
+  else if (qt.includes('RANKED_SOLO')) gameModeLabel = 'Ranked Solo';
+  else if (qt.includes('RANKED_FLEX')) gameModeLabel = 'Ranked Flex';
+  else if (qt === 'ARAM' || qt.includes('ARAM')) gameModeLabel = 'ARAM';
+  else if (qt === 'CHERRY' || qt === 'ARENA') gameModeLabel = 'Arena';
+  else if (qt.includes('NORMAL')) gameModeLabel = 'Normal';
+
+  const healAlliesRaw = stats.TOTAL_HEAL_ON_TEAMMATES || 0;
+  const shieldsRaw    = stats.TOTAL_DAMAGE_SHIELDED_ON_TEAMMATES || 0;
+
+  // Height: base 572px, add 46px augments row for Mayhem
+  const bodyHeight = isMayhem ? '618px' : '572px';
+
+  return {
+    playerName: formatName(player),
+    championName: player.championName || 'Unknown',
+    championIcon,
+    level: stats.LEVEL || 18,
+    accountLevel: player.level || '?',
+    teamLabel,
+    teamBarClass,
+    resultText: isWinner ? 'VICTORY' : 'DEFEAT',
+    resultClass: isWinner ? 'victory' : 'defeat',
+    gameMode: gameModeLabel,
+    duration: `${Math.floor(gameLength / 60)}m ${gameLength % 60}s`,
+    isMayhem,
+    bodyHeight,
+    displayItems,
+    augments,
+    kills: k, deaths: d, assists: a,
+    kdaRatio,
+    largestSpree: stats.LARGEST_KILLING_SPREE || 0,
+    largestMultiKillLabel,
+    largestCrit: fmtN(stats.LARGEST_CRITICAL_STRIKE || 0),
+    totalDamageToChamps: fmtN(myDmg),
+    physicalDamage: fmtN(stats.PHYSICAL_DAMAGE_DEALT_TO_CHAMPIONS || 0),
+    magicDamage: fmtN(stats.MAGIC_DAMAGE_DEALT_TO_CHAMPIONS || 0),
+    trueDamage: fmtN(stats.TRUE_DAMAGE_DEALT_TO_CHAMPIONS || 0),
+    totalDamageAll: fmtN(stats.TOTAL_DAMAGE_DEALT || 0),
+    turretDamage: fmtN(stats.TOTAL_DAMAGE_DEALT_TO_TURRETS || 0),
+    objectiveDamage: fmtN(stats.TOTAL_DAMAGE_DEALT_TO_OBJECTIVES || 0),
+    dmgPercent: Math.round((myDmg / maxDmg) * 100),
+    totalTaken: fmtN(myTaken),
+    physicalTaken: fmtN(stats.PHYSICAL_DAMAGE_TAKEN || 0),
+    magicTaken: fmtN(stats.MAGIC_DAMAGE_TAKEN || 0),
+    trueTaken: fmtN(stats.TRUE_DAMAGE_TAKEN || 0),
+    mitigated: fmtN(stats.TOTAL_DAMAGE_SELF_MITIGATED || 0),
+    takenPercent: Math.round((myTaken / maxTaken) * 100),
+    timeDead, timeDeadFmt, isHighDeathTime,
+    wasAfk: Boolean(stats.WAS_AFK),
+    ccTime: stats.TIME_CCING_OTHERS || 0,
+    ccDealt: stats.TOTAL_TIME_CROWD_CONTROL_DEALT || 0,
+    heals: fmtN(stats.TOTAL_HEAL || 0),
+    healAllies: fmtN(healAlliesRaw),
+    shields: fmtN(shieldsRaw),
+    hasHealAllies: healAlliesRaw > 0,
+    hasShields: shieldsRaw > 0,
+    turretKills: stats.TURRETS_KILLED || 0,
+    inhibKills: stats.BARRACKS_KILLED || 0,
+    spell1Icon: `${SPELL_CDN}/${s1Name}.png`,
+    spell2Icon: `${SPELL_CDN}/${s2Name}.png`,
+    spell1Name: s1Name.replace('Summoner', ''),
+    spell2Name: s2Name.replace('Summoner', ''),
+    spell1Casts: stats.SPELL1_CAST || 0,
+    spell2Casts: stats.SPELL2_CAST || 0,
+    leaves: player.leaves || 0,
+    hadLeaverPenalty: (player.leaves || 0) > 0,
+    gold: fmtN(stats.GOLD_EARNED || 0),
+    cs: stats.MINIONS_KILLED || 0,
+    neutralCs: stats.NEUTRAL_MINIONS_KILLED || 0,
+    visionScore: stats.VISION_SCORE || 0,
+    wardsPlaced: stats.SIGHT_WARDS_BOUGHT_IN_GAME || 0,
+    visionWards: stats.VISION_WARDS_BOUGHT_IN_GAME || 0,
+    wins, losses, winRate,
+  };
+}
+
+async function generatePlayerStatsImage(player, payload, allPlayers) {
+  try {
+    const templatePath = path.join(__dirname, 'match-template-player-stats.html');
+    const template = fs.readFileSync(templatePath, 'utf8');
+    const data = await preparePlayerStatsData(player, payload, allPlayers);
+    logger.info('[PlayerStats] Generating player stats image', { player: formatName(player) });
+    const imageBuffer = await nodeHtmlToImage({
+      html: template,
+      content: data,
+      puppeteerArgs: { args: ['--no-sandbox', '--disable-setuid-sandbox'] }
+    });
+    logger.info('[PlayerStats] Player stats image generated');
+    return { imageBuffer, errorMessage: null };
+  } catch (err) {
+    logger.error('[PlayerStats] Image generation failed', err);
+    return { imageBuffer: null, errorMessage: err?.message || 'unknown error' };
+  }
+}
+
+/* =====================================================
+   Show More Stats Handler
+===================================================== */
+
+/**
+ * Builds the ordered all-players list from a payload (team100 first, then team200).
+ */
+function getAllPlayersOrdered(payload) {
+  const teams = Array.isArray(payload.teams) ? payload.teams : [];
+  const t100 = teams.find(t => t.teamId === 100);
+  const t200 = teams.find(t => t.teamId === 200);
+  return [...(t100?.players || []), ...(t200?.players || [])];
+}
+
+/**
+ * Builds ActionRows for player selector buttons, highlighting the active player.
+ */
+function buildPlayerSelectorRows(allPlayers, gameId, activeIdx) {
+  const rows = [];
+  for (let rowStart = 0; rowStart < allPlayers.length; rowStart += 5) {
+    const slice = allPlayers.slice(rowStart, rowStart + 5);
+    const row = new ActionRowBuilder();
+    for (let i = 0; i < slice.length; i++) {
+      const idx = rowStart + i;
+      const p   = slice[i];
+      const isTeam100 = p.teamId === 100;
+      const isActive  = idx === activeIdx;
+      const label = (p.championName || `Player ${idx + 1}`).slice(0, 20);
+      row.addComponents(
+        new ButtonBuilder()
+          .setCustomId(`LEAGUE_PLAYER_STATS_${gameId}_${idx}`)
+          .setLabel(label)
+          .setStyle(isActive ? ButtonStyle.Success : (isTeam100 ? ButtonStyle.Primary : ButtonStyle.Danger))
+      );
+    }
+    rows.push(row);
+  }
+  return rows;
+}
 
 /**
  * Called when a user clicks "Show More Stats" on a match post.
  * @param {import('discord.js').ButtonInteraction} interaction - already deferred (ephemeral)
- * @param {object} payload   - full normalised match payload
- * @param {Array}  uploaderInfos - uploader info array
+ * @param {object} payload        - full normalised match payload
+ * @param {Array}  uploaderInfos  - uploader info array
+ * @param {Array}  matchedPlayers - DB players matched in this match
  */
-async function handleMoreStatsInteraction(interaction, payload, uploaderInfos) {
-  // Stub — Part 2 will replace this body with real stat panels.
-  await interaction.editReply({ content: 'More detailed stats are coming soon!' });
+async function handleMoreStatsInteraction(interaction, payload, uploaderInfos, matchedPlayers = []) {
+  const gameId    = String(payload.gameId || payload.reportGameId || 'unknown');
+  const allPlayers = getAllPlayersOrdered(payload);
+
+  if (allPlayers.length === 0) {
+    logger.info('[PlayerStats] No players found in payload', { gameId });
+    return interaction.editReply({ content: 'No player data found in this match.' });
+  }
+
+  // Find the linked player for this Discord user
+  let defaultIdx = 0;
+  const userId = String(interaction.user.id);
+  const linked = matchedPlayers.find(mp => String(mp.user_id) === userId);
+  if (linked) {
+    const idx = allPlayers.findIndex(p => {
+      if (linked.puuid && linked.puuid !== 'none' && p.puuid) return p.puuid === linked.puuid;
+      const lName = (linked.league_name || '').trim().toLowerCase();
+      const pName = (formatName(p) || '').trim().toLowerCase();
+      return lName && lName === pName;
+    });
+    if (idx !== -1) defaultIdx = idx;
+  }
+
+  logger.info('[PlayerStats] Show More Stats requested', { gameId, defaultIdx, userId });
+
+  const result = await generatePlayerStatsImage(allPlayers[defaultIdx], payload, allPlayers);
+  if (!result.imageBuffer) {
+    return interaction.editReply({ content: `Could not generate player stats: ${result.errorMessage || 'unknown error'}` });
+  }
+
+  const rows = buildPlayerSelectorRows(allPlayers, gameId, defaultIdx);
+  const attachment = new AttachmentBuilder(result.imageBuffer, { name: `player-stats-${gameId}-${defaultIdx}.png` });
+
+  await interaction.editReply({ files: [attachment], components: rows });
 }
 
 /* =====================================================
@@ -1324,13 +1561,44 @@ async function onInteraction(interaction) {
       const cached = recentMatchData.get(gameId);
 
       if (!cached) {
-        return interaction.reply({ content: 'Match data has expired (5-minute window). Re-upload to refresh.', ephemeral: true });
+        return interaction.reply({ content: 'Match data has expired (30-minute window). Re-upload to refresh.', ephemeral: true });
       }
 
       await interaction.deferReply({ ephemeral: true });
+      await handleMoreStatsInteraction(interaction, cached.payload, cached.uploaderInfos, cached.matchedPlayers || []);
+      return;
+    }
 
-      // Part 2 will populate this — for now hand off to the stats builder
-      await handleMoreStatsInteraction(interaction, cached.payload, cached.uploaderInfos);
+    if (interaction.customId.startsWith('LEAGUE_PLAYER_STATS_')) {
+      // Format: LEAGUE_PLAYER_STATS_{gameId}_{playerIdx}
+      const withoutPrefix = interaction.customId.replace('LEAGUE_PLAYER_STATS_', '');
+      const lastUnderscore = withoutPrefix.lastIndexOf('_');
+      const gameId    = withoutPrefix.slice(0, lastUnderscore);
+      const playerIdx = parseInt(withoutPrefix.slice(lastUnderscore + 1), 10);
+
+      const cached = recentMatchData.get(gameId);
+      if (!cached) {
+        return interaction.reply({ content: 'Match data expired. Re-upload to refresh.', ephemeral: true });
+      }
+
+      await interaction.deferUpdate();
+
+      const allPlayers = getAllPlayersOrdered(cached.payload);
+      if (isNaN(playerIdx) || playerIdx < 0 || playerIdx >= allPlayers.length) {
+        return interaction.editReply({ content: 'Invalid player selection.' });
+      }
+
+      logger.info('[PlayerStats] Player button clicked', { gameId, playerIdx });
+
+      const result = await generatePlayerStatsImage(allPlayers[playerIdx], cached.payload, allPlayers);
+      if (!result.imageBuffer) {
+        return interaction.editReply({ content: `Could not generate stats: ${result.errorMessage || 'unknown error'}` });
+      }
+
+      const rows = buildPlayerSelectorRows(allPlayers, gameId, playerIdx);
+      const attachment = new AttachmentBuilder(result.imageBuffer, { name: `player-stats-${gameId}-${playerIdx}.png` });
+
+      await interaction.editReply({ files: [attachment], components: rows });
       return;
     }
 
