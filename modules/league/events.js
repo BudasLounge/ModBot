@@ -347,6 +347,13 @@ function isAramMayhem(payload) {
   return Boolean(payload?.isAramMayhem) || mode === 'KIWI' || queue === 'KIWI';
 }
 
+function isSRGame(payload) {
+  if (isAramMayhem(payload)) return false;
+  const mode = (payload?.gameMode || '').toUpperCase();
+  const qt   = (payload?.queueType || '').toUpperCase();
+  return mode === 'CLASSIC' || qt.includes('RANKED') || qt === 'CLASH' || qt.includes('NORMAL') || qt === 'DRAFT';
+}
+
 const AUGMENT_NAME_MAP = {
   // Populate with known ID->name pairs as they become available.
 };
@@ -1035,7 +1042,7 @@ async function handleMatchPayload(payload, client, uploaderInfos = [], placehold
     }
 
     // Cache full payload for "Show More Stats" button (30-min TTL)
-    recentMatchData.set(String(gameId), { payload, uploaderInfos, matchedPlayers });
+    recentMatchData.set(String(gameId), { payload, uploaderInfos, matchedPlayers, v5Data: null });
     setTimeout(() => recentMatchData.delete(String(gameId)), 30 * 60 * 1000);
     logger.info('[LoL Match Ingest] Cached match data for Show More Stats', { gameId });
 
@@ -1389,6 +1396,7 @@ async function preparePlayerStatsData(player, payload, allPlayers) {
     shields: fmtN(shieldsRaw),
     hasHealAllies: healAlliesRaw > 0,
     hasShields: shieldsRaw > 0,
+    combinedSupport: fmtN(healAlliesRaw + shieldsRaw),
     turretKills: stats.TURRETS_KILLED || 0,
     inhibKills: stats.BARRACKS_KILLED || 0,
     spell1Icon: `${SPELL_CDN}/${s1Name}.png`,
@@ -1424,6 +1432,224 @@ async function generatePlayerStatsImage(player, payload, allPlayers) {
     return { imageBuffer, errorMessage: null };
   } catch (err) {
     logger.error('[PlayerStats] Image generation failed', err);
+    return { imageBuffer: null, errorMessage: err?.message || 'unknown error' };
+  }
+}
+
+/* =====================================================
+   SR (Summoner's Rift) Per-Player Stats
+===================================================== */
+
+async function fetchMatchV5Data(gameId) {
+  try {
+    const matchId = `NA1_${gameId}`;
+    logger.info('[PlayerStats] Fetching Match V5 data', { gameId, matchId });
+    const res = await riotGet(`https://americas.api.riotgames.com/lol/match/v5/matches/${matchId}`);
+    logger.info('[PlayerStats] Match V5 data fetched', { gameId });
+    return res.data;
+  } catch (err) {
+    logger.error('[PlayerStats] Failed to fetch Match V5 data', { gameId, err: err?.message });
+    return null;
+  }
+}
+
+async function preparePlayerStatsDataSR(participant, v5Match, allParticipants) {
+  const p    = participant;
+  const info = v5Match.info || {};
+  const ver  = await getLatestDDVersion();
+  const CDN       = `https://ddragon.leagueoflegends.com/cdn/${ver}/img`;
+  const ITEM_CDN  = `${CDN}/item`;
+  const SPELL_CDN = `${CDN}/spell`;
+
+  const spellMap = {
+    1:'SummonerBoost', 3:'SummonerExhaust', 4:'SummonerFlash', 6:'SummonerHaste',
+    7:'SummonerHeal', 11:'SummonerSmite', 12:'SummonerTeleport', 13:'SummonerMana',
+    14:'SummonerDot', 21:'SummonerBarrier', 32:'SummonerSnowball'
+  };
+  const spellDisplayNames = {
+    SummonerBoost:'Cleanse', SummonerExhaust:'Exhaust', SummonerFlash:'Flash',
+    SummonerHaste:'Ghost', SummonerHeal:'Heal', SummonerSmite:'Smite',
+    SummonerTeleport:'Teleport', SummonerMana:'Clarity', SummonerDot:'Ignite',
+    SummonerBarrier:'Barrier', SummonerSnowball:'Mark'
+  };
+
+  const k = p.kills || 0;
+  const d = p.deaths || 0;
+  const a = p.assists || 0;
+  const kdaRatio = d === 0 ? '∞' : ((k + a) / d).toFixed(2) + ':1';
+  const isWinner     = Boolean(p.win);
+  const teamBarClass = p.teamId === 100 ? 'bar-blue' : 'bar-red';
+  const teamLabel    = p.teamId === 100 ? 'Blue' : 'Red';
+
+  const posMap = { TOP:'Top', JUNGLE:'Jungle', MIDDLE:'Mid', BOTTOM:'Bot', UTILITY:'Support', '':'Fill' };
+  const posKey        = p.teamPosition || p.individualPosition || '';
+  const positionLabel = posMap[posKey] || posKey;
+
+  const s1Key = spellMap[p.summoner1Id] || 'SummonerFlash';
+  const s2Key = spellMap[p.summoner2Id] || 'SummonerFlash';
+
+  const itemIds     = [0,1,2,3,4,5].map(i => p[`item${i}`] || 0);
+  const trinketId   = p.item6 || 0;
+  const displayItems = [
+    ...itemIds.map(id => ({ url: id ? `${ITEM_CDN}/${id}.png` : null, isPlaceholder: !id })),
+    { url: trinketId ? `${ITEM_CDN}/${trinketId}.png` : null, isPlaceholder: !trinketId, isTrinket: true }
+  ];
+
+  const maxDmg   = Math.max(...allParticipants.map(pp => pp.totalDamageDealtToChampions || 0), 1);
+  const maxTaken = Math.max(...allParticipants.map(pp => pp.totalDamageTaken || 0), 1);
+  const myDmg    = p.totalDamageDealtToChampions || 0;
+  const myTaken  = p.totalDamageTaken || 0;
+
+  const gameLength = info.gameDuration || 1;
+  const timeDead   = p.totalTimeSpentDead || 0;
+  const timeDeadFmt    = timeDead   >= 60 ? `${Math.floor(timeDead/60)}m ${timeDead%60}s`   : `${timeDead}s`;
+  const isHighDeathTime = timeDead > gameLength * 0.25;
+  const longestAlive    = p.longestTimeSpentLiving || 0;
+  const longestAliveFmt = longestAlive >= 60 ? `${Math.floor(longestAlive/60)}m ${longestAlive%60}s` : `${longestAlive}s`;
+
+  const queueMap = {
+    420:'Ranked Solo/Duo', 440:'Ranked Flex', 400:'Normal Draft', 430:'Normal Blind',
+    700:'Clash', 900:'URF', 1020:'One for All', 1700:'Arena', 450:'ARAM'
+  };
+  const gameModeLabel = queueMap[info.queueId] || info.gameMode || 'LoL Match';
+
+  const fmtN = (n) => (n || 0).toLocaleString();
+
+  const multiKillMax = Math.max(
+    (p.doubleKills||0) > 0 ? 2 : 0,
+    (p.tripleKills||0) > 0 ? 3 : 0,
+    (p.quadraKills||0) > 0 ? 4 : 0,
+    (p.pentaKills||0)  > 0 ? 5 : 0
+  );
+  const mkLabels = { 0:'—', 2:'Double', 3:'Triple', 4:'Quadra', 5:'Penta' };
+  const largestMultiKillLabel = mkLabels[multiKillMax] || `${multiKillMax}x`;
+
+  const healAlliesRaw = p.totalHealsOnTeammates || 0;
+  const shieldsRaw    = p.totalDamageShieldedOnTeammates || 0;
+  const totalPings =
+    (p.allInPings||0)+(p.assistMePings||0)+(p.basicPings||0)+(p.commandPings||0)+
+    (p.dangerPings||0)+(p.enemyMissingPings||0)+(p.getBackPings||0)+(p.holdPings||0)+
+    (p.needVisionPings||0)+(p.onMyWayPings||0)+(p.pushPings||0)+(p.retreatPings||0)+
+    (p.visionClearedPings||0);
+
+  return {
+    playerName:   p.riotIdGameName || 'Unknown',
+    riotTag:      p.riotIdTagline  ? `#${p.riotIdTagline}` : '',
+    championName: p.championName   || 'Unknown',
+    championIcon: `${CDN}/champion/${fixChampName(p.championName || '')}.png`,
+    level:        p.champLevel   || 18,
+    accountLevel: p.summonerLevel || '?',
+    teamLabel, teamBarClass, position: positionLabel,
+    resultText:  isWinner ? 'VICTORY' : 'DEFEAT',
+    resultClass: isWinner ? 'victory' : 'defeat',
+    gameMode: gameModeLabel,
+    duration: `${Math.floor(gameLength/60)}m ${gameLength%60}s`,
+    displayItems,
+    spell1Icon: `${SPELL_CDN}/${s1Key}.png`,
+    spell2Icon: `${SPELL_CDN}/${s2Key}.png`,
+    spell1Name:  spellDisplayNames[s1Key] || s1Key.replace('Summoner',''),
+    spell2Name:  spellDisplayNames[s2Key] || s2Key.replace('Summoner',''),
+    spell1Casts: p.summoner1Casts || 0,
+    spell2Casts: p.summoner2Casts || 0,
+    abilityCasts: [
+      { key: 'Q', count: p.spell1Casts || 0 },
+      { key: 'W', count: p.spell2Casts || 0 },
+      { key: 'E', count: p.spell3Casts || 0 },
+      { key: 'R', count: p.spell4Casts || 0 },
+    ],
+    // Combat
+    kills: k, deaths: d, assists: a, kdaRatio,
+    largestSpree: p.largestKillingSpree || 0,
+    killingSprees: p.killingSprees || 0,
+    largestMultiKillLabel,
+    doubleKills: p.doubleKills || 0,
+    tripleKills: p.tripleKills || 0,
+    quadraKills: p.quadraKills || 0,
+    pentaKills:  p.pentaKills  || 0,
+    firstBloodKill:   Boolean(p.firstBloodKill),
+    firstBloodAssist: Boolean(p.firstBloodAssist),
+    firstTowerKill:   Boolean(p.firstTowerKill),
+    firstTowerAssist: Boolean(p.firstTowerAssist),
+    largestCrit: fmtN(p.largestCriticalStrike || 0),
+    longestAliveFmt,
+    // Damage dealt
+    totalDamageToChamps: fmtN(myDmg),
+    physicalDamage:  fmtN(p.physicalDamageDealtToChampions || 0),
+    magicDamage:     fmtN(p.magicDamageDealtToChampions    || 0),
+    trueDamage:      fmtN(p.trueDamageDealtToChampions     || 0),
+    totalDamageAll:  fmtN(p.totalDamageDealt               || 0),
+    turretDamage:    fmtN(p.damageDealtToTurrets           || 0),
+    objectiveDamage: fmtN(p.damageDealtToObjectives        || 0),
+    epicMonsterDmg:  fmtN(p.damageDealtToEpicMonsters      || 0),
+    dmgPercent:      Math.round((myDmg   / maxDmg)   * 100),
+    // Survivability
+    totalTaken:    fmtN(myTaken),
+    physicalTaken: fmtN(p.physicalDamageTaken || 0),
+    magicTaken:    fmtN(p.magicDamageTaken    || 0),
+    trueTaken:     fmtN(p.trueDamageTaken     || 0),
+    mitigated:     fmtN(p.damageSelfMitigated || 0),
+    takenPercent:  Math.round((myTaken / maxTaken) * 100),
+    timeDead, timeDeadFmt, isHighDeathTime,
+    // Support
+    ccTime:  p.timeCCingOthers  || 0,
+    ccDealt: p.totalTimeCCDealt || 0,
+    heals:      fmtN(p.totalHeal || 0),
+    healAllies: fmtN(healAlliesRaw),
+    shields:    fmtN(shieldsRaw),
+    hasHealAllies: healAlliesRaw > 0,
+    hasShields:    shieldsRaw    > 0,
+    combinedSupport: fmtN(healAlliesRaw + shieldsRaw),
+    // Objectives
+    turretKills:         p.turretKills         || 0,
+    turretTakedowns:     p.turretTakedowns      || 0,
+    inhibitorKills:      p.inhibitorKills       || 0,
+    inhibitorTakedowns:  p.inhibitorTakedowns   || 0,
+    dragonKills:         p.dragonKills          || 0,
+    baronKills:          p.baronKills           || 0,
+    objectivesStolen:    p.objectivesStolen     || 0,
+    objectivesStolenAssists: p.objectivesStolenAssists || 0,
+    // Vision
+    visionScore:   p.visionScore              || 0,
+    wardsPlaced:   p.wardsPlaced              || 0,
+    wardsKilled:   p.wardsKilled              || 0,
+    controlWards:  p.visionWardsBoughtInGame   || 0,
+    detectorWards: p.detectorWardsPlaced       || 0,
+    sightWards:    p.sightWardsBoughtInGame    || 0,
+    // Resources
+    gold:      fmtN(p.goldEarned || 0),
+    goldSpent: fmtN(p.goldSpent  || 0),
+    cs:        p.totalMinionsKilled          || 0,
+    neutralCs: p.neutralMinionsKilled        || 0,
+    allyJungleCs:  p.totalAllyJungleMinionsKilled  || 0,
+    enemyJungleCs: p.totalEnemyJungleMinionsKilled || 0,
+    itemsPurchased:      p.itemsPurchased    || 0,
+    consumablesPurchased: p.consumablesPurchased || 0,
+    // Pings
+    allInPings:   p.allInPings       || 0,
+    dangerPings:  p.dangerPings      || 0,
+    missingPings: p.enemyMissingPings || 0,
+    onMyWayPings: p.onMyWayPings     || 0,
+    assistMePings: p.assistMePings   || 0,
+    retreatPings:  p.retreatPings    || 0,
+    totalPings,
+  };
+}
+
+async function generatePlayerStatsImageSR(participant, v5Match, allParticipants) {
+  try {
+    const templatePath = path.join(__dirname, 'match-template-player-stats-sr.html');
+    const template = fs.readFileSync(templatePath, 'utf8');
+    const data = await preparePlayerStatsDataSR(participant, v5Match, allParticipants);
+    logger.info('[PlayerStats] Generating SR player stats image', { player: participant.riotIdGameName });
+    const imageBuffer = await nodeHtmlToImage({
+      html: template,
+      content: data,
+      puppeteerArgs: { args: ['--no-sandbox', '--disable-setuid-sandbox'] }
+    });
+    logger.info('[PlayerStats] SR player stats image generated');
+    return { imageBuffer, errorMessage: null };
+  } catch (err) {
+    logger.error('[PlayerStats] SR image generation failed', err);
     return { imageBuffer: null, errorMessage: err?.message || 'unknown error' };
   }
 }
@@ -1474,19 +1700,65 @@ function buildPlayerSelectorRows(allPlayers, gameId, activeIdx) {
  * @param {object} payload        - full normalised match payload
  * @param {Array}  uploaderInfos  - uploader info array
  * @param {Array}  matchedPlayers - DB players matched in this match
+ * @param {object} cachedEntry    - live cache entry (for storing fetched V5 data)
  */
-async function handleMoreStatsInteraction(interaction, payload, uploaderInfos, matchedPlayers = []) {
-  const gameId    = String(payload.gameId || payload.reportGameId || 'unknown');
-  const allPlayers = getAllPlayersOrdered(payload);
+async function handleMoreStatsInteraction(interaction, payload, uploaderInfos, matchedPlayers = [], cachedEntry = null) {
+  const gameId = String(payload.gameId || payload.reportGameId || 'unknown');
+  const userId = String(interaction.user.id);
 
+  // ─── SR: fetch Match V5 and use the SR template ───
+  if (isSRGame(payload) && gameId !== 'unknown') {
+    let v5Data = cachedEntry?.v5Data || null;
+    if (!v5Data) {
+      v5Data = await fetchMatchV5Data(gameId);
+      if (cachedEntry && v5Data) cachedEntry.v5Data = v5Data;
+    }
+
+    if (v5Data) {
+      const allParticipants = v5Data.info.participants;
+
+      // Find default index – linked player first, then local player, then 0
+      let defaultIdx = 0;
+      const linked = matchedPlayers.find(mp => String(mp.user_id) === userId);
+      if (linked) {
+        const idx = allParticipants.findIndex(p => {
+          if (linked.puuid && linked.puuid !== 'none') return p.puuid === linked.puuid;
+          const lName = (linked.league_name || '').trim().toLowerCase();
+          return lName && (
+            `${(p.riotIdGameName||'').toLowerCase()}#${(p.riotIdTagline||'').toLowerCase()}` === lName
+            || (p.riotIdGameName||'').toLowerCase() === lName
+          );
+        });
+        if (idx !== -1) defaultIdx = idx;
+      } else {
+        const localPlayer = payload.localPlayer
+          || (Array.isArray(payload.teams) ? payload.teams.flatMap(t => t.players || []).find(p => p.isLocalPlayer) : null);
+        if (localPlayer?.puuid) {
+          const idx = allParticipants.findIndex(p => p.puuid === localPlayer.puuid);
+          if (idx !== -1) defaultIdx = idx;
+        }
+      }
+
+      logger.info('[PlayerStats] Show More Stats (SR)', { gameId, defaultIdx, userId });
+      const result = await generatePlayerStatsImageSR(allParticipants[defaultIdx], v5Data, allParticipants);
+      if (!result.imageBuffer) {
+        return interaction.editReply({ content: `Could not generate player stats: ${result.errorMessage || 'unknown error'}` });
+      }
+      const rows = buildPlayerSelectorRows(allParticipants, gameId, defaultIdx);
+      const attachment = new AttachmentBuilder(result.imageBuffer, { name: `player-stats-${gameId}-${defaultIdx}.png` });
+      return interaction.editReply({ files: [attachment], components: rows });
+    }
+    logger.info('[PlayerStats] V5 fetch failed, falling back to LCU data', { gameId });
+  }
+
+  // ─── ARAM / Mayhem / V5 fallback: use LCU data ───
+  const allPlayers = getAllPlayersOrdered(payload);
   if (allPlayers.length === 0) {
     logger.info('[PlayerStats] No players found in payload', { gameId });
     return interaction.editReply({ content: 'No player data found in this match.' });
   }
 
-  // Find the linked player for this Discord user
   let defaultIdx = 0;
-  const userId = String(interaction.user.id);
   const linked = matchedPlayers.find(mp => String(mp.user_id) === userId);
   if (linked) {
     const idx = allPlayers.findIndex(p => {
@@ -1498,8 +1770,7 @@ async function handleMoreStatsInteraction(interaction, payload, uploaderInfos, m
     if (idx !== -1) defaultIdx = idx;
   }
 
-  logger.info('[PlayerStats] Show More Stats requested', { gameId, defaultIdx, userId });
-
+  logger.info('[PlayerStats] Show More Stats (LCU/Mayhem)', { gameId, defaultIdx, userId });
   const result = await generatePlayerStatsImage(allPlayers[defaultIdx], payload, allPlayers);
   if (!result.imageBuffer) {
     return interaction.editReply({ content: `Could not generate player stats: ${result.errorMessage || 'unknown error'}` });
@@ -1507,7 +1778,6 @@ async function handleMoreStatsInteraction(interaction, payload, uploaderInfos, m
 
   const rows = buildPlayerSelectorRows(allPlayers, gameId, defaultIdx);
   const attachment = new AttachmentBuilder(result.imageBuffer, { name: `player-stats-${gameId}-${defaultIdx}.png` });
-
   await interaction.editReply({ files: [attachment], components: rows });
 }
 
@@ -1565,7 +1835,7 @@ async function onInteraction(interaction) {
       }
 
       await interaction.deferReply({ ephemeral: true });
-      await handleMoreStatsInteraction(interaction, cached.payload, cached.uploaderInfos, cached.matchedPlayers || []);
+      await handleMoreStatsInteraction(interaction, cached.payload, cached.uploaderInfos, cached.matchedPlayers || [], cached);
       return;
     }
 
@@ -1583,6 +1853,24 @@ async function onInteraction(interaction) {
 
       await interaction.deferUpdate();
 
+      // ─── SR branch: use V5 participants ───
+      if (isSRGame(cached.payload) && cached.v5Data) {
+        const allParticipants = cached.v5Data.info.participants;
+        if (isNaN(playerIdx) || playerIdx < 0 || playerIdx >= allParticipants.length) {
+          return interaction.editReply({ content: 'Invalid player selection.' });
+        }
+        logger.info('[PlayerStats] SR Player button clicked', { gameId, playerIdx });
+        const result = await generatePlayerStatsImageSR(allParticipants[playerIdx], cached.v5Data, allParticipants);
+        if (!result.imageBuffer) {
+          return interaction.editReply({ content: `Could not generate stats: ${result.errorMessage || 'unknown error'}` });
+        }
+        const rows = buildPlayerSelectorRows(allParticipants, gameId, playerIdx);
+        const attachment = new AttachmentBuilder(result.imageBuffer, { name: `player-stats-${gameId}-${playerIdx}.png` });
+        await interaction.editReply({ files: [attachment], components: rows });
+        return;
+      }
+
+      // ─── LCU / Mayhem branch ───
       const allPlayers = getAllPlayersOrdered(cached.payload);
       if (isNaN(playerIdx) || playerIdx < 0 || playerIdx >= allPlayers.length) {
         return interaction.editReply({ content: 'Invalid player selection.' });

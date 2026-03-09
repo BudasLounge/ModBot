@@ -48,83 +48,55 @@
     }
     .champ-line { font-size: 13px; color: #c8aa6e; margin-top: 2px; }
     .account-line { font-size: 11px; color: #5c5b57; margin-top: 3px; }
-
-    .header-right { text-align: right; flex-shrink: 0; }
+    .header-right { flex-shrink: 0; text-align: right; }
     .result-badge {
       display: inline-block;
-      padding: 5px 14px;
-      font-size: 16px; font-weight: 700;
-      letter-spacing: 2px; text-transform: uppercase;
-      border-radius: 4px;
+      font-size: 13px; font-weight: 700; letter-spacing: 1.5px;
+      padding: 3px 10px; border-radius: 3px;
     }
-    .result-badge.victory { color: #0acbe6; background: rgba(10,203,230,0.08); border: 1px solid rgba(10,203,230,0.3); }
-    .result-badge.defeat  { color: #e84057; background: rgba(232,64,87,0.08);  border: 1px solid rgba(232,64,87,0.3); }
-    .game-meta { font-size: 13px; color: #939a9e; margin-top: 6px; }
-    .game-duration { font-size: 11px; color: #5c5b57; margin-top: 2px; }
+    .result-badge.victory { background: rgba(10,203,230,0.15); color: #0acbe6; border: 1px solid #0acbe6; }
+    .result-badge.defeat  { background: rgba(232,64,87,0.15);  color: #e84057; border: 1px solid #e84057; }
+    .game-meta     { font-size: 11px; color: #5c5b57; margin-top: 5px; }
+    .game-duration { font-size: 13px; color: #a09b8c; margin-top: 2px; }
 
-    /* ─── ITEMS + KDA STRIP ─── */
+    /* ─── ITEMS + SPELLS STRIP ─── */
     .items-strip {
       display: flex;
       align-items: center;
       gap: 6px;
       padding: 0 20px;
-      height: 50px;
-      background: #090e14;
-      border-bottom: 1px solid #1e2328;
-    }
-    .strip-label {
-      font-size: 9px; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 1px;
-      color: #5c5b57; flex-shrink: 0;
-    }
-    .spell-icon {
-      width: 26px; height: 26px;
-      border-radius: 4px; background: #141619; border: 1px solid #333;
-      display: block; flex-shrink: 0;
-    }
-    .item-icon {
-      width: 30px; height: 30px;
-      border-radius: 4px; background: #141619; border: 1px solid #333;
-      display: block; flex-shrink: 0;
-    }
-    .item-trinket { border-radius: 50%; margin-left: 2px; }
-    .item-placeholder { opacity: 0; }
-    .strip-divider { width: 1px; height: 28px; background: #1e2328; margin: 0 6px; flex-shrink: 0; }
-    .kda-display { margin-left: 6px; white-space: nowrap; }
-    .kda-value { font-size: 19px; font-weight: 700; color: #fff; }
-    .kda-sub { font-size: 11px; color: #666; margin-left: 6px; }
-
-    /* ─── AUGMENTS STRIP (Mayhem only) ─── */
-    .augments-strip {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 0 20px;
-      height: 46px;
+      height: 44px;
       background: #07111c;
       border-bottom: 1px solid #1e2328;
     }
-    .aug-item { display: flex; align-items: center; gap: 6px; }
-    .aug-icon  { width: 28px; height: 28px; border-radius: 4px; background: #141619; border: 1px solid rgba(200,170,110,0.3); flex-shrink: 0; }
-    .aug-placeholder {
-      width: 28px; height: 28px; border-radius: 4px;
-      background: #1e2328; border: 1px solid #333;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 9px; color: #c8aa6e; font-weight: 700; flex-shrink: 0;
+    .strip-label { font-size: 9px; color: #3d5263; letter-spacing: 1px; text-transform: uppercase; padding: 2px 4px 2px 0; }
+    .strip-divider { width: 1px; height: 24px; background: #1e2328; margin: 0 4px; }
+    .spell-icon  { width: 26px; height: 26px; border-radius: 3px; background: #141619; border: 1px solid #333; flex-shrink: 0; }
+    .spell-name  { font-size: 9px; color: #5c5b57; }
+    .item-icon   {
+      width: 30px; height: 30px; border-radius: 3px;
+      background: #141619; border: 1px solid #1e2328; flex-shrink: 0;
     }
-    .aug-name { font-size: 11px; color: #c8aa6e; max-width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .item-trinket   { border-color: #c8aa6e44; }
+    .item-placeholder { opacity: 0.2; }
+    .kda-display { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+    .kda-value  { font-size: 17px; font-weight: 700; color: #fff; }
+    .kda-sub { font-size: 11px; color: #666; margin-left: 6px; }
 
     /* ─── STATS GRID ─── */
+    .main-content { display: flex; flex-direction: column; }
+    .stats-area   { display: flex; flex-direction: column; flex: 1; }
     .stats-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(2, 1fr);
       gap: 1px;
       background: #1e2328;
       flex: 1;
     }
     .stat-section {
-      background: #0f1216;
-      padding: 10px 14px;
+      background: #010a13;
+      padding: 10px 14px 8px 14px;
     }
     .section-title {
       font-size: 9px; font-weight: 700;
@@ -146,24 +118,66 @@
     .stat-positive  { color: #0acbe6; }
     .stat-danger    { color: #e84057; }
     .stat-muted     { color: #636363; }
+    .stat-gold      { color: #c8aa6e; }
 
-    /* Damage bar */
+    /* Damage bars */
     .dmg-bar-bg   { height: 4px; background: #1c1f24; border-radius: 2px; margin: 3px 0 5px 0; }
     .dmg-bar-fill { height: 100%; border-radius: 2px; }
-    .bar-blue   { background: #0acbe6; }
-    .bar-red    { background: #e84057; }
+    .bar-blue { background: #0acbe6; }
+    .bar-red  { background: #e84057; }
 
-
-
-    /* ─── MAIN CONTENT WRAPPER ─── */
-    .main-content {
+    /* ─── ABILITY CASTS (Q/W/E/R 4-block) ─── */
+    .ability-4-row {
       display: flex;
-      flex-direction: column;
+      gap: 0;
+      margin-bottom: 8px;
+      background: #0a0f14;
+      border: 1px solid #1e2328;
+      border-radius: 4px;
+      overflow: hidden;
     }
-    .stats-area {
+    .ability-cast-block {
+      flex: 1;
       display: flex;
       flex-direction: column;
-      flex: 1;
+      align-items: center;
+      padding: 6px 2px 5px 2px;
+    }
+    .ability-cast-block + .ability-cast-block { border-left: 1px solid #1e2328; }
+    .ability-key-label {
+      font-size: 9px; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; color: #5c5b57;
+      margin-bottom: 2px;
+    }
+    .ability-cast-count { font-size: 19px; font-weight: 700; color: #fff; line-height: 1; }
+    .ability-cast-sub   { font-size: 9px; color: #5c5b57; margin-top: 2px; }
+
+    /* ─── SUMMONER SPELL ROWS ─── */
+    .summoner-spell-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 2px 0;
+    }
+    .summoner-spell-icon {
+      width: 22px; height: 22px;
+      border-radius: 3px;
+      border: 1px solid #333;
+      background: #141619;
+      flex-shrink: 0;
+    }
+    .summoner-spell-name  { font-size: 11px; color: #5c5b57; flex: 1; }
+    .summoner-spell-casts { font-size: 12px; color: #a09b8c; font-weight: 500; }
+
+    /* ─── POSITION BADGE ─── */
+    .position-badge {
+      display: inline-block;
+      padding: 1px 7px;
+      font-size: 10px; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase;
+      background: #1e2328; border: 1px solid #c8aa6e44;
+      color: #c8aa6e; border-radius: 3px;
+      margin-left: 6px; vertical-align: middle;
     }
 
     /* ─── FOOTER ─── */
@@ -177,12 +191,11 @@
       font-size: 11px;
       color: #5c5b57;
     }
-    .footer-record { color: #939a9e; }
+    .footer-record  { color: #939a9e; }
     .footer-winrate { color: #c8aa6e; font-weight: 700; }
-    .footer-afk { color: #e84057; font-weight: 700; }
   </style>
 </head>
-<body style="height: {{bodyHeight}};">
+<body style="height: 572px;">
 
   <!-- ── HEADER ── -->
   <div class="player-header">
@@ -192,8 +205,13 @@
       <div class="champ-level">{{level}}</div>
     </div>
     <div class="header-info">
-      <div class="summoner-name">{{playerName}}</div>
-      <div class="champ-line">{{championName}} &bull; {{teamLabel}} Team</div>
+      <div class="summoner-name">
+        {{playerName}}<span class="stat-muted" style="font-size:14px;font-weight:400;"> {{riotTag}}</span>
+      </div>
+      <div class="champ-line">
+        {{championName}} &bull; {{teamLabel}} Team
+        <span class="position-badge">{{position}}</span>
+      </div>
       <div class="account-line">Account Level {{accountLevel}}</div>
     </div>
     <div class="header-right">
@@ -226,24 +244,6 @@
       </div>
     </div>
 
-    <!-- ── AUGMENTS STRIP (Mayhem only) ── -->
-    {{#if isMayhem}}
-    <div class="augments-strip">
-      <span class="strip-label">Augments</span>
-      {{#each augments}}
-        <div class="aug-item">
-          {{#if icon}}
-            <img src="{{icon}}" class="aug-icon"
-                 onerror="this.style.background='#1e2328';this.removeAttribute('src')">
-          {{else}}
-            <div class="aug-placeholder">{{short}}</div>
-          {{/if}}
-          <span class="aug-name">{{name}}</span>
-        </div>
-      {{/each}}
-    </div>
-    {{/if}}
-
     <!-- ── STATS GRID (2 rows × 3 cols) ── -->
     <div class="stats-area">
       <div class="stats-grid">
@@ -268,12 +268,18 @@
             <span class="stat-val stat-positive">{{kdaRatio}}</span>
           </div>
           <div class="stat-row">
-            <span class="stat-key">Largest Killing Spree</span>
-            <span class="stat-val">{{largestSpree}}</span>
-          </div>
-          <div class="stat-row">
             <span class="stat-key">Best Multi-Kill</span>
             <span class="stat-val">{{largestMultiKillLabel}}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-key">Killing Sprees</span>
+            <span class="stat-val">{{killingSprees}}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-key">First Blood</span>
+            <span class="stat-val {{#if firstBloodKill}}stat-positive{{else}}{{#if firstBloodAssist}}stat-positive{{/if}}{{/if}}">
+              {{#if firstBloodKill}}Kill{{else}}{{#if firstBloodAssist}}Assist{{else}}—{{/if}}{{/if}}
+            </span>
           </div>
           <div class="stat-row">
             <span class="stat-key">Largest Crit</span>
@@ -348,63 +354,88 @@
             <span class="stat-val {{#if isHighDeathTime}}stat-danger{{/if}}">{{timeDeadFmt}}</span>
           </div>
           <div class="stat-row">
-            <span class="stat-key">AFK</span>
-            <span class="stat-val {{#if wasAfk}}stat-danger{{/if}}">{{#if wasAfk}}YES{{else}}No{{/if}}</span>
+            <span class="stat-key">Longest Alive</span>
+            <span class="stat-val">{{longestAliveFmt}}</span>
           </div>
         </div>
 
-        <!-- Row 2 Col 1: UTILITY -->
+        <!-- Row 2 Col 1: ABILITY CASTS -->
         <div class="stat-section">
-          <div class="section-title">Utility</div>
-          <div class="stat-row">
-            <span class="stat-key">Hard CC on Enemies</span>
-            <span class="stat-val">{{ccTime}}s</span>
+          <div class="section-title">Ability Casts</div>
+          <div class="ability-4-row">
+            {{#each abilityCasts}}
+            <div class="ability-cast-block">
+              <div class="ability-key-label">{{key}}</div>
+              <div class="ability-cast-count">{{count}}</div>
+              <div class="ability-cast-sub">casts</div>
+            </div>
+            {{/each}}
           </div>
-          <div class="stat-row">
-            <span class="stat-key">All CC (incl. Slows)</span>
-            <span class="stat-val">{{ccDealt}}s</span>
+          <div class="summoner-spell-row">
+            <img src="{{spell1Icon}}" class="summoner-spell-icon"
+                 onerror="this.style.background='#1e2328';this.removeAttribute('src')">
+            <span class="summoner-spell-name">{{spell1Name}}</span>
+            <span class="summoner-spell-casts">{{spell1Casts}}x</span>
           </div>
-          <div class="stat-row">
-            <span class="stat-key">Turrets Destroyed</span>
-            <span class="stat-val">{{turretKills}}</span>
+          <div class="summoner-spell-row">
+            <img src="{{spell2Icon}}" class="summoner-spell-icon"
+                 onerror="this.style.background='#1e2328';this.removeAttribute('src')">
+            <span class="summoner-spell-name">{{spell2Name}}</span>
+            <span class="summoner-spell-casts">{{spell2Casts}}x</span>
           </div>
-          <div class="stat-row">
-            <span class="stat-key">Inhibitors</span>
-            <span class="stat-val">{{inhibKills}}</span>
-          </div>
-          <div class="stat-row">
-            <span class="stat-key">Leaver Penalties</span>
-            <span class="stat-val {{#if hadLeaverPenalty}}stat-danger{{/if}}">{{leaves}}</span>
+          <div class="stat-row" style="margin-top:4px;">
+            <span class="stat-key">Total Pings</span>
+            <span class="stat-val">{{totalPings}}</span>
           </div>
         </div>
 
-        <!-- Row 2 Col 2: HEALING & PROTECTION -->
+        <!-- Row 2 Col 2: VISION & OBJECTIVES -->
         <div class="stat-section">
-          <div class="section-title">Healing &amp; Protection</div>
+          <div class="section-title">Vision &amp; Objectives</div>
           <div class="stat-row">
-            <span class="stat-key">Self Heal</span>
-            <span class="stat-val">{{heals}}</span>
+            <span class="stat-key">Vision Score</span>
+            <span class="stat-val stat-highlight">{{visionScore}}</span>
           </div>
           <div class="stat-row">
-            <span class="stat-key">Ally Heals</span>
-            <span class="stat-val {{#if hasHealAllies}}stat-positive{{/if}}">{{healAllies}}</span>
+            <span class="stat-key">Wards Placed</span>
+            <span class="stat-val">{{wardsPlaced}}</span>
           </div>
           <div class="stat-row">
-            <span class="stat-key">Ally Shields</span>
-            <span class="stat-val {{#if hasShields}}stat-positive{{/if}}">{{shields}}</span>
+            <span class="stat-key">Wards Killed</span>
+            <span class="stat-val">{{wardsKilled}}</span>
           </div>
           <div class="stat-row">
-            <span class="stat-key">Combined Support</span>
-            <span class="stat-val stat-highlight">{{combinedSupport}}</span>
+            <span class="stat-key">Control Wards</span>
+            <span class="stat-val {{#if controlWards}}stat-positive{{/if}}">{{controlWards}}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-key">Dragons</span>
+            <span class="stat-val">{{dragonKills}}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-key">Barons</span>
+            <span class="stat-val">{{baronKills}}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-key">Objectives Stolen</span>
+            <span class="stat-val {{#if objectivesStolen}}stat-positive{{/if}}">{{objectivesStolen}}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-key">Tower Takedowns</span>
+            <span class="stat-val">{{turretTakedowns}}</span>
           </div>
         </div>
 
-        <!-- Row 2 Col 3: RESOURCES & FARM -->
+        <!-- Row 2 Col 3: RESOURCES -->
         <div class="stat-section">
-          <div class="section-title">Resources &amp; Farm</div>
+          <div class="section-title">Resources</div>
           <div class="stat-row">
             <span class="stat-key">Gold Earned</span>
             <span class="stat-val stat-highlight">{{gold}}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-key">Gold Spent</span>
+            <span class="stat-val stat-gold">{{goldSpent}}</span>
           </div>
           <div class="stat-row">
             <span class="stat-key">Minions (CS)</span>
@@ -415,20 +446,20 @@
             <span class="stat-val">{{neutralCs}}</span>
           </div>
           <div class="stat-row">
-            <span class="stat-key">Vision Score</span>
-            <span class="stat-val">{{visionScore}}</span>
+            <span class="stat-key">Ally Jungle CS</span>
+            <span class="stat-val">{{allyJungleCs}}</span>
           </div>
           <div class="stat-row">
-            <span class="stat-key">Control Wards</span>
-            <span class="stat-val">{{visionWards}}</span>
+            <span class="stat-key">Enemy Jungle CS</span>
+            <span class="stat-val {{#if enemyJungleCs}}stat-positive{{/if}}">{{enemyJungleCs}}</span>
           </div>
           <div class="stat-row">
-            <span class="stat-key">Sight Wards</span>
-            <span class="stat-val">{{wardsPlaced}}</span>
+            <span class="stat-key">Items Purchased</span>
+            <span class="stat-val">{{itemsPurchased}}</span>
           </div>
           <div class="stat-row">
-            <span class="stat-key">Account Record</span>
-            <span class="stat-val">{{wins}}W / {{losses}}L</span>
+            <span class="stat-key">Consumables</span>
+            <span class="stat-val">{{consumablesPurchased}}</span>
           </div>
         </div>
 
@@ -438,10 +469,9 @@
     <!-- ── FOOTER ── -->
     <div class="stats-footer">
       <span class="footer-record">
-        Summoner Lvl {{accountLevel}} &bull; {{wins}}W &mdash; {{losses}}L
-        {{#if wasAfk}}&bull; <span class="footer-afk">AFK FLAGGED</span>{{/if}}
+        Summoner Lvl {{accountLevel}} &bull; {{position}} &bull; {{teamLabel}} Team
       </span>
-      <span class="footer-winrate">Win Rate: {{winRate}}</span>
+      <span class="footer-winrate">{{gameMode}} &bull; {{duration}}</span>
     </div>
 
   </div>
