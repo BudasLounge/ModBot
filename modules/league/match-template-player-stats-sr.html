@@ -54,8 +54,8 @@
       font-size: 13px; font-weight: 700; letter-spacing: 1.5px;
       padding: 3px 10px; border-radius: 3px;
     }
-    .result-badge.victory { background: rgba(10,203,230,0.15); color: #0acbe6; border: 1px solid #0acbe6; }
-    .result-badge.defeat  { background: rgba(232,64,87,0.15);  color: #e84057; border: 1px solid #e84057; }
+    .result-badge.victory { color: #0acbe6; background: rgba(10,203,230,0.08); border: 1px solid rgba(10,203,230,0.3); }
+    .result-badge.defeat  { color: #e84057; background: rgba(232,64,87,0.08);  border: 1px solid rgba(232,64,87,0.3); }
     .game-meta     { font-size: 11px; color: #5c5b57; margin-top: 5px; }
     .game-duration { font-size: 13px; color: #a09b8c; margin-top: 2px; }
 
@@ -66,7 +66,7 @@
       gap: 6px;
       padding: 0 20px;
       height: 44px;
-      background: #07111c;
+      background: #090e14;
       border-bottom: 1px solid #1e2328;
     }
     .strip-label { font-size: 9px; color: #3d5263; letter-spacing: 1px; text-transform: uppercase; padding: 2px 4px 2px 0; }
@@ -95,7 +95,7 @@
       flex: 1;
     }
     .stat-section {
-      background: #010a13;
+      background: #0f1216;
       padding: 10px 14px 8px 14px;
     }
     .section-title {
@@ -168,6 +168,12 @@
     }
     .summoner-spell-name  { font-size: 11px; color: #5c5b57; flex: 1; }
     .summoner-spell-casts { font-size: 12px; color: #a09b8c; font-weight: 500; }
+
+    .mini-divider {
+      height: 1px;
+      background: #1e2328;
+      margin: 5px 0;
+    }
 
     /* ─── POSITION BADGE ─── */
     .position-badge {
@@ -389,9 +395,27 @@
           </div>
         </div>
 
-        <!-- Row 2 Col 2: VISION & OBJECTIVES -->
+        <!-- Row 2 Col 2: HEALING / VISION / OBJECTIVES -->
         <div class="stat-section">
-          <div class="section-title">Vision &amp; Objectives</div>
+          <div class="section-title">Healing &amp; Shielding</div>
+          <div class="stat-row">
+            <span class="stat-key">Self Heal</span>
+            <span class="stat-val">{{heals}}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-key">Ally Heals</span>
+            <span class="stat-val {{#if hasHealAllies}}stat-positive{{/if}}">{{healAllies}}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-key">Ally Shields</span>
+            <span class="stat-val {{#if hasShields}}stat-positive{{/if}}">{{shields}}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-key">Combined Support</span>
+            <span class="stat-val stat-highlight">{{combinedSupport}}</span>
+          </div>
+          <div class="mini-divider"></div>
+          <div class="section-title" style="margin-top:2px;">Vision &amp; Objectives</div>
           <div class="stat-row">
             <span class="stat-key">Vision Score</span>
             <span class="stat-val stat-highlight">{{visionScore}}</span>
