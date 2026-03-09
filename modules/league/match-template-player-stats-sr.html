@@ -84,7 +84,11 @@
     .kda-sub { font-size: 11px; color: #666; margin-left: 6px; }
 
     /* ─── STATS GRID ─── */
-    .main-content { display: flex; flex-direction: column; }
+    .main-content {
+      display: flex;
+      flex-direction: column;
+      height: calc(100% - 134px);
+    }
     .stats-area   { display: flex; flex-direction: column; flex: 1; }
     .stats-grid {
       display: grid;
@@ -102,15 +106,15 @@
       font-size: 9px; font-weight: 700;
       text-transform: uppercase; letter-spacing: 1.5px;
       color: #c8aa6e;
-      margin-bottom: 7px;
+      margin-bottom: 5px;
       border-bottom: 1px solid #1e2328;
-      padding-bottom: 4px;
+      padding-bottom: 3px;
     }
     .stat-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 2px 0;
+      padding: 1px 0;
     }
     .stat-key  { font-size: 11px; color: #5c5b57; }
     .stat-val  { font-size: 12px; color: #a09b8c; font-weight: 500; }
@@ -201,7 +205,7 @@
     .footer-winrate { color: #c8aa6e; font-weight: 700; }
   </style>
 </head>
-<body style="height: 640px;">
+<body style="height: 700px;">
 
   <!-- ── HEADER ── -->
   <div class="player-header">
