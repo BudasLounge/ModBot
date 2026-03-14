@@ -355,7 +355,7 @@ function isSRGame(payload) {
 }
 
 function extractRankedLpInfo(payload) {
-  const hasRankedPayload = Boolean(payload?.isRanked || payload?.rankedSummary || payload?.rankedLpChange);
+  const hasRankedPayload = Boolean(payload?.isRanked || payload?.rankedSummary || payload?.rankedLpChange || payload?.rankedCurrent);
   if (!hasRankedPayload) {
     return {
       hasRankedLp: false,
@@ -369,6 +369,7 @@ function extractRankedLpInfo(payload) {
   const top = payload?.rankedLpChange || null;
   const summary = payload?.rankedSummary || null;
   const change = top || summary?.rankedChange || null;
+  const current = payload?.rankedCurrent || summary?.rankedCurrent || null;
 
   const pick = (...vals) => vals.find(v => v !== undefined && v !== null && v !== '');
   const toNum = (v) => {
@@ -376,17 +377,19 @@ function extractRankedLpInfo(payload) {
     return Number.isFinite(n) ? n : null;
   };
 
-  const queueRaw = String(pick(change?.queueType, summary?.queueType, payload?.queueType, '')).toUpperCase();
+  const queueRaw = String(pick(change?.queueType, current?.queueType, summary?.queueType, payload?.queueType, '')).toUpperCase();
   const rankedQueueLabel = queueRaw.includes('FLEX')
     ? 'Ranked Flex'
     : queueRaw.includes('SOLO')
       ? 'Ranked Solo'
       : 'Ranked';
 
-  const tier = pick(change?.tier, summary?.tier, change?.currentTier, summary?.currentTier);
+  const tier = pick(change?.tier, current?.tier, summary?.tier, change?.currentTier, summary?.currentTier);
   const division = pick(
     change?.rank,
     change?.division,
+    current?.division,
+    current?.rank,
     summary?.rank,
     summary?.division,
     change?.currentRank,
@@ -397,6 +400,10 @@ function extractRankedLpInfo(payload) {
     change?.leaguePoints,
     change?.currentLp,
     change?.currentLP,
+    current?.lp,
+    current?.leaguePoints,
+    current?.currentLp,
+    current?.currentLP,
     summary?.lp,
     summary?.leaguePoints,
     summary?.currentLp,
@@ -649,6 +656,27 @@ async function prepareScoreboardData(payload, uploaderInfos = [], rankedLpEntrie
       .filter(Boolean)
   );
 
+  const normalizeName = (name) => String(name || '').trim().toLowerCase();
+  const stripTag = (name) => {
+    const raw = String(name || '').trim();
+    const idx = raw.lastIndexOf('#');
+    return idx === -1 ? raw : raw.slice(0, idx);
+  };
+  const compactQueueLabel = (label) => {
+    const upper = String(label || '').toUpperCase();
+    if (upper.includes('SOLO')) return 'Solo';
+    if (upper.includes('FLEX')) return 'Flex';
+    return 'Ranked';
+  };
+
+  const rankedEntryByName = new Map();
+  for (const entry of effectiveRankedEntries) {
+    const full = normalizeName(entry?.playerName);
+    const base = normalizeName(stripTag(entry?.playerName));
+    if (full && !rankedEntryByName.has(full)) rankedEntryByName.set(full, entry);
+    if (base && !rankedEntryByName.has(base)) rankedEntryByName.set(base, entry);
+  }
+
   const mapPlayer = (p) => {
     const stats = p.stats || {};
     
@@ -714,6 +742,28 @@ async function prepareScoreboardData(payload, uploaderInfos = [], rankedLpEntrie
     const pStyle = stats.PERK_PRIMARY_STYLE || 8000;
     const sStyle = stats.PERK_SUB_STYLE || 8100;
 
+    const playerRiotId = p.riotIdGameName && p.riotIdTagLine
+      ? `${p.riotIdGameName}#${p.riotIdTagLine}`
+      : null;
+    const rankedCandidateNames = [
+      formatName(p),
+      playerName,
+      playerRiotId,
+      p.riotIdGameName,
+      stripTag(formatName(p)),
+    ]
+      .map(normalizeName)
+      .filter(Boolean);
+
+    let playerRankedEntry = null;
+    for (const candidate of rankedCandidateNames) {
+      const found = rankedEntryByName.get(candidate);
+      if (found) {
+        playerRankedEntry = found;
+        break;
+      }
+    }
+
     return {
       name: playerName || 'Unknown',
       championName: p.championName,
@@ -733,7 +783,12 @@ async function prepareScoreboardData(payload, uploaderInfos = [], rankedLpEntrie
       gold: ((stats.GOLD_EARNED || 0) / 1000).toFixed(1) + 'k',
       cs: (stats.MINIONS_KILLED || 0) + (stats.NEUTRAL_MINIONS_KILLED || 0),
       vision: stats.VISION_SCORE || 0,
-      isLocal: isHighlight
+      isLocal: isHighlight,
+      hasRankedCard: Boolean(playerRankedEntry),
+      rankedQueueCompact: playerRankedEntry ? compactQueueLabel(playerRankedEntry.rankedQueueLabel) : null,
+      rankedCurrentCompact: playerRankedEntry?.rankedCurrent || null,
+      rankedDeltaCompact: playerRankedEntry?.rankedDelta || null,
+      rankedDeltaClassCompact: playerRankedEntry?.rankedDeltaClass || 'ranked-delta-neutral',
     };
   };
 
