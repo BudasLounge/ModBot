@@ -415,7 +415,7 @@ function extractRankedLpInfo(payload) {
 
   const rankParts = [tier, division].filter(Boolean);
   const rankedCurrent = rankParts.length
-    ? `${rankParts.join(' ')}${lp !== null ? ` ${lp} LP` : ''}`
+    ? `${rankParts.join(' ')}${lp !== null ? ` (${lp} LP)` : ' (LP unknown)'}`
     : (lp !== null ? `${lp} LP` : 'Rank unavailable');
 
   const rankedDelta = delta !== null ? `${delta >= 0 ? '+' : ''}${delta} LP` : 'LP change unavailable';
@@ -430,6 +430,31 @@ function extractRankedLpInfo(payload) {
     rankedDelta,
     rankedDeltaClass
   };
+}
+
+function buildRankedLpEntries(payloads = []) {
+  if (!Array.isArray(payloads) || payloads.length === 0) return [];
+
+  const entriesByPlayerAndQueue = new Map();
+
+  for (const payload of payloads) {
+    const ranked = extractRankedLpInfo(payload);
+    if (!ranked.hasRankedLp) continue;
+
+    const uploader = getUploaderInfo(payload);
+    const playerName = (uploader?.name || 'Player').trim() || 'Player';
+    const key = `${playerName.toLowerCase()}::${ranked.rankedQueueLabel || 'Ranked'}`;
+
+    entriesByPlayerAndQueue.set(key, {
+      playerName,
+      rankedQueueLabel: ranked.rankedQueueLabel,
+      rankedCurrent: ranked.rankedCurrent,
+      rankedDelta: ranked.rankedDelta,
+      rankedDeltaClass: ranked.rankedDeltaClass,
+    });
+  }
+
+  return Array.from(entriesByPlayerAndQueue.values());
 }
 
 const AUGMENT_NAME_MAP = {
@@ -561,10 +586,27 @@ function fixChampName(name) {
    Infographic Logic (Clean Badges + Detailed Footer)
 ===================================================== */
 
-async function prepareScoreboardData(payload, uploaderInfos = []) {
+async function prepareScoreboardData(payload, uploaderInfos = [], rankedLpEntries = []) {
   const teams = Array.isArray(payload.teams) ? payload.teams : [];
   const isMayhem = isAramMayhem(payload);
-  const rankedLpInfo = extractRankedLpInfo(payload);
+  const fallbackRanked = extractRankedLpInfo(payload);
+  const effectiveRankedEntries = Array.isArray(rankedLpEntries) && rankedLpEntries.length > 0
+    ? rankedLpEntries
+    : (fallbackRanked.hasRankedLp
+      ? [{
+          playerName: (uploaderInfos?.[0]?.name || 'Player'),
+          rankedQueueLabel: fallbackRanked.rankedQueueLabel,
+          rankedCurrent: fallbackRanked.rankedCurrent,
+          rankedDelta: fallbackRanked.rankedDelta,
+          rankedDeltaClass: fallbackRanked.rankedDeltaClass,
+        }]
+      : []);
+  const primaryRanked = effectiveRankedEntries[0] || {
+    rankedQueueLabel: fallbackRanked.rankedQueueLabel,
+    rankedCurrent: fallbackRanked.rankedCurrent,
+    rankedDelta: fallbackRanked.rankedDelta,
+    rankedDeltaClass: fallbackRanked.rankedDeltaClass,
+  };
   const forfeit = getForfeitDetails(payload);
   const ver = await getLatestDDVersion();
   const CDN = `https://ddragon.leagueoflegends.com/cdn/${ver}/img`;
@@ -770,6 +812,7 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
   // Use clashSummary existence check or explicit queueType override where applicable
   let gameModeLabel = payload.gameMode || payload.queueType || 'LoL Match';
   const qt = (payload.queueType || '').toUpperCase();
+  const gt = (payload.gameType || '').toUpperCase();
 
   if (isMayhem) {
     gameModeLabel = 'ARAM Mayhem';
@@ -787,6 +830,10 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
     gameModeLabel = 'Normal';
   } else if (qt.includes('BOT')) {
     gameModeLabel = 'Co-op vs AI';
+  }
+
+  if (gt === 'CUSTOM_GAME') {
+    gameModeLabel = `${gameModeLabel} (Custom game)`;
   }
 
   return {
@@ -807,18 +854,23 @@ async function prepareScoreboardData(payload, uploaderInfos = []) {
     t200Stats: getTotals(t200),
     t200Win: t200.isWinningTeam,
     badgeWinners,
-    ...rankedLpInfo
+    hasRankedLp: effectiveRankedEntries.length > 0,
+    rankedEntries: effectiveRankedEntries,
+    rankedQueueLabel: primaryRanked.rankedQueueLabel,
+    rankedCurrent: primaryRanked.rankedCurrent,
+    rankedDelta: primaryRanked.rankedDelta,
+    rankedDeltaClass: primaryRanked.rankedDeltaClass,
   };
 }
 
-async function generateInfographicImage(payload, uploaderInfos) {
+async function generateInfographicImage(payload, uploaderInfos, rankedLpEntries = []) {
   try {
     const templateFile = isAramMayhem(payload) ? 'match-template-mayhem.html' : 'match-template.html';
     const templatePath = path.join(__dirname, templateFile);
     const template = fs.readFileSync(templatePath, 'utf8');
     
     // Await the data preparation (since it fetches version)
-    const data = await prepareScoreboardData(payload, uploaderInfos);
+    const data = await prepareScoreboardData(payload, uploaderInfos, rankedLpEntries);
 
     logger.info('[Infographic] Generating infographic image', { templateFile });
     const imageBuffer = await nodeHtmlToImage({
@@ -934,7 +986,7 @@ async function enqueueMatchPayload(rawPayload, client) {
   // If no gameId, send immediately.
   if (!gameId) {
     logger.info('[LoL Match Ingest] No gameId present, handling immediately');
-    return handleMatchPayload(payload, client, [getUploaderInfo(payload)]);
+    return handleMatchPayload(payload, client, [getUploaderInfo(payload)], null, buildRankedLpEntries([payload]));
   }
 
   if (!MATCH_WEBHOOK_CHANNEL) {
@@ -986,14 +1038,16 @@ async function enqueueMatchPayload(rawPayload, client) {
 
       const latest = (bundle.payloads && bundle.payloads[bundle.payloads.length - 1]) || payload;
       const uploaderInfos = (bundle.payloads || []).map(getUploaderInfo).filter(Boolean);
+      const rankedLpEntries = buildRankedLpEntries(bundle.payloads || []);
       const placeholderMessage = bundle.placeholderMessage || (bundle.placeholderPromise ? await bundle.placeholderPromise.catch(() => null) : null);
 
       logger.info('[LoL Match Ingest] Debounced payload bundle ready', {
         gameId,
         bundleCount: bundle.payloads?.length || 1,
+        rankedLpEntries: rankedLpEntries.length,
       });
 
-      await handleMatchPayload(latest, client, uploaderInfos, placeholderMessage);
+      await handleMatchPayload(latest, client, uploaderInfos, placeholderMessage, rankedLpEntries);
     } catch (err) {
       logger.error('[LoL Match Ingest] Debounce handler error', { gameId, err: err?.message });
     }
@@ -1008,12 +1062,23 @@ async function enqueueMatchPayload(rawPayload, client) {
   return Promise.resolve();
 }
 
-async function handleMatchPayload(payload, client, uploaderInfos = [], placeholderMessage = null) {
+async function handleMatchPayload(payload, client, uploaderInfos = [], placeholderMessage = null, rankedLpEntries = []) {
   const gameId = payload.gameId || payload.reportGameId || 'unknown';
   logger.info('[LoL Match Ingest] Payload received, generating infographic...', { gameId });
 
   const forfeit = getForfeitDetails(payload);
   const rankedInfo = extractRankedLpInfo(payload);
+  const effectiveRankedEntries = Array.isArray(rankedLpEntries) && rankedLpEntries.length > 0
+    ? rankedLpEntries
+    : (rankedInfo.hasRankedLp
+      ? [{
+          playerName: uploaderInfos?.[0]?.name || 'Player',
+          rankedQueueLabel: rankedInfo.rankedQueueLabel,
+          rankedCurrent: rankedInfo.rankedCurrent,
+          rankedDelta: rankedInfo.rankedDelta,
+          rankedDeltaClass: rankedInfo.rankedDeltaClass,
+        }]
+      : []);
   const forfeitText = forfeit.isForfeit
     ? `${forfeit.reasonLabel} by ${forfeit.teamLabel}${forfeit.forfeitingNames.length ? `: ${forfeit.forfeitingNames.join(', ')}` : ''}`
     : '';
@@ -1028,12 +1093,10 @@ async function handleMatchPayload(payload, client, uploaderInfos = [], placehold
     });
   }
 
-  if (rankedInfo.hasRankedLp) {
+  if (effectiveRankedEntries.length > 0) {
     logger.info('[LoL Match Ingest] Ranked LP payload detected', {
       gameId,
-      queue: rankedInfo.rankedQueueLabel,
-      current: rankedInfo.rankedCurrent,
-      delta: rankedInfo.rankedDelta,
+      rankedEntries: effectiveRankedEntries,
     });
   }
 
@@ -1052,7 +1115,7 @@ async function handleMatchPayload(payload, client, uploaderInfos = [], placehold
     const matchedPlayersPromise = resolveMatchPlayers(payload);
 
     // Generate image in memory
-    const { imageBuffer, errorMessage: imageError } = await generateInfographicImage(payload, uploaderInfos);
+    const { imageBuffer, errorMessage: imageError } = await generateInfographicImage(payload, uploaderInfos, effectiveRankedEntries);
     let scoreboardMessage = placeholderMessage;
 
     if (imageBuffer) {
@@ -1427,6 +1490,7 @@ async function preparePlayerStatsData(player, payload, allPlayers) {
   const winRate = totalGames > 0 ? Math.round((wins / totalGames) * 100) + '%' : 'N/A';
 
   const qt = (payload.queueType || '').toUpperCase();
+  const gt = (payload.gameType || '').toUpperCase();
   let gameModeLabel = payload.gameMode || payload.queueType || 'LoL Match';
   if (isMayhem) gameModeLabel = 'ARAM Mayhem';
   else if (qt === 'CLASH' || payload.clashSummary) gameModeLabel = 'Clash';
@@ -1435,6 +1499,8 @@ async function preparePlayerStatsData(player, payload, allPlayers) {
   else if (qt === 'ARAM' || qt.includes('ARAM')) gameModeLabel = 'ARAM';
   else if (qt === 'CHERRY' || qt === 'ARENA') gameModeLabel = 'Arena';
   else if (qt.includes('NORMAL')) gameModeLabel = 'Normal';
+
+  if (gt === 'CUSTOM_GAME') gameModeLabel = `${gameModeLabel} (Custom game)`;
 
   const healAlliesRaw = stats.TOTAL_HEAL_ON_TEAMMATES || 0;
   const shieldsRaw    = stats.TOTAL_DAMAGE_SHIELDED_ON_TEAMMATES || 0;

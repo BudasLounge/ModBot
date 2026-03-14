@@ -24,8 +24,9 @@
     .defeat { color: #e84057; text-shadow: 0 0 10px rgba(232, 64, 87, 0.3); }
     .meta-info { text-align: right; font-size: 16px; color: #939a9e; }
     .ranked-strip {
-      display: inline-flex;
+      display: flex;
       align-items: center;
+      flex-wrap: wrap;
       gap: 10px;
       margin: 2px 0 12px 0;
       padding: 6px 10px;
@@ -34,6 +35,20 @@
       border-left: 3px solid #c8aa6e;
       border-radius: 4px;
       font-size: 13px;
+    }
+    .ranked-strip-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-bottom: 4px;
+    }
+    .ranked-player {
+      color: #fff;
+      font-weight: 700;
+      max-width: 220px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .ranked-queue { color: #c8aa6e; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
     .ranked-current { color: #939a9e; font-weight: 500; }
@@ -194,11 +209,16 @@
   </div>
 
   {{#if hasRankedLp}}
-    <div class="ranked-strip">
-      <span class="ranked-queue">{{rankedQueueLabel}}</span>
-      <span class="ranked-current">{{rankedCurrent}}</span>
-      <span class="ranked-divider">•</span>
-      <span class="ranked-delta {{rankedDeltaClass}}">{{rankedDelta}}</span>
+    <div class="ranked-strip-list">
+      {{#each rankedEntries}}
+        <div class="ranked-strip">
+          <span class="ranked-player">{{playerName}}</span>
+          <span class="ranked-queue">{{rankedQueueLabel}}</span>
+          <span class="ranked-current">{{rankedCurrent}}</span>
+          <span class="ranked-divider">•</span>
+          <span class="ranked-delta {{rankedDeltaClass}}">{{rankedDelta}}</span>
+        </div>
+      {{/each}}
     </div>
   {{/if}}
 
