@@ -433,10 +433,52 @@ function extractRankedLpInfo(payload) {
   return {
     hasRankedLp: true,
     rankedQueueLabel,
+    rankedTier: tier || null,
+    rankedDivision: division || null,
+    rankedLeaguePoints: lp,
     rankedCurrent,
     rankedDelta,
     rankedDeltaClass
   };
+}
+
+function formatCompactRankLabel(entry) {
+  if (!entry) return null;
+
+  const abbr = {
+    IRON: 'Iron',
+    BRONZE: 'Bronze',
+    SILVER: 'Silver',
+    GOLD: 'Gold',
+    PLATINUM: 'Plat',
+    EMERALD: 'Emrld',
+    DIAMOND: 'Dia',
+    MASTER: 'Master',
+    GRANDMASTER: 'GMaster',
+    CHALLENGER: 'Chlngr',
+  };
+
+  let tier = String(entry.rankedTier || '').toUpperCase();
+  let division = entry.rankedDivision ? String(entry.rankedDivision).toUpperCase() : null;
+  let lp = Number.isFinite(Number(entry.rankedLeaguePoints)) ? Number(entry.rankedLeaguePoints) : null;
+
+  // Back-compat parse from existing label when tier/div/lp are not explicitly present.
+  if (!tier || lp === null) {
+    const current = String(entry.rankedCurrent || '');
+    const rankMatch = current.match(/(IRON|BRONZE|SILVER|GOLD|PLATINUM|EMERALD|DIAMOND|MASTER|GRANDMASTER|CHALLENGER)\s*(I|II|III|IV)?/i);
+    const lpMatch = current.match(/(\d+)\s*LP/i);
+    if (!tier && rankMatch?.[1]) tier = rankMatch[1].toUpperCase();
+    if (!division && rankMatch?.[2]) division = rankMatch[2].toUpperCase();
+    if (lp === null && lpMatch?.[1]) lp = Number(lpMatch[1]);
+  }
+
+  if (!tier && lp === null) return entry.rankedCurrent || null;
+
+  const tierLabel = abbr[tier] || tier;
+  const parts = [tierLabel];
+  if (division) parts.push(division);
+  if (lp !== null) parts.push(String(lp));
+  return parts.join(' ');
 }
 
 function buildRankedLpEntries(payloads = []) {
@@ -455,6 +497,9 @@ function buildRankedLpEntries(payloads = []) {
     entriesByPlayerAndQueue.set(key, {
       playerName,
       rankedQueueLabel: ranked.rankedQueueLabel,
+      rankedTier: ranked.rankedTier,
+      rankedDivision: ranked.rankedDivision,
+      rankedLeaguePoints: ranked.rankedLeaguePoints,
       rankedCurrent: ranked.rankedCurrent,
       rankedDelta: ranked.rankedDelta,
       rankedDeltaClass: ranked.rankedDeltaClass,
@@ -603,6 +648,9 @@ async function prepareScoreboardData(payload, uploaderInfos = [], rankedLpEntrie
       ? [{
           playerName: (uploaderInfos?.[0]?.name || 'Player'),
           rankedQueueLabel: fallbackRanked.rankedQueueLabel,
+          rankedTier: fallbackRanked.rankedTier,
+          rankedDivision: fallbackRanked.rankedDivision,
+          rankedLeaguePoints: fallbackRanked.rankedLeaguePoints,
           rankedCurrent: fallbackRanked.rankedCurrent,
           rankedDelta: fallbackRanked.rankedDelta,
           rankedDeltaClass: fallbackRanked.rankedDeltaClass,
@@ -786,7 +834,7 @@ async function prepareScoreboardData(payload, uploaderInfos = [], rankedLpEntrie
       isLocal: isHighlight,
       hasRankedCard: Boolean(playerRankedEntry),
       rankedQueueCompact: playerRankedEntry ? compactQueueLabel(playerRankedEntry.rankedQueueLabel) : null,
-      rankedCurrentCompact: playerRankedEntry?.rankedCurrent || null,
+      rankedCurrentCompact: formatCompactRankLabel(playerRankedEntry),
       rankedDeltaCompact: playerRankedEntry?.rankedDelta || null,
       rankedDeltaClassCompact: playerRankedEntry?.rankedDeltaClass || 'ranked-delta-neutral',
     };
@@ -1129,6 +1177,9 @@ async function handleMatchPayload(payload, client, uploaderInfos = [], placehold
       ? [{
           playerName: uploaderInfos?.[0]?.name || 'Player',
           rankedQueueLabel: rankedInfo.rankedQueueLabel,
+          rankedTier: rankedInfo.rankedTier,
+          rankedDivision: rankedInfo.rankedDivision,
+          rankedLeaguePoints: rankedInfo.rankedLeaguePoints,
           rankedCurrent: rankedInfo.rankedCurrent,
           rankedDelta: rankedInfo.rankedDelta,
           rankedDeltaClass: rankedInfo.rankedDeltaClass,
