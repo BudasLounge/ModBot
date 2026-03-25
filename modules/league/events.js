@@ -377,7 +377,7 @@ function extractRankedLpInfo(payload) {
     return Number.isFinite(n) ? n : null;
   };
 
-  const queueRaw = String(pick(change?.queueType, current?.queueType, summary?.queueType, payload?.queueType, '')).toUpperCase();
+  const queueRaw = String(pick(payload?.queueType, change?.queueType, current?.queueType, summary?.queueType, '')).toUpperCase();
   const rankedQueueLabel = queueRaw.includes('FLEX')
     ? 'Ranked Flex'
     : queueRaw.includes('SOLO')
