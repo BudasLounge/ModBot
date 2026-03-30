@@ -903,13 +903,17 @@ async function prepareScoreboardData(payload, uploaderInfos = [], rankedLpEntrie
     }
   ];
 
-  let anyUploaderWon = false;
-  if (uploaderInfos.length > 0) {
-    anyUploaderWon = uploaderInfos.some(u => u.result === 'Win');
-  } else {
-    const local = payload.localPlayer || teams.flatMap((t) => t.players || []).find((p) => p.isLocalPlayer);
-    const winTeam = teams.find((t) => t.isWinningTeam)?.teamId;
-    anyUploaderWon = local?.teamId === winTeam;
+  const blueTeamWon = Boolean(t100.isWinningTeam);
+  const redTeamWon = Boolean(t200.isWinningTeam);
+
+  let outcomeText = 'MATCH COMPLETE';
+  let outcomeClass = 'neutral';
+  if (blueTeamWon && !redTeamWon) {
+    outcomeText = 'BLUE TEAM VICTORY';
+    outcomeClass = 'victory';
+  } else if (redTeamWon && !blueTeamWon) {
+    outcomeText = 'RED TEAM VICTORY';
+    outcomeClass = 'defeat';
   }
 
   // Use clashSummary existence check or explicit queueType override where applicable
@@ -942,8 +946,8 @@ async function prepareScoreboardData(payload, uploaderInfos = [], rankedLpEntrie
   return {
     gameMode: gameModeLabel,
     duration: `${Math.floor(payload.gameLength / 60)}m ${payload.gameLength % 60}s`,
-    uploaderResult: anyUploaderWon ? "VICTORY" : "DEFEAT",
-    resultClass: anyUploaderWon ? "victory" : "defeat",
+    uploaderResult: outcomeText,
+    resultClass: outcomeClass,
     isMayhem,
     augmentsVersion: payload.augmentsVersion || null,
     forfeit: forfeit.isForfeit,
