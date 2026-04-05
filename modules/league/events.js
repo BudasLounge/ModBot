@@ -210,6 +210,24 @@ async function loadLeaguePlayerByUserId(userId) {
   }
 }
 
+async function loadLeaguePlayerByLeagueName(leagueName) {
+  if (!leagueName) return null;
+  try {
+    const response = await api.get('league_player', {});
+    const rows = Array.isArray(response?.league_players) ? response.league_players : [];
+    const normalized = normalizeLeagueName(leagueName);
+    const base = stripRiotTag(leagueName);
+    return rows.find((p) => {
+      const pFull = normalizeLeagueName(p?.league_name);
+      const pBase = stripRiotTag(p?.league_name);
+      return (normalized && pFull === normalized) || (base && pBase === base);
+    }) || null;
+  } catch (err) {
+    logger.error('[LoL Match Tags] Failed to load league_player by name', { leagueName, err: err?.message });
+    return null;
+  }
+}
+
 async function canEditMatchKeywords(userId, payload, uploaderInfos = [], tagUploader = null, tagUploaderId = null) {
   if (tagUploaderId && tagUploaderId === userId) {
     return { allowed: true, reason: 'tag_uploader_id', isAdmin: false };
@@ -1294,8 +1312,18 @@ async function handleMatchPayload(payload, client, uploaderInfos = [], placehold
           rankedDeltaClass: rankedInfo.rankedDeltaClass,
         }]
       : []);
-  const uploaderDiscordIds = collectUploaderDiscordIds(payload);
   const primaryUploaderInfo = uploaderInfos?.[0] || getUploaderInfo(payload);
+  const uploaderDiscordIds = collectUploaderDiscordIds(payload);
+  if (uploaderDiscordIds.length === 0 && primaryUploaderInfo?.name) {
+    const linkedPlayer = await loadLeaguePlayerByLeagueName(primaryUploaderInfo.name);
+    if (linkedPlayer?.user_id) {
+      const snowflake = toDiscordSnowflake(linkedPlayer.user_id);
+      if (snowflake) {
+        uploaderDiscordIds.push(snowflake);
+        logger.info('[LoL Match Ingest] Resolved uploader Discord ID from linked account', { leagueName: primaryUploaderInfo.name, userId: snowflake });
+      }
+    }
+  }
   const matchTagLine = buildMatchTagLine({
     payload,
     gameId,
