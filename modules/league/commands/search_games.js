@@ -342,15 +342,36 @@ function isMatchForQuery(tags, query) {
   return true;
 }
 
-async function resolveSearchChannel(message, logger) {
+async function resolveSearchChannel(message, api, logger) {
+  // Prefer the channel ID stored in the discord_server record
+  if (message.guild?.id && api) {
+    try {
+      const resp = await api.get('discord_server', { server_id: message.guild.id });
+      const channelId = resp?.discord_servers?.[0]?.match_data_channel;
+      if (channelId && message.guild?.channels?.fetch) {
+        const ch = await message.guild.channels.fetch(channelId);
+        if (ch?.messages?.fetch) {
+          logger.info('[search_games] Using match_data_channel from discord_server', { channelId });
+          return ch;
+        }
+      }
+    } catch (err) {
+      logger.error('[search_games] Failed to resolve match_data_channel from API, trying env fallback', {
+        err: err?.message,
+      });
+    }
+  }
+
+  // Fall back to env var
   if (MATCH_WEBHOOK_CHANNEL && message.guild?.channels?.fetch) {
     try {
       const configuredChannel = await message.guild.channels.fetch(MATCH_WEBHOOK_CHANNEL);
       if (configuredChannel?.messages?.fetch) {
+        logger.info('[search_games] Using MATCH_WEBHOOK_CHANNEL env fallback', { channelId: MATCH_WEBHOOK_CHANNEL });
         return configuredChannel;
       }
     } catch (err) {
-      logger.error('[search_games] Failed to resolve MATCH_WEBHOOK_CHANNEL, falling back to current channel', {
+      logger.error('[search_games] Failed to resolve MATCH_WEBHOOK_CHANNEL env fallback', {
         channelId: MATCH_WEBHOOK_CHANNEL,
         err: err?.message,
       });
@@ -384,7 +405,7 @@ module.exports = {
   syntax: 'search_games help | search_games [player=riotid] [champ=champion] [result=win|loss] [kw=keyword1,keyword2] [limit=10] [scan=500]',
   num_args: 0,
   args_to_lower: false,
-  needs_api: false,
+  needs_api: true,
   has_state: false,
   options: [
     { name: 'help',        description: 'Show command help',                                                   type: 'BOOLEAN', required: false },
@@ -408,7 +429,7 @@ module.exports = {
       required: false,
     },
   ],
-  async execute(message, args) {
+  async execute(message, args, extra) {
     const isSlashInvocation = Boolean(message?._interaction);
     this.logger.info('[search_games] Execute called', {
       userId: message.author?.id,
@@ -432,7 +453,7 @@ module.exports = {
       summary: summarizeQuery(query),
     });
 
-    const channel = await resolveSearchChannel(message, this.logger);
+    const channel = await resolveSearchChannel(message, extra?.api, this.logger);
     if (!channel?.messages?.fetch) {
       this.logger.error('[search_games] Target channel does not support message history fetch');
       await message.channel.send('Could not search this channel. Please run this in a text channel.');
