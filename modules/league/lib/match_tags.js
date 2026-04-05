@@ -136,8 +136,18 @@ function sanitizeListScalar(value, { fallback = 'none', allowHash = false, maxLe
 
 function buildAutoKeywords(payload) {
   const autoKws = [];
-  if (String(payload?.gameType || '').toUpperCase() === 'CUSTOM_GAME') {
+  const gameType = String(payload?.gameType || '').toUpperCase();
+  const gameMode = String(payload?.gameMode || '').toUpperCase();
+  const queueType = String(payload?.queueType || '').toUpperCase();
+
+  if (gameType === 'CUSTOM_GAME') {
     autoKws.push('custom');
+  }
+  if (gameMode === 'ARAM') {
+    autoKws.push('aram');
+  }
+  if (Boolean(payload?.isAramMayhem) || gameMode === 'KIWI' || queueType === 'KIWI') {
+    autoKws.push('mayhem');
   }
   return autoKws;
 }
@@ -174,7 +184,7 @@ function parseListField(value) {
 function parseMatchTagLine(rawLine) {
   if (typeof rawLine !== 'string') return null;
 
-  const line = rawLine.trim();
+  const line = rawLine.trim().replace(/^-#\s+/, '');
   if (!line.startsWith(MATCH_TAG_PREFIX)) return null;
 
   const body = line.slice(MATCH_TAG_PREFIX.length).trim();
@@ -224,13 +234,13 @@ function formatMatchTagLine(fields) {
     kw: sanitizeListScalar(fields?.kw, { fallback: 'none', allowHash: false, maxLength: MAX_KEYWORD_LENGTH, maxCount: MAX_MANUAL_KEYWORDS }),
   };
 
-  return `${MATCH_TAG_PREFIX} gid=${safeFields.gid}; ts=${safeFields.ts}; result=${safeFields.result}; queue=${safeFields.queue}; mode=${safeFields.mode}; uploader=${safeFields.uploader}; uid=${safeFields.uid}; players=${safeFields.players}; champs=${safeFields.champs}; kw=${safeFields.kw}`;
+  return `-# ${MATCH_TAG_PREFIX} gid=${safeFields.gid}; ts=${safeFields.ts}; result=${safeFields.result}; queue=${safeFields.queue}; mode=${safeFields.mode}; uploader=${safeFields.uploader}; uid=${safeFields.uid}; players=${safeFields.players}; champs=${safeFields.champs}; kw=${safeFields.kw}`;
 }
 
 function extractTagLineAndIndex(content) {
   const lines = String(content || '').split(/\r?\n/);
   for (let i = 0; i < lines.length; i += 1) {
-    if (lines[i].trim().startsWith(MATCH_TAG_PREFIX)) {
+    if (lines[i].trim().replace(/^-#\s+/, '').startsWith(MATCH_TAG_PREFIX)) {
       return { index: i, line: lines[i].trim(), lines };
     }
   }
