@@ -134,8 +134,18 @@ function sanitizeListScalar(value, { fallback = 'none', allowHash = false, maxLe
   return deduped.length > 0 ? deduped.join(',') : fallback;
 }
 
+function buildAutoKeywords(payload) {
+  const autoKws = [];
+  if (String(payload?.gameType || '').toUpperCase() === 'CUSTOM_GAME') {
+    autoKws.push('custom');
+  }
+  return autoKws;
+}
+
 function buildMatchTagLine({ payload, gameId, uploaderInfo, uploaderDiscordId = null, matchedPlayers = [], keywords = [] }) {
+  const autoKeywords = buildAutoKeywords(payload);
   const manualKeywords = normalizeManualKeywords(keywords);
+  const mergedKeywords = uniqueLimited([...autoKeywords, ...manualKeywords], MAX_MANUAL_KEYWORDS);
 
   const fields = {
     gid: sanitizeScalar(gameId, 'unknown', 64),
@@ -147,7 +157,7 @@ function buildMatchTagLine({ payload, gameId, uploaderInfo, uploaderDiscordId = 
     uid: sanitizeSnowflake(uploaderDiscordId),
     players: buildPlayersTag(payload, matchedPlayers),
     champs: buildChampionsTag(payload),
-    kw: manualKeywords.length > 0 ? manualKeywords.join(',') : 'none',
+    kw: mergedKeywords.length > 0 ? mergedKeywords.join(',') : 'none',
   };
 
   return formatMatchTagLine(fields);
