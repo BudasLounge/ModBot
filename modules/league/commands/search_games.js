@@ -523,18 +523,24 @@ module.exports = {
       return;
     }
 
-    const lines = matches.map((entry, idx) => {
-      const players = entry.tags.players.slice(0, 3).join(', ') || 'none';
-      const champs = entry.tags.champions.slice(0, 3).join(', ') || 'none';
-      const keywords = entry.tags.keywords.length > 0 ? entry.tags.keywords.join(', ') : 'none';
+    const resultLines = matches.map((entry, idx) => {
+      const { tags, message: msg } = entry;
+      const resultIcon = tags.result === 'win' ? '✅' : tags.result === 'loss' ? '❌' : '❓';
+      const date = tags.timestamp || '?';
+      const queue = tags.queue !== 'unknown' ? tags.queue.replace(/_/g, ' ') : null;
+      const uploader = tags.uploader !== 'unknown' ? tags.uploader : null;
 
-      const uploader = entry.tags.uploader || 'unknown';
-      const uploaderId = entry.tags.uploaderId || 'none';
-      return `${idx + 1}. [Match ${entry.tags.gameId}](${entry.message.url}) | ${entry.tags.result} | ${entry.tags.queue} | ${entry.tags.mode} | uploader:${uploader} | uid:${uploaderId} | players:${players} | champs:${champs} | kw:${keywords}`;
+      const champList = tags.champions.length > 0 ? tags.champions.join(', ') : null;
+      const kwList = tags.keywords.length > 0 ? tags.keywords.join(', ') : null;
+
+      const meta = [queue, date, uploader ? `by ${uploader}` : null].filter(Boolean).join(' · ');
+      const detail = [champList, kwList ? `🏷 ${kwList}` : null].filter(Boolean).join('  ·  ');
+
+      return `**${idx + 1}.** ${resultIcon} [Match ${tags.gameId}](${msg.url})  ${meta}\n> ${detail || 'no details'}`;
     });
 
-    const header = `Match Search Results (${matches.length})\nQuery: ${summarizeQuery(query)}\nScanned: ${scanned} messages across ${pages} page(s) in <#${channel.id}>\n`;
-    const chunks = splitForDiscord(`${header}\n${lines.join('\n')}`, 1900);
+    const header = `### Match Search Results (${matches.length})\n-# Query: ${summarizeQuery(query)}  ·  Scanned ${scanned} msgs in <#${channel.id}>\n`;
+    const chunks = splitForDiscord(`${header}\n${resultLines.join('\n\n')}`, 1900);
 
     for (const chunk of chunks) {
       await message.channel.send(chunk);
