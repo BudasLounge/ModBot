@@ -19,6 +19,12 @@ require('dotenv').config();
 
 const ApiClient = require("../../core/js/APIClient.js");
 const api = new ApiClient();
+const {
+  buildMatchTagLine,
+  parseMatchTagLine,
+  normalizeManualKeywords,
+  upsertKeywordsInContent,
+} = require('./lib/match_tags.js');
 
 // Cache for recent matches to allow "Identify Augment" interactions
 // Key: gameId, Value: { players: [{ user_id, augments: [id1, id2...] }] }
@@ -41,6 +47,9 @@ const MATCH_WEBHOOK_PATH = process.env.MATCH_WEBHOOK_PATH || '/lol/match';
 const MATCH_WEBHOOK_SECRET = process.env.MATCH_WEBHOOK_SECRET;
 const MATCH_WEBHOOK_CHANNEL = process.env.MATCH_WEBHOOK_CHANNEL;
 const MATCH_DEBOUNCE_MS = 10000;
+const LEAGUE_EDIT_KEYWORDS_PREFIX = 'LEAGUE_EDIT_KEYWORDS_';
+const LEAGUE_KEYWORDS_MODAL_PREFIX = 'LEAGUE_KW_MODAL_';
+const LEAGUE_KEYWORDS_FIELD_ID = 'match_keywords';
 let matchServerStarted = false;
 
 /* =====================================================
@@ -143,6 +152,102 @@ function getUploaderInfo(payload) {
     : 'Unknown';
 
   return { name: uploaderName, result };
+}
+
+function toDiscordSnowflake(value) {
+  const asString = String(value || '').trim();
+  if (!/^\d{15,22}$/.test(asString)) return null;
+  return asString;
+}
+
+function normalizeLeagueName(value) {
+  return String(value || '').trim().toLowerCase();
+}
+
+function stripRiotTag(value) {
+  const normalized = normalizeLeagueName(value);
+  const idx = normalized.lastIndexOf('#');
+  return idx === -1 ? normalized : normalized.slice(0, idx);
+}
+
+function parseLeagueAdminFlag(value) {
+  if (typeof value === 'boolean') return value;
+  return value === 1 || value === '1' || value === 'true';
+}
+
+function collectUploaderDiscordIds(payload) {
+  const rawCandidates = [
+    payload?.user_id,
+    payload?.uploaderId,
+    payload?.uploaderUserId,
+    payload?.uploadedByUserId,
+    payload?.discordUserId,
+    payload?.uploaderDiscordId,
+  ];
+
+  return Array.from(
+    new Set(rawCandidates.map(toDiscordSnowflake).filter(Boolean))
+  );
+}
+
+function extractParsedMatchTags(content) {
+  const lines = String(content || '').split(/\r?\n/);
+  for (const line of lines) {
+    const parsed = parseMatchTagLine(line);
+    if (parsed) return parsed;
+  }
+  return null;
+}
+
+async function loadLeaguePlayerByUserId(userId) {
+  try {
+    const response = await api.get('league_player', { user_id: userId });
+    const rows = Array.isArray(response?.league_players) ? response.league_players : [];
+    return rows[0] || null;
+  } catch (err) {
+    logger.error('[LoL Match Tags] Failed to load league_player row', { userId, err: err?.message });
+    return null;
+  }
+}
+
+async function canEditMatchKeywords(userId, payload, uploaderInfos = [], tagUploader = null, tagUploaderId = null) {
+  if (tagUploaderId && tagUploaderId === userId) {
+    return { allowed: true, reason: 'tag_uploader_id', isAdmin: false };
+  }
+
+  const uploaderIds = collectUploaderDiscordIds(payload);
+  if (uploaderIds.includes(userId)) {
+    return { allowed: true, reason: 'uploader_id', isAdmin: false };
+  }
+
+  const leaguePlayer = await loadLeaguePlayerByUserId(userId);
+  const isAdmin = parseLeagueAdminFlag(leaguePlayer?.league_admin);
+
+  const uploaderNameSet = new Set();
+  for (const info of uploaderInfos) {
+    const full = normalizeLeagueName(info?.name);
+    const base = stripRiotTag(info?.name);
+    if (full) uploaderNameSet.add(full);
+    if (base) uploaderNameSet.add(base);
+  }
+
+  const tagUploaderFull = normalizeLeagueName(tagUploader);
+  const tagUploaderBase = stripRiotTag(tagUploader);
+  if (tagUploaderFull) uploaderNameSet.add(tagUploaderFull);
+  if (tagUploaderBase) uploaderNameSet.add(tagUploaderBase);
+
+  const linkedLeagueName = normalizeLeagueName(leaguePlayer?.league_name);
+  const linkedLeagueNameBase = stripRiotTag(leaguePlayer?.league_name);
+  if ((linkedLeagueName && uploaderNameSet.has(linkedLeagueName)) ||
+      (linkedLeagueNameBase && uploaderNameSet.has(linkedLeagueNameBase))) {
+    return { allowed: true, reason: 'uploader_name', isAdmin };
+  }
+
+  if (isAdmin) {
+    return { allowed: true, reason: 'league_admin', isAdmin: true };
+  }
+
+  return { allowed: false, reason: 'not_allowed', isAdmin: false };
 }
 
 
@@ -1189,6 +1294,15 @@ async function handleMatchPayload(payload, client, uploaderInfos = [], placehold
           rankedDeltaClass: rankedInfo.rankedDeltaClass,
         }]
       : []);
+  const uploaderDiscordIds = collectUploaderDiscordIds(payload);
+  const primaryUploaderInfo = uploaderInfos?.[0] || getUploaderInfo(payload);
+  const matchTagLine = buildMatchTagLine({
+    payload,
+    gameId,
+    uploaderInfo: primaryUploaderInfo,
+    uploaderDiscordId: uploaderDiscordIds[0] || null,
+    keywords: [],
+  });
   const forfeitText = forfeit.isForfeit
     ? `${forfeit.reasonLabel} by ${forfeit.teamLabel}${forfeit.forfeitingNames.length ? `: ${forfeit.forfeitingNames.join(', ')}` : ''}`
     : '';
@@ -1231,20 +1345,22 @@ async function handleMatchPayload(payload, client, uploaderInfos = [], placehold
     if (imageBuffer) {
       const attachment = new AttachmentBuilder(imageBuffer, { name: `match-${gameId}.png` });
       if (scoreboardMessage) {
-        await scoreboardMessage.edit({ content: '', files: [attachment] });
+        await scoreboardMessage.edit({ content: matchTagLine, files: [attachment] });
         logger.info('[LoL Match Ingest] Infographic edited into placeholder.', { gameId });
       } else {
-        scoreboardMessage = await channel.send({ content: '', files: [attachment] });
+        scoreboardMessage = await channel.send({ content: matchTagLine, files: [attachment] });
         logger.info('[LoL Match Ingest] Infographic sent (no placeholder).');
       }
+      logger.info('[LoL Match Ingest] Added searchable match tags to post', { gameId });
     } else {
       const reason = imageError ? `: ${imageError}` : '';
       const fallbackContent = `Match ${gameId} completed (Image generation failed${reason}).`;
+      const taggedFallbackContent = `${fallbackContent}\n${matchTagLine}`;
       if (scoreboardMessage) {
-        await scoreboardMessage.edit({ content: fallbackContent, files: [] });
+        await scoreboardMessage.edit({ content: taggedFallbackContent, files: [] });
         logger.info('[LoL Match Ingest] Fallback text edited into placeholder', { gameId });
       } else {
-        scoreboardMessage = await channel.send(fallbackContent);
+        scoreboardMessage = await channel.send(taggedFallbackContent);
         logger.info('[LoL Match Ingest] Fallback text sent for match', { gameId });
       }
     }
@@ -1305,7 +1421,16 @@ async function handleMatchPayload(payload, client, uploaderInfos = [], placehold
     }
 
     // Cache full payload for "Show More Stats" button (30-min TTL)
-    recentMatchData.set(String(gameId), { payload, uploaderInfos, matchedPlayers, v5Data: null });
+    recentMatchData.set(String(gameId), {
+      payload,
+      uploaderInfos,
+      matchedPlayers,
+      v5Data: null,
+      messageId: scoreboardMessage?.id || null,
+      channelId: scoreboardMessage?.channelId || MATCH_WEBHOOK_CHANNEL,
+      manualKeywords: [],
+      uploaderDiscordIds,
+    });
     setTimeout(() => recentMatchData.delete(String(gameId)), 30 * 60 * 1000);
     logger.info('[LoL Match Ingest] Cached match data for Show More Stats', { gameId });
 
@@ -1328,6 +1453,13 @@ async function handleMatchPayload(payload, client, uploaderInfos = [], placehold
           new ButtonBuilder()
             .setCustomId(`LEAGUE_MORE_STATS_${gameId}`)
             .setLabel('Show More Stats')
+            .setStyle(ButtonStyle.Secondary)
+        );
+
+        row.addComponents(
+          new ButtonBuilder()
+            .setCustomId(`${LEAGUE_EDIT_KEYWORDS_PREFIX}${gameId}`)
+            .setLabel('Edit Keywords')
             .setStyle(ButtonStyle.Secondary)
         );
 
@@ -2105,6 +2237,64 @@ async function onInteraction(interaction) {
       return;
     }
 
+    if (interaction.customId.startsWith(LEAGUE_EDIT_KEYWORDS_PREFIX)) {
+      const gameId = interaction.customId.replace(LEAGUE_EDIT_KEYWORDS_PREFIX, '');
+      const cached = recentMatchData.get(gameId);
+      const parsedTags = extractParsedMatchTags(interaction.message?.content || '');
+
+      if (!cached && !parsedTags) {
+        return interaction.reply({ content: 'Match data has expired (30-minute window). Re-upload to refresh.', ephemeral: true });
+      }
+
+      const uploaderInfos = Array.isArray(cached?.uploaderInfos) && cached.uploaderInfos.length > 0
+        ? cached.uploaderInfos
+        : (parsedTags?.uploader ? [{ name: parsedTags.uploader }] : []);
+
+      if (uploaderInfos.length === 0 && cached?.payload) {
+        uploaderInfos.push(getUploaderInfo(cached.payload));
+      }
+
+      const permission = await canEditMatchKeywords(
+        interaction.user.id,
+        cached?.payload || null,
+        uploaderInfos,
+        parsedTags?.uploader || null,
+        parsedTags?.uploaderId || null
+      );
+      if (!permission.allowed) {
+        logger.info('[LoL Match Tags] Keyword edit denied', { gameId, userId: interaction.user.id, reason: permission.reason });
+        return interaction.reply({
+          content: 'Only the uploader or a league admin can edit match keywords.',
+          ephemeral: true,
+        });
+      }
+
+      const currentKeywords = parsedTags?.keywords || cached?.manualKeywords || [];
+      const modalToken = interaction.message?.id
+        ? `${gameId}_${interaction.message.id}`
+        : gameId;
+
+      const modal = new ModalBuilder()
+        .setCustomId(`${LEAGUE_KEYWORDS_MODAL_PREFIX}${modalToken}`)
+        .setTitle('Edit Match Keywords');
+
+      modal.addComponents(
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder()
+            .setCustomId(LEAGUE_KEYWORDS_FIELD_ID)
+            .setLabel('Keywords (comma separated)')
+            .setStyle(TextInputStyle.Short)
+            .setPlaceholder('comeback, baron_steal, finals_scrim')
+            .setValue(currentKeywords.join(', '))
+            .setRequired(false)
+        )
+      );
+
+      logger.info('[LoL Match Tags] Opening keyword modal', { gameId, userId: interaction.user.id, reason: permission.reason });
+      await interaction.showModal(modal);
+      return;
+    }
+
     if (interaction.customId.startsWith('LEAGUE_PLAYER_STATS_')) {
       // Format: LEAGUE_PLAYER_STATS_{gameId}_{playerIdx}
       const withoutPrefix = interaction.customId.replace('LEAGUE_PLAYER_STATS_', '');
@@ -2205,6 +2395,135 @@ async function onInteraction(interaction) {
 
   // Modal submit
 if (interaction.isModalSubmit()) {
+    if (interaction.customId.startsWith(LEAGUE_KEYWORDS_MODAL_PREFIX)) {
+      const modalToken = interaction.customId.replace(LEAGUE_KEYWORDS_MODAL_PREFIX, '');
+      const tokenSplitIdx = modalToken.lastIndexOf('_');
+      const gameId = tokenSplitIdx === -1 ? modalToken : modalToken.slice(0, tokenSplitIdx);
+      const modalMessageId = tokenSplitIdx === -1 ? null : modalToken.slice(tokenSplitIdx + 1);
+      const cached = recentMatchData.get(gameId);
+
+      const rawKeywords = interaction.fields.getTextInputValue(LEAGUE_KEYWORDS_FIELD_ID);
+      const normalizedKeywords = normalizeManualKeywords(rawKeywords);
+
+      let targetMessage = null;
+      try {
+        if (cached?.channelId && cached?.messageId) {
+          const targetChannel = await interaction.client.channels.fetch(cached.channelId);
+          if (targetChannel?.messages?.fetch) {
+            targetMessage = await targetChannel.messages.fetch(cached.messageId);
+          }
+        }
+
+        if (!targetMessage && modalMessageId && interaction.channel?.messages?.fetch) {
+          targetMessage = await interaction.channel.messages.fetch(modalMessageId);
+        }
+
+        if (!targetMessage && modalMessageId && interaction.channelId) {
+          const interactionChannel = await interaction.client.channels.fetch(interaction.channelId);
+          if (interactionChannel?.messages?.fetch) {
+            targetMessage = await interactionChannel.messages.fetch(modalMessageId);
+          }
+        }
+      } catch (err) {
+        logger.error('[LoL Match Tags] Failed to fetch target message for keyword update', {
+          gameId,
+          err: err?.message,
+          channelId: cached?.channelId || interaction.channelId,
+          messageId: cached?.messageId || modalMessageId,
+        });
+      }
+
+      if (!targetMessage) {
+        return interaction.reply({
+          content: 'Could not find the original match message to update keywords.',
+          ephemeral: true,
+        });
+      }
+
+      const parsedTags = extractParsedMatchTags(targetMessage.content || '');
+      if (!cached && !parsedTags) {
+        return interaction.reply({
+          content: 'This match message does not contain searchable tags to update.',
+          ephemeral: true,
+        });
+      }
+
+      const uploaderInfos = Array.isArray(cached?.uploaderInfos) && cached.uploaderInfos.length > 0
+        ? cached.uploaderInfos
+        : (parsedTags?.uploader ? [{ name: parsedTags.uploader }] : []);
+
+      if (uploaderInfos.length === 0 && cached?.payload) {
+        uploaderInfos.push(getUploaderInfo(cached.payload));
+      }
+
+      const permission = await canEditMatchKeywords(
+        interaction.user.id,
+        cached?.payload || null,
+        uploaderInfos,
+        parsedTags?.uploader || null,
+        parsedTags?.uploaderId || null
+      );
+      if (!permission.allowed) {
+        logger.info('[LoL Match Tags] Keyword modal submit denied', {
+          gameId,
+          userId: interaction.user.id,
+          reason: permission.reason,
+        });
+        return interaction.reply({
+          content: 'Only the uploader or a league admin can edit match keywords.',
+          ephemeral: true,
+        });
+      }
+
+      let updatedContent = upsertKeywordsInContent(targetMessage.content, normalizedKeywords);
+      if (!updatedContent) {
+        if (cached?.payload) {
+          const rebuiltTagLine = buildMatchTagLine({
+            payload: cached.payload,
+            gameId,
+            uploaderInfo: uploaderInfos[0],
+            uploaderDiscordId: cached?.uploaderDiscordIds?.[0] || parsedTags?.uploaderId || null,
+            matchedPlayers: cached.matchedPlayers || [],
+            keywords: normalizedKeywords,
+          });
+
+          const existingContent = String(targetMessage.content || '').trim();
+          updatedContent = existingContent
+            ? `${existingContent}\n${rebuiltTagLine}`
+            : rebuiltTagLine;
+        } else {
+          return interaction.reply({
+            content: 'Could not update keywords because no match tag line was found.',
+            ephemeral: true,
+          });
+        }
+      }
+
+      if (updatedContent !== targetMessage.content) {
+        await targetMessage.edit({ content: updatedContent });
+      }
+
+      if (cached) {
+        cached.manualKeywords = normalizedKeywords;
+        recentMatchData.set(gameId, cached);
+      }
+
+      logger.info('[LoL Match Tags] Match keywords updated', {
+        gameId,
+        userId: interaction.user.id,
+        keywordCount: normalizedKeywords.length,
+      });
+
+      const keywordText = normalizedKeywords.length > 0
+        ? normalizedKeywords.join(', ')
+        : 'none';
+      await interaction.reply({
+        content: `Updated match keywords: ${keywordText}`,
+        ephemeral: true,
+      });
+      return;
+    }
+
     if (interaction.customId.startsWith('LEAGUE_ID_MODAL_')) {
         const updates = {};
         // Iterate through all fields submitted
