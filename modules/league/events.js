@@ -778,28 +778,64 @@ const ANSI = {
 function stripWikiMarkup(text) {
   if (!text) return '';
 
+  // Keep first pipe-delimited argument; discards type hints like |mana, |hp, |physical
+  const firstArg = (_, args) => args.split('|')[0];
+  // Keep last pipe-delimited argument (used for templates where last arg is the plain-text label)
+  const lastArg  = (_, args) => { const p = args.split('|'); return p[p.length - 1]; };
+
   let result = text
     .replace(/<br\s*\/?>/gi, '\n')
     .replace(/\[\[File:[^\]]+\]\]/gi, '');
 
-  // Iteratively strip innermost {{ }} templates (no nested braces) until stable
-  for (let pass = 0; pass < 12; pass++) {
+  // Named rules that KEEP or TRANSFORM content.
+  // Run iteratively to handle nesting before the catch-all wipes unknowns.
+  // Catch-alls are intentionally OUTSIDE the loop so that resolving an inner
+  // template doesn't cause the now-exposed outer template to be wiped in the
+  // same pass before the named rule can fire.
+  for (let pass = 0; pass < 14; pass++) {
     const before = result;
     result = result
-      .replace(/\{\{cai\|([^|{}]+)\|[^{}]*\}\}/gi, '$1')
-      .replace(/\{\{tip\|([^|{}]+)(?:\|[^{}]*)?\}\}/gi, '$1')
-      .replace(/\{\{tt\|([^|{}]+)(?:\|[^{}]*)?\}\}/gi, '$1')
-      .replace(/\{\{ft\|([^|{}]+)(?:\|[^{}]*)?\}\}/gi, '$1')
-      .replace(/\{\{stil?\|([^{}]+)\}\}/gi, '$1')
-      .replace(/\{\{as\|([^{}]+)\}\}/gi, '$1')
-      .replace(/\{\{fd\|([^{}]+)\}\}/gi, '$1')
-      .replace(/\{\{pp\|([^{}]+)\}\}/gi, '$1')
-      .replace(/\{\{ap\|([^{}]+)\}\}/gi, '$1')
-      .replace(/\{\{hp\}\}/gi, 'HP')
-      .replace(/\{\{[^|{}]+\}\}/g, '')
-      .replace(/\{\{[^{}]+\}\}/g, '');
+      // ── Icon-only tips: drop entirely ({{tip|cr|icononly=true}}) ──────────
+      .replace(/\{\{tip\|[^|{}]+\|icononly[^{}]*\}\}/gi, '')
+      // ── Core existing rules ───────────────────────────────────────────────
+      .replace(/\{\{cai\|([^|{}]+)\|[^{}]*\}\}/gi, '$1')            // {{cai|name|champ}}
+      .replace(/\{\{tip\|([^|{}]+)(?:\|[^{}]*)?\}\}/gi, '$1')       // {{tip|text|optional}}
+      .replace(/\{\{tt\|([^|{}]+)(?:\|[^{}]*)?\}\}/gi, '$1')        // {{tt|text|tooltip}}
+      .replace(/\{\{ft\|[^{}|]+\|([^{}|]+)\}\}/gi, '$1')            // {{ft|complex|simple}} → keep plain-text last arg
+      .replace(/\{\{ft\|([^{}]+)\}\}/gi, firstArg)                   // {{ft|single-arg}} fallback
+      .replace(/\{\{stil?\|([^{}]+)\}\}/gi, firstArg)                // {{sti|...}}, {{stil|...}}
+      .replace(/\{\{as\|([^{}]+)\}\}/gi, firstArg)                   // {{as|value|color}}
+      .replace(/\{\{fd\|([^{}]+)\}\}/gi, '$1')                       // {{fd|decimal}}
+      .replace(/\{\{pp\|([^{}]+)\}\}/gi, firstArg)                   // {{pp|range}}
+      .replace(/\{\{ap\|([^{}]+)\}\}/gi, firstArg)                   // {{ap|value}}
+      .replace(/\{\{hp\}\}/gi, 'HP')                                 // {{hp}}
+      // ── New rules: content-bearing templates ─────────────────────────────
+      .replace(/\{\{adaptive\|([^{}]+)\}\}/gi, firstArg)             // {{adaptive|value}}
+      .replace(/\{\{ais?\|([^|{}]+)(?:\|[^{}]*)?\}\}/gi, '$1')      // {{ai|name|champ}}, {{ais|name|champ}}
+      .replace(/\{\{bi\|([^|{}]+)(?:\|[^{}]*)?\}\}/gi, '$1')        // {{bi|buff name}}
+      .replace(/\{\{cis?\|([^|{}]+)(?:\|[^{}]*)?\}\}/gi, '$1')      // {{ci|champ}}, {{cis|champ}}
+      .replace(/\{\{ccs\|([^{}]+)\}\}/gi, firstArg)                  // {{ccs|text|type}} → keep text
+      .replace(/\{\{csl\|[^|{}]+\|([^{}|]+)\}\}/gi, '$1')           // {{csl|champ|skin}} → keep skin name
+      .replace(/\{\{csl\|([^|{}]+)\}\}/gi, '$1')                     // {{csl|name}} single-arg fallback
+      .replace(/\{\{g\|([^{}]+)\}\}/gi, firstArg)                    // {{g|amount}} gold value
+      .replace(/\{\{iis?\|([^|{}]+)(?:\|[^{}]*)?\}\}/gi, '$1')      // {{ii|item}}, {{iis|item}}
+      .replace(/\{\{nie\|([^|{}]+)(?:\|[^{}]*)?\}\}/gi, '$1')       // {{nie|status effect}}
+      .replace(/\{\{rd\|([^{}]+)\}\}/gi, firstArg)                   // {{rd|value|modifier}}
+      .replace(/\{\{ri\|([^|{}]+)(?:\|[^{}]*)?\}\}/gi, '$1')        // {{ri|rune name}}
+      .replace(/\{\{rutngt\|([^{}]+)\}\}/gi, firstArg)               // {{rutngt|time value}}
+      .replace(/\{\{sbc\|([^{}]+)\}\}/gi, firstArg)                  // {{sbc|section header}}
+      .replace(/\{\{sis?\|([^|{}]+)(?:\|[^{}]*)?\}\}/gi, '$1')      // {{si|spell}}, {{sis|spell}}
+      // ── New rules: symbol / drop ──────────────────────────────────────────
+      .replace(/\{\{times\}\}/gi, '\u00d7')                          // {{times}} → ×
+      .replace(/\{\{recurring\|[^{}]*\}\}/gi, '')                    // {{recurring|n}} repeating decimal marker
+      .replace(/\{\{#[^|{}]+(?:\|[^{}]*)?\}\}/gi, '');              // parser functions: {{#invoke:...}}
     if (result === before) break;
   }
+
+  // Catch-all: only after named rules are stable, strip remaining unknown templates
+  result = result
+    .replace(/\{\{[^|{}]+\}\}/g, '')    // zero-arg unknown: {{foo}}
+    .replace(/\{\{[^{}]+\}\}/g, '');    // single-level unknown with args
 
   return result
     .replace(/\[\[[^\]]*\|([^\]]+)\]\]/g, '$1')   // [[Article|display]] → display
