@@ -722,6 +722,135 @@ function extractPlayerAugments(player) {
   return unique.map(buildAugmentDisplay);
 }
 
+/* =====================================================
+   Augment View Helpers
+===================================================== */
+
+/**
+ * Extracts augments for a player with full wiki details (tier, description).
+ * Returns: [{ id, name, tier, description, isUnknown }]
+ */
+function extractPlayerAugmentsWithDetails(player) {
+  if (!player) return [];
+
+  let ids = [];
+  if (Array.isArray(player.augments)) {
+    ids = player.augments;
+  } else {
+    const stats = player.stats || {};
+    ids = [1, 2, 3, 4, 5, 6]
+      .map((i) => stats[`PLAYER_AUGMENT_${i}`])
+      .filter((v) => v !== undefined && v !== null && v !== 0);
+  }
+
+  const unique = Array.from(new Set(ids.filter((v) => Number.isFinite(v) || (typeof v === 'string' && v.length > 0))));
+
+  return unique.map((id) => {
+    const isNumericId = typeof id === 'number' && Number.isFinite(id);
+    const mappedName = isNumericId ? AUGMENT_NAME_MAP[id] : null;
+    const resolvedName = typeof id === 'string' ? id : (mappedName || null);
+    const wikiEntry = resolvedName
+      ? (wikiAugmentData[resolvedName] || wikiAugmentDataLower[resolvedName.toLowerCase()])
+      : null;
+    const displayName = wikiEntry ? wikiEntry.name : (resolvedName || `Augment ${id}`);
+    const isUnknown = isNumericId && !mappedName && !wikiEntry;
+
+    return { id, name: displayName, tier: wikiEntry?.tier || null, description: wikiEntry?.description || null, isUnknown };
+  });
+}
+
+const TIER_COLORS = { Silver: 0xC0C0C0, Gold: 0xFFD700, Prismatic: 0x9B59B6 };
+
+/**
+ * Builds a paginated EmbedBuilder showing one player's augments.
+ */
+function buildAugmentPageEmbed(allPlayers, activeIdx, gameId) {
+  const player = allPlayers[activeIdx];
+  const playerName = formatName(player);
+  const champName = player.championName || 'Unknown';
+  const teamLabel = player.teamId === 100 ? 'Blue' : 'Red';
+  const augments = extractPlayerAugmentsWithDetails(player);
+
+  let embedColor = 0x7289DA;
+  if (augments.some((a) => a.tier === 'Prismatic')) embedColor = TIER_COLORS.Prismatic;
+  else if (augments.some((a) => a.tier === 'Gold')) embedColor = TIER_COLORS.Gold;
+  else if (augments.some((a) => a.tier === 'Silver')) embedColor = TIER_COLORS.Silver;
+
+  const embed = new EmbedBuilder()
+    .setTitle(`${playerName} — ${champName}`)
+    .setDescription(`${teamLabel} Team · Player ${activeIdx + 1} of ${allPlayers.length}`)
+    .setColor(embedColor)
+    .setFooter({ text: `Match Augments | Game ${gameId}` });
+
+  if (augments.length === 0) {
+    embed.addFields({ name: 'Augments', value: 'No augments recorded for this player.' });
+  } else {
+    for (const aug of augments) {
+      if (aug.isUnknown) {
+        embed.addFields({
+          name: `🔴 Unknown Augment (ID: ${aug.id})`,
+          value: 'Not yet identified. A Moderator can click **Identify** below to name it.',
+        });
+      } else {
+        const tierLabel = aug.tier ? `**[${aug.tier}]** ` : '';
+        embed.addFields({
+          name: `${tierLabel}${aug.name}`,
+          value: aug.description || '*No description available*',
+        });
+      }
+    }
+  }
+
+  return embed;
+}
+
+/**
+ * Builds ActionRows for the augment view: prev/next navigation + identify buttons for unknowns.
+ */
+function buildAugmentPageComponents(allPlayers, gameId, activeIdx) {
+  const rows = [];
+  const hasPrev = activeIdx > 0;
+  const hasNext = activeIdx < allPlayers.length - 1;
+
+  if (hasPrev || hasNext) {
+    const navRow = new ActionRowBuilder();
+    if (hasPrev) {
+      navRow.addComponents(
+        new ButtonBuilder()
+          .setCustomId(`LEAGUE_AUGS_PAGE_${gameId}_${activeIdx - 1}`)
+          .setLabel('← Prev')
+          .setStyle(ButtonStyle.Secondary)
+      );
+    }
+    if (hasNext) {
+      navRow.addComponents(
+        new ButtonBuilder()
+          .setCustomId(`LEAGUE_AUGS_PAGE_${gameId}_${activeIdx + 1}`)
+          .setLabel('Next →')
+          .setStyle(ButtonStyle.Secondary)
+      );
+    }
+    rows.push(navRow);
+  }
+
+  const augments = extractPlayerAugmentsWithDetails(allPlayers[activeIdx]);
+  const unknowns = augments.filter((a) => a.isUnknown).slice(0, 5);
+  if (unknowns.length > 0) {
+    const identifyRow = new ActionRowBuilder();
+    for (const aug of unknowns) {
+      identifyRow.addComponents(
+        new ButtonBuilder()
+          .setCustomId(`LEAGUE_AUGS_IDENTIFY_${gameId}_${activeIdx}_${aug.id}`)
+          .setLabel(`Identify #${aug.id}`)
+          .setStyle(ButtonStyle.Danger)
+      );
+    }
+    rows.push(identifyRow);
+  }
+
+  return rows;
+}
+
 async function getLatestDDVersion() {
   const now = Date.now();
   // Fetch only once every hour to be polite
@@ -1468,12 +1597,21 @@ async function handleMatchPayload(payload, client, uploaderInfos = [], placehold
         const augmentsData = recentMatchAugments.get(String(gameId));
         const row = new ActionRowBuilder();
 
+        if (isAramMayhem(payload)) {
+          row.addComponents(
+            new ButtonBuilder()
+              .setCustomId(`LEAGUE_VIEW_AUGS_${gameId}`)
+              .setLabel('View Augments')
+              .setStyle(ButtonStyle.Primary)
+          );
+        }
+
         if (augmentsData) {
           row.addComponents(
             new ButtonBuilder()
               .setCustomId(`LEAGUE_ID_AUGMENTS_${gameId}`)
               .setLabel('Identify Augments')
-              .setStyle(ButtonStyle.Primary)
+              .setStyle(ButtonStyle.Secondary)
           );
         }
 
@@ -2419,10 +2557,148 @@ async function onInteraction(interaction) {
       await interaction.showModal(modal);
       return;
     }
+
+    // ── View Augments: paginated embed for all players ──
+    if (interaction.customId.startsWith('LEAGUE_VIEW_AUGS_')) {
+      const gameId = interaction.customId.replace('LEAGUE_VIEW_AUGS_', '');
+      const cached = recentMatchData.get(gameId);
+
+      if (!cached) {
+        return interaction.reply({ content: 'Match data has expired (30-minute window). Re-upload to refresh.', ephemeral: true });
+      }
+
+      await interaction.deferReply({ ephemeral: true });
+
+      const allPlayers = getAllPlayersOrdered(cached.payload);
+      if (allPlayers.length === 0) {
+        return interaction.editReply({ content: 'No player data found for this match.' });
+      }
+
+      const embed = buildAugmentPageEmbed(allPlayers, 0, gameId);
+      const components = buildAugmentPageComponents(allPlayers, gameId, 0);
+
+      logger.info('[AugmentView] View Augments opened', { gameId, userId: interaction.user.id, playerCount: allPlayers.length });
+      return interaction.editReply({ embeds: [embed], components });
+    }
+
+    // ── Augment page navigation ──
+    if (interaction.customId.startsWith('LEAGUE_AUGS_PAGE_')) {
+      const withoutPrefix = interaction.customId.replace('LEAGUE_AUGS_PAGE_', '');
+      const lastUnder = withoutPrefix.lastIndexOf('_');
+      const gameId = withoutPrefix.slice(0, lastUnder);
+      const playerIdx = parseInt(withoutPrefix.slice(lastUnder + 1), 10);
+
+      const cached = recentMatchData.get(gameId);
+      if (!cached) {
+        return interaction.reply({ content: 'Match data expired. Re-upload to refresh.', ephemeral: true });
+      }
+
+      const allPlayers = getAllPlayersOrdered(cached.payload);
+      if (isNaN(playerIdx) || playerIdx < 0 || playerIdx >= allPlayers.length) {
+        return interaction.reply({ content: 'Invalid player selection.', ephemeral: true });
+      }
+
+      await interaction.deferUpdate();
+
+      const embed = buildAugmentPageEmbed(allPlayers, playerIdx, gameId);
+      const components = buildAugmentPageComponents(allPlayers, gameId, playerIdx);
+
+      logger.info('[AugmentView] Navigated to player', { gameId, playerIdx, userId: interaction.user.id });
+      return interaction.editReply({ embeds: [embed], components });
+    }
+
+    // ── Identify unknown augment (Moderator only) ──
+    if (interaction.customId.startsWith('LEAGUE_AUGS_IDENTIFY_')) {
+      // Format: LEAGUE_AUGS_IDENTIFY_{gameId}_{playerIdx}_{augId}
+      const withoutPrefix = interaction.customId.replace('LEAGUE_AUGS_IDENTIFY_', '');
+      const lastUnder = withoutPrefix.lastIndexOf('_');
+      const augId = withoutPrefix.slice(lastUnder + 1);
+      const remainder = withoutPrefix.slice(0, lastUnder);
+      const secondLastUnder = remainder.lastIndexOf('_');
+      const playerIdx = parseInt(remainder.slice(secondLastUnder + 1), 10);
+      const gameId = remainder.slice(0, secondLastUnder);
+
+      const isModerator = interaction.member?.roles?.cache?.some(
+        (r) => r.name.toLowerCase() === 'moderator'
+      );
+
+      if (!isModerator) {
+        logger.info('[AugmentView] Identify denied — not a Moderator', { augId, userId: interaction.user.id });
+        return interaction.reply({ content: 'Only members with the **Moderator** role can identify augments.', ephemeral: true });
+      }
+
+      const numericId = parseInt(augId, 10);
+      const knownName = Number.isFinite(numericId) ? (AUGMENT_NAME_MAP[numericId] || '') : '';
+
+      const modal = new ModalBuilder()
+        .setCustomId(`LEAGUE_AUGS_ID_MODAL_${gameId}_${playerIdx}_${augId}`)
+        .setTitle(`Identify Augment #${augId}`);
+
+      modal.addComponents(
+        new ActionRowBuilder().addComponents(
+          new TextInputBuilder()
+            .setCustomId('aug_name')
+            .setLabel('Augment Name')
+            .setStyle(TextInputStyle.Short)
+            .setPlaceholder('e.g. Poltergeist')
+            .setValue(knownName)
+            .setRequired(true)
+        )
+      );
+
+      logger.info('[AugmentView] Identify modal opened', { augId, gameId, userId: interaction.user.id });
+      await interaction.showModal(modal);
+      return;
+    }
   }
 
   // Modal submit
 if (interaction.isModalSubmit()) {
+    // ── Moderator augment identification from View Augments ──
+    if (interaction.customId.startsWith('LEAGUE_AUGS_ID_MODAL_')) {
+      // Format: LEAGUE_AUGS_ID_MODAL_{gameId}_{playerIdx}_{augId}
+      const withoutPrefix = interaction.customId.replace('LEAGUE_AUGS_ID_MODAL_', '');
+      const lastUnder = withoutPrefix.lastIndexOf('_');
+      const augId = withoutPrefix.slice(lastUnder + 1);
+      const remainder = withoutPrefix.slice(0, lastUnder);
+      const secondLastUnder = remainder.lastIndexOf('_');
+      const playerIdx = parseInt(remainder.slice(secondLastUnder + 1), 10);
+      const gameId = remainder.slice(0, secondLastUnder);
+
+      const augName = interaction.fields.getTextInputValue('aug_name').trim();
+      if (!augName) {
+        return interaction.reply({ content: 'Augment name cannot be empty.', ephemeral: true });
+      }
+
+      const numericId = parseInt(augId, 10);
+      if (Number.isFinite(numericId)) {
+        AUGMENT_NAME_MAP[numericId] = augName;
+        try {
+          let fileData = {};
+          if (fs.existsSync(AUGMENT_ID_FILE)) {
+            fileData = JSON.parse(fs.readFileSync(AUGMENT_ID_FILE, 'utf8'));
+          }
+          fileData[numericId] = augName;
+          fs.writeFileSync(AUGMENT_ID_FILE, JSON.stringify(fileData, null, 2));
+          logger.info('[AugmentView] Augment identified and saved', { augId: numericId, name: augName, userId: interaction.user.id });
+        } catch (err) {
+          logger.error('[AugmentView] Failed to save augment identification', err);
+        }
+      }
+
+      // Reply with confirmation + updated embed for the same player page
+      const cached = recentMatchData.get(gameId);
+      if (cached) {
+        const allPlayers = getAllPlayersOrdered(cached.payload);
+        const validIdx = !isNaN(playerIdx) && playerIdx >= 0 && playerIdx < allPlayers.length ? playerIdx : 0;
+        const embed = buildAugmentPageEmbed(allPlayers, validIdx, gameId);
+        const components = buildAugmentPageComponents(allPlayers, gameId, validIdx);
+        return interaction.reply({ content: `✅ Augment ID \`${augId}\` identified as **${augName}**.`, embeds: [embed], components, ephemeral: true });
+      }
+
+      return interaction.reply({ content: `✅ Augment ID \`${augId}\` identified as **${augName}**. (Match data has since expired.)`, ephemeral: true });
+    }
+
     if (interaction.customId.startsWith(LEAGUE_KEYWORDS_MODAL_PREFIX)) {
       const modalToken = interaction.customId.replace(LEAGUE_KEYWORDS_MODAL_PREFIX, '');
       const tokenSplitIdx = modalToken.lastIndexOf('_');
