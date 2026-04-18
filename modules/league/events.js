@@ -806,11 +806,18 @@ function stripWikiMarkup(text) {
       .replace(/\{\{stil?\|([^{}]+)\}\}/gi, firstArg)                // {{sti|...}}, {{stil|...}}
       .replace(/\{\{as\|([^{}]+)\}\}/gi, firstArg)                   // {{as|value|color}}
       .replace(/\{\{fd\|([^{}]+)\}\}/gi, '$1')                       // {{fd|decimal}}
-      .replace(/\{\{pp\|([^{}]+)\}\}/gi, firstArg)                   // {{pp|range}}
+      .replace(/\{\{pp\|([^{}]+)\}\}/gi, (_, args) => {            // {{pp|range}} — skip named params, append % if key=%
+        const parts = args.split('|');
+        const positional = parts.filter(p => !p.includes('='));
+        const hasPercent = parts.some(p => p.trim() === 'key=%' || p.trim() === 'key1=%');
+        const val = (positional[0] || parts[0]).replace(/\s+for\s+\d+$/i, '').trim();
+        return hasPercent ? val + '%' : val;
+      })
       .replace(/\{\{ap\|([^{}]+)\}\}/gi, firstArg)                   // {{ap|value}}
       .replace(/\{\{hp\}\}/gi, 'HP')                                 // {{hp}}
+      .replace(/\{\{critical damage\|([^{}]+)\}\}/gi, (_, args) => args.split('|')[0] + '%') // {{critical damage|N}} → N%
       // ── New rules: content-bearing templates ─────────────────────────────
-      .replace(/\{\{adaptive\|([^{}]+)\}\}/gi, firstArg)             // {{adaptive|value}}
+      .replace(/\{\{adaptive\|([^{}]+)\}\}/gi, (_, v) => v.split('|')[0] + ' Adaptive Force') // {{adaptive|value}}
       .replace(/\{\{ais?\|([^|{}]+)(?:\|[^{}]*)?\}\}/gi, '$1')      // {{ai|name|champ}}, {{ais|name|champ}}
       .replace(/\{\{bi\|([^|{}]+)(?:\|[^{}]*)?\}\}/gi, '$1')        // {{bi|buff name}}
       .replace(/\{\{cis?\|([^|{}]+)(?:\|[^{}]*)?\}\}/gi, '$1')      // {{ci|champ}}, {{cis|champ}}
@@ -828,7 +835,8 @@ function stripWikiMarkup(text) {
       // ── New rules: symbol / drop ──────────────────────────────────────────
       .replace(/\{\{times\}\}/gi, '\u00d7')                          // {{times}} → ×
       .replace(/\{\{recurring\|[^{}]*\}\}/gi, '')                    // {{recurring|n}} repeating decimal marker
-      .replace(/\{\{#[^|{}]+(?:\|[^{}]*)?\}\}/gi, '');              // parser functions: {{#invoke:...}}
+      .replace(/\{\{#invoke:[^|}{}]+\|geteffect\|([^|}{}]+)[^{}]*\}\}/gi, '(Spell data unavailable for: $1)') // {{#invoke:SpellData|geteffect|name}}
+      .replace(/\{\{#[^|{}]+(?:\|[^{}]*)?\}\}/gi, '');              // other parser functions
     if (result === before) break;
   }
 
@@ -843,6 +851,7 @@ function stripWikiMarkup(text) {
     .replace(/'{2,3}/g, '')                          // '''bold''' / ''italic''
     .replace(/<[^>]+>/g, '')                         // leftover HTML tags
     .replace(/[ \t]{2,}/g, ' ')                      // collapse spaces
+    .replace(/\n[ \t]+/g, '\n')                       // trim leading whitespace on each line
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 }
