@@ -761,8 +761,58 @@ function extractPlayerAugmentsWithDetails(player) {
 
 const TIER_COLORS = { Silver: 0xC0C0C0, Gold: 0xFFD700, Prismatic: 0x9B59B6 };
 
+// ANSI escape sequences for Discord ```ansi code blocks
+const ANSI = {
+  reset:     '\u001b[0m',
+  prismatic: '\u001b[1;35m',  // bold magenta
+  gold:      '\u001b[1;33m',  // bold yellow
+  silver:    '\u001b[0;37m',  // white
+  unknown:   '\u001b[0;31m',  // red
+  dim:       '\u001b[2;37m',  // dim white (description text)
+  label:     '\u001b[0;36m',  // cyan (augment name when no tier)
+};
+
 /**
- * Builds a paginated EmbedBuilder showing one player's augments.
+ * Strips League wiki template markup from a description string, returning plain text.
+ */
+function stripWikiMarkup(text) {
+  if (!text) return '';
+
+  let result = text
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/\[\[File:[^\]]+\]\]/gi, '');
+
+  // Iteratively strip innermost {{ }} templates (no nested braces) until stable
+  for (let pass = 0; pass < 12; pass++) {
+    const before = result;
+    result = result
+      .replace(/\{\{cai\|([^|{}]+)\|[^{}]*\}\}/gi, '$1')
+      .replace(/\{\{tip\|([^|{}]+)(?:\|[^{}]*)?\}\}/gi, '$1')
+      .replace(/\{\{tt\|([^|{}]+)(?:\|[^{}]*)?\}\}/gi, '$1')
+      .replace(/\{\{ft\|([^|{}]+)(?:\|[^{}]*)?\}\}/gi, '$1')
+      .replace(/\{\{sti\|([^{}]+)\}\}/gi, '$1')
+      .replace(/\{\{as\|([^{}]+)\}\}/gi, '$1')
+      .replace(/\{\{fd\|([^{}]+)\}\}/gi, '$1')
+      .replace(/\{\{pp\|([^{}]+)\}\}/gi, '$1')
+      .replace(/\{\{ap\|([^{}]+)\}\}/gi, '$1')
+      .replace(/\{\{hp\}\}/gi, 'HP')
+      .replace(/\{\{[^|{}]+\}\}/g, '')
+      .replace(/\{\{[^{}]+\}\}/g, '');
+    if (result === before) break;
+  }
+
+  return result
+    .replace(/\[\[[^\]]*\|([^\]]+)\]\]/g, '$1')   // [[Article|display]] → display
+    .replace(/\[\[([^\]]+)\]\]/g, '$1')             // [[Article]] → Article
+    .replace(/'{2,3}/g, '')                          // '''bold''' / ''italic''
+    .replace(/<[^>]+>/g, '')                         // leftover HTML tags
+    .replace(/[ \t]{2,}/g, ' ')                      // collapse spaces
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+/**
+ * Builds a paginated EmbedBuilder showing one player's augments using ANSI coloring.
  */
 function buildAugmentPageEmbed(allPlayers, activeIdx, gameId) {
   const player = allPlayers[activeIdx];
@@ -776,32 +826,54 @@ function buildAugmentPageEmbed(allPlayers, activeIdx, gameId) {
   else if (augments.some((a) => a.tier === 'Gold')) embedColor = TIER_COLORS.Gold;
   else if (augments.some((a) => a.tier === 'Silver')) embedColor = TIER_COLORS.Silver;
 
-  const embed = new EmbedBuilder()
-    .setTitle(`${playerName} — ${champName}`)
-    .setDescription(`${teamLabel} Team · Player ${activeIdx + 1} of ${allPlayers.length}`)
-    .setColor(embedColor)
-    .setFooter({ text: `Match Augments | Game ${gameId}` });
+  const tierAnsi = { Prismatic: ANSI.prismatic, Gold: ANSI.gold, Silver: ANSI.silver };
+  const DESC_LIMIT = 280;
 
+  const lines = [];
   if (augments.length === 0) {
-    embed.addFields({ name: 'Augments', value: 'No augments recorded for this player.' });
+    lines.push(`${ANSI.dim}No augments recorded for this player.${ANSI.reset}`);
   } else {
-    for (const aug of augments) {
+    for (let i = 0; i < augments.length; i++) {
+      const aug = augments[i];
+      if (i > 0) lines.push('');
+
       if (aug.isUnknown) {
-        embed.addFields({
-          name: `🔴 Unknown Augment (ID: ${aug.id})`,
-          value: 'Not yet identified. A Moderator can click **Identify** below to name it.',
-        });
+        lines.push(`${ANSI.unknown}[Unknown] Augment ID: ${aug.id}${ANSI.reset}`);
+        lines.push(`${ANSI.dim}Not yet identified — use the Identify button below.${ANSI.reset}`);
       } else {
-        const tierLabel = aug.tier ? `**[${aug.tier}]** ` : '';
-        embed.addFields({
-          name: `${tierLabel}${aug.name}`,
-          value: aug.description || '*No description available*',
-        });
+        const color = (aug.tier && tierAnsi[aug.tier]) || ANSI.label;
+        const tierTag = aug.tier ? `[${aug.tier}] ` : '';
+        lines.push(`${color}${tierTag}${aug.name}${ANSI.reset}`);
+
+        if (aug.description) {
+          const cleaned = stripWikiMarkup(aug.description);
+          const paragraphs = cleaned.split('\n').filter((l) => l.trim());
+          const firstPara = paragraphs[0] || '';
+          const truncated = firstPara.length > DESC_LIMIT
+            ? firstPara.slice(0, DESC_LIMIT - 1) + '…'
+            : firstPara;
+          lines.push(`${ANSI.dim}${truncated}${ANSI.reset}`);
+          if (paragraphs.length > 1) {
+            const second = paragraphs[1];
+            const truncated2 = second.length > DESC_LIMIT
+              ? second.slice(0, DESC_LIMIT - 1) + '…'
+              : second;
+            lines.push(`${ANSI.dim}${truncated2}${ANSI.reset}`);
+          }
+        } else {
+          lines.push(`${ANSI.dim}No description available.${ANSI.reset}`);
+        }
       }
     }
   }
 
-  return embed;
+  const codeBlock = `\`\`\`ansi\n${lines.join('\n')}\n\`\`\``;
+
+  return new EmbedBuilder()
+    .setTitle(`${playerName} — ${champName}`)
+    .setDescription(`${teamLabel} Team · Player ${activeIdx + 1} of ${allPlayers.length}\n${codeBlock}`)
+    .setColor(embedColor)
+    .setFooter({ text: `Match Augments | Game ${gameId}` });
 }
 
 /**
