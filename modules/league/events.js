@@ -647,16 +647,37 @@ try {
   console.error('Failed to load augment_ids.json', err);
 }
 
-let wikiAugmentData = {};
-const wikiAugmentDataLower = {};
-try {
-  wikiAugmentData = require('./mayhem_wiki_data.json');
-  Object.keys(wikiAugmentData).forEach(k => {
-      wikiAugmentDataLower[k.toLowerCase()] = wikiAugmentData[k];
-  });
-} catch (e) {
-  // Wiki data not yet fetched
+const WIKI_AUGMENT_DATA_FILE = path.join(__dirname, 'mayhem_wiki_data.json');
+
+/**
+ * Reads the mayhem wiki augment data fresh from disk on every call so that
+ * updates produced by fetch_mayhem_augments.js are picked up without requiring
+ * a bot restart or module cache bust. Returns both the original-cased map and
+ * a lowercase-keyed map for case-insensitive lookups.
+ */
+function loadWikiAugmentData() {
+  try {
+    const raw = fs.readFileSync(WIKI_AUGMENT_DATA_FILE, 'utf8');
+    const data = JSON.parse(raw);
+    const lower = {};
+    for (const key of Object.keys(data)) {
+      lower[key.toLowerCase()] = data[key];
+    }
+    return { data, lower };
+  } catch (err) {
+    if (err && err.code !== 'ENOENT' && logger) {
+      logger.error('[Infographic] Failed to load mayhem_wiki_data.json', err);
+    }
+    return { data: {}, lower: {} };
+  }
 }
+
+function getWikiAugmentEntry(name) {
+  if (!name) return null;
+  const { data, lower } = loadWikiAugmentData();
+  return data[name] || lower[String(name).toLowerCase()] || null;
+}
+
 const AUGMENT_ICON_DIR = path.join(__dirname, 'assets', 'mayhem');
 
 function getAugmentName(id) {
@@ -671,7 +692,7 @@ function buildAugmentDisplay(id) {
   const name = getAugmentName(id);
   
   let icon = null;
-  const wikiEntry = wikiAugmentData[name] || (name ? wikiAugmentDataLower[name.toLowerCase()] : null);
+  const wikiEntry = getWikiAugmentEntry(name);
   
   // If we have wiki data for this name, try to resolve the local icon
   if (wikiEntry && wikiEntry.icon) {
@@ -749,9 +770,7 @@ function extractPlayerAugmentsWithDetails(player) {
     const isNumericId = typeof id === 'number' && Number.isFinite(id);
     const mappedName = isNumericId ? AUGMENT_NAME_MAP[id] : null;
     const resolvedName = typeof id === 'string' ? id : (mappedName || null);
-    const wikiEntry = resolvedName
-      ? (wikiAugmentData[resolvedName] || wikiAugmentDataLower[resolvedName.toLowerCase()])
-      : null;
+    const wikiEntry = resolvedName ? getWikiAugmentEntry(resolvedName) : null;
     const displayName = wikiEntry ? wikiEntry.name : (resolvedName || `Augment ${id}`);
     const isUnknown = isNumericId && !mappedName && !wikiEntry;
 
