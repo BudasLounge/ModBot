@@ -25,6 +25,12 @@ const {
   normalizeManualKeywords,
   upsertKeywordsInContent,
 } = require('./lib/match_tags.js');
+const MatchArchive = require('./lib/match_archive.js');
+
+// Persistent on-disk archive of final post-match payloads. Instantiated in
+// register_handlers once the module logger is available so the archive can
+// share the same log stream as the rest of the league module.
+let matchArchive = null;
 
 // Cache for recent matches to allow "Identify Augment" interactions
 // Key: gameId, Value: { players: [{ user_id, augments: [id1, id2...] }] }
@@ -1542,6 +1548,21 @@ async function enqueueMatchPayload(rawPayload, client) {
         rankedLpEntries: rankedLpEntries.length,
       });
 
+      // Persist the final (latest) payload to disk before rendering. We
+      // wrap this in its own try/catch as a defense-in-depth measure even
+      // though saveMatch already swallows its own errors -- archive
+      // failures must never block the Discord-facing match handling.
+      try {
+        if (matchArchive) {
+          matchArchive.saveMatch(latest);
+        }
+      } catch (archiveErr) {
+        logger.error('[LoL Match Ingest] Archive save threw unexpectedly', {
+          gameId,
+          err: archiveErr?.message,
+        });
+      }
+
       await handleMatchPayload(latest, client, uploaderInfos, placeholderMessage, rankedLpEntries);
     } catch (err) {
       logger.error('[LoL Match Ingest] Debounce handler error', { gameId, err: err?.message });
@@ -2604,9 +2625,21 @@ async function onInteraction(interaction) {
       const gameId    = withoutPrefix.slice(0, lastUnderscore);
       const playerIdx = parseInt(withoutPrefix.slice(lastUnderscore + 1), 10);
 
-      const cached = recentMatchData.get(gameId);
+      // Prefer the in-memory cache (fresh post-match: includes V5 data + uploader
+      // context). Fall back to the on-disk archive so pagination buttons on old
+      // posts and /match_stats results remain responsive after the 5-min cache TTL.
+      let cached = recentMatchData.get(gameId);
+      if (!cached && matchArchive) {
+        const envelope = await matchArchive.readMatch(gameId);
+        if (envelope && envelope.payload) {
+          logger.info('[PlayerStats] Cache miss, loaded from archive', { gameId });
+          // Synthesize a minimal cache shape. v5Data is archive-unaware, so we
+          // always render via the LCU/Mayhem branch for archived matches.
+          cached = { payload: envelope.payload, v5Data: null, uploaderInfos: [], matchedPlayers: [] };
+        }
+      }
       if (!cached) {
-        return interaction.reply({ content: 'Match data expired. Re-upload to refresh.', ephemeral: true });
+        return interaction.reply({ content: 'Match data unavailable (not cached and not archived).', ephemeral: true });
       }
 
       await interaction.deferUpdate();
@@ -3116,8 +3149,19 @@ if (interaction.isModalSubmit()) {
 
 function register_handlers(event_registry) {
   logger = event_registry.logger;
+  // Stand up the on-disk match archive now that we have a logger to share.
+  matchArchive = new MatchArchive(logger);
   startMatchWebhook(event_registry);
   event_registry.register('interactionCreate', onInteraction);
 }
+
+// Expose select internals so the /match_stats command (and any future
+// archive-backed analysis commands) can reuse the exact same rendering +
+// selector pipeline the live post-match embed uses. Attaching these to the
+// function object preserves the callable default export for module_handler.
+register_handlers.generatePlayerStatsImage = generatePlayerStatsImage;
+register_handlers.getAllPlayersOrdered = getAllPlayersOrdered;
+register_handlers.buildPlayerSelectorRows = buildPlayerSelectorRows;
+register_handlers.getMatchArchive = () => matchArchive;
 
 module.exports = register_handlers;
