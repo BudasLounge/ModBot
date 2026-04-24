@@ -461,7 +461,12 @@ class ModuleHandler {
                 builder.addStringOption(o => {
                     o.setName(optName).setDescription(optDesc).setRequired(isRequired);
                     if (opt.choices && opt.choices.length > 0) {
-                        o.addChoices(...opt.choices.map(c => ({ name: c, value: c })));
+                        // Support both plain strings ("foo") and choice objects ({ name, value }).
+                        o.addChoices(...opt.choices.map(c =>
+                            typeof c === 'object' && c !== null
+                                ? { name: String(c.name), value: String(c.value) }
+                                : { name: String(c), value: String(c) }
+                        ));
                     } else if (opt.autocomplete) {
                         o.setAutocomplete(true);
                     }
