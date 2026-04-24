@@ -393,7 +393,20 @@ function aggregateByChampionRole(collected) {
 }
 
 // ── Rendering ───────────────────────────────────────────────────────────────
+const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// Returns compact "Mmm DD" (6 chars) to stay within codeblock column budget.
+// Full date range is shown in the header.
 function formatLastPlayed(ts) {
+    if (!ts) return '—     ';
+    const d = new Date(ts);
+    const mon = MONTHS_SHORT[d.getUTCMonth()];
+    const day = String(d.getUTCDate()).padStart(2, '0');
+    return `${mon} ${day}`;
+}
+
+// Full YYYY-MM-DD used in the header range line only.
+function formatDateFull(ts) {
     if (!ts) return '—';
     const d = new Date(ts);
     const y = d.getUTCFullYear();
@@ -420,7 +433,7 @@ const STOP_REASON_LABELS = {
     scan_cap: `⚠️ Scan cap reached (${MAX_IDS_SCANNED} match IDs) before target was met. Try a smaller count.`,
 };
 
-function buildHeaderDescription(summonerName, totalCounted, idsScanned, queueCounts, dateRange, targetCount, stopReason) {
+function buildHeaderDescription(summonerName, totalCounted, idsScanned, queueCounts, dateRange, targetCount, stopReason, roleFilter) {
     const parts = [];
     parts.push(`**Player:** ${summonerName}`);
 
@@ -436,10 +449,11 @@ function buildHeaderDescription(summonerName, totalCounted, idsScanned, queueCou
         .map(([qid, n]) => `${QUEUE_LABELS[qid] || `Queue ${qid}`}: ${n}`)
         .join(' • ');
     if (breakdown) parts.push(`**Queues:** ${breakdown}`);
+    if (roleFilter) parts.push(`**Role filter:** ${ROLE_LABELS[roleFilter] || roleFilter}`);
     if (dateRange.newestTs && dateRange.oldestTs) {
         parts.push(
-            `**Range:** ${formatLastPlayed(dateRange.oldestTs)} → ` +
-            `${formatLastPlayed(dateRange.newestTs)}`
+            `**Range:** ${formatDateFull(dateRange.oldestTs)} → ` +
+            `${formatDateFull(dateRange.newestTs)}`
         );
     }
     return parts.join('\n');
@@ -448,24 +462,25 @@ function buildHeaderDescription(summonerName, totalCounted, idsScanned, queueCou
 function buildCodeblockPage(rows, page, totalPages) {
     const slice = rows.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
+    // Column widths tuned to fit ~50 chars (Discord embed codeblock boundary).
     const header =
-        padRight('Champion', 14) + ' ' +
+        padRight('Champion', 12) + ' ' +
         padRight('Role', 7) + ' ' +
-        padLeft('G', 4) + ' ' +
-        padLeft('W-L', 9) + ' ' +
-        padLeft('WR%', 6) + ' ' +
-        padLeft('KDA', 6) + ' ' +
+        padLeft('G', 3) + ' ' +
+        padLeft('W-L', 7) + ' ' +
+        padLeft('WR%', 5) + ' ' +
+        padLeft('KDA', 5) + ' ' +
         'Last';
     const sep = '-'.repeat(header.length);
 
     const lines = slice.map((r) => {
         return (
-            padRight(r.champion, 14) + ' ' +
+            padRight(r.champion, 12) + ' ' +
             padRight(r.roleLabel, 7) + ' ' +
-            padLeft(r.games, 4) + ' ' +
-            padLeft(`${r.wins}-${r.losses}`, 9) + ' ' +
-            padLeft(r.winRate.toFixed(1), 6) + ' ' +
-            padLeft(r.kda.toFixed(2), 6) + ' ' +
+            padLeft(r.games, 3) + ' ' +
+            padLeft(`${r.wins}-${r.losses}`, 7) + ' ' +
+            padLeft(r.winRate.toFixed(1), 5) + ' ' +
+            padLeft(r.kda.toFixed(2), 5) + ' ' +
             formatLastPlayed(r.lastPlayedTs)
         );
     });
@@ -621,13 +636,26 @@ module.exports = {
             required: false,
         },
         {
+            name: 'role',
+            description: 'Filter results to a specific role (optional)',
+            type: 'STRING',
+            required: false,
+            choices: [
+                { name: 'Top',     value: 'TOP'     },
+                { name: 'Jungle',  value: 'JUNGLE'  },
+                { name: 'Mid',     value: 'MIDDLE'  },
+                { name: 'Bot',     value: 'BOTTOM'  },
+                { name: 'Support', value: 'UTILITY' },
+            ],
+        },
+        {
             name: 'display',
             description: 'Display mode: codeblock (default) or embed',
             type: 'STRING',
             required: false,
             choices: [
                 { name: 'codeblock', value: 'codeblock' },
-                { name: 'embed', value: 'embed' },
+                { name: 'embed',     value: 'embed'     },
             ],
         },
     ],
@@ -657,12 +685,33 @@ module.exports = {
         }
         args = flatArgs;
 
+        // Recognise canonical role values and common aliases (case-insensitive).
+        const ROLE_FILTER_MAP = {
+            top: 'TOP',
+            jg: 'JUNGLE', jungle: 'JUNGLE',
+            mid: 'MIDDLE', middle: 'MIDDLE',
+            bot: 'BOTTOM', bottom: 'BOTTOM', adc: 'BOTTOM',
+            sup: 'UTILITY', support: 'UTILITY', utility: 'UTILITY',
+        };
+        // Also accept the canonical uppercase values the slash command sends.
+        for (const v of Object.values(ROLE_FILTER_MAP)) ROLE_FILTER_MAP[v.toLowerCase()] = v;
+
         // Parse trailing optional display mode ("codeblock" | "embed").
         let displayMode = 'codeblock';
         if (args.length > 0) {
             const tail = String(args[args.length - 1]).toLowerCase();
             if (tail === 'embed' || tail === 'codeblock') {
                 displayMode = tail;
+                args.pop();
+            }
+        }
+
+        // Parse trailing optional role filter.
+        let roleFilter = null;
+        if (args.length > 0) {
+            const tail = String(args[args.length - 1]).toLowerCase();
+            if (ROLE_FILTER_MAP[tail]) {
+                roleFilter = ROLE_FILTER_MAP[tail];
                 args.pop();
             }
         }
@@ -682,13 +731,14 @@ module.exports = {
 
         const summonerName = args.join(' ').trim();
         if (!summonerName) {
-            await message.channel.send('Usage: `/champstats <Name#TAG> [game_count] [display]`');
+            await message.channel.send('Usage: `/champstats <Name#TAG> [game_count] [role] [display]`');
             return;
         }
 
         this.logger.info('[champstats] Parsed inputs', {
             summonerName,
             gameCount,
+            roleFilter,
             displayMode,
         });
 
@@ -763,14 +813,32 @@ module.exports = {
             return;
         }
 
-        const rows = aggregateByChampionRole(collected);
+        let rows = aggregateByChampionRole(collected);
+
+        // Apply role filter if requested.
+        if (roleFilter) {
+            rows = rows.filter((r) => r.role === roleFilter);
+            this.logger.info('[champstats] Role filter applied', {
+                roleFilter, rowsAfterFilter: rows.length,
+            });
+        }
 
         this.logger.info('[champstats] Aggregation summary', {
             totalCounted: collected.length,
             uniqueChampionRolePairs: rows.length,
+            roleFilter,
             queueCounts,
             idsScanned,
         });
+
+        if (!rows.length) {
+            await target.send(
+                roleFilter
+                    ? `No ${ROLE_LABELS[roleFilter] || roleFilter} games found in the collected data.`
+                    : 'No data to display after aggregation.'
+            );
+            return;
+        }
 
         const headerDesc = buildHeaderDescription(
             summonerName,
@@ -779,7 +847,8 @@ module.exports = {
             queueCounts,
             dateRange,
             gameCount,
-            stopReason
+            stopReason,
+            roleFilter
         );
 
         // TODO(future): swap this paginator for an HTML-rendered infographic
