@@ -234,6 +234,7 @@ async function collectAllowedMatches(puuid, targetCount, logger) {
     let scannedMatches = 0;
     let newestTs = null;
     let oldestTs = null;
+    let stopReason = 'target_reached'; // 'target_reached' | 'exhausted' | 'scan_cap'
 
     logger.info('[champstats] Fetch plan', {
         targetCount,
@@ -245,6 +246,7 @@ async function collectAllowedMatches(puuid, targetCount, logger) {
     while (collected.length < targetCount && idsScanned < MAX_IDS_SCANNED) {
         const pageIds = await fetchMatchIdsPage(puuid, start, IDS_PAGE_SIZE, logger);
         if (!pageIds.length) {
+            stopReason = 'exhausted';
             logger.info('[champstats] Match ID page empty; history exhausted', {
                 start, idsScanned, collected: collected.length,
             });
@@ -315,17 +317,22 @@ async function collectAllowedMatches(puuid, targetCount, logger) {
         }
     }
 
-    const reachedCap = idsScanned >= MAX_IDS_SCANNED && collected.length < targetCount;
-    if (reachedCap) {
+    if (idsScanned >= MAX_IDS_SCANNED && collected.length < targetCount) {
+        stopReason = 'scan_cap';
         logger.info('[champstats] Hit MAX_IDS_SCANNED before target', {
             idsScanned, collected: collected.length, target: targetCount,
         });
     }
 
+    logger.info('[champstats] Collection complete', {
+        stopReason, idsScanned, collected: collected.length, target: targetCount,
+    });
+
     return {
         collected,
         scannedMatches,
         idsScanned,
+        stopReason,
         queueCounts,
         dateRange: {
             newestTs,
@@ -407,13 +414,24 @@ function padLeft(str, len) {
     return ' '.repeat(len - s.length) + s;
 }
 
-function buildHeaderDescription(summonerName, totalCounted, idsScanned, queueCounts, dateRange, targetCount) {
+const STOP_REASON_LABELS = {
+    target_reached: null, // no extra note needed
+    exhausted: '⚠️ Full match history scanned — Riot does not have older data for this account.',
+    scan_cap: `⚠️ Scan cap reached (${MAX_IDS_SCANNED} match IDs) before target was met. Try a smaller count.`,
+};
+
+function buildHeaderDescription(summonerName, totalCounted, idsScanned, queueCounts, dateRange, targetCount, stopReason) {
     const parts = [];
     parts.push(`**Player:** ${summonerName}`);
-    parts.push(
-        `**Counted:** ${totalCounted} / ${targetCount} ` +
-        `(scanned ${idsScanned} match IDs)`
-    );
+
+    const countLine = stopReason === 'target_reached'
+        ? `**Counted:** ${totalCounted} / ${targetCount} (scanned ${idsScanned} match IDs)`
+        : `**Counted:** ${totalCounted} / ${targetCount} — this is all available data (scanned ${idsScanned} match IDs)`;
+    parts.push(countLine);
+
+    const note = STOP_REASON_LABELS[stopReason];
+    if (note) parts.push(note);
+
     const breakdown = Object.entries(queueCounts)
         .map(([qid, n]) => `${QUEUE_LABELS[qid] || `Queue ${qid}`}: ${n}`)
         .join(' • ');
@@ -735,7 +753,7 @@ module.exports = {
             return;
         }
 
-        const { collected, idsScanned, queueCounts, dateRange } = collection;
+        const { collected, idsScanned, stopReason, queueCounts, dateRange } = collection;
 
         if (!collected.length) {
             await target.send(
@@ -760,7 +778,8 @@ module.exports = {
             idsScanned,
             queueCounts,
             dateRange,
-            gameCount
+            gameCount,
+            stopReason
         );
 
         // TODO(future): swap this paginator for an HTML-rendered infographic
