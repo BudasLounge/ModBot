@@ -623,6 +623,22 @@ module.exports = {
         // Drop command name.
         args.shift();
 
+        // Drop null/empty positional slots that slash command options produce
+        // when the user omits an optional option. Also split any space-containing
+        // positional into its whitespace-delimited pieces so that a user who
+        // accidentally pasted "Name#TAG 500" into the summoner_name slash field
+        // still gets sensible parsing (Riot tags can't contain spaces anyway).
+        const flatArgs = [];
+        for (const a of args) {
+            if (a === null || a === undefined) continue;
+            const s = String(a).trim();
+            if (!s) continue;
+            for (const piece of s.split(/\s+/)) {
+                if (piece) flatArgs.push(piece);
+            }
+        }
+        args = flatArgs;
+
         // Parse trailing optional display mode ("codeblock" | "embed").
         let displayMode = 'codeblock';
         if (args.length > 0) {
