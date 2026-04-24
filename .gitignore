@@ -5,3 +5,4 @@ logs/
 .env
 .github/instructions/
 modules/league/match_archive/
+modules/league/mayhem_wiki_data.json
