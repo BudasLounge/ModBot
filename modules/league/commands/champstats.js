@@ -1119,7 +1119,7 @@ const CHART_COLORS = {
  */
 function svgLineChart({
     width = 480,
-    height = 220,
+    height = 280,
     title = '',
     yLabel = '',
     winMy = null,
@@ -1133,7 +1133,7 @@ function svgLineChart({
 
     const allSeries = [winMy, winEnemy, lossMy, lossEnemy].filter(Boolean);
     if (!allSeries.length || allSeries.every((s) => !s.length)) {
-        return `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+        return `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
             <rect width="100%" height="100%" fill="#0f1216"/>
             <text x="${width / 2}" y="${height / 2}" fill="${CHART_COLORS.axis}" font-size="13" text-anchor="middle">No data — ${escapeXml(title)}</text>
         </svg>`;
@@ -1179,7 +1179,7 @@ function svgLineChart({
     const yTickLines = yTicks.map((v) => {
         const y = yScale(v);
         return `<line x1="${padL}" y1="${y}" x2="${width - padR}" y2="${y}" stroke="${CHART_COLORS.grid}" stroke-width="1"/>
-                <text x="${padL - 4}" y="${y + 3}" fill="${CHART_COLORS.axis}" font-size="9" text-anchor="end">${formatTickValue(v)}</text>`;
+                <text x="${padL - 4}" y="${y + 4}" fill="${CHART_COLORS.axis}" font-size="11" text-anchor="end">${formatTickValue(v)}</text>`;
     }).join('');
 
     // X-axis ticks every 5 minutes within range
@@ -1189,13 +1189,13 @@ function svgLineChart({
     const xTickLines = xTickMins.map((m) => {
         const x = xScale(m);
         return `<line x1="${x}" y1="${padT + plotH}" x2="${x}" y2="${padT + plotH + 3}" stroke="${CHART_COLORS.axis}" stroke-width="1"/>
-                <text x="${x}" y="${padT + plotH + 14}" fill="${CHART_COLORS.axis}" font-size="9" text-anchor="middle">${m}</text>`;
+                <text x="${x}" y="${padT + plotH + 16}" fill="${CHART_COLORS.axis}" font-size="11" text-anchor="middle">${m}</text>`;
     }).join('');
 
-    return `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+    return `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
         <rect width="100%" height="100%" fill="#0f1216"/>
-        <text x="${padL}" y="16" fill="${CHART_COLORS.text}" font-size="12" font-weight="700">${escapeXml(title)}</text>
-        ${yLabel ? `<text x="${padL}" y="28" fill="${CHART_COLORS.axis}" font-size="9">${escapeXml(yLabel)}</text>` : ''}
+        <text x="${padL}" y="16" fill="${CHART_COLORS.text}" font-size="14" font-weight="700">${escapeXml(title)}</text>
+        ${yLabel ? `<text x="${padL}" y="30" fill="${CHART_COLORS.axis}" font-size="11">${escapeXml(yLabel)}</text>` : ''}
         ${yTickLines}
         ${xTickLines}
         ${drawSeries(winEnemy,  (p) => p.my, CHART_COLORS.winEnemy,  true,  1.5)}
@@ -1208,7 +1208,7 @@ function svgLineChart({
 /** Signed bar chart (e.g. gold diff), positive = blue, negative = red. */
 function svgDiffBarChart({
     width = 480,
-    height = 220,
+    height = 280,
     title = '',
     winSeries = null,
     lossSeries = null,
@@ -1221,7 +1221,7 @@ function svgDiffBarChart({
     if (winSeries) all.push(...winSeries);
     if (lossSeries) all.push(...lossSeries);
     if (!all.length) {
-        return `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+        return `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
             <rect width="100%" height="100%" fill="#0f1216"/>
             <text x="${width / 2}" y="${height / 2}" fill="${CHART_COLORS.axis}" font-size="13" text-anchor="middle">No data — ${escapeXml(title)}</text>
         </svg>`;
@@ -1258,7 +1258,7 @@ function svgDiffBarChart({
     for (let m = startTick; m <= xMax; m += 5) xTickMins.push(m);
     const xTickLines = xTickMins.map((m) => {
         const x = xScale(m);
-        return `<text x="${x}" y="${padT + plotH + 14}" fill="${CHART_COLORS.axis}" font-size="9" text-anchor="middle">${m}</text>`;
+        return `<text x="${x}" y="${padT + plotH + 16}" fill="${CHART_COLORS.axis}" font-size="11" text-anchor="middle">${m}</text>`;
     }).join('');
 
     // Y-axis ticks
@@ -1266,12 +1266,12 @@ function svgDiffBarChart({
     const yTickLines = yTicks.map((v) => {
         const y = yScale(v);
         return `<line x1="${padL}" y1="${y}" x2="${width - padR}" y2="${y}" stroke="${CHART_COLORS.grid}" stroke-width="1"/>
-                <text x="${padL - 4}" y="${y + 3}" fill="${CHART_COLORS.axis}" font-size="9" text-anchor="end">${formatTickValue(v)}</text>`;
+                <text x="${padL - 4}" y="${y + 4}" fill="${CHART_COLORS.axis}" font-size="11" text-anchor="end">${formatTickValue(v)}</text>`;
     }).join('');
 
-    return `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+    return `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
         <rect width="100%" height="100%" fill="#0f1216"/>
-        <text x="${padL}" y="16" fill="${CHART_COLORS.text}" font-size="12" font-weight="700">${escapeXml(title)}</text>
+        <text x="${padL}" y="16" fill="${CHART_COLORS.text}" font-size="14" font-weight="700">${escapeXml(title)}</text>
         ${yTickLines}
         ${xTickLines}
         ${drawBars(winSeries,  CHART_COLORS.win,  -barW / 2 - 1)}
@@ -1363,7 +1363,7 @@ function buildDeepRenderContext(row, deep, summonerName, ver) {
 
         charts.push({
             svg: svgLineChart({
-                width: 700, height: 240,
+                width: 700, height: 280,
                 title: 'Gold over time vs enemy laner',
                 winMy:     seriesFrom(win, 'gold'),
                 winEnemy:  enemyFrom(win, 'gold'),
@@ -1373,7 +1373,7 @@ function buildDeepRenderContext(row, deep, summonerName, ver) {
         });
         charts.push({
             svg: svgLineChart({
-                width: 700, height: 240,
+                width: 700, height: 280,
                 title: 'Lane CS (lane minions) vs enemy laner',
                 winMy:     seriesFrom(win, 'laneCs'),
                 winEnemy:  enemyFrom(win, 'laneCs'),
@@ -1383,7 +1383,7 @@ function buildDeepRenderContext(row, deep, summonerName, ver) {
         });
         charts.push({
             svg: svgLineChart({
-                width: 700, height: 240,
+                width: 700, height: 280,
                 title: 'XP over time vs enemy laner',
                 winMy:     seriesFrom(win, 'xp'),
                 winEnemy:  enemyFrom(win, 'xp'),
@@ -1393,7 +1393,7 @@ function buildDeepRenderContext(row, deep, summonerName, ver) {
         });
         charts.push({
             svg: svgDiffBarChart({
-                width: 700, height: 240,
+                width: 700, height: 280,
                 title: 'Gold diff vs enemy laner (signed)',
                 winSeries:  seriesFrom(win, 'goldDiff'),
                 lossSeries: seriesFrom(loss, 'goldDiff'),
@@ -1402,7 +1402,7 @@ function buildDeepRenderContext(row, deep, summonerName, ver) {
         if (isJungle) {
             charts.push({
                 svg: svgLineChart({
-                    width: 700, height: 240,
+                    width: 700, height: 280,
                     title: 'Jungle monsters vs enemy jungler',
                     winMy:     seriesFrom(win, 'jungleCs'),
                     winEnemy:  enemyFrom(win, 'jungleCs'),
