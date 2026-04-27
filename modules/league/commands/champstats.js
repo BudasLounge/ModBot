@@ -1898,6 +1898,7 @@ module.exports = {
                 );
             }
 
+            rows.sort((a, b) => b.games - a.games);
             const deepStatsMap = buildDeepStatsMap(collected, rows);
             this.logger.info('[champstats] Deep stats map built', {
                 buckets: deepStatsMap.size,
