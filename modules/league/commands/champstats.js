@@ -653,40 +653,51 @@ async function fetchTimeline(matchId, logger) {
 
 /**
  * Extract per-minute snapshots from a timeline for a given participant and
- * (optionally) their lane opponent.
- *
- * Each snapshot contains: minute, totalGold, cs, xp, level,
- * enemyTotalGold (nullable), goldDiff (nullable).
+ * (optionally) their lane opponent. Also scans events for tower plates and
+ * estimates the minute of first legendary-tier item (totalGold >= 3400).
  */
 function extractTimelineStats(timeline, participantId, enemyParticipantId) {
     if (!timeline?.info?.frames?.length) return null;
 
+    let platesCount = 0;
+    let firstItemMin = null;
     const snapshots = [];
+
     for (const frame of timeline.info.frames) {
         const minute = Math.round(frame.timestamp / 60000);
         const pf = frame.participantFrames?.[String(participantId)];
         if (!pf) continue;
 
+        // Count turret plates destroyed by this participant.
+        for (const evt of (frame.events || [])) {
+            if (evt.type === 'TURRET_PLATE_DESTROYED' && evt.killerId === participantId) {
+                platesCount++;
+            }
+        }
+
         const cs = (pf.minionsKilled || 0) + (pf.jungleMinionsKilled || 0);
         const ef = enemyParticipantId
             ? frame.participantFrames?.[String(enemyParticipantId)]
             : null;
+        const enemyCs = ef != null
+            ? (ef.minionsKilled || 0) + (ef.jungleMinionsKilled || 0)
+            : null;
+
+        // First minute total earned gold crosses the legendary-item floor.
+        if (firstItemMin === null && (pf.totalGold || 0) >= 3400) {
+            firstItemMin = minute;
+        }
 
         snapshots.push({
             minute,
             totalGold: pf.totalGold || 0,
-            currentGold: pf.currentGold || 0,
             cs,
             xp: pf.xp || 0,
             level: pf.level || 1,
             enemyTotalGold: ef?.totalGold ?? null,
             goldDiff: ef != null ? (pf.totalGold || 0) - (ef.totalGold || 0) : null,
-            // damage stats at final frame only – carried from damageStats if present
-            totalDmgToChamps: pf.damageStats?.totalDamageDoneToChampions ?? null,
-            physDmgToChamps: pf.damageStats?.physicalDamageDoneToChampions ?? null,
-            magicDmgToChamps: pf.damageStats?.magicDamageDoneToChampions ?? null,
-            totalDmgTaken: pf.damageStats?.totalDamageTaken ?? null,
-            ccTimeDealt: pf.timeEnemySpentControlled ?? null,
+            enemyCs,
+            csDiff: enemyCs != null ? cs - enemyCs : null,
         });
     }
 
@@ -700,12 +711,8 @@ function extractTimelineStats(timeline, participantId, enemyParticipantId) {
         goldPerMin: last.totalGold / mins,
         csPerMin: last.cs / mins,
         xpPerMin: last.xp / mins,
-        // Final-frame damage stats (cumulative totals from timeline)
-        totalDmgToChamps: last.totalDmgToChamps,
-        physDmgToChamps: last.physDmgToChamps,
-        magicDmgToChamps: last.magicDmgToChamps,
-        totalDmgTaken: last.totalDmgTaken,
-        ccTimeDealtSec: last.ccTimeDealt != null ? last.ccTimeDealt / 1000 : null,
+        platesCount,
+        firstItemMin,
         snapshots,
     };
 }
@@ -770,60 +777,52 @@ function buildDeepStatsMap(collected, rowOrder) {
         const n = enriched.length;
         const avg = (fn) => enriched.reduce((s, i) => s + fn(i.timelineStats), 0) / n;
 
-        const avgGoldPerMin = avg((ts) => ts.goldPerMin);
-        const avgCsPerMin   = avg((ts) => ts.csPerMin);
-        const avgXpPerMin   = avg((ts) => ts.xpPerMin);
-
-        // Damage/CC averages — only count items that have the data
-        const dmgItems = enriched.filter((i) => i.timelineStats.totalDmgToChamps != null);
-        const avgDmgToChamps = dmgItems.length
-            ? dmgItems.reduce((s, i) => s + i.timelineStats.totalDmgToChamps, 0) / dmgItems.length
-            : null;
-        const avgPhysDmg = dmgItems.length
-            ? dmgItems.reduce((s, i) => s + (i.timelineStats.physDmgToChamps || 0), 0) / dmgItems.length
-            : null;
-        const avgMagicDmg = dmgItems.length
-            ? dmgItems.reduce((s, i) => s + (i.timelineStats.magicDmgToChamps || 0), 0) / dmgItems.length
-            : null;
-        const avgDmgTaken = dmgItems.length
-            ? dmgItems.reduce((s, i) => s + (i.timelineStats.totalDmgTaken || 0), 0) / dmgItems.length
-            : null;
-        const ccItems = enriched.filter((i) => i.timelineStats.ccTimeDealtSec != null);
-        const avgCcSec = ccItems.length
-            ? ccItems.reduce((s, i) => s + i.timelineStats.ccTimeDealtSec, 0) / ccItems.length
+        const avgGoldPerMin   = avg((ts) => ts.goldPerMin);
+        const avgCsPerMin     = avg((ts) => ts.csPerMin);
+        const avgXpPerMin     = avg((ts) => ts.xpPerMin);
+        const avgPlates       = avg((ts) => ts.platesCount);
+        const itemMinItems    = enriched.filter((i) => i.timelineStats.firstItemMin != null);
+        const avgFirstItemMin = itemMinItems.length
+            ? itemMinItems.reduce((s, i) => s + i.timelineStats.firstItemMin, 0) / itemMinItems.length
             : null;
 
-        // Gold curve: for each DEEP_MILESTONE_MINUTES target, find the nearest
-        // available minute mark and average across games that have it.
-        const goldByMin = new Map();
-        const diffByMin = new Map();
+        // Build per-minute gold and CS curves from frame snapshots.
+        const goldByMin    = new Map();
+        const goldDiffByMin = new Map();
+        const csByMin      = new Map();
+        const csDiffByMin  = new Map();
         for (const item of enriched) {
             for (const snap of item.timelineStats.snapshots) {
                 if (!goldByMin.has(snap.minute)) goldByMin.set(snap.minute, []);
                 goldByMin.get(snap.minute).push(snap.totalGold);
                 if (snap.goldDiff !== null) {
-                    if (!diffByMin.has(snap.minute)) diffByMin.set(snap.minute, []);
-                    diffByMin.get(snap.minute).push(snap.goldDiff);
+                    if (!goldDiffByMin.has(snap.minute)) goldDiffByMin.set(snap.minute, []);
+                    goldDiffByMin.get(snap.minute).push(snap.goldDiff);
+                }
+                if (!csByMin.has(snap.minute)) csByMin.set(snap.minute, []);
+                csByMin.get(snap.minute).push(snap.cs);
+                if (snap.csDiff !== null) {
+                    if (!csDiffByMin.has(snap.minute)) csDiffByMin.set(snap.minute, []);
+                    csDiffByMin.get(snap.minute).push(snap.csDiff);
                 }
             }
         }
 
         const threshold = Math.ceil(n / 2); // require at least half of games to have reached this minute
-        const goldCurve = DEEP_MILESTONE_MINUTES.map((target) => {
-            // Accept the nearest minute mark within ±1 of the target
-            const candidates = [...goldByMin.keys()].filter((k) => Math.abs(k - target) <= 1);
+        const buildCurve = (mainMap, diffMap) => DEEP_MILESTONE_MINUTES.map((target) => {
+            const candidates = [...mainMap.keys()].filter((k) => Math.abs(k - target) <= 1);
             if (!candidates.length) return null;
             const best = candidates.reduce((a, b) =>
                 Math.abs(a - target) <= Math.abs(b - target) ? a : b
             );
-            const vals = goldByMin.get(best);
+            const vals = mainMap.get(best);
             if (vals.length < threshold) return null;
-            const avgGold = vals.reduce((s, v) => s + v, 0) / vals.length;
-            const diffs = diffByMin.get(best) || [];
+            const avgVal = vals.reduce((s, v) => s + v, 0) / vals.length;
+            const diffs = diffMap.get(best) || [];
             const avgDiff = diffs.length
                 ? diffs.reduce((s, v) => s + v, 0) / diffs.length
                 : null;
-            return { minute: target, avgGold, avgDiff, games: vals.length };
+            return { minute: target, avgVal, avgDiff };
         }).filter(Boolean);
 
         result.set(key, {
@@ -831,12 +830,10 @@ function buildDeepStatsMap(collected, rowOrder) {
             avgGoldPerMin,
             avgCsPerMin,
             avgXpPerMin,
-            avgDmgToChamps,
-            avgPhysDmg,
-            avgMagicDmg,
-            avgDmgTaken,
-            avgCcSec,
-            goldCurve,
+            avgPlates,
+            avgFirstItemMin,
+            goldCurve: buildCurve(goldByMin, goldDiffByMin),
+            csCurve:   buildCurve(csByMin, csDiffByMin),
         });
     }
     return result;
@@ -845,84 +842,129 @@ function buildDeepStatsMap(collected, rowOrder) {
 // ── Deep rendering ───────────────────────────────────────────────────────────
 
 /**
- * Render one champion+role bucket as a codeblock string.
- * One bucket per page — designed for human inspection and iteration.
+ * Render one champion+role bucket as a plain codeblock string.
+ * One bucket per page — wide layout intended for plain text messages.
+ *
+ * Gold and CS curves share one combined table to maximise horizontal space.
+ * "~1st item" is the minute when the player's cumulative gold first crossed
+ * 3400 (gold earned, not current) — a rough proxy for first legendary purchase.
  */
-function buildDeepPage(rows, deepStatsMap, page, totalPages) {
+function buildDeepPage(rows, deepStatsMap, page, totalPages, headerDesc) {
     const row = rows[page];
     if (!row) return '```\nNo data.\n```';
 
     const key = `${row.champion}|${row.role}`;
     const ds = deepStatsMap.get(key);
 
-    const title = `${row.champion} / ${row.roleLabel}`;
-    const subtitle = `${row.games} games  •  ${row.winRate.toFixed(1)}% WR  •  ${row.kda.toFixed(2)} KDA  (${row.wins}W-${row.losses}L)`;
-    const sep = '─'.repeat(Math.min(Math.max(title.length, subtitle.length), 52));
+    const title    = `${row.champion} / ${row.roleLabel}`;
+    const subtitle = `${row.games}g  •  ${row.winRate.toFixed(1)}% WR  •  ${row.kda.toFixed(2)} KDA  (${row.wins}W-${row.losses}L)`;
+    const sep60    = '─'.repeat(60);
 
-    const lines = [title, subtitle, sep];
+    const lines = [];
+
+    // Header only on first page.
+    if (page === 0 && headerDesc) {
+        lines.push(headerDesc);
+        lines.push('');
+    }
+
+    lines.push(title);
+    lines.push(subtitle);
+    lines.push(sep60);
 
     if (!ds) {
         lines.push('(no timeline data available for this bucket)');
     } else {
-        lines.push(`Timeline data:  ${ds.n} / ${row.games} games`);
+        lines.push(`Timeline: ${ds.n} / ${row.games} games`);
         lines.push('');
 
-        // ── Per-minute averages ──────────────────────────────────────────
-        lines.push(`Gold/min:   ${ds.avgGoldPerMin.toFixed(1)}`);
-        lines.push(`CS/min:     ${ds.avgCsPerMin.toFixed(2)}`);
-        lines.push(`XP/min:     ${ds.avgXpPerMin.toFixed(1)}`);
-
-        // ── Damage averages ──────────────────────────────────────────────
-        if (ds.avgDmgToChamps != null) {
-            lines.push('');
-            lines.push(`Dmg to champs:  ${Math.round(ds.avgDmgToChamps).toLocaleString()} total avg`);
-            if (ds.avgPhysDmg != null)
-                lines.push(`  Physical:      ${Math.round(ds.avgPhysDmg).toLocaleString()}`);
-            if (ds.avgMagicDmg != null)
-                lines.push(`  Magic:         ${Math.round(ds.avgMagicDmg).toLocaleString()}`);
-            if (ds.avgDmgTaken != null)
-                lines.push(`Dmg taken:      ${Math.round(ds.avgDmgTaken).toLocaleString()} total avg`);
-        }
-        if (ds.avgCcSec != null) {
-            lines.push(`CC time dealt:  ${ds.avgCcSec.toFixed(1)}s avg`);
+        // ── Per-game averages ────────────────────────────────────────────
+        lines.push(`Gold/min:       ${ds.avgGoldPerMin.toFixed(1)}`);
+        lines.push(`CS/min:         ${ds.avgCsPerMin.toFixed(2)}`);
+        lines.push(`XP/min:         ${ds.avgXpPerMin.toFixed(1)}`);
+        lines.push(`Tower plates:   ${ds.avgPlates.toFixed(1)} avg`);
+        if (ds.avgFirstItemMin != null) {
+            lines.push(`~1st item:      min ${ds.avgFirstItemMin.toFixed(1)} (by gold earned ≥3400)`);
         }
 
-        // ── Gold curve ───────────────────────────────────────────────────
-        if (ds.goldCurve.length) {
+        // ── Combined Gold + CS curve ─────────────────────────────────────
+        const hasCurve = ds.goldCurve.length > 0 || ds.csCurve.length > 0;
+        if (hasCurve) {
             lines.push('');
-            lines.push('Gold curve vs enemy (avg):');
-            lines.push(
-                padLeft('Min', 4) + '  ' +
-                padLeft('Gold', 7) + '  ' +
-                padLeft('Enemy', 7) + '  ' +
-                padLeft('Diff', 7) + '  ' +
-                padLeft('N', 3)
-            );
-            lines.push('─'.repeat(38));
-            for (const pt of ds.goldCurve) {
-                const myGold   = Math.round(pt.avgGold);
-                const enemyGold = pt.avgDiff != null ? Math.round(pt.avgGold - pt.avgDiff) : null;
-                const diffVal  = pt.avgDiff != null ? Math.round(pt.avgDiff) : null;
-                const enemyStr = enemyGold != null ? padLeft(enemyGold, 7) : padLeft('?', 7);
-                const diffStr  = diffVal != null
-                    ? padLeft((diffVal >= 0 ? '+' : '') + diffVal, 7)
-                    : padLeft('?', 7);
-                lines.push(
-                    padLeft(pt.minute, 4) + '  ' +
-                    padLeft(myGold, 7) + '  ' +
-                    enemyStr + '  ' +
-                    diffStr + '  ' +
-                    padLeft(pt.games, 3)
-                );
+
+            // Merge gold and CS rows by minute key.
+            const byMinute = new Map();
+            for (const pt of ds.goldCurve) byMinute.set(pt.minute, { gold: pt, cs: null });
+            for (const pt of ds.csCurve) {
+                if (!byMinute.has(pt.minute)) byMinute.set(pt.minute, { gold: null, cs: pt });
+                else byMinute.get(pt.minute).cs = pt;
+            }
+            const minutes = [...byMinute.keys()].sort((a, b) => a - b);
+
+            const hasGoldEnemy = ds.goldCurve.some((pt) => pt.avgDiff !== null);
+            const hasCsEnemy   = ds.csCurve.some((pt) => pt.avgDiff !== null);
+
+            // Build header row dynamically.
+            let hdr = padLeft('Min', 4) + '  ';
+            hdr += padLeft('Gold', 7);
+            if (hasGoldEnemy) hdr += '  ' + padLeft('EGold', 7) + '  ' + padLeft('GDiff', 7);
+            hdr += '    ';
+            hdr += padLeft('CS', 4);
+            if (hasCsEnemy) hdr += '  ' + padLeft('ECS', 4) + '  ' + padLeft('CDiff', 5);
+
+            lines.push('Gold & CS vs enemy laner (avg per game):');
+            lines.push(hdr);
+            lines.push('─'.repeat(hdr.length));
+
+            for (const m of minutes) {
+                const { gold, cs } = byMinute.get(m);
+                let row_ = padLeft(m, 4) + '  ';
+
+                if (gold) {
+                    row_ += padLeft(Math.round(gold.avgVal), 7);
+                    if (hasGoldEnemy) {
+                        const eg = gold.avgDiff != null ? Math.round(gold.avgVal - gold.avgDiff) : null;
+                        const gd = gold.avgDiff != null ? Math.round(gold.avgDiff) : null;
+                        row_ += '  ' + (eg != null ? padLeft(eg, 7) : padLeft('?', 7));
+                        row_ += '  ' + (gd != null
+                            ? padLeft((gd >= 0 ? '+' : '') + gd, 7)
+                            : padLeft('?', 7));
+                    }
+                } else {
+                    row_ += padLeft('—', 7);
+                    if (hasGoldEnemy) row_ += '  ' + padLeft('—', 7) + '  ' + padLeft('—', 7);
+                }
+
+                row_ += '    ';
+
+                if (cs) {
+                    row_ += padLeft(Math.round(cs.avgVal), 4);
+                    if (hasCsEnemy) {
+                        const ec = cs.avgDiff != null ? Math.round(cs.avgVal - cs.avgDiff) : null;
+                        const cd = cs.avgDiff != null ? Math.round(cs.avgDiff) : null;
+                        row_ += '  ' + (ec != null ? padLeft(ec, 4) : padLeft('?', 4));
+                        row_ += '  ' + (cd != null
+                            ? padLeft((cd >= 0 ? '+' : '') + cd, 5)
+                            : padLeft('?', 5));
+                    }
+                } else {
+                    row_ += padLeft('—', 4);
+                    if (hasCsEnemy) row_ += '  ' + padLeft('—', 4) + '  ' + padLeft('—', 5);
+                }
+
+                lines.push(row_);
             }
         }
     }
 
-    return '```\n' + lines.join('\n') + '\n```' + `\nPage ${page + 1}/${totalPages}`;
+    lines.push('');
+    lines.push(`Page ${page + 1} / ${totalPages}`);
+
+    return '```\n' + lines.join('\n') + '\n```';
 }
 
 async function sendDeepResults(channel, summonerName, rows, deepStatsMap, headerDesc, logger) {
-    // One champion+role bucket per page.
+    // One champion+role bucket per page, sent as plain text (no embed) for full channel width.
     const totalPages = rows.length;
     if (totalPages === 0) {
         await channel.send('No data to display.');
@@ -932,22 +974,10 @@ async function sendDeepResults(channel, summonerName, rows, deepStatsMap, header
     let page = 0;
     const pagerId = `${Date.now()}_${Math.floor(Math.random() * 1_000_000)}`;
 
-    const buildEmbed = (p) => {
-        const embed = new EmbedBuilder()
-            .setTitle(`Champion Deep Stats: ${summonerName}`)
-            .setColor('#ff9900')
-            .setTimestamp();
-        const body = buildDeepPage(rows, deepStatsMap, p, totalPages);
-        if (p === 0) {
-            embed.setDescription(`${headerDesc}\n\n${body}`);
-        } else {
-            embed.setDescription(body);
-        }
-        return embed;
-    };
+    const buildContent = (p) => buildDeepPage(rows, deepStatsMap, p, totalPages, headerDesc);
 
     const listMessage = await channel.send({
-        embeds: [buildEmbed(page)],
+        content: buildContent(page),
         components: buildPageButtons(pagerId, page, totalPages),
     });
 
@@ -972,7 +1002,8 @@ async function sendDeepResults(channel, summonerName, rows, deepStatsMap, header
         }
         try {
             await interaction.update({
-                embeds: [buildEmbed(page)],
+                content: buildContent(page),
+                embeds: [],
                 components: buildPageButtons(pagerId, page, totalPages),
             });
         } catch (err) {
