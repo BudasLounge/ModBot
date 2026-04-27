@@ -20,12 +20,16 @@
  */
 
 const axios = require('axios');
+const fs = require('fs');
+const path = require('path');
+const nodeHtmlToImage = require('node-html-to-image');
 const {
     EmbedBuilder,
     ActionRowBuilder,
     ButtonBuilder,
     ButtonStyle,
     ComponentType,
+    AttachmentBuilder,
 } = require('discord.js');
 require('dotenv').config();
 const ApiClient = require('../../../core/js/APIClient.js');
@@ -303,13 +307,24 @@ async function collectAllowedMatches(puuid, targetCount, logger) {
             }
 
             queueCounts[queueId] = (queueCounts[queueId] || 0) + 1;
+
+            const enemyParticipantObj = match.info.participants.find(
+                (p) => p.participantId === findEnemyParticipantId(match.info.participants, participant)
+            ) || null;
+            const myTeam = (match.info.teams || []).find((t) => t.teamId === participant.teamId) || null;
+            const enemyTeam = (match.info.teams || []).find((t) => t.teamId !== participant.teamId) || null;
+
             collected.push({
                 matchId: uniqueIds[mi], // string ID (e.g. NA1_XXXX) needed for timeline endpoint
                 queueId,
                 ts,
+                gameDurationSec: match.info.gameDuration ?? null,
                 participant,
                 participantId: participant.participantId,
-                enemyParticipantId: findEnemyParticipantId(match.info.participants, participant),
+                enemyParticipantId: enemyParticipantObj?.participantId ?? null,
+                enemyParticipant: enemyParticipantObj,
+                myTeam,
+                enemyTeam,
             });
             kept++;
 
@@ -653,51 +668,70 @@ async function fetchTimeline(matchId, logger) {
 
 /**
  * Extract per-minute snapshots from a timeline for a given participant and
- * (optionally) their lane opponent. Also scans events for tower plates and
- * estimates the minute of first legendary-tier item (totalGold >= 3400).
+ * (optionally) their lane opponent. Splits laneCs vs jungleCs separately so
+ * we can detect when a jungler farms lane minions or a laner roams jungle.
+ * Also collects ITEM_PURCHASED events (real itemIds + minutes) and counts
+ * tower plates taken from TURRET_PLATE_DESTROYED events.
  */
 function extractTimelineStats(timeline, participantId, enemyParticipantId) {
     if (!timeline?.info?.frames?.length) return null;
 
     let platesCount = 0;
-    let firstItemMin = null;
+    const itemPurchases = []; // [{ minute, itemId }]
+    const itemSells     = []; // [{ minute, itemId }]
+    const itemUndos     = []; // [{ minute, beforeId, afterId }]
     const snapshots = [];
 
     for (const frame of timeline.info.frames) {
-        const minute = Math.round(frame.timestamp / 60000);
+        const minute = frame.timestamp / 60000;
         const pf = frame.participantFrames?.[String(participantId)];
         if (!pf) continue;
 
-        // Count turret plates destroyed by this participant.
         for (const evt of (frame.events || [])) {
-            if (evt.type === 'TURRET_PLATE_DESTROYED' && evt.killerId === participantId) {
-                platesCount++;
+            if (evt.participantId !== participantId) continue;
+            switch (evt.type) {
+                case 'TURRET_PLATE_DESTROYED':
+                    if (evt.killerId === participantId) platesCount++;
+                    break;
+                case 'ITEM_PURCHASED':
+                    itemPurchases.push({ minute: evt.timestamp / 60000, itemId: evt.itemId });
+                    break;
+                case 'ITEM_SOLD':
+                    itemSells.push({ minute: evt.timestamp / 60000, itemId: evt.itemId });
+                    break;
+                case 'ITEM_UNDO':
+                    itemUndos.push({
+                        minute: evt.timestamp / 60000,
+                        beforeId: evt.beforeId,
+                        afterId: evt.afterId,
+                    });
+                    break;
+                default: break;
             }
         }
 
-        const cs = (pf.minionsKilled || 0) + (pf.jungleMinionsKilled || 0);
+        const laneCs   = pf.minionsKilled || 0;
+        const jungleCs = pf.jungleMinionsKilled || 0;
         const ef = enemyParticipantId
             ? frame.participantFrames?.[String(enemyParticipantId)]
             : null;
-        const enemyCs = ef != null
-            ? (ef.minionsKilled || 0) + (ef.jungleMinionsKilled || 0)
-            : null;
-
-        // First minute total earned gold crosses the legendary-item floor.
-        if (firstItemMin === null && (pf.totalGold || 0) >= 3400) {
-            firstItemMin = minute;
-        }
+        const enemyLaneCs   = ef ? (ef.minionsKilled || 0) : null;
+        const enemyJungleCs = ef ? (ef.jungleMinionsKilled || 0) : null;
 
         snapshots.push({
-            minute,
+            minute: Math.round(minute),
             totalGold: pf.totalGold || 0,
-            cs,
+            laneCs,
+            jungleCs,
+            cs: laneCs + jungleCs,
             xp: pf.xp || 0,
             level: pf.level || 1,
             enemyTotalGold: ef?.totalGold ?? null,
-            goldDiff: ef != null ? (pf.totalGold || 0) - (ef.totalGold || 0) : null,
-            enemyCs,
-            csDiff: enemyCs != null ? cs - enemyCs : null,
+            enemyXp: ef?.xp ?? null,
+            enemyLaneCs,
+            enemyJungleCs,
+            enemyCs: ef ? (enemyLaneCs + enemyJungleCs) : null,
+            goldDiff: ef ? (pf.totalGold || 0) - (ef.totalGold || 0) : null,
         });
     }
 
@@ -710,9 +744,13 @@ function extractTimelineStats(timeline, participantId, enemyParticipantId) {
         gameDurationMins: mins,
         goldPerMin: last.totalGold / mins,
         csPerMin: last.cs / mins,
+        laneCsPerMin: last.laneCs / mins,
+        jungleCsPerMin: last.jungleCs / mins,
         xpPerMin: last.xp / mins,
         platesCount,
-        firstItemMin,
+        itemPurchases,
+        itemSells,
+        itemUndos,
         snapshots,
     };
 }
@@ -752,9 +790,230 @@ async function enrichWithTimelines(collected, logger) {
     });
 }
 
+// ── Aggregation helpers ─────────────────────────────────────────────────────
+
+function avgOf(arr) { return arr.length ? arr.reduce((s, v) => s + v, 0) / arr.length : 0; }
+function rateOf(arr, predicate) {
+    if (!arr.length) return 0;
+    return arr.filter(predicate).length / arr.length;
+}
+
 /**
- * For each row in `rowOrder`, aggregate timeline stats across all matching
- * collected items. Returns Map<`champion|role`, deepStats|null>.
+ * Build per-minute curve from items.snapshots, optionally with enemy series.
+ * Returns { points: [{minute, my, enemy}], hasEnemy }
+ */
+function buildSeriesCurve(items, mySelector, enemySelector) {
+    if (!items.length) return { points: [], hasEnemy: false };
+
+    const myByMin = new Map();
+    const enemyByMin = new Map();
+    let hasEnemy = false;
+
+    for (const item of items) {
+        for (const snap of item.timelineStats.snapshots) {
+            const my = mySelector(snap);
+            if (my != null) {
+                if (!myByMin.has(snap.minute)) myByMin.set(snap.minute, []);
+                myByMin.get(snap.minute).push(my);
+            }
+            const en = enemySelector ? enemySelector(snap) : null;
+            if (en != null) {
+                hasEnemy = true;
+                if (!enemyByMin.has(snap.minute)) enemyByMin.set(snap.minute, []);
+                enemyByMin.get(snap.minute).push(en);
+            }
+        }
+    }
+
+    const threshold = Math.max(1, Math.ceil(items.length / 2));
+    const minutes = [...myByMin.keys()].sort((a, b) => a - b);
+    const points = [];
+    for (const m of minutes) {
+        const myVals = myByMin.get(m) || [];
+        if (myVals.length < threshold) continue;
+        const enVals = enemyByMin.get(m) || [];
+        points.push({
+            minute: m,
+            my: avgOf(myVals),
+            enemy: enVals.length ? avgOf(enVals) : null,
+            n: myVals.length,
+        });
+    }
+    return { points, hasEnemy };
+}
+
+/**
+ * Aggregate stats for a single (champion, role, outcome) bucket of items.
+ * Returns null when bucket is empty.
+ */
+function aggregateBucket(items) {
+    if (!items.length) return null;
+
+    const enriched = items.filter((i) => i.timelineStats);
+    const n = items.length;
+    const nTl = enriched.length;
+
+    // Final-game scalars from match-v5 participant payload
+    const goldEarned     = items.map((i) => i.participant.goldEarned || 0);
+    const minions        = items.map((i) => i.participant.totalMinionsKilled || 0);
+    const jungleMonsters = items.map((i) => i.participant.neutralMinionsKilled || 0);
+    const visionScore    = items.map((i) => i.participant.visionScore || 0);
+    const wardsPlaced    = items.map((i) => i.participant.wardsPlaced || 0);
+    const wardsKilled    = items.map((i) => i.participant.wardsKilled || 0);
+    const controlWards   = items.map((i) => i.participant.detectorWardsPlaced ?? i.participant.visionWardsBoughtInGame ?? 0);
+    const turretTakedowns = items.map((i) => i.participant.turretTakedowns ?? i.participant.turretKills ?? 0);
+    const turretDmg      = items.map((i) => i.participant.damageDealtToTurrets || 0);
+    const dragonKills    = items.map((i) => i.myTeam?.objectives?.dragon?.kills || 0);
+    const baronKills     = items.map((i) => i.myTeam?.objectives?.baron?.kills || 0);
+    const heraldKills    = items.map((i) => i.myTeam?.objectives?.riftHerald?.kills || 0);
+    const platesTimeline = enriched.map((i) => i.timelineStats.platesCount);
+    const kp             = items.map((i) => i.participant.challenges?.killParticipation ?? null).filter((v) => v != null);
+    const soloKills      = items.map((i) => i.participant.challenges?.soloKills ?? 0);
+    const cc             = items.map((i) => i.participant.timeCCingOthers || 0);
+    const dmgChamps      = items.map((i) => i.participant.totalDamageDealtToChampions || 0);
+    const dmgTaken       = items.map((i) => i.participant.totalDamageTaken || 0);
+
+    // Game-duration averages (from timeline if present, fall back to match-v5)
+    const gpm = enriched.length ? avgOf(enriched.map((i) => i.timelineStats.goldPerMin))
+        : avgOf(items.map((i) => (i.participant.goldEarned || 0) / Math.max(1, (i.gameDurationSec || 1) / 60)));
+    const cspm = enriched.length ? avgOf(enriched.map((i) => i.timelineStats.csPerMin))
+        : avgOf(items.map((i) => ((i.participant.totalMinionsKilled || 0) + (i.participant.neutralMinionsKilled || 0)) / Math.max(1, (i.gameDurationSec || 1) / 60)));
+    const lcspm = enriched.length ? avgOf(enriched.map((i) => i.timelineStats.laneCsPerMin)) : null;
+    const jcspm = enriched.length ? avgOf(enriched.map((i) => i.timelineStats.jungleCsPerMin)) : null;
+    const xpm = enriched.length ? avgOf(enriched.map((i) => i.timelineStats.xpPerMin)) : null;
+
+    // Curves (only built if timeline data present)
+    const curves = nTl ? {
+        gold:        buildSeriesCurve(enriched, (s) => s.totalGold, (s) => s.enemyTotalGold),
+        laneCs:      buildSeriesCurve(enriched, (s) => s.laneCs,    (s) => s.enemyLaneCs),
+        jungleCs:    buildSeriesCurve(enriched, (s) => s.jungleCs,  (s) => s.enemyJungleCs),
+        xp:          buildSeriesCurve(enriched, (s) => s.xp,        (s) => s.enemyXp),
+        goldDiff:    buildSeriesCurve(enriched, (s) => s.goldDiff,  null),
+    } : null;
+
+    // ── Item frequency ───────────────────────────────────────────────────
+    // Final-game build (item0..6 from match-v5)
+    const finalItemFreq = new Map();
+    for (const item of items) {
+        const p = item.participant;
+        for (const slot of ['item0', 'item1', 'item2', 'item3', 'item4', 'item5']) {
+            const id = p[slot];
+            if (id && id > 0) {
+                finalItemFreq.set(id, (finalItemFreq.get(id) || 0) + 1);
+            }
+        }
+    }
+    const topFinalItems = [...finalItemFreq.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 8)
+        .map(([itemId, count]) => ({ itemId, count, pct: count / n }));
+
+    // Trinket frequency
+    const trinketFreq = new Map();
+    for (const item of items) {
+        const id = item.participant.item6;
+        if (id && id > 0) trinketFreq.set(id, (trinketFreq.get(id) || 0) + 1);
+    }
+    const topTrinket = [...trinketFreq.entries()].sort((a, b) => b[1] - a[1])[0];
+
+    // Item purchase order — average minute of first purchase for each itemId across enriched games.
+    const purchaseAggregator = new Map(); // itemId -> { minutes: [], gameCount }
+    for (const item of enriched) {
+        const seenThisGame = new Set();
+        for (const purchase of item.timelineStats.itemPurchases) {
+            // Only count first purchase of each item per game (avoid potions/wards spam dominating)
+            if (seenThisGame.has(purchase.itemId)) continue;
+            seenThisGame.add(purchase.itemId);
+            if (!purchaseAggregator.has(purchase.itemId)) {
+                purchaseAggregator.set(purchase.itemId, { minutes: [], gameCount: 0 });
+            }
+            const agg = purchaseAggregator.get(purchase.itemId);
+            agg.minutes.push(purchase.minute);
+            agg.gameCount += 1;
+        }
+    }
+    // Filter: must appear in >= half of enriched games AND not be a consumable/ward.
+    // Simple approach: keep itemIds that also appear in finalItemFreq (i.e. ended in someone's build).
+    const buildItemIds = new Set(finalItemFreq.keys());
+    const purchaseOrder = [...purchaseAggregator.entries()]
+        .filter(([itemId, agg]) => buildItemIds.has(itemId) && agg.gameCount >= Math.max(1, Math.ceil(nTl / 3)))
+        .map(([itemId, agg]) => ({
+            itemId,
+            avgMinute: avgOf(agg.minutes),
+            gameCount: agg.gameCount,
+        }))
+        .sort((a, b) => a.avgMinute - b.avgMinute)
+        .slice(0, 10);
+
+    // ── Summoner spells / runes ──────────────────────────────────────────
+    const summFreq = new Map();
+    for (const item of items) {
+        const key = `${item.participant.summoner1Id}_${item.participant.summoner2Id}`;
+        summFreq.set(key, (summFreq.get(key) || 0) + 1);
+    }
+    const [topSumm] = [...summFreq.entries()].sort((a, b) => b[1] - a[1]);
+    const topSummPair = topSumm ? topSumm[0].split('_').map(Number) : [null, null];
+
+    const primaryRuneFreq = new Map();   // perks.styles[0].selections[0].perk
+    const secondaryStyleFreq = new Map();
+    for (const item of items) {
+        const styles = item.participant.perks?.styles || [];
+        const primary = styles[0];
+        const secondary = styles[1];
+        const keystone = primary?.selections?.[0]?.perk;
+        if (keystone) primaryRuneFreq.set(keystone, (primaryRuneFreq.get(keystone) || 0) + 1);
+        if (secondary?.style) secondaryStyleFreq.set(secondary.style, (secondaryStyleFreq.get(secondary.style) || 0) + 1);
+    }
+    const [topKeystone] = [...primaryRuneFreq.entries()].sort((a, b) => b[1] - a[1]);
+    const [topSecondary] = [...secondaryStyleFreq.entries()].sort((a, b) => b[1] - a[1]);
+
+    return {
+        n,
+        nTl,
+        avgGoldPerMin: gpm,
+        avgCsPerMin: cspm,
+        avgLaneCsPerMin: lcspm,
+        avgJungleCsPerMin: jcspm,
+        avgXpPerMin: xpm,
+        avgGoldEarned: avgOf(goldEarned),
+        avgMinions: avgOf(minions),
+        avgJungleMonsters: avgOf(jungleMonsters),
+        avgVisionScore: avgOf(visionScore),
+        avgWardsPlaced: avgOf(wardsPlaced),
+        avgWardsKilled: avgOf(wardsKilled),
+        avgControlWards: avgOf(controlWards),
+        avgTurretTakedowns: avgOf(turretTakedowns),
+        avgTurretDmg: avgOf(turretDmg),
+        avgPlates: platesTimeline.length ? avgOf(platesTimeline) : null,
+        avgDragons: avgOf(dragonKills),
+        avgBarons: avgOf(baronKills),
+        avgHeralds: avgOf(heraldKills),
+        avgKp: kp.length ? avgOf(kp) : null,
+        avgSoloKills: avgOf(soloKills),
+        avgCcSec: avgOf(cc),
+        avgDmgChamps: avgOf(dmgChamps),
+        avgDmgTaken: avgOf(dmgTaken),
+        firstBloodKillRate:    rateOf(items, (i) => !!i.participant.firstBloodKill),
+        firstBloodAssistRate:  rateOf(items, (i) => !!i.participant.firstBloodAssist),
+        firstTowerKillRate:    rateOf(items, (i) => !!i.participant.firstTowerKill),
+        firstTowerAssistRate:  rateOf(items, (i) => !!i.participant.firstTowerAssist),
+        curves,
+        topFinalItems,
+        topTrinketId: topTrinket ? topTrinket[0] : null,
+        topTrinketCount: topTrinket ? topTrinket[1] : 0,
+        purchaseOrder,
+        topSumm1: topSummPair[0],
+        topSumm2: topSummPair[1],
+        topSummCount: topSumm ? topSumm[1] : 0,
+        topKeystone: topKeystone ? topKeystone[0] : null,
+        topKeystoneCount: topKeystone ? topKeystone[1] : 0,
+        topSecondaryStyle: topSecondary ? topSecondary[0] : null,
+    };
+}
+
+/**
+ * For each row in `rowOrder`, aggregate timeline + match-v5 stats split by
+ * win and loss. Returns Map<`champion|role`, { all, win, loss }>.
  */
 function buildDeepStatsMap(collected, rowOrder) {
     // Group items by bucket key
@@ -770,201 +1029,518 @@ function buildDeepStatsMap(collected, rowOrder) {
     for (const row of rowOrder) {
         const key = `${row.champion}|${row.role}`;
         const items = buckets.get(key) || [];
-        const enriched = items.filter((i) => i.timelineStats);
+        if (!items.length) { result.set(key, null); continue; }
 
-        if (!enriched.length) { result.set(key, null); continue; }
-
-        const n = enriched.length;
-        const avg = (fn) => enriched.reduce((s, i) => s + fn(i.timelineStats), 0) / n;
-
-        const avgGoldPerMin   = avg((ts) => ts.goldPerMin);
-        const avgCsPerMin     = avg((ts) => ts.csPerMin);
-        const avgXpPerMin     = avg((ts) => ts.xpPerMin);
-        const avgPlates       = avg((ts) => ts.platesCount);
-        const itemMinItems    = enriched.filter((i) => i.timelineStats.firstItemMin != null);
-        const avgFirstItemMin = itemMinItems.length
-            ? itemMinItems.reduce((s, i) => s + i.timelineStats.firstItemMin, 0) / itemMinItems.length
-            : null;
-
-        // Build per-minute gold and CS curves from frame snapshots.
-        const goldByMin    = new Map();
-        const goldDiffByMin = new Map();
-        const csByMin      = new Map();
-        const csDiffByMin  = new Map();
-        for (const item of enriched) {
-            for (const snap of item.timelineStats.snapshots) {
-                if (!goldByMin.has(snap.minute)) goldByMin.set(snap.minute, []);
-                goldByMin.get(snap.minute).push(snap.totalGold);
-                if (snap.goldDiff !== null) {
-                    if (!goldDiffByMin.has(snap.minute)) goldDiffByMin.set(snap.minute, []);
-                    goldDiffByMin.get(snap.minute).push(snap.goldDiff);
-                }
-                if (!csByMin.has(snap.minute)) csByMin.set(snap.minute, []);
-                csByMin.get(snap.minute).push(snap.cs);
-                if (snap.csDiff !== null) {
-                    if (!csDiffByMin.has(snap.minute)) csDiffByMin.set(snap.minute, []);
-                    csDiffByMin.get(snap.minute).push(snap.csDiff);
-                }
-            }
-        }
-
-        const threshold = Math.ceil(n / 2); // require at least half of games to have reached this minute
-        const buildCurve = (mainMap, diffMap) => DEEP_MILESTONE_MINUTES.map((target) => {
-            const candidates = [...mainMap.keys()].filter((k) => Math.abs(k - target) <= 1);
-            if (!candidates.length) return null;
-            const best = candidates.reduce((a, b) =>
-                Math.abs(a - target) <= Math.abs(b - target) ? a : b
-            );
-            const vals = mainMap.get(best);
-            if (vals.length < threshold) return null;
-            const avgVal = vals.reduce((s, v) => s + v, 0) / vals.length;
-            const diffs = diffMap.get(best) || [];
-            const avgDiff = diffs.length
-                ? diffs.reduce((s, v) => s + v, 0) / diffs.length
-                : null;
-            return { minute: target, avgVal, avgDiff };
-        }).filter(Boolean);
+        const wins = items.filter((i) => i.participant.win);
+        const losses = items.filter((i) => !i.participant.win);
 
         result.set(key, {
-            n,
-            avgGoldPerMin,
-            avgCsPerMin,
-            avgXpPerMin,
-            avgPlates,
-            avgFirstItemMin,
-            goldCurve: buildCurve(goldByMin, goldDiffByMin),
-            csCurve:   buildCurve(csByMin, csDiffByMin),
+            all: aggregateBucket(items),
+            win: aggregateBucket(wins),
+            loss: aggregateBucket(losses),
         });
     }
     return result;
 }
 
-// ── Deep rendering ───────────────────────────────────────────────────────────
+// ── Deep rendering (image) ──────────────────────────────────────────────────
+
+// Mirror of the helpers in events.js so we don't introduce a cross-module dep.
+let _ddVersionCache = null;
+let _ddVersionFetchedAt = 0;
+async function getDeepDDVersion(logger) {
+    const now = Date.now();
+    if (_ddVersionCache && (now - _ddVersionFetchedAt) < 60 * 60 * 1000) return _ddVersionCache;
+    try {
+        const res = await axios.get('https://ddragon.leagueoflegends.com/api/versions.json', { timeout: 5000 });
+        if (res.data?.[0]) {
+            _ddVersionCache = res.data[0];
+            _ddVersionFetchedAt = now;
+            return _ddVersionCache;
+        }
+    } catch (err) {
+        logger.error(`[champstats] DDragon version fetch failed: ${err.message || err}`);
+    }
+    return _ddVersionCache || '14.1.1';
+}
+
+function fixChampNameForCdn(name) {
+    if (!name) return 'Unknown';
+    const normalized = String(name).replace(/[\u2018\u2019\u02BC]/g, "'");
+    const map = {
+        'Wukong': 'MonkeyKing', 'Renata Glasc': 'Renata',
+        "Bel'Veth": 'Belveth', "Kog'Maw": 'KogMaw', "Rek'Sai": 'RekSai',
+        "Dr. Mundo": 'DrMundo', 'Nunu & Willump': 'Nunu',
+        'Fiddlesticks': 'Fiddlesticks', 'LeBlanc': 'Leblanc',
+        "Cho'Gath": 'Chogath', "Kai'Sa": 'Kaisa', "Kha'Zix": 'Khazix',
+        "Vel'Koz": 'Velkoz',
+    };
+    return map[normalized] || normalized.replace(/[' .&]/g, '');
+}
+
+// Riot summoner-spell ID → DDragon filename (no extension)
+const SUMMONER_SPELL_KEYS = {
+    1: 'SummonerBoost', 3: 'SummonerExhaust', 4: 'SummonerFlash', 6: 'SummonerHaste',
+    7: 'SummonerHeal', 11: 'SummonerSmite', 12: 'SummonerTeleport', 13: 'SummonerMana',
+    14: 'SummonerDot', 21: 'SummonerBarrier', 32: 'SummonerSnowball',
+    39: 'SummonerSnowURFSnowball_Mark', 54: 'Summoner_UltBookPlaceholder',
+    55: 'Summoner_UltBookSmitePlaceholder',
+};
+
+// Common rune perk → image path mapping (subset; extend as needed).
+// CommunityDragon serves all perk icons by perk id.
+function runeIconUrl(perkId) {
+    if (!perkId) return null;
+    return `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/styles/${perkId}.png`;
+}
+function runeStyleIconUrl(styleId) {
+    if (!styleId) return null;
+    return `https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/perk-images/styles/${styleId}.png`;
+}
+
+// ── SVG chart helpers ───────────────────────────────────────────────────────
+
+const CHART_COLORS = {
+    win:       '#0acbe6',
+    loss:      '#e84057',
+    winEnemy:  '#5ad8ec',
+    lossEnemy: '#f08a99',
+    grid:      '#1e2328',
+    axis:      '#5c5b57',
+    text:      '#a09b8c',
+    pos:       '#0acbe6',
+    neg:       '#e84057',
+};
 
 /**
- * Render one champion+role bucket as a plain codeblock string.
- * One bucket per page — wide layout intended for plain text messages.
- *
- * Gold and CS curves share one combined table to maximise horizontal space.
- * "~1st item" is the minute when the player's cumulative gold first crossed
- * 3400 (gold earned, not current) — a rough proxy for first legendary purchase.
+ * Build an inline SVG line chart with up to 4 series:
+ *   winMy, winEnemy, lossMy, lossEnemy.
+ * Each `series` is the points[] array from buildSeriesCurve, or null.
  */
-function buildDeepPage(rows, deepStatsMap, page, totalPages, headerDesc) {
-    const row = rows[page];
-    if (!row) return '```\nNo data.\n```';
+function svgLineChart({
+    width = 480,
+    height = 220,
+    title = '',
+    yLabel = '',
+    winMy = null,
+    winEnemy = null,
+    lossMy = null,
+    lossEnemy = null,
+}) {
+    const padL = 44, padR = 12, padT = 30, padB = 26;
+    const plotW = width - padL - padR;
+    const plotH = height - padT - padB;
 
-    const key = `${row.champion}|${row.role}`;
-    const ds = deepStatsMap.get(key);
-
-    const title    = `${row.champion} / ${row.roleLabel}`;
-    const subtitle = `${row.games}g  •  ${row.winRate.toFixed(1)}% WR  •  ${row.kda.toFixed(2)} KDA  (${row.wins}W-${row.losses}L)`;
-    const sep60    = '─'.repeat(60);
-
-    const lines = [];
-
-    // Header only on first page.
-    if (page === 0 && headerDesc) {
-        lines.push(headerDesc);
-        lines.push('');
+    const allSeries = [winMy, winEnemy, lossMy, lossEnemy].filter(Boolean);
+    if (!allSeries.length || allSeries.every((s) => !s.length)) {
+        return `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100%" height="100%" fill="#0f1216"/>
+            <text x="${width / 2}" y="${height / 2}" fill="${CHART_COLORS.axis}" font-size="13" text-anchor="middle">No data — ${escapeXml(title)}</text>
+        </svg>`;
     }
 
-    lines.push(title);
-    lines.push(subtitle);
-    lines.push(sep60);
-
-    if (!ds) {
-        lines.push('(no timeline data available for this bucket)');
-    } else {
-        lines.push(`Timeline: ${ds.n} / ${row.games} games`);
-        lines.push('');
-
-        // ── Per-game averages ────────────────────────────────────────────
-        lines.push(`Gold/min:       ${ds.avgGoldPerMin.toFixed(1)}`);
-        lines.push(`CS/min:         ${ds.avgCsPerMin.toFixed(2)}`);
-        lines.push(`XP/min:         ${ds.avgXpPerMin.toFixed(1)}`);
-        lines.push(`Tower plates:   ${ds.avgPlates.toFixed(1)} avg`);
-        if (ds.avgFirstItemMin != null) {
-            lines.push(`~1st item:      min ${ds.avgFirstItemMin.toFixed(1)} (by gold earned ≥3400)`);
-        }
-
-        // ── Combined Gold + CS curve ─────────────────────────────────────
-        const hasCurve = ds.goldCurve.length > 0 || ds.csCurve.length > 0;
-        if (hasCurve) {
-            lines.push('');
-
-            // Merge gold and CS rows by minute key.
-            const byMinute = new Map();
-            for (const pt of ds.goldCurve) byMinute.set(pt.minute, { gold: pt, cs: null });
-            for (const pt of ds.csCurve) {
-                if (!byMinute.has(pt.minute)) byMinute.set(pt.minute, { gold: null, cs: pt });
-                else byMinute.get(pt.minute).cs = pt;
-            }
-            const minutes = [...byMinute.keys()].sort((a, b) => a - b);
-
-            const hasGoldEnemy = ds.goldCurve.some((pt) => pt.avgDiff !== null);
-            const hasCsEnemy   = ds.csCurve.some((pt) => pt.avgDiff !== null);
-
-            // Build header row dynamically.
-            let hdr = padLeft('Min', 4) + '  ';
-            hdr += padLeft('Gold', 7);
-            if (hasGoldEnemy) hdr += '  ' + padLeft('EGold', 7) + '  ' + padLeft('GDiff', 7);
-            hdr += '    ';
-            hdr += padLeft('CS', 4);
-            if (hasCsEnemy) hdr += '  ' + padLeft('ECS', 4) + '  ' + padLeft('CDiff', 5);
-
-            lines.push('Gold & CS vs enemy laner (avg per game):');
-            lines.push(hdr);
-            lines.push('─'.repeat(hdr.length));
-
-            for (const m of minutes) {
-                const { gold, cs } = byMinute.get(m);
-                let row_ = padLeft(m, 4) + '  ';
-
-                if (gold) {
-                    row_ += padLeft(Math.round(gold.avgVal), 7);
-                    if (hasGoldEnemy) {
-                        const eg = gold.avgDiff != null ? Math.round(gold.avgVal - gold.avgDiff) : null;
-                        const gd = gold.avgDiff != null ? Math.round(gold.avgDiff) : null;
-                        row_ += '  ' + (eg != null ? padLeft(eg, 7) : padLeft('?', 7));
-                        row_ += '  ' + (gd != null
-                            ? padLeft((gd >= 0 ? '+' : '') + gd, 7)
-                            : padLeft('?', 7));
-                    }
-                } else {
-                    row_ += padLeft('—', 7);
-                    if (hasGoldEnemy) row_ += '  ' + padLeft('—', 7) + '  ' + padLeft('—', 7);
-                }
-
-                row_ += '    ';
-
-                if (cs) {
-                    row_ += padLeft(Math.round(cs.avgVal), 4);
-                    if (hasCsEnemy) {
-                        const ec = cs.avgDiff != null ? Math.round(cs.avgVal - cs.avgDiff) : null;
-                        const cd = cs.avgDiff != null ? Math.round(cs.avgDiff) : null;
-                        row_ += '  ' + (ec != null ? padLeft(ec, 4) : padLeft('?', 4));
-                        row_ += '  ' + (cd != null
-                            ? padLeft((cd >= 0 ? '+' : '') + cd, 5)
-                            : padLeft('?', 5));
-                    }
-                } else {
-                    row_ += padLeft('—', 4);
-                    if (hasCsEnemy) row_ += '  ' + padLeft('—', 4) + '  ' + padLeft('—', 5);
-                }
-
-                lines.push(row_);
+    let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity;
+    for (const s of allSeries) {
+        for (const p of s) {
+            if (p.minute < xMin) xMin = p.minute;
+            if (p.minute > xMax) xMax = p.minute;
+            const v = p.my != null ? p.my : (p.enemy != null ? p.enemy : 0);
+            if (v < yMin) yMin = v;
+            if (v > yMax) yMax = v;
+            if (p.enemy != null) {
+                if (p.enemy < yMin) yMin = p.enemy;
+                if (p.enemy > yMax) yMax = p.enemy;
             }
         }
     }
+    if (xMin === xMax) xMax = xMin + 1;
+    if (yMin === yMax) yMax = yMin + 1;
+    // Tighten lower bound for non-negative metrics (no point starting at min if all positive)
+    if (yMin > 0) yMin = 0;
 
-    lines.push('');
-    lines.push(`Page ${page + 1} / ${totalPages}`);
+    const xScale = (m) => padL + ((m - xMin) / (xMax - xMin)) * plotW;
+    const yScale = (v) => padT + plotH - ((v - yMin) / (yMax - yMin)) * plotH;
 
-    return '```\n' + lines.join('\n') + '\n```';
+    const linePath = (points, accessor) => {
+        const pts = points.filter((p) => accessor(p) != null);
+        if (!pts.length) return '';
+        return pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${xScale(p.minute).toFixed(1)},${yScale(accessor(p)).toFixed(1)}`).join(' ');
+    };
+
+    const drawSeries = (series, accessor, color, dash = false, width_ = 2) => {
+        if (!series || !series.length) return '';
+        const d = linePath(series, accessor);
+        if (!d) return '';
+        return `<path d="${d}" fill="none" stroke="${color}" stroke-width="${width_}" ${dash ? 'stroke-dasharray="4,3"' : ''} stroke-linejoin="round" stroke-linecap="round"/>`;
+    };
+
+    // Y-axis ticks (3)
+    const yTicks = [yMin, (yMin + yMax) / 2, yMax];
+    const yTickLines = yTicks.map((v) => {
+        const y = yScale(v);
+        return `<line x1="${padL}" y1="${y}" x2="${width - padR}" y2="${y}" stroke="${CHART_COLORS.grid}" stroke-width="1"/>
+                <text x="${padL - 4}" y="${y + 3}" fill="${CHART_COLORS.axis}" font-size="9" text-anchor="end">${formatTickValue(v)}</text>`;
+    }).join('');
+
+    // X-axis ticks every 5 minutes within range
+    const xTickMins = [];
+    const startTick = Math.ceil(xMin / 5) * 5;
+    for (let m = startTick; m <= xMax; m += 5) xTickMins.push(m);
+    const xTickLines = xTickMins.map((m) => {
+        const x = xScale(m);
+        return `<line x1="${x}" y1="${padT + plotH}" x2="${x}" y2="${padT + plotH + 3}" stroke="${CHART_COLORS.axis}" stroke-width="1"/>
+                <text x="${x}" y="${padT + plotH + 14}" fill="${CHART_COLORS.axis}" font-size="9" text-anchor="middle">${m}</text>`;
+    }).join('');
+
+    return `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100%" height="100%" fill="#0f1216"/>
+        <text x="${padL}" y="16" fill="${CHART_COLORS.text}" font-size="12" font-weight="700">${escapeXml(title)}</text>
+        ${yLabel ? `<text x="${padL}" y="28" fill="${CHART_COLORS.axis}" font-size="9">${escapeXml(yLabel)}</text>` : ''}
+        ${yTickLines}
+        ${xTickLines}
+        ${drawSeries(winEnemy,  (p) => p.my, CHART_COLORS.winEnemy,  true,  1.5)}
+        ${drawSeries(lossEnemy, (p) => p.my, CHART_COLORS.lossEnemy, true,  1.5)}
+        ${drawSeries(winMy,     (p) => p.my, CHART_COLORS.win,       false, 2.4)}
+        ${drawSeries(lossMy,    (p) => p.my, CHART_COLORS.loss,      false, 2.4)}
+    </svg>`;
+}
+
+/** Signed bar chart (e.g. gold diff), positive = blue, negative = red. */
+function svgDiffBarChart({
+    width = 480,
+    height = 220,
+    title = '',
+    winSeries = null,
+    lossSeries = null,
+}) {
+    const padL = 44, padR = 12, padT = 30, padB = 26;
+    const plotW = width - padL - padR;
+    const plotH = height - padT - padB;
+
+    const all = [];
+    if (winSeries) all.push(...winSeries);
+    if (lossSeries) all.push(...lossSeries);
+    if (!all.length) {
+        return `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100%" height="100%" fill="#0f1216"/>
+            <text x="${width / 2}" y="${height / 2}" fill="${CHART_COLORS.axis}" font-size="13" text-anchor="middle">No data — ${escapeXml(title)}</text>
+        </svg>`;
+    }
+
+    let xMin = Math.min(...all.map((p) => p.minute));
+    let xMax = Math.max(...all.map((p) => p.minute));
+    if (xMin === xMax) xMax = xMin + 1;
+    const absMax = Math.max(1, ...all.map((p) => Math.abs(p.my || 0)));
+    const yMin = -absMax;
+    const yMax = absMax;
+
+    const xScale = (m) => padL + ((m - xMin) / (xMax - xMin)) * plotW;
+    const yScale = (v) => padT + plotH - ((v - yMin) / (yMax - yMin)) * plotH;
+    const zeroY = yScale(0);
+
+    // Bar width based on minute density
+    const barW = Math.max(3, Math.min(14, plotW / Math.max(1, all.length / 2) - 4));
+
+    const drawBars = (series, color, offsetX) => {
+        if (!series || !series.length) return '';
+        return series.map((p) => {
+            const v = p.my || 0;
+            const x = xScale(p.minute) - barW / 2 + offsetX;
+            const y = v >= 0 ? yScale(v) : zeroY;
+            const h = Math.abs(yScale(v) - zeroY);
+            return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${Math.max(0.5, h).toFixed(1)}" fill="${color}" opacity="0.85"/>`;
+        }).join('');
+    };
+
+    // X-axis ticks every 5 minutes
+    const xTickMins = [];
+    const startTick = Math.ceil(xMin / 5) * 5;
+    for (let m = startTick; m <= xMax; m += 5) xTickMins.push(m);
+    const xTickLines = xTickMins.map((m) => {
+        const x = xScale(m);
+        return `<text x="${x}" y="${padT + plotH + 14}" fill="${CHART_COLORS.axis}" font-size="9" text-anchor="middle">${m}</text>`;
+    }).join('');
+
+    // Y-axis ticks
+    const yTicks = [-absMax, 0, absMax];
+    const yTickLines = yTicks.map((v) => {
+        const y = yScale(v);
+        return `<line x1="${padL}" y1="${y}" x2="${width - padR}" y2="${y}" stroke="${CHART_COLORS.grid}" stroke-width="1"/>
+                <text x="${padL - 4}" y="${y + 3}" fill="${CHART_COLORS.axis}" font-size="9" text-anchor="end">${formatTickValue(v)}</text>`;
+    }).join('');
+
+    return `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100%" height="100%" fill="#0f1216"/>
+        <text x="${padL}" y="16" fill="${CHART_COLORS.text}" font-size="12" font-weight="700">${escapeXml(title)}</text>
+        ${yTickLines}
+        ${xTickLines}
+        ${drawBars(winSeries,  CHART_COLORS.win,  -barW / 2 - 1)}
+        ${drawBars(lossSeries, CHART_COLORS.loss,  barW / 2 + 1)}
+        <line x1="${padL}" y1="${zeroY}" x2="${width - padR}" y2="${zeroY}" stroke="${CHART_COLORS.axis}" stroke-width="1"/>
+    </svg>`;
+}
+
+function formatTickValue(v) {
+    const a = Math.abs(v);
+    if (a >= 10000) return `${(v / 1000).toFixed(1)}k`;
+    if (a >= 1000) return `${(v / 1000).toFixed(1)}k`;
+    if (a < 1 && a > 0) return v.toFixed(2);
+    return Math.round(v).toString();
+}
+
+function escapeXml(s) {
+    return String(s ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&apos;');
+}
+
+// ── Template data preparation ──────────────────────────────────────────────
+
+/**
+ * Build the handlebars context for one (champion, role) bucket.
+ */
+function buildDeepRenderContext(row, deep, summonerName, ver) {
+    const CDN = `https://ddragon.leagueoflegends.com/cdn/${ver}/img`;
+    const ITEM_CDN = `${CDN}/item`;
+    const SPELL_CDN = `${CDN}/spell`;
+    const isJungle = row.role === 'JUNGLE';
+
+    const all = deep?.all;
+    const win = deep?.win;
+    const loss = deep?.loss;
+
+    const fmtPct = (v) => v == null ? '—' : `${(v * 100).toFixed(0)}%`;
+    const fmtNum = (v, d = 1) => v == null ? '—' : Number(v).toFixed(d);
+    const fmtInt = (v) => v == null ? '—' : Math.round(v).toLocaleString();
+
+    // KPI tiles — winAvg / lossAvg pairs
+    const tile = (label, winVal, lossVal, suffix = '') => ({
+        label,
+        winVal: winVal == null ? '—' : `${winVal}${suffix}`,
+        lossVal: lossVal == null ? '—' : `${lossVal}${suffix}`,
+    });
+
+    const kpis = [
+        tile('Gold/min',
+            win ? fmtNum(win.avgGoldPerMin, 0) : null,
+            loss ? fmtNum(loss.avgGoldPerMin, 0) : null),
+        tile(isJungle ? 'Jungle CS/min' : 'CS/min',
+            win ? fmtNum(isJungle ? win.avgJungleCsPerMin : win.avgCsPerMin, 2) : null,
+            loss ? fmtNum(isJungle ? loss.avgJungleCsPerMin : loss.avgCsPerMin, 2) : null),
+        tile('XP/min',
+            win?.avgXpPerMin != null ? fmtNum(win.avgXpPerMin, 0) : null,
+            loss?.avgXpPerMin != null ? fmtNum(loss.avgXpPerMin, 0) : null),
+        tile('KP%',
+            win?.avgKp != null ? fmtPct(win.avgKp) : null,
+            loss?.avgKp != null ? fmtPct(loss.avgKp) : null),
+        tile('Solo K',
+            win ? fmtNum(win.avgSoloKills, 1) : null,
+            loss ? fmtNum(loss.avgSoloKills, 1) : null),
+        tile('Plates',
+            win?.avgPlates != null ? fmtNum(win.avgPlates, 1) : null,
+            loss?.avgPlates != null ? fmtNum(loss.avgPlates, 1) : null),
+        tile('Vision',
+            win ? fmtNum(win.avgVisionScore, 1) : null,
+            loss ? fmtNum(loss.avgVisionScore, 1) : null),
+        tile('Wards K/P',
+            win ? `${fmtNum(win.avgWardsKilled, 1)}/${fmtNum(win.avgWardsPlaced, 1)}` : null,
+            loss ? `${fmtNum(loss.avgWardsKilled, 1)}/${fmtNum(loss.avgWardsPlaced, 1)}` : null),
+    ];
+
+    // Charts — win avg + win-enemy avg vs loss avg + loss-enemy avg
+    const charts = [];
+    if (all?.curves) {
+        // Build chart input: helper to pull series from a bucket
+        const seriesFrom = (bucket, key) => bucket?.curves?.[key]?.points || null;
+        const enemyFrom  = (bucket, key) => {
+            const c = bucket?.curves?.[key];
+            if (!c || !c.hasEnemy) return null;
+            return c.points.map((p) => ({ minute: p.minute, my: p.enemy }));
+        };
+
+        charts.push({
+            svg: svgLineChart({
+                width: 700, height: 240,
+                title: 'Gold over time vs enemy laner',
+                winMy:     seriesFrom(win, 'gold'),
+                winEnemy:  enemyFrom(win, 'gold'),
+                lossMy:    seriesFrom(loss, 'gold'),
+                lossEnemy: enemyFrom(loss, 'gold'),
+            }),
+        });
+        charts.push({
+            svg: svgLineChart({
+                width: 700, height: 240,
+                title: 'Lane CS (lane minions) vs enemy laner',
+                winMy:     seriesFrom(win, 'laneCs'),
+                winEnemy:  enemyFrom(win, 'laneCs'),
+                lossMy:    seriesFrom(loss, 'laneCs'),
+                lossEnemy: enemyFrom(loss, 'laneCs'),
+            }),
+        });
+        charts.push({
+            svg: svgLineChart({
+                width: 700, height: 240,
+                title: 'XP over time vs enemy laner',
+                winMy:     seriesFrom(win, 'xp'),
+                winEnemy:  enemyFrom(win, 'xp'),
+                lossMy:    seriesFrom(loss, 'xp'),
+                lossEnemy: enemyFrom(loss, 'xp'),
+            }),
+        });
+        charts.push({
+            svg: svgDiffBarChart({
+                width: 700, height: 240,
+                title: 'Gold diff vs enemy laner (signed)',
+                winSeries:  seriesFrom(win, 'goldDiff'),
+                lossSeries: seriesFrom(loss, 'goldDiff'),
+            }),
+        });
+        if (isJungle) {
+            charts.push({
+                svg: svgLineChart({
+                    width: 700, height: 240,
+                    title: 'Jungle monsters vs enemy jungler',
+                    winMy:     seriesFrom(win, 'jungleCs'),
+                    winEnemy:  enemyFrom(win, 'jungleCs'),
+                    lossMy:    seriesFrom(loss, 'jungleCs'),
+                    lossEnemy: enemyFrom(loss, 'jungleCs'),
+                }),
+            });
+        }
+    }
+
+    // Final-build items
+    const finalBuild = (all?.topFinalItems || []).map((it) => ({
+        url: `${ITEM_CDN}/${it.itemId}.png`,
+        count: it.count,
+        pct: `${Math.round(it.pct * 100)}%`,
+    }));
+    const trinketUrl = all?.topTrinketId ? `${ITEM_CDN}/${all.topTrinketId}.png` : null;
+
+    // Purchase order items
+    const purchaseOrder = (all?.purchaseOrder || []).map((pi) => ({
+        url: `${ITEM_CDN}/${pi.itemId}.png`,
+        minute: pi.avgMinute.toFixed(1),
+        gameCount: pi.gameCount,
+    }));
+
+    // Summoner spells
+    const summ1Key = SUMMONER_SPELL_KEYS[all?.topSumm1] || null;
+    const summ2Key = SUMMONER_SPELL_KEYS[all?.topSumm2] || null;
+    const summ1Url = summ1Key ? `${SPELL_CDN}/${summ1Key}.png` : null;
+    const summ2Url = summ2Key ? `${SPELL_CDN}/${summ2Key}.png` : null;
+
+    // Runes
+    const keystoneUrl = runeIconUrl(all?.topKeystone);
+    const secondaryStyleUrl = runeStyleIconUrl(all?.topSecondaryStyle);
+
+    // Header
+    const championIcon = `${CDN}/champion/${fixChampNameForCdn(row.champion)}.png`;
+
+    return {
+        // Header
+        summonerName,
+        championIcon,
+        championName: row.champion,
+        roleLabel: row.roleLabel,
+        gamesText: `${row.games} games`,
+        wlText: `${row.wins}W-${row.losses}L`,
+        wrText: `${row.winRate.toFixed(1)}% WR`,
+        kdaText: `${row.kda.toFixed(2)} KDA`,
+        kdaSubText: `${(row.kills / Math.max(1, row.games)).toFixed(1)} / ${(row.deaths / Math.max(1, row.games)).toFixed(1)} / ${(row.assists / Math.max(1, row.games)).toFixed(1)} avg`,
+        timelineCoverage: all ? `${all.nTl}/${all.n} games with timeline data` : '',
+
+        // KPIs
+        kpis,
+
+        // Charts
+        charts,
+
+        // Build
+        finalBuild,
+        trinketUrl,
+        finalBuildLabel: trinketUrl
+            ? `Most-built items (final inventory across ${all?.n || 0} games)`
+            : `Most-built items (final inventory)`,
+
+        // Purchase order
+        purchaseOrder,
+
+        // Loadout
+        summ1Url, summ2Url,
+        summCountText: all?.topSummCount
+            ? `${all.topSummCount}/${all.n} games`
+            : '',
+        keystoneUrl, secondaryStyleUrl,
+
+        // Footer stats
+        objectives: {
+            dragons: fmtNum(all?.avgDragons, 1),
+            barons:  fmtNum(all?.avgBarons,  1),
+            heralds: fmtNum(all?.avgHeralds, 1),
+            turrets: fmtNum(all?.avgTurretTakedowns, 1),
+            turretDmg: fmtInt(all?.avgTurretDmg),
+        },
+        firstStats: {
+            firstBlood: all
+                ? `Kill ${fmtPct(all.firstBloodKillRate)} • Assist ${fmtPct(all.firstBloodAssistRate)}`
+                : '—',
+            firstTower: all
+                ? `Kill ${fmtPct(all.firstTowerKillRate)} • Assist ${fmtPct(all.firstTowerAssistRate)}`
+                : '—',
+        },
+        damage: {
+            toChamps: fmtInt(all?.avgDmgChamps),
+            taken:    fmtInt(all?.avgDmgTaken),
+            ccSec:    fmtNum(all?.avgCcSec, 1),
+        },
+        controlWardsText: all ? `${fmtNum(all.avgControlWards, 1)} avg` : '—',
+
+        // Legend (used by template)
+        legend: {
+            win: 'Win avg',
+            loss: 'Loss avg',
+            winEnemy: 'Enemy (in win games)',
+            lossEnemy: 'Enemy (in loss games)',
+        },
+
+        // For text fallback
+        bucketKey: `${row.champion} / ${row.roleLabel}`,
+    };
+}
+
+let _deepTemplateCache = null;
+function loadDeepTemplate() {
+    if (_deepTemplateCache) return _deepTemplateCache;
+    const templatePath = path.join(__dirname, '..', 'match-template-champstats.html');
+    _deepTemplateCache = fs.readFileSync(templatePath, 'utf8');
+    return _deepTemplateCache;
+}
+
+async function renderDeepImage(row, deep, summonerName, logger) {
+    const ver = await getDeepDDVersion(logger);
+    const ctx = buildDeepRenderContext(row, deep, summonerName, ver);
+    const template = loadDeepTemplate();
+    logger.info('[champstats] Rendering deep image', {
+        bucket: ctx.bucketKey,
+        charts: ctx.charts.length,
+        finalBuildItems: ctx.finalBuild.length,
+        purchaseOrderItems: ctx.purchaseOrder.length,
+    });
+    const buffer = await nodeHtmlToImage({
+        html: template,
+        content: ctx,
+        puppeteerArgs: { args: ['--no-sandbox', '--disable-setuid-sandbox'] },
+    });
+    return buffer;
 }
 
 async function sendDeepResults(channel, summonerName, rows, deepStatsMap, headerDesc, logger) {
-    // One champion+role bucket per page, sent as plain text (no embed) for full channel width.
+    // One champion+role bucket per page, rendered as PNG via HTML→image.
     const totalPages = rows.length;
     if (totalPages === 0) {
         await channel.send('No data to display.');
@@ -973,16 +1549,38 @@ async function sendDeepResults(channel, summonerName, rows, deepStatsMap, header
 
     let page = 0;
     const pagerId = `${Date.now()}_${Math.floor(Math.random() * 1_000_000)}`;
+    const imageCache = new Map(); // pageIndex -> Buffer
 
-    const buildContent = (p) => buildDeepPage(rows, deepStatsMap, p, totalPages, headerDesc);
+    const getImageForPage = async (p) => {
+        if (imageCache.has(p)) return imageCache.get(p);
+        const row = rows[p];
+        const deep = deepStatsMap.get(`${row.champion}|${row.role}`);
+        const buffer = await renderDeepImage(row, deep, summonerName, logger);
+        imageCache.set(p, buffer);
+        return buffer;
+    };
+
+    let initialBuffer;
+    try {
+        initialBuffer = await getImageForPage(page);
+    } catch (err) {
+        logger.error('[champstats] Initial deep render failed', { message: err?.message, stack: err?.stack });
+        await channel.send(`Failed to render deep image: ${err?.message || 'unknown error'}`);
+        return;
+    }
+
+    const attach = (buf, p) => new AttachmentBuilder(buf, { name: `champstats-${p + 1}.png` });
+    const headerLine = (p) =>
+        (p === 0 && headerDesc ? headerDesc + '\n\n' : '') +
+        `Deep dive page ${p + 1} / ${totalPages} — ${rows[p].champion} / ${rows[p].roleLabel}`;
 
     const listMessage = await channel.send({
-        content: buildContent(page),
+        content: headerLine(page),
+        files: [attach(initialBuffer, page)],
         components: buildPageButtons(pagerId, page, totalPages),
     });
 
     if (totalPages <= 1) return;
-
     if (typeof listMessage?.createMessageComponentCollector !== 'function') {
         logger.info('[champstats] Deep results: message does not support collectors; skipping pagination');
         return;
@@ -995,19 +1593,34 @@ async function sendDeepResults(channel, summonerName, rows, deepStatsMap, header
 
     collector.on('collect', async (interaction) => {
         if (!interaction.customId.endsWith(pagerId)) return;
+        const prevPage = page;
         if (interaction.customId.startsWith('CHAMPSTATS_PREV_')) {
             page = Math.max(0, page - 1);
         } else if (interaction.customId.startsWith('CHAMPSTATS_NEXT_')) {
             page = Math.min(totalPages - 1, page + 1);
         }
+        if (page === prevPage) {
+            try { await interaction.deferUpdate(); } catch (_) { /* ignore */ }
+            return;
+        }
+
         try {
-            await interaction.update({
-                content: buildContent(page),
-                embeds: [],
+            await interaction.deferUpdate();
+            const buf = await getImageForPage(page);
+            await interaction.editReply({
+                content: headerLine(page),
+                files: [attach(buf, page)],
+                attachments: [],
                 components: buildPageButtons(pagerId, page, totalPages),
             });
         } catch (err) {
             logger.error(`[champstats] Deep pagination update failed: ${err.message || err}`);
+            try {
+                await interaction.followUp({
+                    content: `Failed to render page ${page + 1}: ${err.message || 'unknown error'}`,
+                    ephemeral: true,
+                });
+            } catch (_) { /* ignore */ }
         }
     });
 

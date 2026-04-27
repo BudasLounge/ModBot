@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 1500px;
+      min-height: 2000px;
+      background: #010a13;
+      font-family: 'Roboto', sans-serif;
+      color: #a09b8c;
+      padding: 28px 32px;
+      position: relative;
+    }
+
+    /* ── Header ───────────────────────────────────────────── */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #1e2328;
+      margin-bottom: 18px;
+    }
+    .champ-icon {
+      width: 86px;
+      height: 86px;
+      border-radius: 50%;
+      border: 3px solid #c8aa6e;
+      box-shadow: 0 0 14px rgba(200,170,110,0.25);
+      flex-shrink: 0;
+    }
+    .head-text { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+    .head-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 1px;
+    }
+    .head-role {
+      font-size: 16px;
+      font-weight: 500;
+      color: #c8aa6e;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .head-meta {
+      display: flex;
+      gap: 18px;
+      font-size: 14px;
+      color: #939a9e;
+      margin-top: 4px;
+    }
+    .head-meta b { color: #fff; font-weight: 700; }
+    .head-meta .pos { color: #0acbe6; }
+    .head-meta .neg { color: #e84057; }
+    .head-side {
+      text-align: right;
+      font-size: 12px;
+      color: #5c5b57;
+    }
+    .head-side .summoner-name {
+      font-size: 16px;
+      color: #c8aa6e;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    /* ── KPI tiles ─────────────────────────────────────────── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+    .kpi-tile {
+      background: #0f1216;
+      border: 1px solid #1e2328;
+      border-top: 2px solid #c8aa6e;
+      border-radius: 4px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .kpi-label {
+      font-size: 10px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #c8aa6e;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .kpi-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+    }
+    .kpi-row .tag { font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 2px; }
+    .kpi-row .tag.win  { background: rgba(10,203,230,0.15); color: #0acbe6; }
+    .kpi-row .tag.loss { background: rgba(232,64,87,0.15);  color: #e84057; }
+    .kpi-row .val { color: #fff; font-weight: 600; }
+
+    /* ── Section heading ──────────────────────────────────── */
+    .section-h {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 6px 0 8px 0;
+      font-size: 13px;
+      font-weight: 700;
+      color: #c8aa6e;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+    .section-h::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: #1e2328;
+    }
+
+    /* ── Charts grid ──────────────────────────────────────── */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .chart-card {
+      background: #0f1216;
+      border: 1px solid #1e2328;
+      border-radius: 4px;
+      padding: 6px;
+      overflow: hidden;
+    }
+    .chart-card svg { display: block; width: 100%; height: auto; }
+
+    /* Legend strip under charts */
+    .chart-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-size: 11px;
+      color: #939a9e;
+      margin: -8px 0 16px 4px;
+    }
+    .chart-legend .swatch {
+      display: inline-block;
+      width: 18px;
+      height: 3px;
+      vertical-align: middle;
+      margin-right: 5px;
+      border-radius: 1px;
+    }
+    .chart-legend .swatch.dashed {
+      background: repeating-linear-gradient(90deg, currentColor 0 4px, transparent 4px 7px);
+      height: 2px;
+    }
+    .chart-legend .lg-win        { color: #0acbe6; }
+    .chart-legend .lg-loss       { color: #e84057; }
+    .chart-legend .lg-win-enemy  { color: #5ad8ec; }
+    .chart-legend .lg-loss-enemy { color: #f08a99; }
+
+    /* ── Build & purchase order ───────────────────────────── */
+    .build-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: stretch;
+      margin-bottom: 18px;
+    }
+    .build-cell {
+      width: 78px;
+      background: #0f1216;
+      border: 1px solid #1e2328;
+      border-radius: 4px;
+      padding: 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .build-cell img {
+      width: 56px;
+      height: 56px;
+      border-radius: 4px;
+      border: 1px solid #333;
+      background: #141619;
+    }
+    .build-cell.trinket img {
+      border-radius: 50%;
+      border-color: #c8aa6e;
+    }
+    .build-cell .b-count {
+      font-size: 11px;
+      color: #c8aa6e;
+      font-weight: 700;
+    }
+    .build-cell .b-pct {
+      font-size: 10px;
+      color: #5c5b57;
+    }
+
+    .purchase-order {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      background: #0f1216;
+      border: 1px solid #1e2328;
+      border-radius: 4px;
+      padding: 12px;
+      margin-bottom: 18px;
+    }
+    .po-cell {
+      width: 70px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      position: relative;
+    }
+    .po-cell::after {
+      content: "→";
+      position: absolute;
+      right: -6px;
+      top: 18px;
+      color: #5c5b57;
+      font-size: 12px;
+    }
+    .po-cell:last-child::after { content: ""; }
+    .po-cell img {
+      width: 44px;
+      height: 44px;
+      border-radius: 4px;
+      border: 1px solid #333;
+      background: #141619;
+    }
+    .po-cell .po-min {
+      font-size: 11px;
+      color: #c8aa6e;
+      font-weight: 700;
+    }
+    .po-cell .po-games {
+      font-size: 9px;
+      color: #5c5b57;
+    }
+
+    /* ── Footer stat strips ───────────────────────────────── */
+    .footer-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .footer-card {
+      background: #0f1216;
+      border: 1px solid #1e2328;
+      border-top: 2px solid #c8aa6e;
+      border-radius: 4px;
+      padding: 10px 12px;
+    }
+    .footer-card .fc-label {
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #c8aa6e;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .footer-card .fc-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #939a9e;
+      padding: 1px 0;
+    }
+    .footer-card .fc-row b { color: #fff; font-weight: 600; }
+
+    /* Loadout (summs + runes) */
+    .loadout {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .loadout-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: #939a9e;
+    }
+    .loadout-group img {
+      width: 32px;
+      height: 32px;
+      border-radius: 4px;
+      background: #141619;
+      border: 1px solid #333;
+    }
+    .loadout-group.runes img:first-of-type {
+      border-color: #c8aa6e;
+    }
+
+    .legend-note {
+      margin-top: 8px;
+      font-size: 10px;
+      color: #5c5b57;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── HEADER ─────────────────────────────────────────────── -->
+  <div class="header">
+    <img src="{{championIcon}}" class="champ-icon"
+         onerror="this.style.background='#1e2328';this.style.border='3px solid #333';this.removeAttribute('src')">
+    <div class="head-text">
+      <div class="head-title">{{championName}}</div>
+      <div class="head-role">{{roleLabel}}</div>
+      <div class="head-meta">
+        <span><b>{{gamesText}}</b></span>
+        <span>•</span>
+        <span><b>{{wlText}}</b></span>
+        <span>•</span>
+        <span class="pos"><b>{{wrText}}</b></span>
+        <span>•</span>
+        <span><b>{{kdaText}}</b></span>
+        <span style="color:#5c5b57;">({{kdaSubText}})</span>
+      </div>
+    </div>
+    <div class="head-side">
+      <div class="summoner-name">{{summonerName}}</div>
+      <div>{{timelineCoverage}}</div>
+    </div>
+  </div>
+
+  <!-- ── KPI tiles ──────────────────────────────────────────── -->
+  <div class="section-h">Per-game averages — Win vs Loss</div>
+  <div class="kpi-grid">
+    {{#each kpis}}
+      <div class="kpi-tile">
+        <div class="kpi-label">{{label}}</div>
+        <div class="kpi-row"><span class="tag win">W</span> <span class="val">{{winVal}}</span></div>
+        <div class="kpi-row"><span class="tag loss">L</span> <span class="val">{{lossVal}}</span></div>
+      </div>
+    {{/each}}
+  </div>
+
+  <!-- ── Charts ────────────────────────────────────────────── -->
+  <div class="section-h">Per-minute curves vs lane opponent</div>
+  <div class="chart-legend">
+    <span class="lg-win"><span class="swatch" style="background:#0acbe6;"></span>Win avg (you)</span>
+    <span class="lg-loss"><span class="swatch" style="background:#e84057;"></span>Loss avg (you)</span>
+    <span class="lg-win-enemy"><span class="swatch dashed" style="background:#5ad8ec;"></span>Enemy in win games</span>
+    <span class="lg-loss-enemy"><span class="swatch dashed" style="background:#f08a99;"></span>Enemy in loss games</span>
+  </div>
+  <div class="charts-grid">
+    {{#each charts}}
+      <div class="chart-card">{{{svg}}}</div>
+    {{/each}}
+  </div>
+
+  <!-- ── Most-built items ──────────────────────────────────── -->
+  <div class="section-h">{{finalBuildLabel}}</div>
+  <div class="build-row">
+    {{#each finalBuild}}
+      <div class="build-cell">
+        <img src="{{url}}" onerror="this.style.background='#1e2328';this.removeAttribute('src')">
+        <div class="b-count">{{count}} games</div>
+        <div class="b-pct">{{pct}}</div>
+      </div>
+    {{/each}}
+    {{#if trinketUrl}}
+      <div class="build-cell trinket">
+        <img src="{{trinketUrl}}" onerror="this.style.background='#1e2328';this.removeAttribute('src')">
+        <div class="b-count">Trinket</div>
+        <div class="b-pct">most-used</div>
+      </div>
+    {{/if}}
+  </div>
+
+  <!-- ── Purchase order ────────────────────────────────────── -->
+  {{#if purchaseOrder}}
+  <div class="section-h">Average purchase order (real items, by minute)</div>
+  <div class="purchase-order">
+    {{#each purchaseOrder}}
+      <div class="po-cell">
+        <img src="{{url}}" onerror="this.style.background='#1e2328';this.removeAttribute('src')">
+        <div class="po-min">min {{minute}}</div>
+        <div class="po-games">{{gameCount}}g</div>
+      </div>
+    {{/each}}
+  </div>
+  {{/if}}
+
+  <!-- ── Footer cards ──────────────────────────────────────── -->
+  <div class="section-h">Match-wide aggregates</div>
+  <div class="footer-grid">
+
+    <div class="footer-card">
+      <div class="fc-label">Loadout (most-used)</div>
+      <div class="loadout">
+        <div class="loadout-group">
+          {{#if summ1Url}}<img src="{{summ1Url}}" onerror="this.style.background='#1e2328';this.removeAttribute('src')">{{/if}}
+          {{#if summ2Url}}<img src="{{summ2Url}}" onerror="this.style.background='#1e2328';this.removeAttribute('src')">{{/if}}
+          <span>{{summCountText}}</span>
+        </div>
+        <div class="loadout-group runes">
+          {{#if keystoneUrl}}<img src="{{keystoneUrl}}" onerror="this.style.background='#1e2328';this.removeAttribute('src')">{{/if}}
+          {{#if secondaryStyleUrl}}<img src="{{secondaryStyleUrl}}" onerror="this.style.background='#1e2328';this.removeAttribute('src')">{{/if}}
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-card">
+      <div class="fc-label">Objectives (team avg)</div>
+      <div class="fc-row"><span>Dragons</span><b>{{objectives.dragons}}</b></div>
+      <div class="fc-row"><span>Barons</span><b>{{objectives.barons}}</b></div>
+      <div class="fc-row"><span>Heralds</span><b>{{objectives.heralds}}</b></div>
+      <div class="fc-row"><span>Towers (you)</span><b>{{objectives.turrets}}</b></div>
+      <div class="fc-row"><span>Tower dmg</span><b>{{objectives.turretDmg}}</b></div>
+    </div>
+
+    <div class="footer-card">
+      <div class="fc-label">Vision & control</div>
+      <div class="fc-row"><span>Wards placed</span><b>{{kpis.[7].winVal}} / {{kpis.[7].lossVal}}</b></div>
+      <div class="fc-row"><span>Control wards</span><b>{{controlWardsText}}</b></div>
+      <div class="fc-row"><span>First Blood</span><b>{{firstStats.firstBlood}}</b></div>
+      <div class="fc-row"><span>First Tower</span><b>{{firstStats.firstTower}}</b></div>
+    </div>
+
+    <div class="footer-card">
+      <div class="fc-label">Damage profile (avg)</div>
+      <div class="fc-row"><span>Dmg to champs</span><b>{{damage.toChamps}}</b></div>
+      <div class="fc-row"><span>Dmg taken</span><b>{{damage.taken}}</b></div>
+      <div class="fc-row"><span>CC time dealt</span><b>{{damage.ccSec}}s</b></div>
+    </div>
+
+  </div>
+
+  <div class="legend-note">
+    Win / loss curves are averaged across all games in this bucket where timeline data was available.
+    Dashed lines show the lane opponent's average in those same games (each enemy game-set is independent).
+  </div>
+
+</body>
+</html>
