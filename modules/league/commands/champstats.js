@@ -45,8 +45,12 @@ const RIOT_LONG_WINDOW_MS = 10 * 60 * 1000;
 // ── Fetch tuning ────────────────────────────────────────────────────────────
 const IDS_PAGE_SIZE = 100;
 const MATCH_FETCH_CONCURRENCY = 16;
+const TIMELINE_FETCH_CONCURRENCY = 4; // timelines are large; use lower concurrency
 const MAX_GAMES_REQUESTED = 2000; // hard cap on counted games per user instruction
 const MAX_IDS_SCANNED = 4000;     // safety cap to avoid pathological hunts
+
+// Minute marks sampled for gold-curve display in deep mode.
+const DEEP_MILESTONE_MINUTES = [5, 10, 15, 20, 25, 30, 35, 40];
 
 // ── Queue allow-list ────────────────────────────────────────────────────────
 const ALLOWED_QUEUE_IDS = new Set([400, 420, 440]);
@@ -218,6 +222,17 @@ function resolveRole(participant) {
     return 'UNKNOWN';
 }
 
+// Returns the participantId of the opponent sharing the same teamPosition.
+// Returns null when position is unavailable or no opponent found.
+function findEnemyParticipantId(participants, myParticipant) {
+    const myRole = myParticipant.teamPosition;
+    if (!myRole || myRole === '' || myRole === 'Invalid') return null;
+    const enemy = participants.find(
+        (p) => p.teamPosition === myRole && p.teamId !== myParticipant.teamId
+    );
+    return enemy ? enemy.participantId : null;
+}
+
 /**
  * Scan match history and collect allowed-queue matches for `puuid` until we
  * reach `targetCount` or exhaust IDs / hit the safety cap.
@@ -270,7 +285,8 @@ async function collectAllowedMatches(puuid, targetCount, logger) {
 
         let kept = 0;
         let skipped = 0;
-        for (const match of pageMatches) {
+        for (let mi = 0; mi < pageMatches.length; mi++) {
+            const match = pageMatches[mi];
             if (!match?.info?.participants?.length) { skipped++; continue; }
             scannedMatches++;
 
@@ -288,10 +304,12 @@ async function collectAllowedMatches(puuid, targetCount, logger) {
 
             queueCounts[queueId] = (queueCounts[queueId] || 0) + 1;
             collected.push({
-                matchId: match.info.gameId,
+                matchId: uniqueIds[mi], // string ID (e.g. NA1_XXXX) needed for timeline endpoint
                 queueId,
                 ts,
                 participant,
+                participantId: participant.participantId,
+                enemyParticipantId: findEnemyParticipantId(match.info.participants, participant),
             });
             kept++;
 
@@ -613,11 +631,378 @@ async function sendPaginatedResults(channel, summonerName, rows, headerDesc, dis
     });
 }
 
+// ── Timeline deep-dive ───────────────────────────────────────────────────────
+
+async function fetchTimeline(matchId, logger) {
+    try {
+        await acquireRiotRequestSlot(logger, 'timeline');
+        return (await http.get(`${MATCH_BASE}/${matchId}/timeline`)).data;
+    } catch (err) {
+        if (err.response?.status === 429) {
+            const wait = Number(err.response.headers['retry-after'] ?? 1) * 1000;
+            logger.info(`[champstats] Rate limited on timeline ${matchId}; retrying in ${wait}ms`);
+            await sleep(wait);
+            return fetchTimeline(matchId, logger);
+        }
+        logger.error(`[champstats] Failed to fetch timeline ${matchId}`, {
+            status: err.response?.status, message: err.message,
+        });
+        return null;
+    }
+}
+
+/**
+ * Extract per-minute snapshots from a timeline for a given participant and
+ * (optionally) their lane opponent.
+ *
+ * Each snapshot contains: minute, totalGold, cs, xp, level,
+ * enemyTotalGold (nullable), goldDiff (nullable).
+ */
+function extractTimelineStats(timeline, participantId, enemyParticipantId) {
+    if (!timeline?.info?.frames?.length) return null;
+
+    const snapshots = [];
+    for (const frame of timeline.info.frames) {
+        const minute = Math.round(frame.timestamp / 60000);
+        const pf = frame.participantFrames?.[String(participantId)];
+        if (!pf) continue;
+
+        const cs = (pf.minionsKilled || 0) + (pf.jungleMinionsKilled || 0);
+        const ef = enemyParticipantId
+            ? frame.participantFrames?.[String(enemyParticipantId)]
+            : null;
+
+        snapshots.push({
+            minute,
+            totalGold: pf.totalGold || 0,
+            currentGold: pf.currentGold || 0,
+            cs,
+            xp: pf.xp || 0,
+            level: pf.level || 1,
+            enemyTotalGold: ef?.totalGold ?? null,
+            goldDiff: ef != null ? (pf.totalGold || 0) - (ef.totalGold || 0) : null,
+            // damage stats at final frame only – carried from damageStats if present
+            totalDmgToChamps: pf.damageStats?.totalDamageDoneToChampions ?? null,
+            physDmgToChamps: pf.damageStats?.physicalDamageDoneToChampions ?? null,
+            magicDmgToChamps: pf.damageStats?.magicDamageDoneToChampions ?? null,
+            totalDmgTaken: pf.damageStats?.totalDamageTaken ?? null,
+            ccTimeDealt: pf.timeEnemySpentControlled ?? null,
+        });
+    }
+
+    if (!snapshots.length) return null;
+
+    const last = snapshots[snapshots.length - 1];
+    const mins = Math.max(last.minute, 1);
+
+    return {
+        gameDurationMins: mins,
+        goldPerMin: last.totalGold / mins,
+        csPerMin: last.cs / mins,
+        xpPerMin: last.xp / mins,
+        // Final-frame damage stats (cumulative totals from timeline)
+        totalDmgToChamps: last.totalDmgToChamps,
+        physDmgToChamps: last.physDmgToChamps,
+        magicDmgToChamps: last.magicDmgToChamps,
+        totalDmgTaken: last.totalDmgTaken,
+        ccTimeDealtSec: last.ccTimeDealt != null ? last.ccTimeDealt / 1000 : null,
+        snapshots,
+    };
+}
+
+/**
+ * Fetch timeline for every unique match in `collected` and attach
+ * `.timelineStats` to each item that succeeds.
+ */
+async function enrichWithTimelines(collected, logger) {
+    const uniqueMatchIds = [...new Set(collected.map((c) => c.matchId))];
+    logger.info('[champstats] Fetching timelines for deep mode', {
+        uniqueMatches: uniqueMatchIds.length,
+    });
+
+    const timelineResults = await mapWithConcurrency(
+        uniqueMatchIds,
+        TIMELINE_FETCH_CONCURRENCY,
+        (matchId) => fetchTimeline(matchId, logger).then((tl) => ({ matchId, tl }))
+    );
+
+    const timelineMap = new Map();
+    for (const { matchId, tl } of timelineResults) {
+        if (tl) timelineMap.set(matchId, tl);
+    }
+
+    let enriched = 0;
+    for (const item of collected) {
+        const tl = timelineMap.get(item.matchId);
+        if (!tl) continue;
+        item.timelineStats = extractTimelineStats(tl, item.participantId, item.enemyParticipantId);
+        if (item.timelineStats) enriched++;
+    }
+
+    logger.info('[champstats] Timeline enrichment complete', {
+        timelinesFetched: timelineMap.size,
+        itemsEnriched: enriched,
+    });
+}
+
+/**
+ * For each row in `rowOrder`, aggregate timeline stats across all matching
+ * collected items. Returns Map<`champion|role`, deepStats|null>.
+ */
+function buildDeepStatsMap(collected, rowOrder) {
+    // Group items by bucket key
+    const buckets = new Map();
+    for (const item of collected) {
+        const role = resolveRole(item.participant);
+        const key = `${item.participant.championName}|${role}`;
+        if (!buckets.has(key)) buckets.set(key, []);
+        buckets.get(key).push(item);
+    }
+
+    const result = new Map();
+    for (const row of rowOrder) {
+        const key = `${row.champion}|${row.role}`;
+        const items = buckets.get(key) || [];
+        const enriched = items.filter((i) => i.timelineStats);
+
+        if (!enriched.length) { result.set(key, null); continue; }
+
+        const n = enriched.length;
+        const avg = (fn) => enriched.reduce((s, i) => s + fn(i.timelineStats), 0) / n;
+
+        const avgGoldPerMin = avg((ts) => ts.goldPerMin);
+        const avgCsPerMin   = avg((ts) => ts.csPerMin);
+        const avgXpPerMin   = avg((ts) => ts.xpPerMin);
+
+        // Damage/CC averages — only count items that have the data
+        const dmgItems = enriched.filter((i) => i.timelineStats.totalDmgToChamps != null);
+        const avgDmgToChamps = dmgItems.length
+            ? dmgItems.reduce((s, i) => s + i.timelineStats.totalDmgToChamps, 0) / dmgItems.length
+            : null;
+        const avgPhysDmg = dmgItems.length
+            ? dmgItems.reduce((s, i) => s + (i.timelineStats.physDmgToChamps || 0), 0) / dmgItems.length
+            : null;
+        const avgMagicDmg = dmgItems.length
+            ? dmgItems.reduce((s, i) => s + (i.timelineStats.magicDmgToChamps || 0), 0) / dmgItems.length
+            : null;
+        const avgDmgTaken = dmgItems.length
+            ? dmgItems.reduce((s, i) => s + (i.timelineStats.totalDmgTaken || 0), 0) / dmgItems.length
+            : null;
+        const ccItems = enriched.filter((i) => i.timelineStats.ccTimeDealtSec != null);
+        const avgCcSec = ccItems.length
+            ? ccItems.reduce((s, i) => s + i.timelineStats.ccTimeDealtSec, 0) / ccItems.length
+            : null;
+
+        // Gold curve: for each DEEP_MILESTONE_MINUTES target, find the nearest
+        // available minute mark and average across games that have it.
+        const goldByMin = new Map();
+        const diffByMin = new Map();
+        for (const item of enriched) {
+            for (const snap of item.timelineStats.snapshots) {
+                if (!goldByMin.has(snap.minute)) goldByMin.set(snap.minute, []);
+                goldByMin.get(snap.minute).push(snap.totalGold);
+                if (snap.goldDiff !== null) {
+                    if (!diffByMin.has(snap.minute)) diffByMin.set(snap.minute, []);
+                    diffByMin.get(snap.minute).push(snap.goldDiff);
+                }
+            }
+        }
+
+        const threshold = Math.ceil(n / 2); // require at least half of games to have reached this minute
+        const goldCurve = DEEP_MILESTONE_MINUTES.map((target) => {
+            // Accept the nearest minute mark within ±1 of the target
+            const candidates = [...goldByMin.keys()].filter((k) => Math.abs(k - target) <= 1);
+            if (!candidates.length) return null;
+            const best = candidates.reduce((a, b) =>
+                Math.abs(a - target) <= Math.abs(b - target) ? a : b
+            );
+            const vals = goldByMin.get(best);
+            if (vals.length < threshold) return null;
+            const avgGold = vals.reduce((s, v) => s + v, 0) / vals.length;
+            const diffs = diffByMin.get(best) || [];
+            const avgDiff = diffs.length
+                ? diffs.reduce((s, v) => s + v, 0) / diffs.length
+                : null;
+            return { minute: target, avgGold, avgDiff, games: vals.length };
+        }).filter(Boolean);
+
+        result.set(key, {
+            n,
+            avgGoldPerMin,
+            avgCsPerMin,
+            avgXpPerMin,
+            avgDmgToChamps,
+            avgPhysDmg,
+            avgMagicDmg,
+            avgDmgTaken,
+            avgCcSec,
+            goldCurve,
+        });
+    }
+    return result;
+}
+
+// ── Deep rendering ───────────────────────────────────────────────────────────
+
+/**
+ * Render one champion+role bucket as a codeblock string.
+ * One bucket per page — designed for human inspection and iteration.
+ */
+function buildDeepPage(rows, deepStatsMap, page, totalPages) {
+    const row = rows[page];
+    if (!row) return '```\nNo data.\n```';
+
+    const key = `${row.champion}|${row.role}`;
+    const ds = deepStatsMap.get(key);
+
+    const title = `${row.champion} / ${row.roleLabel}`;
+    const subtitle = `${row.games} games  •  ${row.winRate.toFixed(1)}% WR  •  ${row.kda.toFixed(2)} KDA  (${row.wins}W-${row.losses}L)`;
+    const sep = '─'.repeat(Math.min(Math.max(title.length, subtitle.length), 52));
+
+    const lines = [title, subtitle, sep];
+
+    if (!ds) {
+        lines.push('(no timeline data available for this bucket)');
+    } else {
+        lines.push(`Timeline data:  ${ds.n} / ${row.games} games`);
+        lines.push('');
+
+        // ── Per-minute averages ──────────────────────────────────────────
+        lines.push(`Gold/min:   ${ds.avgGoldPerMin.toFixed(1)}`);
+        lines.push(`CS/min:     ${ds.avgCsPerMin.toFixed(2)}`);
+        lines.push(`XP/min:     ${ds.avgXpPerMin.toFixed(1)}`);
+
+        // ── Damage averages ──────────────────────────────────────────────
+        if (ds.avgDmgToChamps != null) {
+            lines.push('');
+            lines.push(`Dmg to champs:  ${Math.round(ds.avgDmgToChamps).toLocaleString()} total avg`);
+            if (ds.avgPhysDmg != null)
+                lines.push(`  Physical:      ${Math.round(ds.avgPhysDmg).toLocaleString()}`);
+            if (ds.avgMagicDmg != null)
+                lines.push(`  Magic:         ${Math.round(ds.avgMagicDmg).toLocaleString()}`);
+            if (ds.avgDmgTaken != null)
+                lines.push(`Dmg taken:      ${Math.round(ds.avgDmgTaken).toLocaleString()} total avg`);
+        }
+        if (ds.avgCcSec != null) {
+            lines.push(`CC time dealt:  ${ds.avgCcSec.toFixed(1)}s avg`);
+        }
+
+        // ── Gold curve ───────────────────────────────────────────────────
+        if (ds.goldCurve.length) {
+            lines.push('');
+            lines.push('Gold curve vs enemy (avg):');
+            lines.push(
+                padLeft('Min', 4) + '  ' +
+                padLeft('Gold', 7) + '  ' +
+                padLeft('Enemy', 7) + '  ' +
+                padLeft('Diff', 7) + '  ' +
+                padLeft('N', 3)
+            );
+            lines.push('─'.repeat(38));
+            for (const pt of ds.goldCurve) {
+                const myGold   = Math.round(pt.avgGold);
+                const enemyGold = pt.avgDiff != null ? Math.round(pt.avgGold - pt.avgDiff) : null;
+                const diffVal  = pt.avgDiff != null ? Math.round(pt.avgDiff) : null;
+                const enemyStr = enemyGold != null ? padLeft(enemyGold, 7) : padLeft('?', 7);
+                const diffStr  = diffVal != null
+                    ? padLeft((diffVal >= 0 ? '+' : '') + diffVal, 7)
+                    : padLeft('?', 7);
+                lines.push(
+                    padLeft(pt.minute, 4) + '  ' +
+                    padLeft(myGold, 7) + '  ' +
+                    enemyStr + '  ' +
+                    diffStr + '  ' +
+                    padLeft(pt.games, 3)
+                );
+            }
+        }
+    }
+
+    return '```\n' + lines.join('\n') + '\n```' + `\nPage ${page + 1}/${totalPages}`;
+}
+
+async function sendDeepResults(channel, summonerName, rows, deepStatsMap, headerDesc, logger) {
+    // One champion+role bucket per page.
+    const totalPages = rows.length;
+    if (totalPages === 0) {
+        await channel.send('No data to display.');
+        return;
+    }
+
+    let page = 0;
+    const pagerId = `${Date.now()}_${Math.floor(Math.random() * 1_000_000)}`;
+
+    const buildEmbed = (p) => {
+        const embed = new EmbedBuilder()
+            .setTitle(`Champion Deep Stats: ${summonerName}`)
+            .setColor('#ff9900')
+            .setTimestamp();
+        const body = buildDeepPage(rows, deepStatsMap, p, totalPages);
+        if (p === 0) {
+            embed.setDescription(`${headerDesc}\n\n${body}`);
+        } else {
+            embed.setDescription(body);
+        }
+        return embed;
+    };
+
+    const listMessage = await channel.send({
+        embeds: [buildEmbed(page)],
+        components: buildPageButtons(pagerId, page, totalPages),
+    });
+
+    if (totalPages <= 1) return;
+
+    if (typeof listMessage?.createMessageComponentCollector !== 'function') {
+        logger.info('[champstats] Deep results: message does not support collectors; skipping pagination');
+        return;
+    }
+
+    const collector = listMessage.createMessageComponentCollector({
+        componentType: ComponentType.Button,
+        time: PAGINATOR_COLLECTOR_TIME_MS,
+    });
+
+    collector.on('collect', async (interaction) => {
+        if (!interaction.customId.endsWith(pagerId)) return;
+        if (interaction.customId.startsWith('CHAMPSTATS_PREV_')) {
+            page = Math.max(0, page - 1);
+        } else if (interaction.customId.startsWith('CHAMPSTATS_NEXT_')) {
+            page = Math.min(totalPages - 1, page + 1);
+        }
+        try {
+            await interaction.update({
+                embeds: [buildEmbed(page)],
+                components: buildPageButtons(pagerId, page, totalPages),
+            });
+        } catch (err) {
+            logger.error(`[champstats] Deep pagination update failed: ${err.message || err}`);
+        }
+    });
+
+    collector.on('end', async () => {
+        logger.info('[champstats] Deep paginator collector ended; disabling buttons');
+        try {
+            await listMessage.edit({
+                components: buildPageButtons(pagerId, page, totalPages).map((row) => {
+                    const disabled = new ActionRowBuilder();
+                    row.components.forEach((c) => {
+                        disabled.addComponents(ButtonBuilder.from(c).setDisabled(true));
+                    });
+                    return disabled;
+                }),
+            });
+        } catch (err) {
+            logger.error(`[champstats] Failed to disable deep paginator buttons: ${err.message || err}`);
+        }
+    });
+}
+
 // ── Command ─────────────────────────────────────────────────────────────────
 module.exports = {
     name: 'champstats',
     description: 'Per-champion stats (Draft/Solo/Flex only) — games, W-L, WR%, KDA, last played, split by role.',
-    syntax: 'champstats [riot_id] [game_count] [display: codeblock|embed]',
+    syntax: 'champstats [riot_id] [game_count] [role] [display: codeblock|embed|deep]',
     num_args: 1,
     args_to_lower: false, // preserve Riot ID casing (tag is case-sensitive-ish)
     needs_api: true,
@@ -650,12 +1035,13 @@ module.exports = {
         },
         {
             name: 'display',
-            description: 'Display mode: codeblock (default) or embed',
+            description: 'Display mode: codeblock (default), embed, or deep (timeline analysis)',
             type: 'STRING',
             required: false,
             choices: [
                 { name: 'codeblock', value: 'codeblock' },
                 { name: 'embed',     value: 'embed'     },
+                { name: 'deep',      value: 'deep'      },
             ],
         },
     ],
@@ -696,11 +1082,11 @@ module.exports = {
         // Also accept the canonical uppercase values the slash command sends.
         for (const v of Object.values(ROLE_FILTER_MAP)) ROLE_FILTER_MAP[v.toLowerCase()] = v;
 
-        // Parse trailing optional display mode ("codeblock" | "embed").
+        // Parse trailing optional display mode ("codeblock" | "embed" | "deep").
         let displayMode = 'codeblock';
         if (args.length > 0) {
             const tail = String(args[args.length - 1]).toLowerCase();
-            if (tail === 'embed' || tail === 'codeblock') {
+            if (tail === 'embed' || tail === 'codeblock' || tail === 'deep') {
                 displayMode = tail;
                 args.pop();
             }
@@ -851,15 +1237,42 @@ module.exports = {
             roleFilter
         );
 
-        // TODO(future): swap this paginator for an HTML-rendered infographic
+        // TODO(future): swap codeblock/embed/deep output for an HTML-rendered infographic
         // similar to modules/league/match-template-player-stats.html.
-        try {
-            await sendPaginatedResults(target, summonerName, rows, headerDesc, displayMode, this.logger);
-        } catch (err) {
-            this.logger.error('[champstats] Failed to send paginated results', {
-                message: err?.message,
+        if (displayMode === 'deep') {
+            await target.send(
+                `Fetching timeline data for **${collected.length}** match${collected.length !== 1 ? 'es' : ''}…` +
+                ` Each match requires an additional API call — this may take extra time.`
+            );
+            try {
+                await enrichWithTimelines(collected, this.logger);
+            } catch (err) {
+                this.logger.error('[champstats] Timeline enrichment failed', { message: err?.message });
+                await target.send(
+                    `Warning: timeline enrichment failed (${err?.message || 'unknown error'}). ` +
+                    `Showing available data only.`
+                );
+            }
+
+            const deepStatsMap = buildDeepStatsMap(collected, rows);
+            this.logger.info('[champstats] Deep stats map built', {
+                buckets: deepStatsMap.size,
+                withData: [...deepStatsMap.values()].filter(Boolean).length,
             });
-            await target.send(`Error rendering results: ${err?.message || 'unknown error'}`);
+
+            try {
+                await sendDeepResults(target, summonerName, rows, deepStatsMap, headerDesc, this.logger);
+            } catch (err) {
+                this.logger.error('[champstats] Failed to send deep results', { message: err?.message });
+                await target.send(`Error rendering deep results: ${err?.message || 'unknown error'}`);
+            }
+        } else {
+            try {
+                await sendPaginatedResults(target, summonerName, rows, headerDesc, displayMode, this.logger);
+            } catch (err) {
+                this.logger.error('[champstats] Failed to send paginated results', { message: err?.message });
+                await target.send(`Error rendering results: ${err?.message || 'unknown error'}`);
+            }
         }
     },
 };
