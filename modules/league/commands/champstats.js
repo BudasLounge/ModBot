@@ -1056,10 +1056,16 @@ async function getRuneIconMap(ver, logger) {
         );
         const map = new Map();
         for (const style of (res.data || [])) {
-            map.set(style.id, `https://ddragon.leagueoflegends.com/cdn/img/${style.icon}`);
+            map.set(style.id, {
+                iconUrl: `https://ddragon.leagueoflegends.com/cdn/img/${style.icon}`,
+                name: style.name,
+            });
             for (const slot of (style.slots || [])) {
                 for (const rune of (slot.runes || [])) {
-                    map.set(rune.id, `https://ddragon.leagueoflegends.com/cdn/img/${rune.icon}`);
+                    map.set(rune.id, {
+                        iconUrl: `https://ddragon.leagueoflegends.com/cdn/img/${rune.icon}`,
+                        name: rune.name,
+                    });
                 }
             }
         }
@@ -1111,7 +1117,9 @@ function buildInsightsData(collected, rowOrder) {
         }
 
         // ── Rune WR ───────────────────────────────────────────────────────
+        const primaryStyleMap = new Map();
         const keystoneMap     = new Map();
+        const primaryPerkMap  = new Map();
         const secStyleMap     = new Map();
         const secPerkMap      = new Map();
 
@@ -1121,11 +1129,28 @@ function buildInsightsData(collected, rowOrder) {
             const primary = perks.styles.find((s) => s.description === 'primaryStyle');
             const sub     = perks.styles.find((s) => s.description === 'subStyle');
 
-            if (primary?.selections?.[0]) {
-                const id = primary.selections[0].perk;
-                if (!keystoneMap.has(id)) keystoneMap.set(id, { perkId: id, wins: 0, losses: 0 });
-                const e = keystoneMap.get(id);
-                if (m.participant.win) e.wins++; else e.losses++;
+            if (primary) {
+                // Primary tree (style)
+                const styleId = primary.style;
+                if (!primaryStyleMap.has(styleId)) primaryStyleMap.set(styleId, { styleId, wins: 0, losses: 0 });
+                const se = primaryStyleMap.get(styleId);
+                if (m.participant.win) se.wins++; else se.losses++;
+
+                // Keystone (slot 0)
+                if (primary.selections?.[0]) {
+                    const id = primary.selections[0].perk;
+                    if (!keystoneMap.has(id)) keystoneMap.set(id, { perkId: id, wins: 0, losses: 0 });
+                    const e = keystoneMap.get(id);
+                    if (m.participant.win) e.wins++; else e.losses++;
+                }
+
+                // Non-keystone primary runes (slots 1-3)
+                for (const sel of (primary.selections || []).slice(1)) {
+                    const pid = sel.perk;
+                    if (!primaryPerkMap.has(pid)) primaryPerkMap.set(pid, { perkId: pid, wins: 0, losses: 0 });
+                    const pe = primaryPerkMap.get(pid);
+                    if (m.participant.win) pe.wins++; else pe.losses++;
+                }
             }
 
             if (sub) {
@@ -1170,11 +1195,13 @@ function buildInsightsData(collected, rowOrder) {
             n:    items.length,
             wins: items.filter((m) => m.participant.win).length,
             byLength: byLength.filter((b) => b.wins + b.losses > 0),
-            keystones:  sortByGames([...keystoneMap.values()]),
-            secStyles:  sortByGames([...secStyleMap.values()]),
-            secPerks:   sortByGames([...secPerkMap.values()]),
-            vsChampions:   sortByGames([...vsMap.values()]).slice(0, 20),
-            withChampions: sortByGames([...withMap.values()]).slice(0, 20),
+            primaryStyles: sortByGames([...primaryStyleMap.values()]),
+            keystones:     sortByGames([...keystoneMap.values()]),
+            primaryPerks:  sortByGames([...primaryPerkMap.values()]),
+            secStyles:     sortByGames([...secStyleMap.values()]),
+            secPerks:      sortByGames([...secPerkMap.values()]),
+            vsChampions:   sortByGames([...vsMap.values()]).slice(0, 15),
+            withChampions: sortByGames([...withMap.values()]).slice(0, 15),
         });
     }
     return result;
@@ -1800,51 +1827,54 @@ async function buildInsightsRenderContext(row, insights, summonerName, ver, logg
     const fmtWr = (wins, total) =>
         total === 0 ? '—' : `${((wins / total) * 100).toFixed(1)}%`;
 
-    // ── Game length ───────────────────────────────────────────────────────
-    const maxTotal = Math.max(1, ...(insights?.byLength || []).map((b) => b.wins + b.losses));
+    // ── Game length — WR% progress bar ───────────────────────────────────
     const byLength = (insights?.byLength || []).map((b) => {
         const total = b.wins + b.losses;
+        const wr    = total > 0 ? b.wins / total : null;
         return {
-            label:   b.label,
-            wins:    b.wins,
-            losses:  b.losses,
+            label:     b.label,
+            wins:      b.wins,
+            losses:    b.losses,
             total,
-            wr:      fmtWr(b.wins, total),
-            wrColor: wrColor(b.wins, total),
-            // bar widths as % of the longest bucket's total
-            barWinPct:  ((b.wins   / maxTotal) * 100).toFixed(1),
-            barLossPct: ((b.losses / maxTotal) * 100).toFixed(1),
+            wr:        fmtWr(b.wins, total),
+            wrColor:   wrColor(b.wins, total),
+            wrBarPct:  wr != null ? (wr * 100).toFixed(1) : '0',
         };
     });
 
-    // ── Runes ─────────────────────────────────────────────────────────────
+    // ── Runes — lookup name + icon from data map ──────────────────────────
     const runeRow = (r) => {
         const total = r.wins + r.losses;
+        const data  = runeMap.get(r.perkId ?? r.styleId);
         return {
-            iconUrl: runeMap.get(r.perkId ?? r.styleId) || null,
+            iconUrl: data?.iconUrl || null,
+            name:    data?.name   || '—',
             wins:    r.wins,
             losses:  r.losses,
-            total,
             wr:      fmtWr(r.wins, total),
             wrColor: wrColor(r.wins, total),
         };
     };
 
-    const keystones = (insights?.keystones || []).map(runeRow);
-    const secStyles = (insights?.secStyles  || []).map(runeRow);
-    const secPerks  = (insights?.secPerks   || []).map(runeRow);
+    const primaryStyles = (insights?.primaryStyles || []).map(runeRow);
+    const keystones     = (insights?.keystones     || []).map(runeRow);
+    const primaryPerks  = (insights?.primaryPerks  || []).map(runeRow);
+    const secStyles     = (insights?.secStyles     || []).map(runeRow);
+    const allSecPerks   = (insights?.secPerks      || []).map(runeRow);
+    // Split secondary runes into two columns if more than 7
+    const secPerks1 = allSecPerks.slice(0, 7);
+    const secPerks2 = allSecPerks.length > 7 ? allSecPerks.slice(7) : null;
 
     // ── vs / with champion ────────────────────────────────────────────────
     const champRow = (c) => {
         const total = c.wins + c.losses;
         return {
-            iconUrl: `${CDN}/champion/${fixChampNameForCdn(c.champion)}.png`,
+            iconUrl:  `${CDN}/champion/${fixChampNameForCdn(c.champion)}.png`,
             champion: c.champion,
-            wins:    c.wins,
-            losses:  c.losses,
-            total,
-            wr:      fmtWr(c.wins, total),
-            wrColor: wrColor(c.wins, total),
+            wins:     c.wins,
+            losses:   c.losses,
+            wr:       fmtWr(c.wins, total),
+            wrColor:  wrColor(c.wins, total),
         };
     };
 
@@ -1864,9 +1894,13 @@ async function buildInsightsRenderContext(row, insights, summonerName, ver, logg
         kdaText:      `${row.kda.toFixed(2)} KDA`,
         kdaSubText:   `${(row.kills   / Math.max(1, row.games)).toFixed(1)} / ${(row.deaths  / Math.max(1, row.games)).toFixed(1)} / ${(row.assists / Math.max(1, row.games)).toFixed(1)} avg`,
         byLength,
+        primaryStyles,
         keystones,
+        primaryPerks,
         secStyles,
-        secPerks,
+        secPerks1,
+        secPerks2,
+        hasSecPerks2: secPerks2 !== null,
         vsChampions,
         withChampions,
         bucketKey: `${row.champion} / ${row.roleLabel}`,

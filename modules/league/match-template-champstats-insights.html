@@ -15,6 +15,367 @@
       padding: 32px 40px;
     }
 
+    /* ── Header ────────────────────────────────────────── */
+    .header {
+      display: flex; align-items: center; gap: 22px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #1e2328;
+      margin-bottom: 22px;
+    }
+    .champ-icon {
+      width: 104px; height: 104px; border-radius: 50%;
+      border: 3px solid #c8aa6e;
+      box-shadow: 0 0 14px rgba(200,170,110,0.25);
+      flex-shrink: 0;
+    }
+    .head-text { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+    .head-title { font-size: 34px; font-weight: 700; color: #fff; letter-spacing: 1px; }
+    .head-role  { font-size: 18px; font-weight: 500; color: #c8aa6e; text-transform: uppercase; letter-spacing: 2px; }
+    .head-meta  { display: flex; gap: 20px; font-size: 16px; color: #939a9e; margin-top: 6px; }
+    .head-meta b { color: #fff; font-weight: 700; }
+    .pos { color: #0acbe6; }
+    .head-side { text-align: right; font-size: 14px; color: #5c5b57; }
+    .head-side .summoner-name { font-size: 20px; color: #c8aa6e; font-weight: 700; margin-bottom: 6px; }
+
+    /* ── Section heading ─────────────────────────────── */
+    .section-h {
+      display: flex; align-items: center; gap: 10px;
+      margin: 6px 0 12px;
+      font-size: 14px; font-weight: 700; color: #c8aa6e;
+      letter-spacing: 1.5px; text-transform: uppercase;
+    }
+    .section-h::after { content: ''; flex: 1; height: 1px; background: #1e2328; }
+
+    /* ── Game length WR% bars ────────────────────────── */
+    .length-chart {
+      background: #0f1216;
+      border: 1px solid #1e2328;
+      border-radius: 4px;
+      padding: 16px 20px;
+      margin-bottom: 22px;
+    }
+    .length-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 9px;
+    }
+    .length-row:last-child { margin-bottom: 0; }
+    .length-label {
+      width: 86px;
+      font-size: 13px;
+      color: #a09b8c;
+      text-align: right;
+      flex-shrink: 0;
+    }
+    /* The track spans the remaining width; 50% mark is in the middle */
+    .length-track {
+      flex: 1;
+      height: 22px;
+      background: #141619;
+      border: 1px solid #1e2328;
+      border-radius: 3px;
+      position: relative;
+      overflow: hidden;
+    }
+    /* 50% reference line */
+    .length-track::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 0; bottom: 0;
+      width: 1px;
+      background: #2d3640;
+    }
+    .length-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.2s;
+    }
+    .length-stats {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+      width: 160px;
+    }
+    .wr-badge {
+      font-size: 14px;
+      font-weight: 700;
+      width: 56px;
+      text-align: right;
+    }
+    .wl-text { font-size: 12px; color: #5c5b57; }
+    /* 50% label under track centre */
+    .length-axis {
+      display: flex;
+      padding-left: 102px; /* label width + gap */
+      padding-right: 174px; /* stats width */
+      margin-top: 4px;
+      margin-bottom: 8px;
+      font-size: 11px;
+      color: #3a4450;
+      justify-content: center;
+    }
+
+    /* ── Layout grids ─────────────────────────────────── */
+    .five-col  { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 10px; }
+    .two-col   { display: grid; grid-template-columns: 1fr 1fr;         gap: 14px; margin-bottom: 22px; }
+    .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr;     gap: 14px; margin-bottom: 22px; }
+
+    /* ── Table card ───────────────────────────────────── */
+    .table-card {
+      background: #0f1216;
+      border: 1px solid #1e2328;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .table-card .card-title {
+      padding: 10px 14px;
+      font-size: 12px; font-weight: 700;
+      letter-spacing: 1.2px; text-transform: uppercase;
+      color: #c8aa6e;
+      background: #0a0e13;
+      border-bottom: 1px solid #1e2328;
+    }
+    .table-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 12px;
+      border-bottom: 1px solid #12181e;
+    }
+    .table-row:last-child { border-bottom: none; }
+    .table-row:nth-child(even) { background: rgba(255,255,255,0.018); }
+    .table-row img {
+      width: 32px; height: 32px;
+      border-radius: 4px;
+      background: #141619; border: 1px solid #1e2328;
+      flex-shrink: 0;
+    }
+    .table-row img.rune-icon { border-radius: 50%; border-color: #2a2d32; }
+    .row-name { flex: 1; font-size: 13px; color: #c9d1d9; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .row-wl   { font-size: 12px; color: #5c5b57; white-space: nowrap; }
+    .row-wr   { font-size: 13px; font-weight: 700; width: 52px; text-align: right; flex-shrink: 0; }
+    .no-data  { padding: 18px 14px; font-size: 13px; color: #5c5b57; font-style: italic; text-align: center; }
+
+    .legend-note {
+      margin-top: 8px; margin-bottom: 6px;
+      font-size: 12px; color: #5c5b57; font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── HEADER ────────────────────────────────────────── -->
+  <div class="header">
+    <img src="{{championIcon}}" class="champ-icon"
+         onerror="this.style.background='#1e2328';this.removeAttribute('src')">
+    <div class="head-text">
+      <div class="head-title">{{championName}}</div>
+      <div class="head-role">{{roleLabel}}</div>
+      <div class="head-meta">
+        <span><b>{{gamesText}}</b></span>
+        <span>•</span>
+        <span><b>{{wlText}}</b></span>
+        <span>•</span>
+        <span class="pos"><b>{{wrText}}</b></span>
+        <span>•</span>
+        <span><b>{{kdaText}}</b></span>
+        <span style="color:#5c5b57">({{kdaSubText}})</span>
+      </div>
+    </div>
+    <div class="head-side">
+      <div class="summoner-name">{{summonerName}}</div>
+      <div>Insights breakdown</div>
+    </div>
+  </div>
+
+  <!-- ── WINRATE vs GAME LENGTH ───────────────────────── -->
+  <div class="section-h">Winrate vs Game Length</div>
+  <div class="length-chart">
+    {{#if byLength}}
+      {{#each byLength}}
+        <div class="length-row">
+          <div class="length-label">{{label}}</div>
+          <div class="length-track">
+            <div class="length-fill" style="width:{{wrBarPct}}%;background:{{wrColor}}"></div>
+          </div>
+          <div class="length-stats">
+            <span class="wr-badge" style="color:{{wrColor}}">{{wr}}</span>
+            <span class="wl-text">{{wins}}W–{{losses}}L</span>
+          </div>
+        </div>
+      {{/each}}
+      <div class="length-axis"><span>0%</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span>50%</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span>100%</span></div>
+    {{else}}
+      <div class="no-data">No game length data available.</div>
+    {{/if}}
+  </div>
+
+  <!-- ── RUNE WINRATES ──────────────────────────────────── -->
+  <div class="section-h">Rune Winrates</div>
+
+  <!-- Row 1: Primary tree | Keystone | Sec tree -->
+  <div class="three-col" style="margin-bottom:10px">
+
+    <div class="table-card">
+      <div class="card-title">Primary Tree</div>
+      {{#if primaryStyles}}
+        {{#each primaryStyles}}
+          <div class="table-row">
+            <img src="{{iconUrl}}" class="rune-icon"
+                 onerror="this.style.background='#1e2328';this.removeAttribute('src')">
+            <span class="row-name">{{name}}</span>
+            <span class="row-wl">{{wins}}W–{{losses}}L</span>
+            <span class="row-wr" style="color:{{wrColor}}">{{wr}}</span>
+          </div>
+        {{/each}}
+      {{else}}
+        <div class="no-data">No data.</div>
+      {{/if}}
+    </div>
+
+    <div class="table-card">
+      <div class="card-title">Keystone</div>
+      {{#if keystones}}
+        {{#each keystones}}
+          <div class="table-row">
+            <img src="{{iconUrl}}" class="rune-icon"
+                 onerror="this.style.background='#1e2328';this.removeAttribute('src')">
+            <span class="row-name">{{name}}</span>
+            <span class="row-wl">{{wins}}W–{{losses}}L</span>
+            <span class="row-wr" style="color:{{wrColor}}">{{wr}}</span>
+          </div>
+        {{/each}}
+      {{else}}
+        <div class="no-data">No data.</div>
+      {{/if}}
+    </div>
+
+    <div class="table-card">
+      <div class="card-title">Secondary Tree</div>
+      {{#if secStyles}}
+        {{#each secStyles}}
+          <div class="table-row">
+            <img src="{{iconUrl}}" class="rune-icon"
+                 onerror="this.style.background='#1e2328';this.removeAttribute('src')">
+            <span class="row-name">{{name}}</span>
+            <span class="row-wl">{{wins}}W–{{losses}}L</span>
+            <span class="row-wr" style="color:{{wrColor}}">{{wr}}</span>
+          </div>
+        {{/each}}
+      {{else}}
+        <div class="no-data">No data.</div>
+      {{/if}}
+    </div>
+
+  </div>
+
+  <!-- Row 2: Primary runes | Sec runes (+ overflow col) -->
+  {{#if hasSecPerks2}}
+  <div class="three-col" style="margin-bottom:22px">
+  {{else}}
+  <div class="two-col">
+  {{/if}}
+
+    <div class="table-card">
+      <div class="card-title">Primary Runes</div>
+      {{#if primaryPerks}}
+        {{#each primaryPerks}}
+          <div class="table-row">
+            <img src="{{iconUrl}}" class="rune-icon"
+                 onerror="this.style.background='#1e2328';this.removeAttribute('src')">
+            <span class="row-name">{{name}}</span>
+            <span class="row-wl">{{wins}}W–{{losses}}L</span>
+            <span class="row-wr" style="color:{{wrColor}}">{{wr}}</span>
+          </div>
+        {{/each}}
+      {{else}}
+        <div class="no-data">No data.</div>
+      {{/if}}
+    </div>
+
+    <div class="table-card">
+      <div class="card-title">Secondary Runes</div>
+      {{#if secPerks1}}
+        {{#each secPerks1}}
+          <div class="table-row">
+            <img src="{{iconUrl}}" class="rune-icon"
+                 onerror="this.style.background='#1e2328';this.removeAttribute('src')">
+            <span class="row-name">{{name}}</span>
+            <span class="row-wl">{{wins}}W–{{losses}}L</span>
+            <span class="row-wr" style="color:{{wrColor}}">{{wr}}</span>
+          </div>
+        {{/each}}
+      {{else}}
+        <div class="no-data">No data.</div>
+      {{/if}}
+    </div>
+
+    {{#if hasSecPerks2}}
+    <div class="table-card">
+      <div class="card-title">Secondary Runes (cont.)</div>
+      {{#each secPerks2}}
+        <div class="table-row">
+          <img src="{{iconUrl}}" class="rune-icon"
+               onerror="this.style.background='#1e2328';this.removeAttribute('src')">
+          <span class="row-name">{{name}}</span>
+          <span class="row-wl">{{wins}}W–{{losses}}L</span>
+          <span class="row-wr" style="color:{{wrColor}}">{{wr}}</span>
+        </div>
+      {{/each}}
+    </div>
+    {{/if}}
+
+  </div>
+
+  <!-- ── CHAMPION MATCHUP WINRATES ───────────────────────── -->
+  <div class="section-h">Champion Matchup Winrates</div>
+  <div class="two-col">
+
+    <div class="table-card">
+      <div class="card-title">vs Champion (enemies)</div>
+      {{#if vsChampions}}
+        {{#each vsChampions}}
+          <div class="table-row">
+            <img src="{{iconUrl}}" onerror="this.style.background='#1e2328';this.removeAttribute('src')">
+            <span class="row-name">{{champion}}</span>
+            <span class="row-wl">{{wins}}W–{{losses}}L</span>
+            <span class="row-wr" style="color:{{wrColor}}">{{wr}}</span>
+          </div>
+        {{/each}}
+      {{else}}
+        <div class="no-data">No opponent data.</div>
+      {{/if}}
+    </div>
+
+    <div class="table-card">
+      <div class="card-title">with Champion (allies)</div>
+      {{#if withChampions}}
+        {{#each withChampions}}
+          <div class="table-row">
+            <img src="{{iconUrl}}" onerror="this.style.background='#1e2328';this.removeAttribute('src')">
+            <span class="row-name">{{champion}}</span>
+            <span class="row-wl">{{wins}}W–{{losses}}L</span>
+            <span class="row-wr" style="color:{{wrColor}}">{{wr}}</span>
+          </div>
+        {{/each}}
+      {{else}}
+        <div class="no-data">No ally data.</div>
+      {{/if}}
+    </div>
+
+  </div>
+
+  <div class="legend-note">
+    WR color: <span style="color:#0acbe6">≥60%</span> &middot; <span style="color:#5ad8ec">50–59%</span> &middot; <span style="color:#f08a99">45–49%</span> &middot; <span style="color:#e84057">&lt;45%</span> &middot; <span style="color:#5c5b57">small sample (&lt;3 games)</span>.
+    vs/with champion includes all members of the respective team per game. Top 15 by games shown.
+  </div>
+
+</body>
+</html>
+
     /* ── Header (same as deep template) ──────────────────── */
     .header {
       display: flex;
