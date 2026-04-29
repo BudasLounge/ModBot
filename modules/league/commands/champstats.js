@@ -321,6 +321,7 @@ async function collectAllowedMatches(puuid, targetCount, logger) {
                 gameDurationSec: match.info.gameDuration ?? null,
                 participant,
                 participantId: participant.participantId,
+                allParticipants: match.info.participants,
                 enemyParticipantId: enemyParticipantObj?.participantId ?? null,
                 enemyParticipant: enemyParticipantObj,
                 myTeam,
@@ -1043,6 +1044,142 @@ function buildDeepStatsMap(collected, rowOrder) {
     return result;
 }
 
+// ── Insights aggregation ─────────────────────────────────────────────────────
+
+let _runeIconMap = null;
+async function getRuneIconMap(ver, logger) {
+    if (_runeIconMap) return _runeIconMap;
+    try {
+        const res = await axios.get(
+            `https://ddragon.leagueoflegends.com/cdn/${ver}/data/en_US/runesReforged.json`,
+            { timeout: 5000 }
+        );
+        const map = new Map();
+        for (const style of (res.data || [])) {
+            map.set(style.id, `https://ddragon.leagueoflegends.com/cdn/img/${style.icon}`);
+            for (const slot of (style.slots || [])) {
+                for (const rune of (slot.runes || [])) {
+                    map.set(rune.id, `https://ddragon.leagueoflegends.com/cdn/img/${rune.icon}`);
+                }
+            }
+        }
+        _runeIconMap = map;
+        return map;
+    } catch (err) {
+        logger.error(`[champstats] Rune metadata fetch failed: ${err.message}`);
+        return new Map();
+    }
+}
+
+const GAME_LENGTH_BUCKETS = [
+    { label: '< 20 min',  min: 0,  max: 20   },
+    { label: '20–25 min', min: 20, max: 25   },
+    { label: '25–30 min', min: 25, max: 30   },
+    { label: '30–35 min', min: 30, max: 35   },
+    { label: '35–40 min', min: 35, max: 40   },
+    { label: '40–45 min', min: 40, max: 45   },
+    { label: '45+ min',   min: 45, max: Infinity },
+];
+
+function buildInsightsData(collected, rowOrder) {
+    // Pre-bucket collected items by champion+role key
+    const buckets = new Map();
+    for (const item of collected) {
+        const role = resolveRole(item.participant);
+        const key = `${item.participant.championName}|${role}`;
+        if (!buckets.has(key)) buckets.set(key, []);
+        buckets.get(key).push(item);
+    }
+
+    const sortByGames = (arr) => arr.sort((a, b) => (b.wins + b.losses) - (a.wins + a.losses));
+
+    const result = new Map();
+    for (const row of rowOrder) {
+        const key = `${row.champion}|${row.role}`;
+        const items = buckets.get(key) || [];
+        if (!items.length) { result.set(key, null); continue; }
+
+        // ── Game length WR ────────────────────────────────────────────────
+        const byLength = GAME_LENGTH_BUCKETS.map((b) => ({ label: b.label, wins: 0, losses: 0 }));
+        for (const m of items) {
+            const mins = (m.gameDurationSec || 0) / 60;
+            const bi = GAME_LENGTH_BUCKETS.findIndex((b) => mins >= b.min && mins < b.max);
+            if (bi >= 0) {
+                if (m.participant.win) byLength[bi].wins++;
+                else byLength[bi].losses++;
+            }
+        }
+
+        // ── Rune WR ───────────────────────────────────────────────────────
+        const keystoneMap     = new Map();
+        const secStyleMap     = new Map();
+        const secPerkMap      = new Map();
+
+        for (const m of items) {
+            const perks = m.participant.perks;
+            if (!perks?.styles) continue;
+            const primary = perks.styles.find((s) => s.description === 'primaryStyle');
+            const sub     = perks.styles.find((s) => s.description === 'subStyle');
+
+            if (primary?.selections?.[0]) {
+                const id = primary.selections[0].perk;
+                if (!keystoneMap.has(id)) keystoneMap.set(id, { perkId: id, wins: 0, losses: 0 });
+                const e = keystoneMap.get(id);
+                if (m.participant.win) e.wins++; else e.losses++;
+            }
+
+            if (sub) {
+                const id = sub.style;
+                if (!secStyleMap.has(id)) secStyleMap.set(id, { styleId: id, wins: 0, losses: 0 });
+                const e = secStyleMap.get(id);
+                if (m.participant.win) e.wins++; else e.losses++;
+
+                for (const sel of (sub.selections || [])) {
+                    const pid = sel.perk;
+                    if (!secPerkMap.has(pid)) secPerkMap.set(pid, { perkId: pid, wins: 0, losses: 0 });
+                    const pe = secPerkMap.get(pid);
+                    if (m.participant.win) pe.wins++; else pe.losses++;
+                }
+            }
+        }
+
+        // ── Vs / with champion WR ─────────────────────────────────────────
+        const vsMap   = new Map();
+        const withMap = new Map();
+
+        for (const m of items) {
+            const all = m.allParticipants || [];
+            const enemies = all.filter((p) => p.teamId !== m.participant.teamId);
+            const allies  = all.filter((p) => p.teamId === m.participant.teamId && p.puuid !== m.participant.puuid);
+
+            for (const p of enemies) {
+                if (!p.championName) continue;
+                if (!vsMap.has(p.championName)) vsMap.set(p.championName, { champion: p.championName, wins: 0, losses: 0 });
+                const e = vsMap.get(p.championName);
+                if (m.participant.win) e.wins++; else e.losses++;
+            }
+            for (const p of allies) {
+                if (!p.championName) continue;
+                if (!withMap.has(p.championName)) withMap.set(p.championName, { champion: p.championName, wins: 0, losses: 0 });
+                const e = withMap.get(p.championName);
+                if (m.participant.win) e.wins++; else e.losses++;
+            }
+        }
+
+        result.set(key, {
+            n:    items.length,
+            wins: items.filter((m) => m.participant.win).length,
+            byLength: byLength.filter((b) => b.wins + b.losses > 0),
+            keystones:  sortByGames([...keystoneMap.values()]),
+            secStyles:  sortByGames([...secStyleMap.values()]),
+            secPerks:   sortByGames([...secPerkMap.values()]),
+            vsChampions:   sortByGames([...vsMap.values()]).slice(0, 24),
+            withChampions: sortByGames([...withMap.values()]).slice(0, 24),
+        });
+    }
+    return result;
+}
+
 // ── Deep rendering (image) ──────────────────────────────────────────────────
 
 // Mirror of the helpers in events.js so we don't introduce a cross-module dep.
@@ -1642,11 +1779,209 @@ async function sendDeepResults(channel, summonerName, rows, deepStatsMap, header
     });
 }
 
+// ── Insights rendering (image) ───────────────────────────────────────────────
+
+function wrColor(wins, total) {
+    if (total < 3) return '#5c5b57';
+    const wr = wins / total;
+    if (wr >= 0.6)  return '#0acbe6';
+    if (wr >= 0.5)  return '#5ad8ec';
+    if (wr >= 0.45) return '#f08a99';
+    return '#e84057';
+}
+
+async function buildInsightsRenderContext(row, insights, summonerName, ver, logger) {
+    const CDN     = `https://ddragon.leagueoflegends.com/cdn/${ver}/img`;
+    const runeMap = await getRuneIconMap(ver, logger);
+
+    const fmtWr = (wins, total) =>
+        total === 0 ? '—' : `${((wins / total) * 100).toFixed(1)}%`;
+
+    // ── Game length ───────────────────────────────────────────────────────
+    const maxTotal = Math.max(1, ...(insights?.byLength || []).map((b) => b.wins + b.losses));
+    const byLength = (insights?.byLength || []).map((b) => {
+        const total = b.wins + b.losses;
+        return {
+            label:   b.label,
+            wins:    b.wins,
+            losses:  b.losses,
+            total,
+            wr:      fmtWr(b.wins, total),
+            wrColor: wrColor(b.wins, total),
+            // bar widths as % of the longest bucket's total
+            barWinPct:  ((b.wins   / maxTotal) * 100).toFixed(1),
+            barLossPct: ((b.losses / maxTotal) * 100).toFixed(1),
+        };
+    });
+
+    // ── Runes ─────────────────────────────────────────────────────────────
+    const runeRow = (r) => {
+        const total = r.wins + r.losses;
+        return {
+            iconUrl: runeMap.get(r.perkId ?? r.styleId) || null,
+            wins:    r.wins,
+            losses:  r.losses,
+            total,
+            wr:      fmtWr(r.wins, total),
+            wrColor: wrColor(r.wins, total),
+        };
+    };
+
+    const keystones = (insights?.keystones || []).map(runeRow);
+    const secStyles = (insights?.secStyles  || []).map(runeRow);
+    const secPerks  = (insights?.secPerks   || []).map(runeRow);
+
+    // ── vs / with champion ────────────────────────────────────────────────
+    const champRow = (c) => {
+        const total = c.wins + c.losses;
+        return {
+            iconUrl: `${CDN}/champion/${fixChampNameForCdn(c.champion)}.png`,
+            champion: c.champion,
+            wins:    c.wins,
+            losses:  c.losses,
+            total,
+            wr:      fmtWr(c.wins, total),
+            wrColor: wrColor(c.wins, total),
+        };
+    };
+
+    const vsChampions   = (insights?.vsChampions   || []).map(champRow);
+    const withChampions = (insights?.withChampions || []).map(champRow);
+
+    const championIcon = `${CDN}/champion/${fixChampNameForCdn(row.champion)}.png`;
+
+    return {
+        summonerName,
+        championIcon,
+        championName: row.champion,
+        roleLabel:    row.roleLabel,
+        gamesText:    `${row.games} games`,
+        wlText:       `${row.wins}W-${row.losses}L`,
+        wrText:       `${row.winRate.toFixed(1)}% WR`,
+        kdaText:      `${row.kda.toFixed(2)} KDA`,
+        kdaSubText:   `${(row.kills   / Math.max(1, row.games)).toFixed(1)} / ${(row.deaths  / Math.max(1, row.games)).toFixed(1)} / ${(row.assists / Math.max(1, row.games)).toFixed(1)} avg`,
+        byLength,
+        keystones,
+        secStyles,
+        secPerks,
+        vsChampions,
+        withChampions,
+        bucketKey: `${row.champion} / ${row.roleLabel}`,
+    };
+}
+
+let _insightsTemplateCache = null;
+function loadInsightsTemplate() {
+    if (_insightsTemplateCache) return _insightsTemplateCache;
+    const p = path.join(__dirname, '..', 'match-template-champstats-insights.html');
+    _insightsTemplateCache = fs.readFileSync(p, 'utf8');
+    return _insightsTemplateCache;
+}
+
+async function renderInsightsImage(row, insights, summonerName, logger) {
+    const ver = await getDeepDDVersion(logger);
+    const ctx = await buildInsightsRenderContext(row, insights, summonerName, ver, logger);
+    const template = loadInsightsTemplate();
+    logger.info('[champstats] Rendering insights image', {
+        bucket: ctx.bucketKey,
+        byLengthBuckets: ctx.byLength.length,
+        keystones: ctx.keystones.length,
+        vsChampions: ctx.vsChampions.length,
+        withChampions: ctx.withChampions.length,
+    });
+    return nodeHtmlToImage({
+        html: template,
+        content: ctx,
+        puppeteerArgs: { args: ['--no-sandbox', '--disable-setuid-sandbox'] },
+    });
+}
+
+async function sendInsightsResults(channel, summonerName, rows, insightsMap, headerDesc, logger) {
+    const totalPages = rows.length;
+    if (totalPages === 0) {
+        await channel.send('No data to display.');
+        return;
+    }
+
+    let page = 0;
+    const pagerId = `INS_${Date.now()}_${Math.floor(Math.random() * 1_000_000)}`;
+    const imageCache = new Map();
+
+    const getImage = async (p) => {
+        if (imageCache.has(p)) return imageCache.get(p);
+        const r = rows[p];
+        const buf = await renderInsightsImage(r, insightsMap.get(`${r.champion}|${r.role}`), summonerName, logger);
+        imageCache.set(p, buf);
+        return buf;
+    };
+
+    let initialBuf;
+    try {
+        initialBuf = await getImage(page);
+    } catch (err) {
+        logger.error('[champstats] Initial insights render failed', { message: err?.message, stack: err?.stack });
+        await channel.send(`Failed to render insights image: ${err?.message || 'unknown error'}`);
+        return;
+    }
+
+    const attach  = (buf, p) => new AttachmentBuilder(buf, { name: `champstats-insights-${p + 1}.png` });
+    const headerLine = (p) =>
+        (p === 0 && headerDesc ? headerDesc + '\n\n' : '') +
+        `Insights page ${p + 1} / ${totalPages} — ${rows[p].champion} / ${rows[p].roleLabel}`;
+
+    const msg = await channel.send({
+        content: headerLine(page),
+        files: [attach(initialBuf, page)],
+        components: buildPageButtons(pagerId, page, totalPages),
+    });
+
+    if (totalPages <= 1) return;
+    if (typeof msg?.createMessageComponentCollector !== 'function') return;
+
+    const collector = msg.createMessageComponentCollector({
+        componentType: ComponentType.Button,
+        time: PAGINATOR_COLLECTOR_TIME_MS,
+    });
+
+    collector.on('collect', async (interaction) => {
+        if (!interaction.customId.endsWith(pagerId)) return;
+        const prev = page;
+        if (interaction.customId.startsWith('CHAMPSTATS_PREV_')) page = Math.max(0, page - 1);
+        else if (interaction.customId.startsWith('CHAMPSTATS_NEXT_')) page = Math.min(totalPages - 1, page + 1);
+        if (page === prev) { try { await interaction.deferUpdate(); } catch (_) {} return; }
+
+        try {
+            await interaction.deferUpdate();
+            const buf = await getImage(page);
+            await interaction.editReply({
+                content: headerLine(page),
+                files: [attach(buf, page)],
+                attachments: [],
+                components: buildPageButtons(pagerId, page, totalPages),
+            });
+        } catch (err) {
+            logger.error(`[champstats] Insights pagination failed: ${err.message || err}`);
+        }
+    });
+
+    collector.on('end', async () => {
+        try {
+            await msg.edit({
+                components: buildPageButtons(pagerId, page, totalPages).map((row) => {
+                    const disabled = new ActionRowBuilder();
+                    row.components.forEach((c) => disabled.addComponents(ButtonBuilder.from(c).setDisabled(true)));
+                    return disabled;
+                }),
+            });
+        } catch (_) {}
+    });
+}
+
 // ── Command ─────────────────────────────────────────────────────────────────
 module.exports = {
     name: 'champstats',
     description: 'Per-champion stats (Draft/Solo/Flex only) — games, W-L, WR%, KDA, last played, split by role.',
-    syntax: 'champstats [riot_id] [game_count] [role] [display: codeblock|embed|deep]',
+    syntax: 'champstats [riot_id] [game_count] [role] [display: codeblock|embed|deep|insights]',
     num_args: 1,
     args_to_lower: false, // preserve Riot ID casing (tag is case-sensitive-ish)
     needs_api: true,
@@ -1679,13 +2014,14 @@ module.exports = {
         },
         {
             name: 'display',
-            description: 'Display mode: codeblock (default), embed, or deep (timeline analysis)',
+            description: 'Display mode: codeblock (default), embed, deep (timeline analysis), or insights (WR breakdowns)',
             type: 'STRING',
             required: false,
             choices: [
                 { name: 'codeblock', value: 'codeblock' },
-                { name: 'embed',     value: 'embed'     },
-                { name: 'deep',      value: 'deep'      },
+                { name: 'embed',    value: 'embed'    },
+                { name: 'deep',     value: 'deep'     },
+                { name: 'insights', value: 'insights' },
             ],
         },
     ],
@@ -1726,11 +2062,11 @@ module.exports = {
         // Also accept the canonical uppercase values the slash command sends.
         for (const v of Object.values(ROLE_FILTER_MAP)) ROLE_FILTER_MAP[v.toLowerCase()] = v;
 
-        // Parse trailing optional display mode ("codeblock" | "embed" | "deep").
+        // Parse trailing optional display mode ("codeblock" | "embed" | "deep" | "insights").
         let displayMode = 'codeblock';
         if (args.length > 0) {
             const tail = String(args[args.length - 1]).toLowerCase();
-            if (tail === 'embed' || tail === 'codeblock' || tail === 'deep') {
+            if (tail === 'embed' || tail === 'codeblock' || tail === 'deep' || tail === 'insights') {
                 displayMode = tail;
                 args.pop();
             }
@@ -1883,7 +2219,21 @@ module.exports = {
 
         // TODO(future): swap codeblock/embed/deep output for an HTML-rendered infographic
         // similar to modules/league/match-template-player-stats.html.
-        if (displayMode === 'deep') {
+        if (displayMode === 'insights') {
+            rows.sort((a, b) => b.games - a.games);
+            const insightsMap = buildInsightsData(collected, rows);
+            this.logger.info('[champstats] Insights map built', {
+                buckets: insightsMap.size,
+                withData: [...insightsMap.values()].filter(Boolean).length,
+            });
+
+            try {
+                await sendInsightsResults(target, summonerName, rows, insightsMap, headerDesc, this.logger);
+            } catch (err) {
+                this.logger.error('[champstats] Failed to send insights results', { message: err?.message });
+                await target.send(`Error rendering insights: ${err?.message || 'unknown error'}`);
+            }
+        } else if (displayMode === 'deep') {
             await target.send(
                 `Fetching timeline data for **${collected.length}** match${collected.length !== 1 ? 'es' : ''}…` +
                 ` Each match requires an additional API call — this may take extra time.`
