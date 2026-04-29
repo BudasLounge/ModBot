@@ -1173,8 +1173,8 @@ function buildInsightsData(collected, rowOrder) {
             keystones:  sortByGames([...keystoneMap.values()]),
             secStyles:  sortByGames([...secStyleMap.values()]),
             secPerks:   sortByGames([...secPerkMap.values()]),
-            vsChampions:   sortByGames([...vsMap.values()]).slice(0, 24),
-            withChampions: sortByGames([...withMap.values()]).slice(0, 24),
+            vsChampions:   sortByGames([...vsMap.values()]).slice(0, 20),
+            withChampions: sortByGames([...withMap.values()]).slice(0, 20),
         });
     }
     return result;
@@ -1672,6 +1672,9 @@ async function renderDeepImage(row, deep, summonerName, logger) {
         html: template,
         content: ctx,
         puppeteerArgs: { args: ['--no-sandbox', '--disable-setuid-sandbox'] },
+        beforeScreenshot: async (page) => {
+            await page.setViewport({ width: 1600, height: 800, deviceScaleFactor: 2 });
+        },
     });
     return buffer;
 }
@@ -1893,6 +1896,9 @@ async function renderInsightsImage(row, insights, summonerName, logger) {
         html: template,
         content: ctx,
         puppeteerArgs: { args: ['--no-sandbox', '--disable-setuid-sandbox'] },
+        beforeScreenshot: async (page) => {
+            await page.setViewport({ width: 1600, height: 800, deviceScaleFactor: 2 });
+        },
     });
 }
 
