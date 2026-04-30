@@ -2017,11 +2017,410 @@ async function sendInsightsResults(channel, summonerName, rows, insightsMap, hea
     });
 }
 
+// ── Role mode (per-role deep dive without rune data) ────────────────────────
+
+/**
+ * Aggregate stats grouped strictly by role (one row per role).
+ */
+function aggregateByRoleOnly(collected) {
+    const buckets = new Map();
+
+    for (const item of collected) {
+        const p = item.participant;
+        const role = resolveRole(p);
+        let b = buckets.get(role);
+        if (!b) {
+            b = {
+                role,
+                roleLabel: ROLE_LABELS[role] || 'Unknown',
+                champion: null,
+                games: 0,
+                wins: 0,
+                losses: 0,
+                kills: 0,
+                deaths: 0,
+                assists: 0,
+                lastPlayedTs: 0,
+            };
+            buckets.set(role, b);
+        }
+
+        b.games += 1;
+        if (p.win) b.wins += 1; else b.losses += 1;
+        b.kills += p.kills || 0;
+        b.deaths += p.deaths || 0;
+        b.assists += p.assists || 0;
+        if (typeof item.ts === 'number' && item.ts > b.lastPlayedTs) {
+            b.lastPlayedTs = item.ts;
+        }
+    }
+
+    const rows = Array.from(buckets.values()).map((b) => {
+        const winRate = b.games > 0 ? (b.wins / b.games) * 100 : 0;
+        const kda = b.deaths === 0
+            ? (b.kills + b.assists)
+            : (b.kills + b.assists) / b.deaths;
+        return { ...b, winRate, kda };
+    });
+
+    rows.sort((a, b) => b.games - a.games);
+    return rows;
+}
+
+/**
+ * For each row in `rowOrder` (one per role), build a combined stats payload
+ * that merges deep timeline aggregations with insight-style breakdowns
+ * (game length, vs/with champion, played champions).
+ */
+function buildRoleStatsMap(collected, rowOrder) {
+    const buckets = new Map();
+    for (const item of collected) {
+        const role = resolveRole(item.participant);
+        if (!buckets.has(role)) buckets.set(role, []);
+        buckets.get(role).push(item);
+    }
+
+    const sortByGames = (arr) => arr.sort((a, b) => (b.wins + b.losses) - (a.wins + a.losses));
+
+    const result = new Map();
+    for (const row of rowOrder) {
+        const items = buckets.get(row.role) || [];
+        if (!items.length) { result.set(row.role, null); continue; }
+
+        const wins   = items.filter((i) => i.participant.win);
+        const losses = items.filter((i) => !i.participant.win);
+
+        // Game length WR
+        const byLength = GAME_LENGTH_BUCKETS.map((b) => ({ label: b.label, wins: 0, losses: 0 }));
+        for (const m of items) {
+            const mins = (m.gameDurationSec || 0) / 60;
+            const bi = GAME_LENGTH_BUCKETS.findIndex((b) => mins >= b.min && mins < b.max);
+            if (bi >= 0) {
+                if (m.participant.win) byLength[bi].wins++;
+                else byLength[bi].losses++;
+            }
+        }
+
+        // Champions played by user in this role
+        const playedMap = new Map();
+        for (const m of items) {
+            const c = m.participant.championName;
+            if (!c) continue;
+            if (!playedMap.has(c)) playedMap.set(c, { champion: c, wins: 0, losses: 0 });
+            const e = playedMap.get(c);
+            if (m.participant.win) e.wins++; else e.losses++;
+        }
+
+        // vs / with champion
+        const vsMap   = new Map();
+        const withMap = new Map();
+        for (const m of items) {
+            const all = m.allParticipants || [];
+            const enemies = all.filter((p) => p.teamId !== m.participant.teamId);
+            const allies  = all.filter((p) => p.teamId === m.participant.teamId && p.puuid !== m.participant.puuid);
+
+            for (const p of enemies) {
+                if (!p.championName) continue;
+                if (!vsMap.has(p.championName)) vsMap.set(p.championName, { champion: p.championName, wins: 0, losses: 0 });
+                const e = vsMap.get(p.championName);
+                if (m.participant.win) e.wins++; else e.losses++;
+            }
+            for (const p of allies) {
+                if (!p.championName) continue;
+                if (!withMap.has(p.championName)) withMap.set(p.championName, { champion: p.championName, wins: 0, losses: 0 });
+                const e = withMap.get(p.championName);
+                if (m.participant.win) e.wins++; else e.losses++;
+            }
+        }
+
+        result.set(row.role, {
+            all:  aggregateBucket(items),
+            win:  aggregateBucket(wins),
+            loss: aggregateBucket(losses),
+            byLength: byLength.filter((b) => b.wins + b.losses > 0),
+            playedChampions: sortByGames([...playedMap.values()]).slice(0, 15),
+            vsChampions:     sortByGames([...vsMap.values()]).slice(0, 15),
+            withChampions:   sortByGames([...withMap.values()]).slice(0, 15),
+        });
+    }
+    return result;
+}
+
+function buildRoleRenderContext(row, roleData, summonerName, ver) {
+    const CDN = `https://ddragon.leagueoflegends.com/cdn/${ver}/img`;
+    const isJungle = row.role === 'JUNGLE';
+
+    const all  = roleData?.all;
+    const win  = roleData?.win;
+    const loss = roleData?.loss;
+
+    const fmtPct = (v) => v == null ? '—' : `${(v * 100).toFixed(0)}%`;
+    const fmtNum = (v, d = 1) => v == null ? '—' : Number(v).toFixed(d);
+    const fmtInt = (v) => v == null ? '—' : Math.round(v).toLocaleString();
+    const fmtWr  = (w, t) => t === 0 ? '—' : `${((w / t) * 100).toFixed(1)}%`;
+
+    // KPI tiles (Win / Loss pairs)
+    const tile = (label, winVal, lossVal, suffix = '') => ({
+        label,
+        winVal: winVal == null ? '—' : `${winVal}${suffix}`,
+        lossVal: lossVal == null ? '—' : `${lossVal}${suffix}`,
+    });
+    const kpis = [
+        tile('Gold/min',
+            win ? fmtNum(win.avgGoldPerMin, 0) : null,
+            loss ? fmtNum(loss.avgGoldPerMin, 0) : null),
+        tile(isJungle ? 'Jungle CS/min' : 'CS/min',
+            win ? fmtNum(isJungle ? win.avgJungleCsPerMin : win.avgCsPerMin, 2) : null,
+            loss ? fmtNum(isJungle ? loss.avgJungleCsPerMin : loss.avgCsPerMin, 2) : null),
+        tile('XP/min',
+            win?.avgXpPerMin != null ? fmtNum(win.avgXpPerMin, 0) : null,
+            loss?.avgXpPerMin != null ? fmtNum(loss.avgXpPerMin, 0) : null),
+        tile('KP%',
+            win?.avgKp != null ? fmtPct(win.avgKp) : null,
+            loss?.avgKp != null ? fmtPct(loss.avgKp) : null),
+        tile('Vision',
+            win ? fmtNum(win.avgVisionScore, 1) : null,
+            loss ? fmtNum(loss.avgVisionScore, 1) : null),
+        tile('Wards K/P',
+            win ? `${fmtNum(win.avgWardsKilled, 1)}/${fmtNum(win.avgWardsPlaced, 1)}` : null,
+            loss ? `${fmtNum(loss.avgWardsKilled, 1)}/${fmtNum(loss.avgWardsPlaced, 1)}` : null),
+        tile('Dmg Champs',
+            win ? fmtInt(win.avgDmgChamps) : null,
+            loss ? fmtInt(loss.avgDmgChamps) : null),
+        tile('Solo K',
+            win ? fmtNum(win.avgSoloKills, 1) : null,
+            loss ? fmtNum(loss.avgSoloKills, 1) : null),
+    ];
+
+    // Charts
+    const charts = [];
+    if (all?.curves) {
+        const seriesFrom = (bucket, key) => bucket?.curves?.[key]?.points || null;
+        const enemyFrom  = (bucket, key) => {
+            const c = bucket?.curves?.[key];
+            if (!c || !c.hasEnemy) return null;
+            return c.points.map((p) => ({ minute: p.minute, my: p.enemy }));
+        };
+
+        charts.push({ svg: svgLineChart({
+            width: 700, height: 280, title: 'Gold over time vs role opponent',
+            winMy:     seriesFrom(win,  'gold'),
+            winEnemy:  enemyFrom(win,   'gold'),
+            lossMy:    seriesFrom(loss, 'gold'),
+            lossEnemy: enemyFrom(loss,  'gold'),
+        }) });
+        charts.push({ svg: svgLineChart({
+            width: 700, height: 280,
+            title: isJungle ? 'Jungle monsters vs enemy jungler' : 'Lane CS vs role opponent',
+            winMy:     seriesFrom(win,  isJungle ? 'jungleCs' : 'laneCs'),
+            winEnemy:  enemyFrom(win,   isJungle ? 'jungleCs' : 'laneCs'),
+            lossMy:    seriesFrom(loss, isJungle ? 'jungleCs' : 'laneCs'),
+            lossEnemy: enemyFrom(loss,  isJungle ? 'jungleCs' : 'laneCs'),
+        }) });
+        charts.push({ svg: svgLineChart({
+            width: 700, height: 280, title: 'XP over time vs role opponent',
+            winMy:     seriesFrom(win,  'xp'),
+            winEnemy:  enemyFrom(win,   'xp'),
+            lossMy:    seriesFrom(loss, 'xp'),
+            lossEnemy: enemyFrom(loss,  'xp'),
+        }) });
+        charts.push({ svg: svgDiffBarChart({
+            width: 700, height: 280, title: 'Gold diff vs role opponent (signed)',
+            winSeries:  seriesFrom(win,  'goldDiff'),
+            lossSeries: seriesFrom(loss, 'goldDiff'),
+        }) });
+    }
+
+    // Game length WR bars
+    const byLength = (roleData?.byLength || []).map((b) => {
+        const total = b.wins + b.losses;
+        const wr    = total > 0 ? b.wins / total : null;
+        return {
+            label:    b.label,
+            wins:     b.wins,
+            losses:   b.losses,
+            wr:       fmtWr(b.wins, total),
+            wrColor:  wrColor(b.wins, total),
+            wrBarPct: wr != null ? (wr * 100).toFixed(1) : '0',
+        };
+    });
+
+    // Champion tables
+    const champRow = (c) => {
+        const total = c.wins + c.losses;
+        return {
+            iconUrl:  `${CDN}/champion/${fixChampNameForCdn(c.champion)}.png`,
+            champion: c.champion,
+            wins:     c.wins,
+            losses:   c.losses,
+            wr:       fmtWr(c.wins, total),
+            wrColor:  wrColor(c.wins, total),
+        };
+    };
+    const playedChampions = (roleData?.playedChampions || []).map(champRow);
+    const vsChampions     = (roleData?.vsChampions     || []).map(champRow);
+    const withChampions   = (roleData?.withChampions   || []).map(champRow);
+
+    return {
+        summonerName,
+        roleLabel: row.roleLabel,
+        gamesText: `${row.games} games`,
+        wlText:    `${row.wins}W-${row.losses}L`,
+        wrText:    `${row.winRate.toFixed(1)}% WR`,
+        kdaText:   `${row.kda.toFixed(2)} KDA`,
+        kdaSubText: `${(row.kills / Math.max(1, row.games)).toFixed(1)} / ${(row.deaths / Math.max(1, row.games)).toFixed(1)} / ${(row.assists / Math.max(1, row.games)).toFixed(1)} avg`,
+        timelineCoverage: all ? `${all.nTl}/${all.n} games with timeline data` : '',
+        kpis,
+        charts,
+        byLength,
+        playedChampions,
+        vsChampions,
+        withChampions,
+        objectives: {
+            dragons:   fmtNum(all?.avgDragons, 1),
+            barons:    fmtNum(all?.avgBarons,  1),
+            heralds:   fmtNum(all?.avgHeralds, 1),
+            turrets:   fmtNum(all?.avgTurretTakedowns, 1),
+            turretDmg: fmtInt(all?.avgTurretDmg),
+        },
+        firstStats: {
+            firstBlood: all
+                ? `Kill ${fmtPct(all.firstBloodKillRate)} • Assist ${fmtPct(all.firstBloodAssistRate)}`
+                : '—',
+            firstTower: all
+                ? `Kill ${fmtPct(all.firstTowerKillRate)} • Assist ${fmtPct(all.firstTowerAssistRate)}`
+                : '—',
+        },
+        damage: {
+            toChamps: fmtInt(all?.avgDmgChamps),
+            taken:    fmtInt(all?.avgDmgTaken),
+            ccSec:    fmtNum(all?.avgCcSec, 1),
+        },
+        controlWardsText: all ? `${fmtNum(all.avgControlWards, 1)} avg` : '—',
+        legend: {
+            win: 'Win avg',
+            loss: 'Loss avg',
+            winEnemy: 'Enemy (in win games)',
+            lossEnemy: 'Enemy (in loss games)',
+        },
+        bucketKey: row.roleLabel,
+    };
+}
+
+let _roleTemplateCache = null;
+function loadRoleTemplate() {
+    if (_roleTemplateCache) return _roleTemplateCache;
+    const templatePath = path.join(__dirname, '..', 'match-template-champstats-role.html');
+    _roleTemplateCache = fs.readFileSync(templatePath, 'utf8');
+    return _roleTemplateCache;
+}
+
+async function renderRoleImage(row, roleData, summonerName, logger) {
+    const ver = await getDeepDDVersion(logger);
+    const ctx = buildRoleRenderContext(row, roleData, summonerName, ver);
+    const template = loadRoleTemplate();
+    logger.info('[champstats] Rendering role image', {
+        bucket: ctx.bucketKey,
+        charts: ctx.charts.length,
+        playedChampions: ctx.playedChampions.length,
+    });
+    const buffer = await nodeHtmlToImage({
+        html: template,
+        content: ctx,
+        puppeteerArgs: { args: ['--no-sandbox', '--disable-setuid-sandbox'] },
+        beforeScreenshot: async (page) => {
+            await page.setViewport({ width: 1600, height: 800, deviceScaleFactor: 2 });
+        },
+    });
+    return buffer;
+}
+
+async function sendRoleResults(channel, summonerName, rows, roleStatsMap, headerDesc, logger) {
+    const totalPages = rows.length;
+    if (totalPages === 0) {
+        await channel.send('No data to display.');
+        return;
+    }
+
+    let page = 0;
+    const pagerId = `ROLE_${Date.now()}_${Math.floor(Math.random() * 1_000_000)}`;
+    const imageCache = new Map();
+
+    const getImage = async (p) => {
+        if (imageCache.has(p)) return imageCache.get(p);
+        const r = rows[p];
+        const buf = await renderRoleImage(r, roleStatsMap.get(r.role), summonerName, logger);
+        imageCache.set(p, buf);
+        return buf;
+    };
+
+    let initialBuf;
+    try {
+        initialBuf = await getImage(page);
+    } catch (err) {
+        logger.error('[champstats] Initial role render failed', { message: err?.message, stack: err?.stack });
+        await channel.send(`Failed to render role image: ${err?.message || 'unknown error'}`);
+        return;
+    }
+
+    const attach = (buf, p) => new AttachmentBuilder(buf, { name: `champstats-role-${p + 1}.png` });
+    const headerLine = (p) =>
+        (p === 0 && headerDesc ? headerDesc + '\n\n' : '') +
+        `Role page ${p + 1} / ${totalPages} — ${rows[p].roleLabel}`;
+
+    const msg = await channel.send({
+        content: headerLine(page),
+        files: [attach(initialBuf, page)],
+        components: buildPageButtons(pagerId, page, totalPages),
+    });
+
+    if (totalPages <= 1) return;
+    if (typeof msg?.createMessageComponentCollector !== 'function') return;
+
+    const collector = msg.createMessageComponentCollector({
+        componentType: ComponentType.Button,
+        time: PAGINATOR_COLLECTOR_TIME_MS,
+    });
+
+    collector.on('collect', async (interaction) => {
+        if (!interaction.customId.endsWith(pagerId)) return;
+        const prev = page;
+        if (interaction.customId.startsWith('CHAMPSTATS_PREV_')) page = Math.max(0, page - 1);
+        else if (interaction.customId.startsWith('CHAMPSTATS_NEXT_')) page = Math.min(totalPages - 1, page + 1);
+        if (page === prev) { try { await interaction.deferUpdate(); } catch (_) {} return; }
+
+        try {
+            await interaction.deferUpdate();
+            const buf = await getImage(page);
+            await interaction.editReply({
+                content: headerLine(page),
+                files: [attach(buf, page)],
+                attachments: [],
+                components: buildPageButtons(pagerId, page, totalPages),
+            });
+        } catch (err) {
+            logger.error(`[champstats] Role pagination failed: ${err.message || err}`);
+        }
+    });
+
+    collector.on('end', async () => {
+        try {
+            await msg.edit({
+                components: buildPageButtons(pagerId, page, totalPages).map((row) => {
+                    const disabled = new ActionRowBuilder();
+                    row.components.forEach((c) => disabled.addComponents(ButtonBuilder.from(c).setDisabled(true)));
+                    return disabled;
+                }),
+            });
+        } catch (_) {}
+    });
+}
+
 // ── Command ─────────────────────────────────────────────────────────────────
 module.exports = {
     name: 'champstats',
     description: 'Per-champion stats (Draft/Solo/Flex only) — games, W-L, WR%, KDA, last played, split by role.',
-    syntax: 'champstats [riot_id] [game_count] [role] [display: codeblock|embed|deep|insights]',
+    syntax: 'champstats [riot_id] [game_count] [role] [display: codeblock|embed|deep|insights|role]',
     num_args: 1,
     args_to_lower: false, // preserve Riot ID casing (tag is case-sensitive-ish)
     needs_api: true,
@@ -2054,7 +2453,7 @@ module.exports = {
         },
         {
             name: 'display',
-            description: 'Display mode: codeblock (default), embed, deep (timeline analysis), or insights (WR breakdowns)',
+            description: 'Display mode: codeblock (default), embed, deep (timeline analysis), insights (WR breakdowns), or role (per-role deep dive)',
             type: 'STRING',
             required: false,
             choices: [
@@ -2062,6 +2461,7 @@ module.exports = {
                 { name: 'embed',    value: 'embed'    },
                 { name: 'deep',     value: 'deep'     },
                 { name: 'insights', value: 'insights' },
+                { name: 'role',     value: 'role'     },
             ],
         },
     ],
@@ -2106,7 +2506,7 @@ module.exports = {
         let displayMode = 'codeblock';
         if (args.length > 0) {
             const tail = String(args[args.length - 1]).toLowerCase();
-            if (tail === 'embed' || tail === 'codeblock' || tail === 'deep' || tail === 'insights') {
+            if (tail === 'embed' || tail === 'codeblock' || tail === 'deep' || tail === 'insights' || tail === 'role') {
                 displayMode = tail;
                 args.pop();
             }
@@ -2272,6 +2672,42 @@ module.exports = {
             } catch (err) {
                 this.logger.error('[champstats] Failed to send insights results', { message: err?.message });
                 await target.send(`Error rendering insights: ${err?.message || 'unknown error'}`);
+            }
+        } else if (displayMode === 'role') {
+            await target.send(
+                `Fetching timeline data for **${collected.length}** match${collected.length !== 1 ? 'es' : ''}…` +
+                ` Each match requires an additional API call — this may take extra time.`
+            );
+            try {
+                await enrichWithTimelines(collected, this.logger);
+            } catch (err) {
+                this.logger.error('[champstats] Timeline enrichment failed', { message: err?.message });
+                await target.send(
+                    `Warning: timeline enrichment failed (${err?.message || 'unknown error'}). ` +
+                    `Showing available data only.`
+                );
+            }
+
+            // Re-aggregate per role only (rows variable from per-champion is replaced).
+            let roleRows = aggregateByRoleOnly(collected);
+            if (roleFilter) {
+                roleRows = roleRows.filter((r) => r.role === roleFilter);
+            }
+            if (!roleRows.length) {
+                await target.send('No data to display for role view.');
+                return;
+            }
+            const roleStatsMap = buildRoleStatsMap(collected, roleRows);
+            this.logger.info('[champstats] Role stats map built', {
+                roles: roleStatsMap.size,
+                withData: [...roleStatsMap.values()].filter(Boolean).length,
+            });
+
+            try {
+                await sendRoleResults(target, summonerName, roleRows, roleStatsMap, headerDesc, this.logger);
+            } catch (err) {
+                this.logger.error('[champstats] Failed to send role results', { message: err?.message });
+                await target.send(`Error rendering role results: ${err?.message || 'unknown error'}`);
             }
         } else if (displayMode === 'deep') {
             await target.send(

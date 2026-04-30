@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 1600px;
+      background: #010a13;
+      font-family: 'Roboto', sans-serif;
+      color: #a09b8c;
+      padding: 32px 40px;
+    }
+
+    /* ── Header ────────────────────────────────────────── */
+    .header {
+      display: flex; align-items: center; gap: 22px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #1e2328;
+      margin-bottom: 22px;
+    }
+    .role-badge {
+      width: 104px; height: 104px;
+      border-radius: 50%;
+      border: 3px solid #c8aa6e;
+      box-shadow: 0 0 14px rgba(200,170,110,0.25);
+      background: #0f1216;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      font-size: 14px; font-weight: 700;
+      color: #c8aa6e;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .head-text { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+    .head-title { font-size: 34px; font-weight: 700; color: #fff; letter-spacing: 1px; }
+    .head-sub   { font-size: 16px; color: #c8aa6e; text-transform: uppercase; letter-spacing: 2px; }
+    .head-meta  { display: flex; gap: 20px; font-size: 16px; color: #939a9e; margin-top: 6px; }
+    .head-meta b { color: #fff; font-weight: 700; }
+    .pos { color: #0acbe6; }
+    .head-side { text-align: right; font-size: 14px; color: #5c5b57; }
+    .head-side .summoner-name { font-size: 20px; color: #c8aa6e; font-weight: 700; margin-bottom: 6px; }
+    .head-side .coverage { font-size: 12px; }
+
+    /* ── Section heading ───────────────────────────────── */
+    .section-h {
+      display: flex; align-items: center; gap: 10px;
+      margin: 6px 0 12px;
+      font-size: 14px; font-weight: 700; color: #c8aa6e;
+      letter-spacing: 1.5px; text-transform: uppercase;
+    }
+    .section-h::after { content: ''; flex: 1; height: 1px; background: #1e2328; }
+
+    /* ── KPI tiles ─────────────────────────────────────── */
+    .kpi-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 10px; margin-bottom: 22px;
+    }
+    .kpi {
+      background: #0f1216;
+      border: 1px solid #1e2328;
+      border-radius: 4px;
+      padding: 12px 14px;
+    }
+    .kpi-label {
+      font-size: 12px; color: #5c5b57;
+      text-transform: uppercase; letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    .kpi-pair { display: flex; gap: 14px; align-items: baseline; }
+    .kpi-pair .v {
+      font-size: 22px; font-weight: 700;
+      flex: 1;
+    }
+    .kpi-pair .v.win  { color: #0acbe6; }
+    .kpi-pair .v.loss { color: #e84057; }
+    .kpi-pair .tag {
+      font-size: 10px; color: #5c5b57;
+      text-transform: uppercase;
+    }
+
+    /* ── Charts ────────────────────────────────────────── */
+    .charts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+    .chart-card {
+      background: #0f1216;
+      border: 1px solid #1e2328;
+      border-radius: 4px;
+      padding: 12px;
+    }
+    .chart-card svg { display: block; width: 100%; height: auto; }
+
+    /* ── Game length WR ───────────────────────────────── */
+    .length-chart {
+      background: #0f1216;
+      border: 1px solid #1e2328;
+      border-radius: 4px;
+      padding: 16px 20px;
+      margin-bottom: 22px;
+    }
+    .length-row {
+      display: flex; align-items: center; gap: 14px;
+      margin-bottom: 9px;
+    }
+    .length-row:last-child { margin-bottom: 0; }
+    .length-label {
+      width: 86px; font-size: 13px; color: #a09b8c;
+      text-align: right; flex-shrink: 0;
+    }
+    .length-track {
+      flex: 1; height: 22px;
+      background: #141619;
+      border: 1px solid #1e2328;
+      border-radius: 3px;
+      position: relative; overflow: hidden;
+    }
+    .length-track::after {
+      content: '';
+      position: absolute;
+      left: 50%; top: 0; bottom: 0;
+      width: 1px; background: #2d3640;
+    }
+    .length-fill { height: 100%; border-radius: 2px; }
+    .length-stats {
+      display: flex; align-items: center; gap: 12px;
+      flex-shrink: 0; width: 160px;
+    }
+    .wr-badge { font-size: 14px; font-weight: 700; width: 56px; text-align: right; }
+    .wl-text  { font-size: 12px; color: #5c5b57; }
+
+    /* ── Tables (champion lists) ──────────────────────── */
+    .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 22px; }
+    .table-card {
+      background: #0f1216;
+      border: 1px solid #1e2328;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .table-card .card-title {
+      padding: 10px 14px;
+      font-size: 12px; font-weight: 700;
+      letter-spacing: 1.2px; text-transform: uppercase;
+      color: #c8aa6e;
+      background: #0a0e13;
+      border-bottom: 1px solid #1e2328;
+    }
+    .table-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 7px 12px;
+      border-bottom: 1px solid #12181e;
+    }
+    .table-row:last-child { border-bottom: none; }
+    .table-row:nth-child(even) { background: rgba(255,255,255,0.018); }
+    .table-row img {
+      width: 32px; height: 32px;
+      border-radius: 4px;
+      background: #141619; border: 1px solid #1e2328;
+      flex-shrink: 0;
+    }
+    .row-name { flex: 1; font-size: 13px; color: #c9d1d9; font-weight: 500;
+                overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .row-wl   { font-size: 12px; color: #5c5b57; white-space: nowrap; }
+    .row-wr   { font-size: 13px; font-weight: 700; width: 52px; text-align: right; flex-shrink: 0; }
+    .no-data  { padding: 18px 14px; font-size: 13px; color: #5c5b57; font-style: italic; text-align: center; }
+
+    /* ── Footer summary ───────────────────────────────── */
+    .footer-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+      margin-bottom: 16px;
+    }
+    .footer-card {
+      background: #0f1216;
+      border: 1px solid #1e2328;
+      border-radius: 4px;
+      padding: 14px;
+    }
+    .footer-card .card-title {
+      font-size: 12px; font-weight: 700;
+      letter-spacing: 1.2px; text-transform: uppercase;
+      color: #c8aa6e; margin-bottom: 10px;
+    }
+    .footer-row {
+      display: flex; justify-content: space-between;
+      font-size: 13px; padding: 3px 0;
+    }
+    .footer-row .l { color: #5c5b57; }
+    .footer-row .v { color: #c9d1d9; font-weight: 500; }
+
+    .legend {
+      display: flex; gap: 20px; align-items: center; flex-wrap: wrap;
+      font-size: 12px; color: #5c5b57; padding-top: 10px;
+      border-top: 1px solid #1e2328;
+    }
+    .legend .swatch {
+      display: inline-block; width: 12px; height: 12px;
+      vertical-align: middle; margin-right: 5px; border-radius: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── HEADER ────────────────────────────────────────── -->
+  <div class="header">
+    <div class="role-badge">{{roleLabel}}</div>
+    <div class="head-text">
+      <div class="head-title">{{roleLabel}}</div>
+      <div class="head-sub">Per-role deep dive</div>
+      <div class="head-meta">
+        <span><b>{{gamesText}}</b></span>
+        <span>•</span>
+        <span><b>{{wlText}}</b></span>
+        <span>•</span>
+        <span class="pos"><b>{{wrText}}</b></span>
+        <span>•</span>
+        <span><b>{{kdaText}}</b></span>
+        <span style="color:#5c5b57">({{kdaSubText}})</span>
+      </div>
+    </div>
+    <div class="head-side">
+      <div class="summoner-name">{{summonerName}}</div>
+      <div class="coverage">{{timelineCoverage}}</div>
+    </div>
+  </div>
+
+  <!-- ── KPI TILES (Win vs Loss) ──────────────────────── -->
+  <div class="section-h">Average per game — Win vs Loss</div>
+  <div class="kpi-grid">
+    {{#each kpis}}
+      <div class="kpi">
+        <div class="kpi-label">{{label}}</div>
+        <div class="kpi-pair">
+          <span class="v win">{{winVal}}</span>
+          <span class="tag">W</span>
+          <span class="v loss">{{lossVal}}</span>
+          <span class="tag">L</span>
+        </div>
+      </div>
+    {{/each}}
+  </div>
+
+  <!-- ── CHARTS ───────────────────────────────────────── -->
+  {{#if charts.length}}
+    <div class="section-h">Lane curves vs role opponent</div>
+    <div class="charts">
+      {{#each charts}}
+        <div class="chart-card">{{{svg}}}</div>
+      {{/each}}
+    </div>
+  {{/if}}
+
+  <!-- ── GAME LENGTH WR ───────────────────────────────── -->
+  <div class="section-h">Winrate vs Game Length</div>
+  <div class="length-chart">
+    {{#if byLength}}
+      {{#each byLength}}
+        <div class="length-row">
+          <div class="length-label">{{label}}</div>
+          <div class="length-track">
+            <div class="length-fill" style="width:{{wrBarPct}}%;background:{{wrColor}}"></div>
+          </div>
+          <div class="length-stats">
+            <span class="wr-badge" style="color:{{wrColor}}">{{wr}}</span>
+            <span class="wl-text">{{wins}}W–{{losses}}L</span>
+          </div>
+        </div>
+      {{/each}}
+    {{else}}
+      <div class="no-data">No game length data.</div>
+    {{/if}}
+  </div>
+
+  <!-- ── CHAMPION TABLES ──────────────────────────────── -->
+  <div class="section-h">Champion breakdown</div>
+  <div class="three-col">
+
+    <div class="table-card">
+      <div class="card-title">Played by you</div>
+      {{#if playedChampions}}
+        {{#each playedChampions}}
+          <div class="table-row">
+            <img src="{{iconUrl}}" onerror="this.style.background='#1e2328';this.removeAttribute('src')">
+            <span class="row-name">{{champion}}</span>
+            <span class="row-wl">{{wins}}W–{{losses}}L</span>
+            <span class="row-wr" style="color:{{wrColor}}">{{wr}}</span>
+          </div>
+        {{/each}}
+      {{else}}
+        <div class="no-data">No data.</div>
+      {{/if}}
+    </div>
+
+    <div class="table-card">
+      <div class="card-title">vs Champion (enemies)</div>
+      {{#if vsChampions}}
+        {{#each vsChampions}}
+          <div class="table-row">
+            <img src="{{iconUrl}}" onerror="this.style.background='#1e2328';this.removeAttribute('src')">
+            <span class="row-name">{{champion}}</span>
+            <span class="row-wl">{{wins}}W–{{losses}}L</span>
+            <span class="row-wr" style="color:{{wrColor}}">{{wr}}</span>
+          </div>
+        {{/each}}
+      {{else}}
+        <div class="no-data">No opponent data.</div>
+      {{/if}}
+    </div>
+
+    <div class="table-card">
+      <div class="card-title">with Champion (allies)</div>
+      {{#if withChampions}}
+        {{#each withChampions}}
+          <div class="table-row">
+            <img src="{{iconUrl}}" onerror="this.style.background='#1e2328';this.removeAttribute('src')">
+            <span class="row-name">{{champion}}</span>
+            <span class="row-wl">{{wins}}W–{{losses}}L</span>
+            <span class="row-wr" style="color:{{wrColor}}">{{wr}}</span>
+          </div>
+        {{/each}}
+      {{else}}
+        <div class="no-data">No ally data.</div>
+      {{/if}}
+    </div>
+
+  </div>
+
+  <!-- ── FOOTER STATS ─────────────────────────────────── -->
+  <div class="section-h">Objectives, vision &amp; damage</div>
+  <div class="footer-grid">
+
+    <div class="footer-card">
+      <div class="card-title">Objectives (avg / game)</div>
+      <div class="footer-row"><span class="l">Dragons</span><span class="v">{{objectives.dragons}}</span></div>
+      <div class="footer-row"><span class="l">Barons</span><span class="v">{{objectives.barons}}</span></div>
+      <div class="footer-row"><span class="l">Heralds</span><span class="v">{{objectives.heralds}}</span></div>
+      <div class="footer-row"><span class="l">Turret takedowns</span><span class="v">{{objectives.turrets}}</span></div>
+      <div class="footer-row"><span class="l">Turret damage</span><span class="v">{{objectives.turretDmg}}</span></div>
+    </div>
+
+    <div class="footer-card">
+      <div class="card-title">Early game (rate)</div>
+      <div class="footer-row"><span class="l">First Blood</span><span class="v">{{firstStats.firstBlood}}</span></div>
+      <div class="footer-row"><span class="l">First Tower</span><span class="v">{{firstStats.firstTower}}</span></div>
+    </div>
+
+    <div class="footer-card">
+      <div class="card-title">Damage (avg / game)</div>
+      <div class="footer-row"><span class="l">To champions</span><span class="v">{{damage.toChamps}}</span></div>
+      <div class="footer-row"><span class="l">Taken</span><span class="v">{{damage.taken}}</span></div>
+      <div class="footer-row"><span class="l">CC time (s)</span><span class="v">{{damage.ccSec}}</span></div>
+    </div>
+
+    <div class="footer-card">
+      <div class="card-title">Vision</div>
+      <div class="footer-row"><span class="l">Control wards</span><span class="v">{{controlWardsText}}</span></div>
+    </div>
+
+  </div>
+
+  <div class="legend">
+    <span><span class="swatch" style="background:#0acbe6"></span>Win avg / ≥60% WR</span>
+    <span><span class="swatch" style="background:#5ad8ec"></span>50–59% WR</span>
+    <span><span class="swatch" style="background:#f08a99"></span>45–49% WR</span>
+    <span><span class="swatch" style="background:#e84057"></span>Loss avg / &lt;45% WR</span>
+    <span><span class="swatch" style="background:#5c5b57"></span>Small sample (&lt;3 games)</span>
+    <span style="margin-left:auto">Top 15 by games shown per table.</span>
+  </div>
+
+</body>
+</html>
