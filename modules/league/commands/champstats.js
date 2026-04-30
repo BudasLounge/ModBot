@@ -2329,7 +2329,9 @@ async function renderRoleImage(row, roleData, summonerName, logger) {
         content: ctx,
         puppeteerArgs: { args: ['--no-sandbox', '--disable-setuid-sandbox'] },
         beforeScreenshot: async (page) => {
-            await page.setViewport({ width: 1600, height: 800, deviceScaleFactor: 2 });
+            // 3x DPR + smaller logical viewport => Discord receives a much
+            // sharper image while in-template font sizes are bumped for legibility.
+            await page.setViewport({ width: 1400, height: 800, deviceScaleFactor: 3 });
         },
     });
     return buffer;
