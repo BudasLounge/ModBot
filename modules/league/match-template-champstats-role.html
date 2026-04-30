@@ -31,6 +31,14 @@
       background: #0f1216;
       display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
+      overflow: hidden;
+    }
+    .role-badge img {
+      width: 78%; height: 78%;
+      object-fit: contain;
+      filter: drop-shadow(0 0 4px rgba(200,170,110,0.45));
+    }
+    .role-badge .role-fallback {
       font-size: 16px; font-weight: 700;
       color: #c8aa6e;
       letter-spacing: 2px;
@@ -97,6 +105,34 @@
       padding: 12px;
     }
     .chart-card svg { display: block; width: 100%; height: auto; }
+
+    /* Chart legend (above the lane curves grid) */
+    .chart-legend {
+      display: flex; flex-wrap: wrap; gap: 18px;
+      align-items: center;
+      background: #0a0e13;
+      border: 1px solid #1e2328;
+      border-radius: 4px;
+      padding: 10px 14px;
+      margin-bottom: 12px;
+      font-size: 13px; color: #b6b1a4;
+    }
+    .chart-legend-item { display: inline-flex; align-items: center; gap: 8px; }
+    .swatch-line {
+      display: inline-block;
+      width: 28px; height: 3px;
+      border-radius: 2px;
+    }
+    .swatch-line.dashed {
+      background: transparent !important;
+      height: 0;
+      border-top-width: 2px;
+      border-top-style: dashed;
+    }
+    .chart-legend-note {
+      margin-left: auto;
+      font-size: 12px; color: #6a7178; font-style: italic;
+    }
 
     /* ── Game length WR ───────────────────────────────── */
     .length-chart {
@@ -209,7 +245,14 @@
 
   <!-- ── HEADER ────────────────────────────────────────── -->
   <div class="header">
-    <div class="role-badge">{{roleLabel}}</div>
+    <div class="role-badge">
+      {{#if roleIconUrl}}
+        <img src="{{roleIconUrl}}"
+             onerror="this.parentNode.innerHTML='<span class=&quot;role-fallback&quot;>{{roleLabel}}</span>'">
+      {{else}}
+        <span class="role-fallback">{{roleLabel}}</span>
+      {{/if}}
+    </div>
     <div class="head-text">
       <div class="head-title">{{roleLabel}}</div>
       <div class="head-sub">Per-role deep dive</div>
@@ -248,8 +291,15 @@
 
   <!-- ── CHARTS ───────────────────────────────────────── -->
   {{#if charts.length}}
-    <div class="section-h">Lane curves vs role opponent</div>
-    <div class="charts">
+    <div class="section-h">Lane curves vs role opponent</div>    <div class="chart-legend">
+      {{#each chartLegend}}
+        <span class="chart-legend-item">
+          <span class="swatch-line {{#if dashed}}dashed{{/if}}" style="background:{{color}};border-top-color:{{color}}"></span>
+          {{label}}
+        </span>
+      {{/each}}
+      <span class="chart-legend-note">Solid = you. Dashed = the role opponent on the enemy team. Curves are averaged across games.</span>
+    </div>    <div class="charts">
       {{#each charts}}
         <div class="chart-card">{{{svg}}}</div>
       {{/each}}
@@ -358,8 +408,11 @@
     </div>
 
     <div class="footer-card">
-      <div class="card-title">Vision</div>
-      <div class="footer-row"><span class="l">Control wards</span><span class="v">{{controlWardsText}}</span></div>
+      <div class="card-title">Vision (avg / game)</div>
+      <div class="footer-row"><span class="l">Vision score</span><span class="v">{{vision.score}}</span></div>
+      <div class="footer-row"><span class="l">Wards placed</span><span class="v">{{vision.wardsPlaced}}</span></div>
+      <div class="footer-row"><span class="l">Wards killed</span><span class="v">{{vision.wardsKilled}}</span></div>
+      <div class="footer-row"><span class="l">Control wards</span><span class="v">{{vision.controlWards}}</span></div>
     </div>
 
   </div>

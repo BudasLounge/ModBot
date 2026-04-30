@@ -219,6 +219,15 @@ const ROLE_LABELS = {
     UNKNOWN: 'Unknown',
 };
 
+// CommunityDragon-hosted role icons (used by the role-mode infographic header).
+const ROLE_ICON_URLS = {
+    TOP:     'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-clash/global/default/assets/images/position-selector/positions/icon-position-top.png',
+    JUNGLE:  'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-clash/global/default/assets/images/position-selector/positions/icon-position-jungle.png',
+    MIDDLE:  'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-clash/global/default/assets/images/position-selector/positions/icon-position-middle.png',
+    BOTTOM:  'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-clash/global/default/assets/images/position-selector/positions/icon-position-bottom.png',
+    UTILITY: 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-clash/global/default/assets/images/position-selector/positions/icon-position-utility.png',
+};
+
 function resolveRole(participant) {
     const raw = participant.teamPosition || participant.individualPosition || '';
     const upper = String(raw).toUpperCase();
@@ -2181,13 +2190,13 @@ function buildRoleRenderContext(row, roleData, summonerName, ver) {
         tile('Vision',
             win ? fmtNum(win.avgVisionScore, 1) : null,
             loss ? fmtNum(loss.avgVisionScore, 1) : null),
-        tile('Wards K/P',
-            win ? `${fmtNum(win.avgWardsKilled, 1)}/${fmtNum(win.avgWardsPlaced, 1)}` : null,
-            loss ? `${fmtNum(loss.avgWardsKilled, 1)}/${fmtNum(loss.avgWardsPlaced, 1)}` : null),
+        tile('Dmg Taken',
+            win ? fmtInt(win.avgDmgTaken) : null,
+            loss ? fmtInt(loss.avgDmgTaken) : null),
         tile('Dmg Champs',
             win ? fmtInt(win.avgDmgChamps) : null,
             loss ? fmtInt(loss.avgDmgChamps) : null),
-        tile('Solo K',
+        tile('Solo Kills',
             win ? fmtNum(win.avgSoloKills, 1) : null,
             loss ? fmtNum(loss.avgSoloKills, 1) : null),
     ];
@@ -2264,6 +2273,7 @@ function buildRoleRenderContext(row, roleData, summonerName, ver) {
     return {
         summonerName,
         roleLabel: row.roleLabel,
+        roleIconUrl: ROLE_ICON_URLS[row.role] || null,
         gamesText: `${row.games} games`,
         wlText:    `${row.wins}W-${row.losses}L`,
         wrText:    `${row.winRate.toFixed(1)}% WR`,
@@ -2296,7 +2306,19 @@ function buildRoleRenderContext(row, roleData, summonerName, ver) {
             taken:    fmtInt(all?.avgDmgTaken),
             ccSec:    fmtNum(all?.avgCcSec, 1),
         },
+        vision: {
+            score:        all ? fmtNum(all.avgVisionScore, 1) : '—',
+            wardsPlaced:  all ? fmtNum(all.avgWardsPlaced,  1) : '—',
+            wardsKilled:  all ? fmtNum(all.avgWardsKilled,  1) : '—',
+            controlWards: all ? fmtNum(all.avgControlWards, 1) : '—',
+        },
         controlWardsText: all ? `${fmtNum(all.avgControlWards, 1)} avg` : '—',
+        chartLegend: [
+            { color: '#0acbe6', label: 'You (win games)',  dashed: false },
+            { color: '#5ad8ec', label: 'Opponent (win games)',  dashed: true  },
+            { color: '#e84057', label: 'You (loss games)', dashed: false },
+            { color: '#f08a99', label: 'Opponent (loss games)', dashed: true  },
+        ],
         legend: {
             win: 'Win avg',
             loss: 'Loss avg',
