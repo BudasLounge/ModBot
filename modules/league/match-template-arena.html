@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 1400px;
+      /* Height intentionally generous; node-html-to-image will trim with full-page screenshot. */
+      min-height: 1500px;
+      background-color: #010a13;
+      font-family: 'Roboto', 'Noto Sans JP', 'Noto Sans KR', 'Noto Sans SC', sans-serif;
+      color: #a09b8c;
+      padding: 22px 24px 28px 24px;
+      position: relative;
+    }
+
+    .header {
+      display: flex; justify-content: space-between; align-items: flex-end;
+      padding-bottom: 8px; border-bottom: 2px solid #1e2328; margin-bottom: 16px;
+    }
+    .outcome { font-size: 30px; font-weight: 700; text-transform: uppercase; letter-spacing: 3px; }
+    .victory  { color: #0acbe6; text-shadow: 0 0 10px rgba(10, 203, 230, 0.3); }
+    .top-half { color: #c8aa6e; text-shadow: 0 0 10px rgba(200, 170, 110, 0.3); }
+    .defeat   { color: #e84057; text-shadow: 0 0 10px rgba(232, 64, 87, 0.3); }
+    .neutral  { color: #c8aa6e; text-shadow: 0 0 10px rgba(200, 170, 110, 0.25); }
+    .meta-info { text-align: right; font-size: 14px; color: #939a9e; }
+
+    /* 2-column grid of subteam cards (4 rows × 2 cols = 8 subteams). */
+    .subteam-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .subteam-card {
+      background: #0f1216;
+      border: 1px solid #1e2328;
+      border-radius: 6px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .subteam-card.winner { border-top: 3px solid #f0c674; box-shadow: 0 0 14px rgba(240, 198, 116, 0.18); }
+    .subteam-card.contains-local { border: 1px solid #c8aa6e; background: #15181d; }
+
+    .subteam-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding-bottom: 4px; border-bottom: 1px solid #1e2328;
+    }
+    .placement-badge {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 16px; font-weight: 700; letter-spacing: 1px;
+    }
+    .placement-num {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 30px; height: 30px;
+      background: #1e2328; color: #c8aa6e;
+      border-radius: 4px; padding: 0 8px;
+      font-size: 16px; font-weight: 700;
+    }
+    .placement-1 .placement-num { background: linear-gradient(135deg, #f0c674, #b8923a); color: #1a1305; }
+    .placement-2 .placement-num { background: #6e7681; color: #fff; }
+    .placement-3 .placement-num { background: #8a5a44; color: #fff; }
+
+    .subteam-label { color: #939a9e; font-size: 12px; }
+
+    .subteam-players { display: flex; flex-direction: column; gap: 6px; }
+
+    .player-row {
+      display: grid;
+      grid-template-columns: 56px 1fr 90px;
+      gap: 8px;
+      align-items: stretch;
+      background: #141619;
+      border-left: 3px solid transparent;
+      border-radius: 4px;
+      padding: 6px 8px;
+    }
+    .player-row.local { border-left-color: #c8aa6e; background: #1a1611; }
+
+    .col-champ {
+      position: relative; display: flex; flex-direction: column;
+      align-items: center; gap: 3px; justify-content: center;
+    }
+    .champ-img {
+      width: 48px; height: 48px;
+      border-radius: 50%; border: 2px solid #333; background: #1e2328;
+      object-fit: cover;
+    }
+    .spells { display: flex; gap: 2px; }
+    .spell-icon { width: 16px; height: 16px; border-radius: 3px; background: #141619; }
+
+    .col-info {
+      display: flex; flex-direction: column; gap: 4px; min-width: 0;
+    }
+    .name-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+    .summoner-name {
+      color: #fff; font-weight: 700; font-size: 14px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1;
+    }
+    .champion-name { color: #939a9e; font-size: 11px; }
+    .kda-line { font-size: 12px; color: #c8aa6e; }
+    .kda-line .sep { color: #5c5b57; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 4px 8px;
+      font-size: 11px;
+    }
+    .stat-cell { display: flex; flex-direction: column; gap: 1px; }
+    .stat-label { color: #5c5b57; text-transform: uppercase; letter-spacing: 1px; font-size: 9px; }
+    .stat-value { color: #e1dccc; font-weight: 500; }
+    .bar-bg {
+      width: 100%; height: 3px; background: #1c1f24; border-radius: 2px; margin-top: 1px; overflow: hidden;
+    }
+    .bar-fill { height: 100%; display: block; border-radius: 2px; }
+    .bar-fill.dealt { background: #0acbe6; }
+    .bar-fill.taken { background: #e84057; }
+    .bar-fill.gold  { background: #c8aa6e; }
+
+    .col-items {
+      display: grid;
+      grid-template-columns: repeat(4, 18px);
+      grid-auto-rows: 18px;
+      gap: 2px;
+      align-content: center;
+      justify-content: center;
+    }
+    .item-icon {
+      width: 18px; height: 18px;
+      border-radius: 3px; border: 1px solid #2a2e35; background: #141619;
+    }
+    .item-icon.placeholder { opacity: 0.15; }
+
+    .augments-row {
+      display: flex; flex-wrap: wrap; gap: 6px;
+      padding-top: 4px; border-top: 1px dashed #1e2328;
+    }
+    .augment {
+      display: flex; align-items: center; gap: 5px;
+      background: #1a1d22; border-radius: 3px; padding: 2px 5px 2px 2px;
+      min-width: 0; max-width: 100%;
+    }
+    .augment-icon {
+      width: 22px; height: 22px;
+      border-radius: 3px; background: #0f1216; border: 1px solid #2a2e35;
+      object-fit: cover;
+    }
+    .augment-placeholder {
+      width: 22px; height: 22px;
+      border-radius: 3px; background: #1e2328; border: 1px solid #2a2e35;
+      display: flex; align-items: center; justify-content: center;
+      color: #c8aa6e; font-size: 9px; font-weight: 700;
+    }
+    .augment-name {
+      font-size: 10px; color: #d6d2c4; line-height: 1.1;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      max-width: 110px;
+    }
+
+    .footer {
+      margin-top: 18px;
+      text-align: center;
+      font-size: 11px;
+      color: #5c5b57;
+      border-top: 1px solid #1e2328;
+      padding-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="outcome {{resultClass}}">{{uploaderResult}}</div>
+    <div class="meta-info">{{gameMode}} • {{duration}}{{#if gameId}} • Game {{gameId}}{{/if}}</div>
+  </div>
+
+  <div class="subteam-grid">
+    {{#each subteams}}
+      <div class="subteam-card placement-{{placement}} {{#if isWinner}}winner{{/if}} {{#if containsLocal}}contains-local{{/if}}">
+        <div class="subteam-header">
+          <div class="placement-badge">
+            <span class="placement-num">{{placementLabel}}</span>
+            <span>{{#if isWinner}}1st Place{{else}}Place {{placement}}{{/if}}</span>
+          </div>
+          <div class="subteam-label">Team {{subteamId}}</div>
+        </div>
+
+        <div class="subteam-players">
+          {{#each players}}
+            <div class="player-row {{#if isLocal}}local{{/if}}">
+              <div class="col-champ">
+                {{#if championIcon}}
+                  <img src="{{championIcon}}" class="champ-img" onerror="this.style.background='#1e2328';this.style.border='2px solid #333';this.removeAttribute('src')">
+                {{else}}
+                  <div class="champ-img"></div>
+                {{/if}}
+                <div class="spells">
+                  <img src="{{spell1Url}}" class="spell-icon">
+                  <img src="{{spell2Url}}" class="spell-icon">
+                </div>
+              </div>
+
+              <div class="col-info">
+                <div class="name-row">
+                  <span class="summoner-name">{{displayName}}</span>
+                  <span class="champion-name">{{championName}}</span>
+                </div>
+                <div class="kda-line">
+                  KDA <strong>{{kda}}</strong>
+                </div>
+                <div class="stats-grid">
+                  <div class="stat-cell">
+                    <span class="stat-label">Damage</span>
+                    <span class="stat-value">{{damageDealtFmt}}</span>
+                    <span class="bar-bg"><span class="bar-fill dealt" style="width: {{damageDealtPct}}%;"></span></span>
+                  </div>
+                  <div class="stat-cell">
+                    <span class="stat-label">Taken</span>
+                    <span class="stat-value">{{damageTakenFmt}}</span>
+                    <span class="bar-bg"><span class="bar-fill taken" style="width: {{damageTakenPct}}%;"></span></span>
+                  </div>
+                  <div class="stat-cell">
+                    <span class="stat-label">Gold</span>
+                    <span class="stat-value">{{goldFmt}}</span>
+                    <span class="bar-bg"><span class="bar-fill gold" style="width: {{goldPct}}%;"></span></span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-items">
+                {{#each items}}
+                  {{#if url}}
+                    <img src="{{url}}" class="item-icon" onerror="this.style.display='none'">
+                  {{else}}
+                    <div class="item-icon placeholder"></div>
+                  {{/if}}
+                {{/each}}
+              </div>
+            </div>
+
+            {{#if augments.length}}
+              <div class="augments-row">
+                {{#each augments}}
+                  <div class="augment" title="{{name}}">
+                    {{#if iconUrl}}
+                      <img src="{{iconUrl}}" class="augment-icon" onerror="this.style.display='none'">
+                    {{else}}
+                      <div class="augment-placeholder">A</div>
+                    {{/if}}
+                    <span class="augment-name">{{name}}</span>
+                  </div>
+                {{/each}}
+              </div>
+            {{/if}}
+          {{/each}}
+        </div>
+      </div>
+    {{/each}}
+  </div>
+
+  <div class="footer">Arena scoreboard • placements 1–8 sorted top-to-bottom</div>
+
+</body>
+</html>

@@ -26,6 +26,7 @@ const {
   upsertKeywordsInContent,
 } = require('./lib/match_tags.js');
 const MatchArchive = require('./lib/match_archive.js');
+const { prepareArenaScoreboardData } = require('./lib/arena_scoreboard.js');
 
 // Persistent on-disk archive of final post-match payloads. Instantiated in
 // register_handlers once the module logger is available so the archive can
@@ -141,6 +142,33 @@ function formatName(player) {
 function getUploaderInfo(payload) {
   const teams = Array.isArray(payload?.teams) ? payload.teams : [];
   const winningTeam = teams.find((t) => t.isWinningTeam);
+
+  // Arena (CHERRY) matches don't expose a winningTeam in the SR sense;
+  // resolve the uploader from arenaPlayers[] when present and fall back
+  // to its placement to populate `result`.
+  if (isArenaMatch(payload) && Array.isArray(payload?.arenaPlayers) && payload.arenaPlayers.length > 0) {
+    const localArena = payload.arenaPlayers.find((p) => p?.isLocalPlayer);
+    const arenaName =
+      payload?.uploader ||
+      payload?.uploadedBy ||
+      payload?.uploaderName ||
+      payload?.uploaderId ||
+      (localArena
+        ? (localArena.riotIdGameName
+            ? (localArena.riotIdTagLine
+                ? `${localArena.riotIdGameName}#${localArena.riotIdTagLine}`
+                : localArena.riotIdGameName)
+            : (localArena.puuid || 'unknown'))
+        : 'unknown');
+    let result = 'Unknown';
+    const placement = Number(localArena?.placement ?? payload?.arenaLocalPlacement);
+    if (Number.isFinite(placement) && placement > 0) {
+      if (placement === 1) result = 'Win';
+      else if (placement <= 4) result = 'Top 4';
+      else result = 'Loss';
+    }
+    return { name: arenaName, result };
+  }
 
   const localPlayer = payload?.localPlayer || teams.flatMap((t) => t.players || []).find((p) => p?.isLocalPlayer);
   const uploaderName =
@@ -331,6 +359,18 @@ async function resolveMatchPlayers(payload) {
     }
   }
 
+  // Arena payloads carry their roster in arenaPlayers[]; harvest those too so
+  // CHERRY matches can be linked to Discord accounts the same way.
+  if (Array.isArray(payload?.arenaPlayers)) {
+    for (const player of payload.arenaPlayers) {
+      const name = (player?.riotIdGameName || '').trim();
+      const tag = (player?.riotIdTagLine || '').trim();
+      if (name && tag) {
+        riotIds.push(`${name}#${tag}`);
+      }
+    }
+  }
+
   const normalizedRiotIds = Array.from(new Set(riotIds.map((id) => id.toLowerCase())));
 
   logger.info('[LoL Match Ingest] Resolving match players by Riot ID', {
@@ -474,6 +514,24 @@ function isAramMayhem(payload) {
   const mode = (payload?.gameMode || '').toUpperCase();
   const queue = (payload?.queueType || '').toUpperCase();
   return Boolean(payload?.isAramMayhem) || mode === 'KIWI' || queue === 'KIWI';
+}
+
+/**
+ * Detect Arena (CHERRY) match payloads. Mirrors the rule from
+ * arena_ingestion_guide.md §2: any of `isArena`, `queueId === 1700`, or
+ * `gameMode === "CHERRY"` qualifies. Both annotated payloads (post-LeagueLoader
+ * client) and raw LCU dumps are handled.
+ */
+function isArenaMatch(payload) {
+  if (!payload) return false;
+  if (payload.isArena === true) return true;
+  if (Number(payload.queueId) === 1700) return true;
+  if (Number(payload.arenaQueueId) === 1700) return true;
+  const mode = String(payload.gameMode || '').toUpperCase();
+  if (mode === 'CHERRY') return true;
+  const queueType = String(payload.queueType || '').toUpperCase();
+  if (queueType === 'CHERRY') return true;
+  return false;
 }
 
 function isSRGame(payload) {
@@ -1366,14 +1424,23 @@ async function prepareScoreboardData(payload, uploaderInfos = [], rankedLpEntrie
 
 async function generateInfographicImage(payload, uploaderInfos, rankedLpEntries = []) {
   try {
-    const templateFile = isAramMayhem(payload) ? 'match-template-mayhem.html' : 'match-template.html';
+    const arena = isArenaMatch(payload);
+    const templateFile = arena
+      ? 'match-template-arena.html'
+      : (isAramMayhem(payload) ? 'match-template-mayhem.html' : 'match-template.html');
     const templatePath = path.join(__dirname, templateFile);
     const template = fs.readFileSync(templatePath, 'utf8');
-    
-    // Await the data preparation (since it fetches version)
-    const data = await prepareScoreboardData(payload, uploaderInfos, rankedLpEntries);
 
-    logger.info('[Infographic] Generating infographic image', { templateFile });
+    // Await the data preparation (since it fetches version)
+    let data;
+    if (arena) {
+      const ddVersion = await getLatestDDVersion();
+      data = await prepareArenaScoreboardData(payload, ddVersion, uploaderInfos, logger);
+    } else {
+      data = await prepareScoreboardData(payload, uploaderInfos, rankedLpEntries);
+    }
+
+    logger.info('[Infographic] Generating infographic image', { templateFile, arena });
     const imageBuffer = await nodeHtmlToImage({
       html: template,
       content: data,
@@ -1752,6 +1819,7 @@ async function handleMatchPayload(payload, client, uploaderInfos = [], placehold
     if (scoreboardMessage) {
       try {
         const augmentsData = recentMatchAugments.get(String(gameId));
+        const arenaMatch = isArenaMatch(payload);
         const row = new ActionRowBuilder();
 
         if (isAramMayhem(payload)) {
@@ -1772,12 +1840,19 @@ async function handleMatchPayload(payload, client, uploaderInfos = [], placehold
           );
         }
 
-        row.addComponents(
-          new ButtonBuilder()
-            .setCustomId(`LEAGUE_MORE_STATS_${gameId}`)
-            .setLabel('Show More Stats')
-            .setStyle(ButtonStyle.Secondary)
-        );
+        // The "Show More Stats" handler renders a per-player card off
+        // payload.teams[] which doesn't exist in the canonical Arena
+        // schema. Skip the button for Arena matches to avoid confusing
+        // empty replies; Arena scoreboard already surfaces the full set
+        // of stats the user requested.
+        if (!arenaMatch) {
+          row.addComponents(
+            new ButtonBuilder()
+              .setCustomId(`LEAGUE_MORE_STATS_${gameId}`)
+              .setLabel('Show More Stats')
+              .setStyle(ButtonStyle.Secondary)
+          );
+        }
 
         row.addComponents(
           new ButtonBuilder()
@@ -1787,7 +1862,7 @@ async function handleMatchPayload(payload, client, uploaderInfos = [], placehold
         );
 
         await scoreboardMessage.edit({ components: [row] });
-        logger.info('[LoL Match Ingest] Added match buttons', { gameId, augments: !!augmentsData });
+        logger.info('[LoL Match Ingest] Added match buttons', { gameId, augments: !!augmentsData, arenaMatch });
       } catch (err) {
         logger.error('[LoL Match Ingest] Failed to add match buttons', err);
       }

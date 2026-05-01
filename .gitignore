@@ -6,3 +6,6 @@ logs/
 .github/instructions/
 modules/league/match_archive/
 modules/league/mayhem_wiki_data.json
+modules/league/arena_wiki_data.json
+modules/league/arena_augment_cache.json
+modules/league/assets/arena/
