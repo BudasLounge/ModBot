@@ -10,7 +10,33 @@
  *     damage dealt + taken
  */
 
+const axios = require('axios');
 const { getArenaAugmentIndex, resolveAugmentDisplay } = require('./arena_augments.js');
+
+// Cache champion ID → { name, urlId } keyed by ddVersion to avoid repeated fetches.
+let _champIdMap = null;
+let _champIdMapVersion = null;
+
+async function buildChampionIdMap(ddVersion, logger) {
+  if (_champIdMap && _champIdMapVersion === ddVersion) return _champIdMap;
+  try {
+    const url = `https://ddragon.leagueoflegends.com/cdn/${ddVersion}/data/en_US/champion.json`;
+    logger?.info?.(`[ArenaScoreboard] Fetching champion ID map from ${url}`);
+    const res = await axios.get(url, { timeout: 10000 });
+    const data = res.data?.data || {};
+    const map = new Map();
+    for (const champ of Object.values(data)) {
+      map.set(Number(champ.key), { name: champ.name, urlId: champ.id });
+    }
+    _champIdMap = map;
+    _champIdMapVersion = ddVersion;
+    logger?.info?.(`[ArenaScoreboard] Built champion ID map with ${map.size} champions`);
+  } catch (err) {
+    logger?.warn?.('[ArenaScoreboard] Failed to fetch champion.json — champion icons will be missing', { err: err.message });
+    _champIdMap = _champIdMap || new Map();
+  }
+  return _champIdMap;
+}
 
 function fixChampName(name) {
   if (!name) return 'Unknown';
@@ -140,7 +166,10 @@ function uploaderNameMatchesPlayer(uploaderInfos, p) {
  * @param {object}   logger
  */
 async function prepareArenaScoreboardData(payload, ddVersion, uploaderInfos = [], logger = null) {
-  const augmentIndex = await getArenaAugmentIndex(logger);
+  const [augmentIndex, champIdMap] = await Promise.all([
+    getArenaAugmentIndex(logger),
+    buildChampionIdMap(ddVersion, logger),
+  ]);
 
   const CDN = `https://ddragon.leagueoflegends.com/cdn/${ddVersion}/img`;
   const ITEM_CDN = `${CDN}/item`;
@@ -161,9 +190,13 @@ async function prepareArenaScoreboardData(payload, ddVersion, uploaderInfos = []
   const explicitLocalExists = rawPlayers.some((p) => p.isLocalPlayer);
 
   const mapPlayer = (p) => {
-    const championName = p.championName || `Champion ${p.championId}`;
+    const champEntry = champIdMap.get(p.championId);
+    const championName = p.championName || champEntry?.name || `Champion ${p.championId}`;
+    // Use DataDragon's URL-safe id (champEntry.urlId) directly so names with
+    // apostrophes, spaces, etc. don't produce broken URLs even without championName.
+    const championIconId = champEntry?.urlId || fixChampName(p.championName || championName);
     const championIcon = p.championId
-      ? `${CDN}/champion/${fixChampName(p.championName || championName)}.png`
+      ? `${CDN}/champion/${championIconId}.png`
       : null;
 
     // Items: Arena pads to 7 slots. Slot 6 is the trinket (often 0/3340).
