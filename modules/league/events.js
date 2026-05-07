@@ -65,6 +65,8 @@ let matchServerStarted = false;
 
 const RIOT_ACCOUNT_BY_RIOT_ID =
   'https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/';
+const RIOT_ACCOUNT_BY_PUUID =
+  'https://americas.api.riotgames.com/riot/account/v1/accounts/by-puuid/';
 const RIOT_SUMMONER_BY_NAME_NA =
   'https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/';
 const RIOT_SUMMONER_BY_PUUID_NA =
@@ -139,6 +141,117 @@ function formatName(player) {
   return 'unknown';
 }
 
+async function resolvePlayerIdentityByPuuid(puuid) {
+  const normalizedPuuid = String(puuid || '').trim();
+  if (!normalizedPuuid) return null;
+  if (!RIOT_API_KEY) {
+    logger?.info?.('[LoL Match Ingest] Riot API key missing; skipping PUUID identity lookup', { puuid: normalizedPuuid });
+    return null;
+  }
+
+  try {
+    logger.info('[LoL Match Ingest] Resolving Riot account by PUUID', { puuid: normalizedPuuid });
+    const response = await riotGet(
+      `${RIOT_ACCOUNT_BY_PUUID}${encodeURIComponent(normalizedPuuid)}`
+    );
+    const gameName = String(response?.data?.gameName || '').trim();
+    const tagLine = String(response?.data?.tagLine || '').trim();
+
+    if (!gameName) {
+      logger.info('[LoL Match Ingest] Riot account lookup returned no username for PUUID', {
+        puuid: normalizedPuuid,
+      });
+      return null;
+    }
+
+    return {
+      puuid: normalizedPuuid,
+      riotIdGameName: gameName,
+      riotIdTagLine: tagLine || null,
+      summonerName: gameName,
+    };
+  } catch (err) {
+    logger.error('[LoL Match Ingest] Failed to resolve Riot account by PUUID', {
+      puuid: normalizedPuuid,
+      err: err?.message,
+    });
+    return null;
+  }
+}
+
+async function enrichPayloadPlayerIdentities(payload, resolver = resolvePlayerIdentityByPuuid) {
+  if (!payload || typeof payload !== 'object') return payload;
+
+  const playersByPuuid = new Map();
+  const addPlayer = (player) => {
+    if (!player || typeof player !== 'object') return;
+
+    const puuid = String(player.puuid || player.PUUID || '').trim();
+    if (!puuid) return;
+
+    const hasName = Boolean(String(player.riotIdGameName || player.summonerName || '').trim());
+    if (hasName) return;
+
+    if (!playersByPuuid.has(puuid)) {
+      playersByPuuid.set(puuid, []);
+    }
+    playersByPuuid.get(puuid).push(player);
+  };
+
+  for (const team of payload?.teams || []) {
+    for (const player of team?.players || []) {
+      addPlayer(player);
+    }
+  }
+  for (const player of payload?.arenaPlayers || []) {
+    addPlayer(player);
+  }
+  for (const player of payload?.statsBlock?.players || []) {
+    addPlayer(player);
+  }
+  addPlayer(payload?.localPlayer);
+
+  if (playersByPuuid.size === 0) return payload;
+
+  logger?.info?.('[LoL Match Ingest] Resolving missing player identities from PUUIDs', {
+    gameId: payload.gameId || payload.reportGameId || null,
+    playerCount: playersByPuuid.size,
+  });
+
+  const resolvedPlayers = await Promise.all(
+    Array.from(playersByPuuid.keys()).map(async (puuid) => [puuid, await resolver(puuid)])
+  );
+
+  let resolvedCount = 0;
+  for (const [puuid, identity] of resolvedPlayers) {
+    if (!identity) continue;
+    resolvedCount += 1;
+
+    for (const player of playersByPuuid.get(puuid) || []) {
+      if (!player.puuid && player.PUUID) {
+        player.puuid = player.PUUID;
+      }
+      if (!player.riotIdGameName && identity.riotIdGameName) {
+        player.riotIdGameName = identity.riotIdGameName;
+      }
+      if (!player.riotIdTagLine && identity.riotIdTagLine) {
+        player.riotIdTagLine = identity.riotIdTagLine;
+      }
+      if (!player.summonerName && identity.summonerName) {
+        player.summonerName = identity.summonerName;
+      }
+    }
+  }
+
+  logger?.info?.('[LoL Match Ingest] Finished PUUID identity resolution', {
+    gameId: payload.gameId || payload.reportGameId || null,
+    attempted: playersByPuuid.size,
+    resolved: resolvedCount,
+  });
+
+  return payload;
+}
+
 function getUploaderInfo(payload) {
   const teams = Array.isArray(payload?.teams) ? payload.teams : [];
   const winningTeam = teams.find((t) => t.isWinningTeam);
@@ -186,6 +299,30 @@ function getUploaderInfo(payload) {
     : 'Unknown';
 
   return { name: uploaderName, result };
+}
+
+function mergeUploaderInfos(payload, uploaderInfos = []) {
+  const merged = Array.isArray(uploaderInfos) ? uploaderInfos.filter(Boolean) : [];
+  const derived = getUploaderInfo(payload);
+  const derivedName = normalizeLeagueName(derived?.name);
+
+  if (!derivedName || derivedName === 'unknown') {
+    return merged.length > 0 ? merged : (derived ? [derived] : []);
+  }
+
+  const existingIndex = merged.findIndex(
+    (info) => normalizeLeagueName(info?.name) === derivedName
+  );
+
+  if (existingIndex === 0) return merged;
+  if (existingIndex > 0) {
+    const [existing] = merged.splice(existingIndex, 1);
+    merged.unshift(existing);
+    return merged;
+  }
+
+  merged.unshift(derived);
+  return merged;
 }
 
 function toDiscordSnowflake(value) {
@@ -1648,6 +1785,9 @@ async function enqueueMatchPayload(rawPayload, client) {
 async function handleMatchPayload(payload, client, uploaderInfos = [], placeholderMessage = null, rankedLpEntries = []) {
   const gameId = payload.gameId || payload.reportGameId || 'unknown';
   logger.info('[LoL Match Ingest] Payload received, generating infographic...', { gameId });
+
+  payload = await enrichPayloadPlayerIdentities(payload);
+  uploaderInfos = mergeUploaderInfos(payload, uploaderInfos);
 
   const forfeit = getForfeitDetails(payload);
   const rankedInfo = extractRankedLpInfo(payload);
