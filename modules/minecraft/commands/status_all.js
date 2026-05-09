@@ -12,12 +12,65 @@ module.exports = {
     const { performance } = require('perf_hooks');
     const perfStart = performance.now();
     const { EmbedBuilder } = require('discord.js');
-    const axios = require('axios');
     const pinger = require('minecraft-ping-js');
     const fs = require('fs');
+    const net = require('net');
 
     // Read Palworld password from file
     const password = fs.readFileSync('../palworld_password.txt').toString().trim();
+
+    // Minimal RCON client using Node's built-in net module.
+    // Palworld's RCON returns all responses with id=0 (non-standard),
+    // so we use a simple auth-then-command flow on a fresh connection per call.
+    const rconSend = (host, port, pwd, command) => new Promise((resolve, reject) => {
+      const client = net.createConnection({ host, port });
+      let buf = Buffer.alloc(0);
+      let authed = false;
+      let done = false;
+
+      const finish = (val, err) => {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        client.destroy();
+        if (err) reject(err); else resolve(val);
+      };
+
+      const timer = setTimeout(() => finish(null, new Error('RCON timeout')), 10000);
+
+      const sendPkt = (id, type, body) => {
+        const bodyBuf = Buffer.concat([Buffer.from(body, 'utf8'), Buffer.from([0, 0])]);
+        const pkt = Buffer.alloc(12 + bodyBuf.length);
+        pkt.writeInt32LE(4 + 4 + bodyBuf.length, 0);
+        pkt.writeInt32LE(id, 4);
+        pkt.writeInt32LE(type, 8);
+        bodyBuf.copy(pkt, 12);
+        client.write(pkt);
+      };
+
+      client.on('connect', () => sendPkt(1, 3, pwd));
+
+      client.on('data', (data) => {
+        buf = Buffer.concat([buf, data]);
+        while (buf.length >= 4) {
+          const len = buf.readInt32LE(0);
+          if (buf.length < len + 4) break;
+          const type = buf.readInt32LE(8);
+          const body = buf.slice(12, 4 + len - 2).toString('utf8');
+          buf = buf.slice(4 + len);
+
+          if (!authed && type === 2) {
+            authed = true;
+            sendPkt(2, 2, command);
+          } else if (authed) {
+            finish(body, null);
+          }
+        }
+      });
+
+      client.on('error', (e) => finish(null, e));
+      client.on('close', () => { if (!done) finish(null, new Error('RCON connection closed')); });
+    });
 
     message.channel.send({ content: 'Let me get that for you... this might take a moment' });
 
@@ -109,47 +162,33 @@ module.exports = {
       .setTitle('Palworld Server Status');
 
     try {
-      // Create promise with timeout for Palworld API
-      const fetchPalworldMetrics = async () => {
-        return await axios.get('http://192.168.1.4:25575/v1/api/metrics', {
-          auth: { username: 'admin', password },
-          timeout: 15000 // 15 second timeout
-        });
-      };
-      
-      const metricsResp = await fetchPalworldMetrics();
-      const metrics = metricsResp.data;
+      const RCON_HOST = '192.168.1.4';
+      const RCON_PORT = 25575;
 
-      let status = `✅ **ONLINE**\n`;
-      status += `Players: ${metrics.currentplayernum}/${metrics.maxplayernum}`;
-      
-      const uptimeSeconds = metrics.uptime;
-      const uptimeHours = Math.floor(uptimeSeconds / 3600);
-      const uptimeMinutes = Math.floor((uptimeSeconds % 3600) / 60);
-      status += `\nUptime: ${uptimeHours}h ${uptimeMinutes}m`;
-      
+      // Run Info and ShowPlayers as sequential RCON calls
+      const infoResponse = await rconSend(RCON_HOST, RCON_PORT, password, 'Info');
+      const playersResponse = await rconSend(RCON_HOST, RCON_PORT, password, 'ShowPlayers');
+
+      // Info response: "Welcome to Pal Server[v0.7.3.90464] Budaslounge\n"
+      const versionMatch = infoResponse.match(/\[v([\d.]+)\]/);
+      const version = versionMatch ? versionMatch[1] : null;
+
+      // ShowPlayers response: "name,playeruid,steamid\nPlayer1,uid,steamid\n..."
+      const playerLines = playersResponse
+        .split('\n')
+        .map(l => l.trim())
+        .filter(l => l && !l.startsWith('name,'));
+      const playerCount = playerLines.length;
+
+      let status = `✅ **ONLINE**`;
+      if (version) status += `\nVersion: ${version}`;
+      status += `\nPlayers: ${playerCount}`;
+
       PalworldEmbed.setDescription(status);
 
-      // If players online, fetch player list with timeout
-      if (metrics.currentplayernum > 0) {
-        try {
-          const fetchPlayers = async () => {
-            return await axios.get('http://192.168.1.4:25575/v1/api/players', {
-              auth: { username: 'admin', password },
-              timeout: 15000 // 15 second timeout
-            });
-          };
-          
-          const playersResp = await fetchPlayers();
-          
-          // Map each player as "name" ("accountName")
-          const playerNames = playersResp.data.players.map(p => `• ${p.name} (${p.accountName})`).join('\n');
-          if (playerNames) {
-            PalworldEmbed.addFields({ name: 'Players Online', value: playerNames });
-          }
-        } catch (playerError) {
-          // Silent error - already showing player count in status
-        }
+      if (playerCount > 0) {
+        const playerNames = playerLines.map(l => `• ${l.split(',')[0]}`).join('\n');
+        PalworldEmbed.addFields({ name: 'Players Online', value: playerNames });
       }
     } catch (error) {
       this.logger.error(`Palworld server error: ${error.message}`);
