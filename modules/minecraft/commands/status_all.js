@@ -111,7 +111,7 @@ module.exports = {
     try {
       // Create promise with timeout for Palworld API
       const fetchPalworldMetrics = async () => {
-        return await axios.get('http://192.168.1.4:8212/v1/api/metrics', {
+        return await axios.get('http://192.168.1.4:25575/v1/api/metrics', {
           auth: { username: 'admin', password },
           timeout: 15000 // 15 second timeout
         });
@@ -134,7 +134,7 @@ module.exports = {
       if (metrics.currentplayernum > 0) {
         try {
           const fetchPlayers = async () => {
-            return await axios.get('http://192.168.1.4:8212/v1/api/players', {
+            return await axios.get('http://192.168.1.4:25575/v1/api/players', {
               auth: { username: 'admin', password },
               timeout: 15000 // 15 second timeout
             });
