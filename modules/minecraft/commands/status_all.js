@@ -101,9 +101,9 @@ module.exports = {
       }
     });
     
-    message.channel.send({ embeds: [ListEmbed] });
+    await message.channel.send({ embeds: [ListEmbed] });
     
-    // Send a separate message to better separate the different game statuses
+    // Send a placeholder we can edit in-place once Palworld data is ready
     const palworldMsg = await message.channel.send({ content: `Now getting Palworld status...` });
     
     // Create Palworld embed
@@ -135,11 +135,8 @@ module.exports = {
       PalworldEmbed.setDescription('❌ **OFFLINE**\n\nIf the server should be online, please contact a server admin.\nThe server should auto-restart within 5 minutes if it crashed.');
     }
 
-    // Send the final Palworld embed
-    await palworldMsg.delete().catch(() => {});
-    message.channel.send({
-      embeds: [PalworldEmbed]
-    });
+    // Edit the placeholder in-place rather than delete+resend (avoids deleting wrong message)
+    await palworldMsg.edit({ content: '', embeds: [PalworldEmbed] });
 
     this.logger.info('<<display_all_servers_status');
   },
