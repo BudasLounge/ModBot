@@ -40,18 +40,21 @@ async function onButtonClick(button){
         // Show the modal to the user
         await button.showModal(modal);
     }
-    else if((button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && button.customId=="MCSERVERDELETOR"){
+    else if((button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && button.customId=="MINE-SERVERDELETOR"){
         var respServer;
         try{
             respServer = await api.get("minecraft_server", {
                 _limit: 20
             });
         } catch(error){
-            console.error(error);
+            logger.error("Error fetching server list for delete GUI:", error.message || error);
+            await button.reply({ content: "Failed to fetch server list. Please try again later." });
+            return;
         };
-        //const modal = new ModalBuilder()
-        //.setCustomId('MCSERVERDELETORMODAL')
-        //.setTitle('MC Server DELETOR');
+        if (!respServer?.minecraft_servers?.length) {
+            await button.reply({ content: "No servers found to delete." });
+            return;
+        }
         const serverSelector = new ActionRowBuilder()
         .addComponents(
             new StringSelectMenuBuilder()
