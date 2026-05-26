@@ -1,4 +1,4 @@
-var Discord = require('discord.js');
+const { Collection } = require('discord.js');
 var APIClient = require('./APIClient.js');
 var moment = require('moment');
 
@@ -68,7 +68,7 @@ class StateManager {
                 _limit: 100
             });
 
-            the_state.data = new Discord.Collection();
+            the_state.data = new Collection();
 
             if(respData.hasOwnProperty("state_data") && respData.state_data.length > 0) {
                 for(var data of respData.state_data) {
@@ -105,7 +105,7 @@ class StateManager {
                     this.data.set(data_name, dataObj);
                 };
 
-                the_state.data = new Discord.Collection();
+                the_state.data = new Collection();
                 return the_state;
             } else {
                 this.logger.error("[CRITICAL] Unable to create new command state!");
@@ -138,7 +138,7 @@ class StateManager {
             _limit: 100
         });
 
-        var existing_data = new Discord.Collection();
+        var existing_data = new Collection();
 
         for(var cur_data of respData.state_data) {
             existing_data.set(cur_data.data_id, cur_data);

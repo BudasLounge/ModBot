@@ -1,17 +1,18 @@
 var ApiClient = require("../../core/js/APIClient.js");
 var api = new ApiClient();
-const {ActionRowBuilder, ButtonBuilder, EmbedBuilder, SelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ButtonStyle} = require('discord.js');
+const {ActionRowBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags} = require('discord.js');
 
 async function onButtonClick(button){
     if (!button.isButton()) return;
     if(!(button.customId.substr(0,3)==="DND")) return;
     if (button.isButton()){
-        button.customId = button.customId.slice(3)
-        if(button.customId.substring(0,3)=="ID-"){
-            if(!button.customId.includes(button.user.id)){
-                await button.reply({content: "This invite was not made for you.", ephemeral: true})
+        const customId = button.customId.slice(3)
+        if(customId.substring(0,3)=="ID-"){
+            if(!customId.includes(button.user.id)){
+                await button.reply({content: "This invite was not made for you.", flags: MessageFlags.Ephemeral})
+                return;
             }
-            var IDcheck = button.customId.split("_").pop();
+            var IDcheck = customId.split("_").pop();
             if(IDcheck.includes("A")){
                 try{
                     var respCampaign = await api.get("dnd_campaign",{
@@ -20,9 +21,9 @@ async function onButtonClick(button){
                 }catch(error2){
                     logger.error(error2.message)
                 }
-                logger.info("IDcheck: "+IDcheck + " customID: "+button.customId)
+                logger.info("IDcheck: "+IDcheck + " customID: "+customId)
                 if(!respCampaign.dnd_campaigns[0]){
-                    button.channel.reply({content: "This invite seems to have an issue. Contact an Admin please.", ephemeral: true});
+                    button.reply({content: "This invite seems to have an issue. Contact an Admin please.", flags: MessageFlags.Ephemeral});
                     return;
                 }
 
@@ -45,7 +46,7 @@ async function onButtonClick(button){
                 await button.update({content:"The invite was denied. If this was an error, contact your potential DM again.", components: [], embeds: []})
                 logger.info("The invite was rejected.")
             }
-        }else if(button.customId=="CAMPAIGNCREATOR"){
+        }else if(customId=="CAMPAIGNCREATOR"){
             const modal = new ModalBuilder()
 			.setCustomId('campaign-'+button.user.id.toString())
 			.setTitle('Campaign Creator');
@@ -53,34 +54,28 @@ async function onButtonClick(button){
             // Create the text input components
             const moduleInput = new TextInputBuilder()
                 .setCustomId('module')
-                // The label is the prompt the user sees for this input
-                .setLabel("What is the name of the module?")
                 // Short means only a single line of text
                 .setStyle(TextInputStyle.Short);
             const roleInput = new TextInputBuilder()
                 .setCustomId('role_name')
-                .setLabel("Player role name?")
                 .setStyle(TextInputStyle.Short);
             const textChannelInput = new TextInputBuilder()
                 .setCustomId('textchannel')
-                // The label is the prompt the user sees for this input
-                .setLabel("How many text channels do you need?")
                 // Short means only a single line of text
                 .setStyle(TextInputStyle.Short);
             const voiceChannelInput = new TextInputBuilder()
                 .setCustomId('voicechannel')
-                // The label is the prompt the user sees for this input
-                .setLabel("How many voice channels do you need?")
                 // Short means only a single line of text
                 .setStyle(TextInputStyle.Short);
             // An action row only holds one text input,
             // so you need one action row per text input.
-            const firstActionRow = new ActionRowBuilder().addComponents(moduleInput);
-            const secondActionRow = new ActionRowBuilder().addComponents(roleInput);
-            const thirdActionRow = new ActionRowBuilder().addComponents(textChannelInput);
-            const fourthActionRow = new ActionRowBuilder().addComponents(voiceChannelInput);
             // Add inputs to the modal
-            modal.addComponents(firstActionRow, secondActionRow, thirdActionRow, fourthActionRow);
+            modal.addLabelComponents(
+                label => label.setLabel('What is the name of the module?').setTextInputComponent(moduleInput),
+                label => label.setLabel('Player role name?').setTextInputComponent(roleInput),
+                label => label.setLabel('How many text channels do you need?').setTextInputComponent(textChannelInput),
+                label => label.setLabel('How many voice channels do you need?').setTextInputComponent(voiceChannelInput),
+            );
             // Show the modal to the user
             await button.showModal(modal);
 			// testing master push

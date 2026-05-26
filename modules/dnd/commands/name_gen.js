@@ -13,7 +13,7 @@ module.exports = {
     ],
     async execute(message, args, extra) {
         const {performance} = require('perf_hooks');
-        const {Util} = require('discord.js');
+        const { splitMessage } = require('../../../core/js/text_utils.js');
         var min = 4;
         var max = 9;
         if(Number.isInteger(parseInt(args[1]))){
@@ -141,7 +141,7 @@ module.exports = {
         var genEnd = performance.now();
         var flat = flatEnd-flatStart;
         var gen = genEnd-flatStart;
-        const messageChunks = Util.splitMessage(words, {
+        const messageChunks = splitMessage(words, {
             maxLength: 2000,
             char:'\n'
         });

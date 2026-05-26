@@ -49,7 +49,7 @@ module.exports = {
 
     // Check if user is asking for help
     if (args[1]?.toLowerCase() === 'help') {
-      const helpEmbed = new MessageEmbed()
+      const helpEmbed = new EmbedBuilder()
         .setColor('#0099ff')
         .setTitle('Minecraft Server List Update Help')
         .setDescription('Available fields that can be updated:')

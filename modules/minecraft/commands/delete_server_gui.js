@@ -12,7 +12,7 @@ module.exports = {
 
         this.logger.info(">>delete_server_gui");
         if(message.member.roles.cache.find(r => r.id === "586313447965327365") || message.author.id === "185223223892377611"){
-            const { ActionRowBuilder, ButtonBuilder, EmbedBuilder, SelectMenuBuilder, ButtonStyle } = require('discord.js');
+            const { ActionRowBuilder, ButtonBuilder, EmbedBuilder, ButtonStyle } = require('discord.js');
             const modalStarter = new ActionRowBuilder()
             .addComponents(
                 new ButtonBuilder()

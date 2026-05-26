@@ -9,9 +9,10 @@ const {
     ButtonStyle,
     TextInputStyle,
     ChannelType,
-    StringSelectMenuBuilder,
     UserSelectMenuBuilder,
-    PermissionFlagsBits
+    RadioGroupBuilder,
+    RadioGroupOptionBuilder,
+    MessageFlags
 } = require('discord.js');
 
 // Module-scoped logger, initialized in register_handlers
@@ -220,7 +221,7 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
     const parts = customId.split('-');
     if (parts.length < 2) {
         logger.warn(`[GAME_BTN] Invalid customId format: ${customId}`);
-        await buttonInteraction.reply({ content: "Invalid button action.", ephemeral: true });
+        await buttonInteraction.reply({ content: "Invalid button action.", flags: MessageFlags.Ephemeral });
         return;
     }
 
@@ -229,7 +230,7 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
     const gameId = Number(gameIdString); // Convert to number
     if (isNaN(gameId)) {
         logger.warn(`[GAME_BTN] Invalid gameId (not a number): ${gameIdString}`);
-        await buttonInteraction.reply({ content: "Invalid game ID in button.", ephemeral: true });
+        await buttonInteraction.reply({ content: "Invalid game ID in button.", flags: MessageFlags.Ephemeral });
         return;
     }
     const userId = buttonInteraction.user.id;
@@ -237,7 +238,7 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
     const actionPrefix = "GAME_";
     if (!fullAction.startsWith(actionPrefix)) {
         logger.warn(`[GAME_BTN] Invalid action prefix: ${fullAction}`);
-        await buttonInteraction.reply({ content: "Invalid button action.", ephemeral: true });
+        await buttonInteraction.reply({ content: "Invalid button action.", flags: MessageFlags.Ephemeral });
         return;
     }
     const actionKey = fullAction.substring(actionPrefix.length);
@@ -254,7 +255,7 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
         }
     } catch (error) {
         logger.error(`[GAME_BTN] API error fetching game ${gameId}: ${error.message || error}`);
-        await buttonInteraction.reply({ content: "Error fetching game details. Please try again.", ephemeral: true });
+        await buttonInteraction.reply({ content: "Error fetching game details. Please try again.", flags: MessageFlags.Ephemeral });
         return;
     }
 
@@ -265,7 +266,7 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
     switch (actionKey) {
         case "JOIN":
             try {
-                await buttonInteraction.deferReply({ ephemeral: true });
+                await buttonInteraction.deferReply({ flags: MessageFlags.Ephemeral });
                 const currentLobbyState = await localApi.get("game_joining_master", { game_id: gameId });
                 if (!currentLobbyState || !currentLobbyState.game_joining_masters || !currentLobbyState.game_joining_masters[0]) {
                     await buttonInteraction.editReply({ content: "Game not found." });
@@ -284,7 +285,7 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
             } catch (error) {
                 logger.error(`[GAME_BTN] Error joining game ${gameId} for ${userId}: ${error.message || error}`);
                 if (!buttonInteraction.replied && !buttonInteraction.deferred) {
-                    await buttonInteraction.reply({ content: "Could not join the game due to an error.", ephemeral: true });
+                    await buttonInteraction.reply({ content: "Could not join the game due to an error.", flags: MessageFlags.Ephemeral });
                 } else {
                     await buttonInteraction.editReply({ content: "Could not join the game due to an error." });
                 }
@@ -293,7 +294,7 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
 
         case "LEAVE":
             try {
-                await buttonInteraction.deferReply({ ephemeral: true });
+                await buttonInteraction.deferReply({ flags: MessageFlags.Ephemeral });
                 const playerResp = await localApi.get("game_joining_player", { game_id: gameId, player_id: userId, _limit: 1 });
                 if (playerResp && playerResp.game_joining_players && playerResp.game_joining_players[0]) {
                     const gamePlayerId = playerResp.game_joining_players[0].game_player_id;
@@ -306,7 +307,7 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
             } catch (error) {
                 logger.error(`[GAME_BTN] Error leaving game ${gameId} for ${userId}: ${error.message || error}`);
                 if (!buttonInteraction.replied && !buttonInteraction.deferred) {
-                    await buttonInteraction.reply({ content: "Could not leave the game due to an error.", ephemeral: true });
+                    await buttonInteraction.reply({ content: "Could not leave the game due to an error.", flags: MessageFlags.Ephemeral });
                 } else {
                     await buttonInteraction.editReply({ content: "Could not leave the game due to an error." });
                 }
@@ -315,7 +316,7 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
 
         case "HOST_SETUP_TEAMS":
             if (!isHost) {
-                await buttonInteraction.reply({ content: "Only the host can set up teams.", ephemeral: true });
+                await buttonInteraction.reply({ content: "Only the host can set up teams.", flags: MessageFlags.Ephemeral });
                 return;
             }
             const modal = new ModalBuilder()
@@ -324,36 +325,50 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
 
             const numTeamsInput = new TextInputBuilder()
                 .setCustomId('numTeams')
-                .setLabel("Number of Teams (2-4)")
                 .setStyle(TextInputStyle.Short)
                 .setRequired(true)
                 .setPlaceholder("Enter 2, 3, or 4");
 
             const playersPerTeamInput = new TextInputBuilder()
                 .setCustomId('playersPerTeam')
-                .setLabel("Max Players Per Team (0 for unlimited)")
                 .setStyle(TextInputStyle.Short)
                 .setRequired(true)
                 .setValue(gameDetails.max_players !== undefined ? String(gameDetails.max_players) : '0')
                 .setPlaceholder("Enter a number >= 0");
 
-            const pickingModeInput = new TextInputBuilder()
+            const currentPickingMode = gameDetails.game && ['turns', 'freeforall', 'manual'].includes(String(gameDetails.game).toLowerCase())
+                ? String(gameDetails.game).toLowerCase()
+                : 'turns';
+            const pickingModeInput = new RadioGroupBuilder()
                 .setCustomId('pickingMode')
-                .setLabel("Team Assignment Mode: turns/freeforall/manual")
-                .setStyle(TextInputStyle.Short)
                 .setRequired(true)
-                .setValue(gameDetails.game && ['turns', 'freeforall', 'manual'].includes(String(gameDetails.game).toLowerCase()) ? String(gameDetails.game).toLowerCase() : 'turns')
-                .setPlaceholder("turns = alternating, freeforall = any captain, manual = host assigns");
+                .addOptions(
+                    new RadioGroupOptionBuilder()
+                        .setLabel('Turn-Based')
+                        .setValue('turns')
+                        .setDescription('Captains alternate picks')
+                        .setDefault(currentPickingMode === 'turns'),
+                    new RadioGroupOptionBuilder()
+                        .setLabel('Free-for-All')
+                        .setValue('freeforall')
+                        .setDescription('Any captain can pick anytime')
+                        .setDefault(currentPickingMode === 'freeforall'),
+                    new RadioGroupOptionBuilder()
+                        .setLabel('Manual')
+                        .setValue('manual')
+                        .setDescription('Host assigns players directly')
+                        .setDefault(currentPickingMode === 'manual'),
+                );
 
             const currentNumTeams = gameDetails.num_teams !== undefined ? String(gameDetails.num_teams) : '2';
             if (currentNumTeams !== '0') {
                 numTeamsInput.setValue(currentNumTeams);
             }
 
-            modal.addComponents(
-                new ActionRowBuilder().addComponents(numTeamsInput),
-                new ActionRowBuilder().addComponents(playersPerTeamInput),
-                new ActionRowBuilder().addComponents(pickingModeInput)
+            modal.addLabelComponents(
+                label => label.setLabel('Number of Teams (2-4)').setTextInputComponent(numTeamsInput),
+                label => label.setLabel('Max Players Per Team (0 for unlimited)').setTextInputComponent(playersPerTeamInput),
+                label => label.setLabel('Team Assignment Mode').setRadioGroupComponent(pickingModeInput),
             );
             await buttonInteraction.showModal(modal);
             logger.info(`[GAME_BTN] Host ${userId} initiated team setup for game ${gameId}`);
@@ -361,18 +376,18 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
 
         case "HOST_MANAGE_PLAYERS":
             if (!isHost) {
-                await buttonInteraction.reply({ content: "Only the host can manage players.", ephemeral: true });
+                await buttonInteraction.reply({ content: "Only the host can manage players.", flags: MessageFlags.Ephemeral });
                 return;
             }
             // Add this log:
             logger.info(`[GAME_BTN_MANAGE_PLAYERS] Game ${gameId} details on entry: Status='${gameDetails.status}', NumTeams=${gameDetails.num_teams}`);
 
             if (gameDetails.status === 'setup' || !gameDetails.num_teams || gameDetails.num_teams === 0) {
-                await buttonInteraction.reply({ content: "Teams need to be configured first. Use 'Setup Teams' / 'Reconfigure Teams'.", ephemeral: true });
+                await buttonInteraction.reply({ content: "Teams need to be configured first. Use 'Setup Teams' / 'Reconfigure Teams'.", flags: MessageFlags.Ephemeral });
                 return;
             }
             try {
-                await buttonInteraction.deferReply({ ephemeral: true });
+                await buttonInteraction.deferReply({ flags: MessageFlags.Ephemeral });
                 const playersResp = await localApi.get("game_joining_player", { game_id: gameId, _limit: 100 });
                 const playersInLobby = playersResp.game_joining_players || [];
 
@@ -438,7 +453,7 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
             } catch (error) {
                 logger.error(`[GAME_BTN] Error managing players for game ${gameId}: ${error.message || error}`);
                 if (!buttonInteraction.replied && !buttonInteraction.deferred) {
-                    await buttonInteraction.reply({ content: "Error loading player management.", ephemeral: true });
+                    await buttonInteraction.reply({ content: "Error loading player management.", flags: MessageFlags.Ephemeral });
                 } else {
                     await buttonInteraction.editReply({ content: "Error loading player management." });
                 }
@@ -447,7 +462,7 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
 
         case "HOST_VOICE_CONTROL":
             if (!isHost) {
-                await buttonInteraction.reply({ content: "Only the host can control voice channels.", ephemeral: true });
+                await buttonInteraction.reply({ content: "Only the host can control voice channels.", flags: MessageFlags.Ephemeral });
                 return;
             }
 
@@ -473,18 +488,18 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
             await buttonInteraction.reply({
                 content: `Voice Controls for Game ${gameId}:`,
                 components: [voiceControlRow],
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
             logger.info(`[GAME_BTN] Host ${userId} accessed voice controls for game ${gameId}`);
             break;
 
         case "HOST_ASSIGN_PLAYER_MODAL":
             if (!isHost) {
-                await buttonInteraction.reply({ content: "Only the host can assign players.", ephemeral: true });
+                await buttonInteraction.reply({ content: "Only the host can assign players.", flags: MessageFlags.Ephemeral });
                 return;
             }
             if (gameDetails.status === 'setup' || !gameDetails.num_teams || gameDetails.num_teams === 0) {
-                await buttonInteraction.reply({ content: "Teams need to be configured first before assigning players. Use 'Setup Teams'.", ephemeral: true });
+                await buttonInteraction.reply({ content: "Teams need to be configured first before assigning players. Use 'Setup Teams'.", flags: MessageFlags.Ephemeral });
                 return;
             }
 
@@ -494,21 +509,20 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
 
             const playerInput = new TextInputBuilder()
                 .setCustomId('playerToAssign')
-                .setLabel("User ID or @Mention of Player")
                 .setPlaceholder("Enter User ID or mention the player")
                 .setStyle(TextInputStyle.Short)
                 .setRequired(true);
 
             const teamInput = new TextInputBuilder()
                 .setCustomId('teamIdToAssign')
-                .setLabel(`Team Number (1-${gameDetails.num_teams}, or 0 to unassign)`)
                 .setPlaceholder(`Enter a team number, or 0`)
                 .setStyle(TextInputStyle.Short)
                 .setRequired(true);
 
-            const playerActionRow = new ActionRowBuilder().addComponents(playerInput);
-            const teamActionRow = new ActionRowBuilder().addComponents(teamInput);
-            assignModal.addComponents(playerActionRow, teamActionRow);
+            assignModal.addLabelComponents(
+                label => label.setLabel('User ID or @Mention of Player').setTextInputComponent(playerInput),
+                label => label.setLabel(`Team Number (1-${gameDetails.num_teams}, or 0 to unassign)`).setTextInputComponent(teamInput),
+            );
 
             await buttonInteraction.showModal(assignModal);
             logger.info(`[GAME_BTN] Host ${userId} opened assign player modal for game ${gameId}`);
@@ -516,15 +530,15 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
 
         case "HOST_AUTO_BALANCE":
             if (!isHost) {
-                await buttonInteraction.reply({ content: "Only the host can auto-balance teams.", ephemeral: true });
+                await buttonInteraction.reply({ content: "Only the host can auto-balance teams.", flags: MessageFlags.Ephemeral });
                 return;
             }
             if (gameDetails.status === 'setup' || !gameDetails.num_teams || gameDetails.num_teams === 0) {
-                await buttonInteraction.reply({ content: "Teams need to be configured first. Use 'Setup Teams'.", ephemeral: true });
+                await buttonInteraction.reply({ content: "Teams need to be configured first. Use 'Setup Teams'.", flags: MessageFlags.Ephemeral });
                 return;
             }
             try {
-                await buttonInteraction.deferReply({ ephemeral: true });
+                await buttonInteraction.deferReply({ flags: MessageFlags.Ephemeral });
                 const playersResp = await localApi.get("game_joining_player", { game_id: gameId, _limit: 500 });
                 const playersInLobby = playersResp.game_joining_players || [];
 
@@ -593,7 +607,7 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
             } catch (error) {
                 logger.error(`[GAME_BTN_AUTO_BALANCE] Error auto-balancing game ${gameId}: ${error.message || error}`);
                 if (!buttonInteraction.replied && !buttonInteraction.deferred) {
-                    await buttonInteraction.reply({ content: "Error auto-balancing teams.", ephemeral: true });
+                    await buttonInteraction.reply({ content: "Error auto-balancing teams.", flags: MessageFlags.Ephemeral });
                 } else {
                     await buttonInteraction.editReply({ content: "Error auto-balancing teams." });
                 }
@@ -602,10 +616,10 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
 
         case "HOST_VOICE_DEPLOY_TEAMS":
             if (!isHost) {
-                await buttonInteraction.reply({ content: "Only the host can do this.", ephemeral: true });
+                await buttonInteraction.reply({ content: "Only the host can do this.", flags: MessageFlags.Ephemeral });
                 return;
             }
-            await buttonInteraction.deferReply({ ephemeral: true });
+            await buttonInteraction.deferReply({ flags: MessageFlags.Ephemeral });
 
             if (gameDetails.status !== 'lobby_configured' || !gameDetails.num_teams || gameDetails.num_teams === 0) {
                 await buttonInteraction.editReply({ content: "Teams must be configured and players assigned before deploying to voice channels." });
@@ -682,7 +696,7 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
 
         case "HOST_END":
             if (!isHost) {
-                await buttonInteraction.reply({ content: "Only the host can end the game.", ephemeral: true });
+                await buttonInteraction.reply({ content: "Only the host can end the game.", flags: MessageFlags.Ephemeral });
                 return;
             }
             try {
@@ -728,15 +742,15 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
 
         case "HOST_SET_CAPTAINS":
             if (!isHost) {
-                await buttonInteraction.reply({ content: "Only the host can set captains.", ephemeral: true });
+                await buttonInteraction.reply({ content: "Only the host can set captains.", flags: MessageFlags.Ephemeral });
                 return;
             }
             if (gameDetails.game === 'manual') {
-                await buttonInteraction.reply({ content: "Manual assignment mode is enabled. Use 'Manage Players' to assign both teams directly.", ephemeral: true });
+                await buttonInteraction.reply({ content: "Manual assignment mode is enabled. Use 'Manage Players' to assign both teams directly.", flags: MessageFlags.Ephemeral });
                 return;
             }
             if (gameDetails.status === 'setup' || !gameDetails.num_teams || gameDetails.num_teams === 0) {
-                await buttonInteraction.reply({ content: "Teams need to be configured first before setting captains.", ephemeral: true });
+                await buttonInteraction.reply({ content: "Teams need to be configured first before setting captains.", flags: MessageFlags.Ephemeral });
                 return;
             }
 
@@ -768,22 +782,22 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
             await buttonInteraction.reply({
                 content: `**Select Captains for Game ${gameId}**\n\nUse the dropdown menus below to select a captain for each team. Once all teams have captains, click Confirm.`,
                 components: [...captainSelectRows, confirmRow],
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
             logger.info(`[GAME_BTN] Host ${userId} opened captain selection for game ${gameId}`);
             break;
 
         case "HOST_START_PICKING":
             if (!isHost) {
-                await buttonInteraction.reply({ content: "Only the host can start the draft.", ephemeral: true });
+                await buttonInteraction.reply({ content: "Only the host can start the draft.", flags: MessageFlags.Ephemeral });
                 return;
             }
             if (gameDetails.game === 'manual') {
-                await buttonInteraction.reply({ content: "Manual assignment mode is enabled. Assign players using 'Manage Players' and then use Voice Controls to move teams.", ephemeral: true });
+                await buttonInteraction.reply({ content: "Manual assignment mode is enabled. Assign players using 'Manage Players' and then use Voice Controls to move teams.", flags: MessageFlags.Ephemeral });
                 return;
             }
             try {
-                await buttonInteraction.deferReply({ ephemeral: true });
+                await buttonInteraction.deferReply({ flags: MessageFlags.Ephemeral });
 
                 // Check if captains are set for all teams
                 const captainsResp = await localApi.get("game_joining_player", {
@@ -893,7 +907,7 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
         case "CAPTAIN_PICK":
             try {
                 if (gameDetails.game === 'manual') {
-                    await buttonInteraction.reply({ content: "Captain draft picks are disabled in manual assignment mode.", ephemeral: true });
+                    await buttonInteraction.reply({ content: "Captain draft picks are disabled in manual assignment mode.", flags: MessageFlags.Ephemeral });
                     return;
                 }
                 // Check if this user is a captain
@@ -905,7 +919,7 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
                 const playerRecord = playerCheckResp.game_joining_players?.[0];
 
                 if (!playerRecord || playerRecord.captain !== 'true') {
-                    await buttonInteraction.reply({ content: "Only team captains can pick players.", ephemeral: true });
+                    await buttonInteraction.reply({ content: "Only team captains can pick players.", flags: MessageFlags.Ephemeral });
                     return;
                 }
 
@@ -916,7 +930,7 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
                 if (!isFreeForAll) {
                     const currentTurn = parseInt(gameDetails.current_turn, 10) || 1;
                     if (playerTeam !== currentTurn) {
-                        await buttonInteraction.reply({ content: `It's not your turn! Currently Team ${currentTurn}'s turn to pick.`, ephemeral: true });
+                        await buttonInteraction.reply({ content: `It's not your turn! Currently Team ${currentTurn}'s turn to pick.`, flags: MessageFlags.Ephemeral });
                         return;
                     }
                 }
@@ -928,23 +942,24 @@ async function handleGameButton(buttonInteraction, logger, localApi) {
 
                 const playerPickInput = new TextInputBuilder()
                     .setCustomId('player_to_pick')
-                    .setLabel("Enter User ID or @mention of player")
                     .setPlaceholder("User ID or @mention")
                     .setStyle(TextInputStyle.Short)
                     .setRequired(true);
 
-                pickModal.addComponents(new ActionRowBuilder().addComponents(playerPickInput));
+                pickModal.addLabelComponents(
+                    label => label.setLabel('Player to pick').setTextInputComponent(playerPickInput),
+                );
                 await buttonInteraction.showModal(pickModal);
                 logger.info(`[GAME_BTN] Captain ${userId} (Team ${playerTeam}) opened pick modal for game ${gameId} (mode: ${isFreeForAll ? 'freeforall' : 'turns'})`);
             } catch (error) {
                 logger.error(`[GAME_BTN] Error in CAPTAIN_PICK for game ${gameId}: ${error.message || error}`);
-                await buttonInteraction.reply({ content: "Error opening pick interface.", ephemeral: true });
+                await buttonInteraction.reply({ content: "Error opening pick interface.", flags: MessageFlags.Ephemeral });
             }
             break;
 
         default:
             logger.warn(`[GAME_BTN] Unknown game actionKey: ${actionKey} for game ${gameId}`);
-            await buttonInteraction.reply({ content: "Unknown game action.", ephemeral: true });
+            await buttonInteraction.reply({ content: "Unknown game action.", flags: MessageFlags.Ephemeral });
     }
 }
 
@@ -955,13 +970,13 @@ async function handleGameSetupTeamsModal(modalInteraction, logger, localApi) {
     const gameId = Number(gameIdString);
     if (isNaN(gameId)) {
         logger.warn(`[GAME_MODAL_SETUP] Invalid gameId (not a number): ${gameIdString}`);
-        await modalInteraction.reply({ content: "Invalid game ID in modal submission.", ephemeral: true });
+        await modalInteraction.reply({ content: "Invalid game ID in modal submission.", flags: MessageFlags.Ephemeral });
         return;
     }
     const userId = modalInteraction.user.id;
 
     try {
-        await modalInteraction.deferReply({ ephemeral: true });
+        await modalInteraction.deferReply({ flags: MessageFlags.Ephemeral });
 
         const gameMasterResp = await localApi.get("game_joining_master", { game_id: gameId, _limit: 1 });
         if (!gameMasterResp || !gameMasterResp.game_joining_masters || !gameMasterResp.game_joining_masters[0]) {
@@ -1000,7 +1015,7 @@ async function handleGameSetupTeamsModal(modalInteraction, logger, localApi) {
         // Get picking mode (store in 'game' column - repurposed for mode)
         let pickingMode = 'turns';
         try {
-            const pickingModeInput = modalInteraction.fields.getTextInputValue('pickingMode');
+            const pickingModeInput = modalInteraction.fields.getRadioGroup('pickingMode', false);
             if (pickingModeInput && (pickingModeInput.toLowerCase() === 'freeforall' || pickingModeInput.toLowerCase() === 'free')) {
                 pickingMode = 'freeforall';
             } else if (pickingModeInput && (pickingModeInput.toLowerCase() === 'manual' || pickingModeInput.toLowerCase() === 'host' || pickingModeInput.toLowerCase() === 'assign')) {
@@ -1077,7 +1092,7 @@ async function handleGameSetupTeamsModal(modalInteraction, logger, localApi) {
     } catch (error) {
         logger.error(`[GAME_MODAL_SETUP] Error processing team setup for game ${gameId}: ${error.message || error}`);
         if (!modalInteraction.replied && !modalInteraction.deferred) {
-            await modalInteraction.reply({ content: "An error occurred while updating game settings.", ephemeral: true });
+            await modalInteraction.reply({ content: "An error occurred while updating game settings.", flags: MessageFlags.Ephemeral });
         } else {
             await modalInteraction.editReply({ content: "An error occurred while updating game settings." });
         }
@@ -1092,7 +1107,7 @@ async function handleAssignPlayerModal(modalInteraction, logger, localApi) {
     const hostId = modalInteraction.user.id;
 
     try {
-        await modalInteraction.deferReply({ ephemeral: true });
+        await modalInteraction.deferReply({ flags: MessageFlags.Ephemeral });
 
         const playerIdInput = modalInteraction.fields.getTextInputValue('playerToAssign');
         const playerIdToAssign = playerIdInput.replace(/[<@!>]/g, '').trim();
@@ -1153,7 +1168,7 @@ async function handleSetCaptainsModal(modalInteraction, logger, localApi) {
     const hostId = modalInteraction.user.id;
 
     try {
-        await modalInteraction.deferReply({ ephemeral: true });
+        await modalInteraction.deferReply({ flags: MessageFlags.Ephemeral });
 
         // Verify host and get game details
         const gameResp = await localApi.get("game_joining_master", { game_id: gameId });
@@ -1258,7 +1273,7 @@ async function handleCaptainPickModal(modalInteraction, logger, localApi) {
     const captainId = modalInteraction.user.id;
 
     try {
-        await modalInteraction.deferReply({ ephemeral: true });
+        await modalInteraction.deferReply({ flags: MessageFlags.Ephemeral });
 
         // Get game details
         const gameResp = await localApi.get("game_joining_master", { game_id: gameId });
@@ -1581,7 +1596,7 @@ async function onInteractionCreate(interaction) {
 
             // Only the winner can use this button
             if (buttonInteraction.user.id !== winnerId) {
-                await buttonInteraction.reply({ content: "Only the breach winner can suggest a persona!", ephemeral: true });
+                await buttonInteraction.reply({ content: "Only the breach winner can suggest a persona!", flags: MessageFlags.Ephemeral });
                 return;
             }
 
@@ -1591,13 +1606,14 @@ async function onInteractionCreate(interaction) {
 
             const suggestionInput = new TextInputBuilder()
                 .setCustomId('personaSuggestion')
-                .setLabel('Guard Theme/Personality')
                 .setStyle(TextInputStyle.Short)
                 .setPlaceholder('e.g., a grumpy pirate, a mysterious wizard, a sarcastic robot')
                 .setRequired(true)
                 .setMaxLength(200);
 
-            modal.addComponents(new ActionRowBuilder().addComponents(suggestionInput));
+            modal.addLabelComponents(
+                label => label.setLabel('Guard Theme/Personality').setTextInputComponent(suggestionInput),
+            );
             await buttonInteraction.showModal(modal);
             logger.info(`[BREACH] Winner ${winnerId} opened persona suggestion modal`);
             return;
@@ -1608,7 +1624,7 @@ async function onInteractionCreate(interaction) {
 
             // Only the winner can use this button
             if (buttonInteraction.user.id !== winnerId) {
-                await buttonInteraction.reply({ content: "Only the breach winner can skip!", ephemeral: true });
+                await buttonInteraction.reply({ content: "Only the breach winner can skip!", flags: MessageFlags.Ephemeral });
                 return;
             }
 
@@ -1667,7 +1683,7 @@ async function onInteractionCreate(interaction) {
                 default:
                     logger.warn(`Unknown VOICE leaderboard command: ${commandName}`);
                     if (!buttonInteraction.replied && !buttonInteraction.deferred) {
-                        await buttonInteraction.reply({ content: "Unknown voice leaderboard action.", ephemeral: true });
+                        await buttonInteraction.reply({ content: "Unknown voice leaderboard action.", flags: MessageFlags.Ephemeral });
                     }
                     break;
             }
@@ -1690,7 +1706,7 @@ async function onInteractionCreate(interaction) {
 
             // Only the winner can submit
             if (modalInteraction.user.id !== winnerId) {
-                await modalInteraction.reply({ content: "Only the breach winner can submit!", ephemeral: true });
+                await modalInteraction.reply({ content: "Only the breach winner can submit!", flags: MessageFlags.Ephemeral });
                 return;
             }
 
@@ -1791,7 +1807,7 @@ async function onInteractionCreate(interaction) {
             const content = btn.message.content;
             const selectionMatch = content.match(/\[SELECTIONS:(.*?)\]/);
             if (!selectionMatch) {
-                await btn.followUp({ content: "Error: Could not find captain selections.", ephemeral: true });
+                await btn.followUp({ content: "Error: Could not find captain selections.", flags: MessageFlags.Ephemeral });
                 return;
             }
 
@@ -1799,14 +1815,14 @@ async function onInteractionCreate(interaction) {
             try {
                 selections = JSON.parse(selectionMatch[1]);
             } catch (e) {
-                await btn.followUp({ content: "Error parsing captain selections.", ephemeral: true });
+                await btn.followUp({ content: "Error parsing captain selections.", flags: MessageFlags.Ephemeral });
                 return;
             }
 
             // Get game details
             const gameResp = await api.get("game_joining_master", { game_id: gameId });
             if (!gameResp?.game_joining_masters?.[0]) {
-                await btn.followUp({ content: "Game not found.", ephemeral: true });
+                await btn.followUp({ content: "Game not found.", flags: MessageFlags.Ephemeral });
                 return;
             }
             const gameDetails = gameResp.game_joining_masters[0];

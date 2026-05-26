@@ -134,7 +134,7 @@ module.exports = {
                 return;
             }
             //message.author.send({ content: output });
-            /*const ListEmbed = new Discord.MessageEmbed()
+            /*const ListEmbed = new EmbedBuilder()
                 .setColor("#f92f03")
                 .setTitle("A list of all champions: ");
             var embeds = extra.MessageHelper.split_embed(ListEmbed, output);

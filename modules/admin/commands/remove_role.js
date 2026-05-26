@@ -33,7 +33,7 @@ module.exports = {
             message.channel.send({ content: "This command requires an admin role but no main admin role has been selected for this server." });
             return;
         }
-        const Discord = require('discord.js');
+        const { EmbedBuilder } = require('discord.js');
         var strLength = 0;
         var messageString = "";
         var role = message.guild.roles.cache.get(args[2] ? args[2].replace(/[<@&>]/g, '') : null); // Fast path if ID is provided
@@ -66,7 +66,7 @@ module.exports = {
             message.channel.send({ content: "Role removing failed!" });
             return;
         }
-        const ListEmbed = new Discord.EmbedBuilder()
+        const ListEmbed = new EmbedBuilder()
             .setTitle(`Made this edit to ${member.user.username}:`)
             .setDescription("Removed role: " + role.name);
         message.channel.send({ embeds: [ListEmbed] });

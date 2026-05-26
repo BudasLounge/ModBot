@@ -1,10 +1,9 @@
 var ApiClient = require("../../core/js/APIClient.js");
 var api = new ApiClient();
-const {ActionRowBuilder, ButtonBuilder, EmbedBuilder, SelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ButtonStyle} = require('discord.js');
-const axios = require('axios');
+const {ActionRowBuilder, ButtonBuilder, StringSelectMenuBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ButtonStyle} = require('discord.js');
 
 async function onButtonClick(button){
-    if (!button.isButton() && !button.isModalSubmit()) return;
+    if (!button.isButton() && !button.isModalSubmit() && !button.isStringSelectMenu()) return;
     if((button.member.roles.cache.find(r => r.id === "586313447965327365" || button.user.id === "185223223892377611" || button.user.id === "195677170432081920") && button.customId=="MINE-SERVERCREATOR")){
         const modal = new ModalBuilder()
         .setCustomId('MCSERVERCREATORMODAL')
@@ -13,41 +12,31 @@ async function onButtonClick(button){
         // Create the text input components
         const displayNameInput = new TextInputBuilder()
             .setCustomId('display_name')
-            // The label is the prompt the user sees for this input
-            .setLabel("What is the display name of the server?")
             // Short means only a single line of text
             .setStyle(TextInputStyle.Short);
         const shortNameInput = new TextInputBuilder()
             .setCustomId('short_name')
-            .setLabel("Server short name?")
             .setStyle(TextInputStyle.Short);
         const portInput = new TextInputBuilder()
             .setCustomId('port')
-            // The label is the prompt the user sees for this input
-            .setLabel("What is the port of the server?")
             // Short means only a single line of text
             .setStyle(TextInputStyle.Short);
         const mcVersionInput = new TextInputBuilder()
             .setCustomId('mc_version')
-            // The label is the prompt the user sees for this input
-            .setLabel("What version of minecraft is this on?")
             // Short means only a single line of text
             .setStyle(TextInputStyle.Short);
         const packVersionInput = new TextInputBuilder()
             .setCustomId('pack_version')
-            // The label is the prompt the user sees for this input
-            .setLabel("What version of the modpack is this on?")
             // Short means only a single line of text
             .setStyle(TextInputStyle.Short);
-        // An action row only holds one text input,
-        // so you need one action row per text input.
-        const firstActionRow = new ActionRowBuilder().addComponents(displayNameInput);
-        const secondActionRow = new ActionRowBuilder().addComponents(shortNameInput);
-        const thirdActionRow = new ActionRowBuilder().addComponents(portInput);
-        const fourthActionRow = new ActionRowBuilder().addComponents(mcVersionInput);
-        const fifthActionRow = new ActionRowBuilder().addComponents(packVersionInput);
         // Add inputs to the modal
-        modal.addComponents(firstActionRow, secondActionRow, thirdActionRow, fourthActionRow, fifthActionRow);
+        modal.addLabelComponents(
+            label => label.setLabel('What is the display name of the server?').setTextInputComponent(displayNameInput),
+            label => label.setLabel('Server short name?').setTextInputComponent(shortNameInput),
+            label => label.setLabel('What is the port of the server?').setTextInputComponent(portInput),
+            label => label.setLabel('What version of minecraft is this on?').setTextInputComponent(mcVersionInput),
+            label => label.setLabel('What version of the modpack is this on?').setTextInputComponent(packVersionInput),
+        );
         // Show the modal to the user
         await button.showModal(modal);
     }
@@ -65,8 +54,8 @@ async function onButtonClick(button){
         //.setTitle('MC Server DELETOR');
         const serverSelector = new ActionRowBuilder()
         .addComponents(
-            new SelectMenuBuilder()
-                .setCustomId('MCSERVERDELETORMODAL')
+            new StringSelectMenuBuilder()
+                .setCustomId('MCSERVERDELETESELECT')
                 .setPlaceholder('Select a server from the list')
                 .setDisabled(false),
         );
@@ -78,12 +67,39 @@ async function onButtonClick(button){
 				value: `${server.short_name}`,
             }])
         });
-        //modal.addComponents(SelectMenu)
-        //await button.showModal(modal);
         await button.reply({components:[serverSelector]});
     }
-    else if((button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && button.customId==="MCSERVERDELETORMODAL"){
-        await button.reply({content: "An option was selected!"})
+    else if(button.isStringSelectMenu() && (button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && button.customId==="MCSERVERDELETESELECT"){
+        const shortName = button.values[0];
+        const confirmRow = new ActionRowBuilder()
+            .addComponents(
+                new ButtonBuilder()
+                    .setCustomId(`MCSERVERDELETECONFIRM:${shortName}`)
+                    .setLabel(`Delete ${shortName}`)
+                    .setStyle(ButtonStyle.Danger),
+                new ButtonBuilder()
+                    .setCustomId('MCSERVERDELETECANCEL')
+                    .setLabel('Cancel')
+                    .setStyle(ButtonStyle.Secondary),
+            );
+        await button.update({ content: `Delete Minecraft server \`${shortName}\`?`, components: [confirmRow] });
+    }
+    else if(button.isButton() && (button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && button.customId.startsWith("MCSERVERDELETECONFIRM:")){
+        const shortName = button.customId.slice("MCSERVERDELETECONFIRM:".length);
+        try {
+            const respDelete = await api.delete("minecraft_server", { short_name: shortName });
+            if (respDelete?.ok) {
+                await button.update({ content: `Deleted Minecraft server \`${shortName}\`.`, components: [] });
+            } else {
+                await button.update({ content: `Failed to delete Minecraft server \`${shortName}\`.`, components: [] });
+            }
+        } catch (err) {
+            logger.error("Error deleting server:", err.message);
+            await button.update({ content: "An error occurred while deleting the server.", components: [] });
+        }
+    }
+    else if(button.isButton() && button.customId==="MCSERVERDELETECANCEL"){
+        await button.update({ content: "Server deletion cancelled.", components: [] });
     }
     else if(button.isModalSubmit() && button.customId==="MCSERVERCREATORMODAL"){
         logger.info(">>MCSERVERCREATORMODAL()");
@@ -157,7 +173,6 @@ async function onButtonClick(button){
         }
         //else if((button.member.roles.cache.find(r => r.id === "586313447965327365") || button.user.id === "185223223892377611") && button.customId==="MCSERVERDELETORMODAL"){
         //}
-        await button.reply({content:"Added a new server!"});
         logger.info("<<MCSERVERCREATORMODAL() SUCCESS");     
     }
 }

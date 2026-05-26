@@ -1,7 +1,6 @@
 var fs = require('fs');
 var APIClient = require('./APIClient.js');
-var Discord = require('discord.js');
-const { REST, Routes, SlashCommandBuilder } = require('discord.js');
+const { Collection, MessageFlags, REST, Routes, SlashCommandBuilder } = require('discord.js');
 
 /**
  * @external Discord
@@ -78,9 +77,9 @@ class ModuleHandler {
     constructor(program_path, state_manager, logger) {
         /** @type {string} The absolute path this ModuleHandler will use as its base working directory */
         this.program_path = program_path;
-        /** @type {?external:Discord.Collection<Module>} A {@link external:Discord.Collection} object containing all the modules this bot found. Will be null until {@link ModuleHandler#discover_modules} runs. */
+        /** @type {?Collection<Module>} A Collection object containing all the modules this bot found. Will be null until {@link ModuleHandler#discover_modules} runs. */
         this.modules = null;
-        /** @type {?external:Discord.Collection<Module>} A {@link external:Discord.Collection} object containing all the modules this bot found but were disabled (by their config). Will be null until {@link ModuleHandler#discover_modules} runs. */
+        /** @type {?Collection<Module>} A Collection object containing all the modules this bot found but were disabled (by their config). Will be null until {@link ModuleHandler#discover_modules} runs. */
         this.disabled_modules = null;
         /** @type {StateManager} The {@link StateManager} instance for this {@link ModuleHandler}. Will be passed to commands when they run with the proper states loaded. */
         this.state_manager = state_manager;
@@ -100,8 +99,8 @@ class ModuleHandler {
      * @returns {} Nothing is returned.
      */
     discover_modules(modules_folder) {
-        this.modules = new Discord.Collection();
-        this.disabled_modules = new Discord.Collection();
+        this.modules = new Collection();
+        this.disabled_modules = new Collection();
 
         this.logger.info("Discovering Modules in: " + modules_folder + " ...");
         var module_folders = fs.readdirSync(modules_folder, { withFileTypes: true });
@@ -135,7 +134,7 @@ class ModuleHandler {
 
         for (var current_module_name of Array.from(this.modules.keys())) {
             var current_module = this.modules.get(current_module_name);
-            current_module.commands = new Discord.Collection();
+            current_module.commands = new Collection();
 
             var commands_dir = current_module.location + current_module.config.commands_directory + "/";
 
@@ -393,9 +392,12 @@ class ModuleHandler {
                     .setName(slashName)
                     .setDescription(description);
 
+                this._apply_slash_metadata(builder, command);
+
                 // Add options from command's options array
                 if (command.options && command.options.length > 0) {
-                    for (var opt of command.options) {
+                    const sortedOptions = command.options.slice().sort((a, b) => (b.required === true) - (a.required === true));
+                    for (var opt of sortedOptions) {
                         try {
                             this._add_slash_option(builder, opt);
                         } catch (optErr) {
@@ -455,11 +457,32 @@ class ModuleHandler {
         const optName = opt.name.toLowerCase().replace(/[^a-z0-9_-]/g, '_').substring(0, 32);
         const optDesc = ((opt.description || opt.name) + '').substring(0, 100);
         const isRequired = opt.required === true;
+        const applyCommon = (optionBuilder) => {
+            optionBuilder.setName(optName).setDescription(optDesc).setRequired(isRequired);
+
+            if (Number.isFinite(opt.min_value) && typeof optionBuilder.setMinValue === 'function') {
+                optionBuilder.setMinValue(opt.min_value);
+            }
+            if (Number.isFinite(opt.max_value) && typeof optionBuilder.setMaxValue === 'function') {
+                optionBuilder.setMaxValue(opt.max_value);
+            }
+            if (Number.isInteger(opt.min_length) && typeof optionBuilder.setMinLength === 'function') {
+                optionBuilder.setMinLength(opt.min_length);
+            }
+            if (Number.isInteger(opt.max_length) && typeof optionBuilder.setMaxLength === 'function') {
+                optionBuilder.setMaxLength(opt.max_length);
+            }
+            if (Array.isArray(opt.channel_types) && opt.channel_types.length > 0 && typeof optionBuilder.addChannelTypes === 'function') {
+                optionBuilder.addChannelTypes(...opt.channel_types);
+            }
+
+            return optionBuilder;
+        };
 
         switch ((opt.type || 'STRING').toUpperCase()) {
             case 'STRING':
                 builder.addStringOption(o => {
-                    o.setName(optName).setDescription(optDesc).setRequired(isRequired);
+                    applyCommon(o);
                     if (opt.choices && opt.choices.length > 0) {
                         // Support both plain strings ("foo") and choice objects ({ name, value }).
                         o.addChoices(...opt.choices.map(c =>
@@ -474,25 +497,56 @@ class ModuleHandler {
                 });
                 break;
             case 'INTEGER':
-                builder.addIntegerOption(o => o.setName(optName).setDescription(optDesc).setRequired(isRequired));
+                builder.addIntegerOption(o => applyCommon(o));
                 break;
             case 'NUMBER':
-                builder.addNumberOption(o => o.setName(optName).setDescription(optDesc).setRequired(isRequired));
+                builder.addNumberOption(o => applyCommon(o));
                 break;
             case 'BOOLEAN':
-                builder.addBooleanOption(o => o.setName(optName).setDescription(optDesc).setRequired(isRequired));
+                builder.addBooleanOption(o => applyCommon(o));
                 break;
             case 'USER':
-                builder.addUserOption(o => o.setName(optName).setDescription(optDesc).setRequired(isRequired));
+                builder.addUserOption(o => applyCommon(o));
                 break;
             case 'CHANNEL':
-                builder.addChannelOption(o => o.setName(optName).setDescription(optDesc).setRequired(isRequired));
+                builder.addChannelOption(o => applyCommon(o));
                 break;
             case 'ROLE':
-                builder.addRoleOption(o => o.setName(optName).setDescription(optDesc).setRequired(isRequired));
+                builder.addRoleOption(o => applyCommon(o));
+                break;
+            case 'MENTIONABLE':
+                builder.addMentionableOption(o => applyCommon(o));
+                break;
+            case 'ATTACHMENT':
+                builder.addAttachmentOption(o => applyCommon(o));
                 break;
             default:
-                builder.addStringOption(o => o.setName(optName).setDescription(optDesc).setRequired(isRequired));
+                builder.addStringOption(o => applyCommon(o));
+        }
+    }
+
+    /**
+     * Applies optional slash-command metadata when command files provide it.
+     * Existing commands keep Discord's defaults because these fields are optional.
+     */
+    _apply_slash_metadata(builder, command) {
+        if (command.default_member_permissions !== undefined) {
+            builder.setDefaultMemberPermissions(command.default_member_permissions);
+        }
+        if (Array.isArray(command.contexts) && command.contexts.length > 0 && typeof builder.setContexts === 'function') {
+            builder.setContexts(...command.contexts);
+        }
+        if (Array.isArray(command.integration_types) && command.integration_types.length > 0 && typeof builder.setIntegrationTypes === 'function') {
+            builder.setIntegrationTypes(...command.integration_types);
+        }
+        if (command.nsfw !== undefined && typeof builder.setNSFW === 'function') {
+            builder.setNSFW(Boolean(command.nsfw));
+        }
+        if (command.name_localizations && typeof builder.setNameLocalizations === 'function') {
+            builder.setNameLocalizations(command.name_localizations);
+        }
+        if (command.description_localizations && typeof builder.setDescriptionLocalizations === 'function') {
+            builder.setDescriptionLocalizations(command.description_localizations);
         }
     }
 
@@ -530,7 +584,7 @@ class ModuleHandler {
 
         if (!current_command) {
             this.logger.warn('[SlashCommands] No command found for: ' + slashName);
-            await interaction.reply({ content: "Sorry, I couldn't find that command!", ephemeral: true });
+            await interaction.reply({ content: "Sorry, I couldn't find that command!", flags: MessageFlags.Ephemeral });
             return;
         }
 
@@ -543,7 +597,7 @@ class ModuleHandler {
                     module_id: parseInt(respModule.modules[0].module_id)
                 });
                 if (respEnabled.enabled_modules.length === 0) {
-                    await interaction.reply({ content: 'That module is disabled on this server!', ephemeral: true });
+                    await interaction.reply({ content: 'That module is disabled on this server!', flags: MessageFlags.Ephemeral });
                     return;
                 }
             }
@@ -596,6 +650,12 @@ class ModuleHandler {
                 } else if (optType === 'ROLE') {
                     var roleVal = interaction.options.getRole(optName);
                     args.push(roleVal ? roleVal.id : null);
+                } else if (optType === 'MENTIONABLE') {
+                    var mentionableVal = interaction.options.getMentionable(optName);
+                    args.push(mentionableVal ? mentionableVal.id : null);
+                } else if (optType === 'ATTACHMENT') {
+                    var attachmentVal = interaction.options.getAttachment(optName);
+                    args.push(attachmentVal ? attachmentVal.url : null);
                 } else {
                     var strVal = interaction.options.getString(optName);
                     args.push(strVal !== null && strVal !== undefined ? strVal : null);
@@ -635,7 +695,7 @@ class ModuleHandler {
         } catch (err) {
             this.logger.error('[SlashCommands] Error in /' + slashName + ': ' + err.message);
             try {
-                const errPayload = { content: 'An error occurred while executing this command.', ephemeral: true };
+                const errPayload = { content: 'An error occurred while executing this command.', flags: MessageFlags.Ephemeral };
                 if (interaction.replied || interaction.deferred) {
                     await interaction.followUp(errPayload);
                 } else {

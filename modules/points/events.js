@@ -1,18 +1,18 @@
 var ApiClient = require("../../core/js/APIClient.js");
 var api = new ApiClient();
-const { EmbedBuilder, PermissionsBitField } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 
 async function onButtonClick(button){
-if (!button.isButton() && !button.isSelectMenu()) return;
-if (button.isButton() || button.isSelectMenu()){
+if (!button.isButton() && !button.isStringSelectMenu()) return;
+if (button.isButton() || button.isStringSelectMenu()){
     if(!(button.customId.substring(0,4)==="BETS")) return;
     button.channel.send(button.customId.substring(0,4))
 if(button.isButton()){
     const moment = require("moment");
-    button.customId = button.customId.substr(4)
-    button.channel.send(button.customId)
-    var serial = button.customId.substring(0,10);
-    var stance = await button.customId.substring(button.customId.indexOf('-')+1, button.customId.indexOf('-')+3);
+    const customId = button.customId.substr(4)
+    button.channel.send(customId)
+    var serial = customId.substring(0,10);
+    var stance = customId.substring(customId.indexOf('-')+1, customId.indexOf('-')+3);
     var bet_amount = 0;
     var respCheckMaster;
     try{
@@ -297,7 +297,7 @@ if(button.isButton()){
         return;
     }
     else{
-        bet_amount = await button.customId.substring(button.customId.indexOf('-')+3);
+        bet_amount = customId.substring(customId.indexOf('-')+3);
     }
     var respCheckServer;
     try{

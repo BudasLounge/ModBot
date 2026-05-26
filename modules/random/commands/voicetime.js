@@ -10,9 +10,15 @@ module.exports = {
         { name: 'subcommand', description: 'Optional subcommand', type: 'STRING', required: false, choices: ['cleanup', 'diagnose'] },
     ],
     async execute(message, args, extra) {
-        const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+        const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require('discord.js');
         const api = extra.api;
         const subCommand = args[1]; // Already lowercased by args_to_lower: true
+        const replyOptions = (payload) => {
+            if (message._interaction) {
+                return { ...payload, flags: MessageFlags.Ephemeral };
+            }
+            return payload;
+        };
 
         if (subCommand === 'cleanup') {
             this.logger.info(`[voicetime cleanup] User ${message.author.tag} initiated cleanup request for guild ${message.guild.id}`);
@@ -31,16 +37,15 @@ module.exports = {
                         .setStyle(ButtonStyle.Secondary)
                 );
 
-            await message.reply({
+            await message.reply(replyOptions({
                 content: '⚠️ **Warning!** You are about to delete ALL voice time tracking data for this server. This action is irreversible.\nAre you sure you want to proceed?',
-                components: [row],
-                ephemeral: true
-            });
+                components: [row]
+            }));
             return;
 
         } else if (subCommand === 'diagnose') {
             this.logger.info(`[voicetime diagnose] User ${message.author.tag} initiated diagnosis for guild ${message.guild.id}`);
-            const reply = await message.reply({ content: "Diagnosing ghost sessions... please wait.", ephemeral: true });
+            const reply = await message.reply(replyOptions({ content: "Diagnosing ghost sessions... please wait." }));
 
             let voiceTrackings;
             try {

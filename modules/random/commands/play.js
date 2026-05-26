@@ -9,7 +9,8 @@ const {
     TextInputStyle,
     ButtonStyle,
     EmbedBuilder,
-    ComponentType
+    ComponentType,
+    MessageFlags
 } = require('discord.js');
 
 const STEAM_API_KEY = process.env.STEAM_API_KEY;
@@ -531,14 +532,11 @@ async function sendPaginatedGameList(channel, games, title, logger) {
 
     const collector = listMessage.createMessageComponentCollector({
         componentType: ComponentType.Button,
+        filter: (interaction) => interaction.customId.endsWith(pagerId),
         time: PAGINATOR_COLLECTOR_TIME_MS
     });
 
     collector.on('collect', async (interaction) => {
-        if (!interaction.customId.endsWith(pagerId)) {
-            return;
-        }
-
         if (interaction.customId.startsWith('PLAY_PAGE_PREV_')) {
             currentPage = Math.max(0, currentPage - 1);
         } else if (interaction.customId.startsWith('PLAY_PAGE_NEXT_')) {
@@ -1061,14 +1059,11 @@ module.exports = {
 
         const collector = botMessage.createMessageComponentCollector({
             componentType: ComponentType.Button,
+            filter: (interaction) => interaction.customId.endsWith(sessionId),
             time: SESSION_COLLECTOR_TIME_MS
         });
 
         collector.on('collect', async (interaction) => {
-            if (!interaction.customId.endsWith(sessionId)) {
-                return;
-            }
-
             if (interaction.customId.startsWith('PLAY_JOIN_')) {
                 this.logger.info(`[play] Join button clicked by ${interaction.user.id}`);
 
@@ -1080,7 +1075,7 @@ module.exports = {
                     if (savedJoin.ok) {
                         await interaction.reply({
                             content: `Using your saved Steam profile: ${savedProfile.profileUrl || toSteamProfileLink(savedProfile.steamId)}`,
-                            ephemeral: true
+                            flags: MessageFlags.Ephemeral
                         });
                         await safeEditMessage(botMessage, { embeds: [buildSessionEmbed(state)], components: buildButtons(sessionId, false, state.isComputing) }, this.logger, 'saved join update');
                         this.logger.info(`[play] Added participant ${interaction.user.id} with saved steamId ${savedProfile.steamId} (${savedJoin.gameCount} games)`);
@@ -1113,7 +1108,7 @@ module.exports = {
                         time: 2 * 60 * 1000
                     });
 
-                    await modalSubmit.deferReply({ ephemeral: true });
+                    await modalSubmit.deferReply({ flags: MessageFlags.Ephemeral });
 
                     const rawProfile = modalSubmit.fields.getTextInputValue('steam_profile');
                     const steamId = await resolveSteamId(rawProfile, this.logger);
@@ -1157,7 +1152,7 @@ module.exports = {
                 const hadParticipant = state.participants.delete(interaction.user.id);
 
                 if (!hadParticipant) {
-                    await interaction.reply({ content: 'You are not currently in this session.', ephemeral: true });
+                    await interaction.reply({ content: 'You are not currently in this session.', flags: MessageFlags.Ephemeral });
                     return;
                 }
 
@@ -1176,17 +1171,17 @@ module.exports = {
 
             if (interaction.customId.startsWith('PLAY_COMPUTE_')) {
                 if (!state.participants.has(interaction.user.id)) {
-                    await interaction.reply({ content: 'Only joined participants can use this button. Click **Join with Steam Profile** first.', ephemeral: true });
+                    await interaction.reply({ content: 'Only joined participants can use this button. Click **Join with Steam Profile** first.', flags: MessageFlags.Ephemeral });
                     return;
                 }
 
                 if (state.isComputing) {
-                    await interaction.reply({ content: 'Already computing common co-op games. Please wait.', ephemeral: true });
+                    await interaction.reply({ content: 'Already computing common co-op games. Please wait.', flags: MessageFlags.Ephemeral });
                     return;
                 }
 
                 if (state.participants.size < 1) {
-                    await interaction.reply({ content: 'No participants yet. Join the session first.', ephemeral: true });
+                    await interaction.reply({ content: 'No participants yet. Join the session first.', flags: MessageFlags.Ephemeral });
                     return;
                 }
 
@@ -1260,7 +1255,7 @@ module.exports = {
                     this.logger.info(`[play] Compute finished. Shared games=${intersection.length}, co-op common=${state.commonCoopGames.length}, cacheHits=${result.stats.cachedHits}, uncached=${result.stats.uncached}, successfulLookups=${result.stats.successfulLookups}, failedLookups=${result.stats.failedLookups}, status403=${result.stats.status403}, status429=${result.stats.status429}, fallbackUsed=${result.fallbackUsed}, elapsedMs=${elapsed}`);
                 } catch (error) {
                     this.logger.error(`[play] Error while computing games: ${error.message || error}`);
-                    await interaction.followUp({ content: 'Failed to compute common co-op games. Check logs and try again.', ephemeral: true });
+                    await interaction.followUp({ content: 'Failed to compute common co-op games. Check logs and try again.', flags: MessageFlags.Ephemeral });
                 } finally {
                     state.isComputing = false;
                     state.computeProgress = null;
@@ -1272,12 +1267,12 @@ module.exports = {
 
             if (interaction.customId.startsWith('PLAY_RNG_')) {
                 if (!state.participants.has(interaction.user.id)) {
-                    await interaction.reply({ content: 'Only joined participants can use this button. Click **Join with Steam Profile** first.', ephemeral: true });
+                    await interaction.reply({ content: 'Only joined participants can use this button. Click **Join with Steam Profile** first.', flags: MessageFlags.Ephemeral });
                     return;
                 }
 
                 if (state.commonCoopGames.length === 0) {
-                    await interaction.reply({ content: 'No common co-op games yet. Click **Find Common Co-op Games** first.', ephemeral: true });
+                    await interaction.reply({ content: 'No common co-op games yet. Click **Find Common Co-op Games** first.', flags: MessageFlags.Ephemeral });
                     return;
                 }
 
@@ -1290,7 +1285,7 @@ module.exports = {
 
                 const rngResult = pickRngGame(state.commonCoopGames, mode);
                 if (!rngResult || !rngResult.pick) {
-                    await interaction.reply({ content: 'Could not pick a game right now. Please try again.', ephemeral: true });
+                    await interaction.reply({ content: 'Could not pick a game right now. Please try again.', flags: MessageFlags.Ephemeral });
                     return;
                 }
 

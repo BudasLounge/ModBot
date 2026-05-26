@@ -7,12 +7,16 @@ const nodeHtmlToImage = require('node-html-to-image');
 const {
   ActionRowBuilder,
   ModalBuilder,
+  RadioGroupBuilder,
+  RadioGroupOptionBuilder,
+  CheckboxBuilder,
   TextInputBuilder,
   TextInputStyle,
   EmbedBuilder,
   AttachmentBuilder,
   ButtonBuilder,
-  ButtonStyle
+  ButtonStyle,
+  MessageFlags
 } = require('discord.js');
 
 require('dotenv').config();
@@ -100,11 +104,6 @@ function normalizeRole(input) {
     support: 'sup',
   };
   return map[input.toLowerCase()] || 'fill';
-}
-
-function parseLFG(input) {
-  if (!input) return false;
-  return ['yes', 'y', 'true', '1'].includes(input.toLowerCase());
 }
 
 function extractRanks(entries) {
@@ -2734,28 +2733,37 @@ async function onInteraction(interaction) {
         .setCustomId('LEAGUE_LINK_MODAL')
         .setTitle('Link League Account (NA)');
 
-      modal.addComponents(
-        new ActionRowBuilder().addComponents(
-          new TextInputBuilder()
-            .setCustomId('account_input')
-            .setLabel('Riot ID (Name#TAG) or Summoner Name')
-            .setStyle(TextInputStyle.Short)
-            .setRequired(true),
-        ),
-        new ActionRowBuilder().addComponents(
-          new TextInputBuilder()
-            .setCustomId('main_role')
-            .setLabel('Main Role')
-            .setStyle(TextInputStyle.Short)
-            .setRequired(false),
-        ),
-        new ActionRowBuilder().addComponents(
-          new TextInputBuilder()
-            .setCustomId('lfg_status')
-            .setLabel('Looking for group? (yes / no)')
-            .setStyle(TextInputStyle.Short)
-            .setRequired(false),
-        ),
+      modal.addLabelComponents(
+        label => label
+          .setLabel('Riot ID (Name#TAG) or Summoner Name')
+          .setTextInputComponent(
+            new TextInputBuilder()
+              .setCustomId('account_input')
+              .setStyle(TextInputStyle.Short)
+              .setRequired(true),
+          ),
+        label => label
+          .setLabel('Main Role')
+          .setRadioGroupComponent(
+            new RadioGroupBuilder()
+              .setCustomId('main_role')
+              .setRequired(false)
+              .addOptions(
+                new RadioGroupOptionBuilder().setLabel('Fill').setValue('fill').setDefault(true),
+                new RadioGroupOptionBuilder().setLabel('Top').setValue('top'),
+                new RadioGroupOptionBuilder().setLabel('Jungle').setValue('jg'),
+                new RadioGroupOptionBuilder().setLabel('Mid').setValue('mid'),
+                new RadioGroupOptionBuilder().setLabel('ADC').setValue('adc'),
+                new RadioGroupOptionBuilder().setLabel('Support').setValue('sup'),
+              ),
+          ),
+        label => label
+          .setLabel('Looking for group?')
+          .setCheckboxComponent(
+            new CheckboxBuilder()
+              .setCustomId('lfg_status')
+              .setDefault(false),
+          ),
       );
 
       await interaction.showModal(modal);
@@ -2767,10 +2775,10 @@ async function onInteraction(interaction) {
       const cached = recentMatchData.get(gameId);
 
       if (!cached) {
-        return interaction.reply({ content: 'Match data has expired (30-minute window). Re-upload to refresh.', ephemeral: true });
+        return interaction.reply({ content: 'Match data has expired (30-minute window). Re-upload to refresh.', flags: MessageFlags.Ephemeral });
       }
 
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       await handleMoreStatsInteraction(interaction, cached.payload, cached.uploaderInfos, cached.matchedPlayers || [], cached);
       return;
     }
@@ -2781,7 +2789,7 @@ async function onInteraction(interaction) {
       const parsedTags = extractParsedMatchTags(interaction.message?.content || '');
 
       if (!cached && !parsedTags) {
-        return interaction.reply({ content: 'Match data has expired (30-minute window). Re-upload to refresh.', ephemeral: true });
+        return interaction.reply({ content: 'Match data has expired (30-minute window). Re-upload to refresh.', flags: MessageFlags.Ephemeral });
       }
 
       const uploaderInfos = Array.isArray(cached?.uploaderInfos) && cached.uploaderInfos.length > 0
@@ -2803,7 +2811,7 @@ async function onInteraction(interaction) {
         logger.info('[LoL Match Tags] Keyword edit denied', { gameId, userId: interaction.user.id, reason: permission.reason });
         return interaction.reply({
           content: 'Only the uploader or a league admin can edit match keywords.',
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       }
 
@@ -2816,16 +2824,17 @@ async function onInteraction(interaction) {
         .setCustomId(`${LEAGUE_KEYWORDS_MODAL_PREFIX}${modalToken}`)
         .setTitle('Edit Match Keywords');
 
-      modal.addComponents(
-        new ActionRowBuilder().addComponents(
-          new TextInputBuilder()
-            .setCustomId(LEAGUE_KEYWORDS_FIELD_ID)
-            .setLabel('Keywords (comma separated)')
-            .setStyle(TextInputStyle.Short)
-            .setPlaceholder('comeback, baron_steal, finals_scrim')
-            .setValue(currentKeywords.join(', '))
-            .setRequired(false)
-        )
+      modal.addLabelComponents(
+        label => label
+          .setLabel('Keywords (comma separated)')
+          .setTextInputComponent(
+            new TextInputBuilder()
+              .setCustomId(LEAGUE_KEYWORDS_FIELD_ID)
+              .setStyle(TextInputStyle.Short)
+              .setPlaceholder('comeback, baron_steal, finals_scrim')
+              .setValue(currentKeywords.join(', '))
+              .setRequired(false)
+          )
       );
 
       logger.info('[LoL Match Tags] Opening keyword modal', { gameId, userId: interaction.user.id, reason: permission.reason });
@@ -2854,7 +2863,7 @@ async function onInteraction(interaction) {
         }
       }
       if (!cached) {
-        return interaction.reply({ content: 'Match data unavailable (not cached and not archived).', ephemeral: true });
+        return interaction.reply({ content: 'Match data unavailable (not cached and not archived).', flags: MessageFlags.Ephemeral });
       }
 
       await interaction.deferUpdate();
@@ -2901,18 +2910,18 @@ async function onInteraction(interaction) {
       const gameData = recentMatchAugments.get(gameId);
       
       if (!gameData) {
-        return interaction.reply({ content: 'Match data expired or not found.', ephemeral: true });
+        return interaction.reply({ content: 'Match data expired or not found.', flags: MessageFlags.Ephemeral });
       }
 
       const playerInfo = gameData.players.find(p => p.user_id === interaction.user.id);
       if (!playerInfo) {
-         return interaction.reply({ content: 'You were not detected in this match (or are not linked).', ephemeral: true });
+          return interaction.reply({ content: 'You were not detected in this match (or are not linked).', flags: MessageFlags.Ephemeral });
       }
 
       const editableAugments = playerInfo.augments.filter(id => typeof id === 'number');
 
       if (editableAugments.length === 0) {
-         return interaction.reply({ content: 'You have no augments that need identification!', ephemeral: true });
+          return interaction.reply({ content: 'You have no augments that need identification!', flags: MessageFlags.Ephemeral });
       }
       
       const modal = new ModalBuilder()
@@ -2925,17 +2934,18 @@ async function onInteraction(interaction) {
         const id = editableAugments[i];
         const knownName = AUGMENT_NAME_MAP[id] || '';
         
-        modal.addComponents(
-          new ActionRowBuilder().addComponents(
-            new TextInputBuilder()
-              .setCustomId(`aug_${id}`)
+          modal.addLabelComponents(
+            label => label
               .setLabel(`Augment ${id} Name`)
-              .setStyle(TextInputStyle.Short)
-              .setPlaceholder(knownName || 'e.g. Poltergeist')
-              .setValue(knownName) 
-              .setRequired(true)
-          )
-        );
+              .setTextInputComponent(
+                new TextInputBuilder()
+                  .setCustomId(`aug_${id}`)
+                  .setStyle(TextInputStyle.Short)
+                  .setPlaceholder(knownName || 'e.g. Poltergeist')
+                  .setValue(knownName)
+                  .setRequired(true)
+              )
+          );
       }
       
       await interaction.showModal(modal);
@@ -2948,10 +2958,10 @@ async function onInteraction(interaction) {
       const cached = recentMatchData.get(gameId);
 
       if (!cached) {
-        return interaction.reply({ content: 'Match data has expired (30-minute window). Re-upload to refresh.', ephemeral: true });
+        return interaction.reply({ content: 'Match data has expired (30-minute window). Re-upload to refresh.', flags: MessageFlags.Ephemeral });
       }
 
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
       const allPlayers = getAllPlayersOrdered(cached.payload);
       if (allPlayers.length === 0) {
@@ -2974,12 +2984,12 @@ async function onInteraction(interaction) {
 
       const cached = recentMatchData.get(gameId);
       if (!cached) {
-        return interaction.reply({ content: 'Match data expired. Re-upload to refresh.', ephemeral: true });
+        return interaction.reply({ content: 'Match data expired. Re-upload to refresh.', flags: MessageFlags.Ephemeral });
       }
 
       const allPlayers = getAllPlayersOrdered(cached.payload);
       if (isNaN(playerIdx) || playerIdx < 0 || playerIdx >= allPlayers.length) {
-        return interaction.reply({ content: 'Invalid player selection.', ephemeral: true });
+        return interaction.reply({ content: 'Invalid player selection.', flags: MessageFlags.Ephemeral });
       }
 
       await interaction.deferUpdate();
@@ -3008,7 +3018,7 @@ async function onInteraction(interaction) {
 
       if (!isModerator) {
         logger.info('[AugmentView] Identify denied — not a Moderator', { augId, userId: interaction.user.id });
-        return interaction.reply({ content: 'Only members with the **Moderator** role can identify augments.', ephemeral: true });
+        return interaction.reply({ content: 'Only members with the **Moderator** role can identify augments.', flags: MessageFlags.Ephemeral });
       }
 
       const numericId = parseInt(augId, 10);
@@ -3018,16 +3028,17 @@ async function onInteraction(interaction) {
         .setCustomId(`LEAGUE_AUGS_ID_MODAL_${gameId}_${playerIdx}_${augId}`)
         .setTitle(`Identify Augment #${augId}`);
 
-      modal.addComponents(
-        new ActionRowBuilder().addComponents(
-          new TextInputBuilder()
-            .setCustomId('aug_name')
-            .setLabel('Augment Name')
-            .setStyle(TextInputStyle.Short)
-            .setPlaceholder('e.g. Poltergeist')
-            .setValue(knownName)
-            .setRequired(true)
-        )
+      modal.addLabelComponents(
+        label => label
+          .setLabel('Augment Name')
+          .setTextInputComponent(
+            new TextInputBuilder()
+              .setCustomId('aug_name')
+              .setStyle(TextInputStyle.Short)
+              .setPlaceholder('e.g. Poltergeist')
+              .setValue(knownName)
+              .setRequired(true)
+          )
       );
 
       logger.info('[AugmentView] Identify modal opened', { augId, gameId, userId: interaction.user.id });
@@ -3051,7 +3062,7 @@ if (interaction.isModalSubmit()) {
 
       const augName = interaction.fields.getTextInputValue('aug_name').trim();
       if (!augName) {
-        return interaction.reply({ content: 'Augment name cannot be empty.', ephemeral: true });
+        return interaction.reply({ content: 'Augment name cannot be empty.', flags: MessageFlags.Ephemeral });
       }
 
       const numericId = parseInt(augId, 10);
@@ -3077,10 +3088,10 @@ if (interaction.isModalSubmit()) {
         const validIdx = !isNaN(playerIdx) && playerIdx >= 0 && playerIdx < allPlayers.length ? playerIdx : 0;
         const embed = buildAugmentPageEmbed(allPlayers, validIdx, gameId);
         const components = buildAugmentPageComponents(allPlayers, gameId, validIdx);
-        return interaction.reply({ content: `✅ Augment ID \`${augId}\` identified as **${augName}**.`, embeds: [embed], components, ephemeral: true });
+        return interaction.reply({ content: `✅ Augment ID \`${augId}\` identified as **${augName}**.`, embeds: [embed], components, flags: MessageFlags.Ephemeral });
       }
 
-      return interaction.reply({ content: `✅ Augment ID \`${augId}\` identified as **${augName}**. (Match data has since expired.)`, ephemeral: true });
+      return interaction.reply({ content: `✅ Augment ID \`${augId}\` identified as **${augName}**. (Match data has since expired.)`, flags: MessageFlags.Ephemeral });
     }
 
     if (interaction.customId.startsWith(LEAGUE_KEYWORDS_MODAL_PREFIX)) {
@@ -3124,7 +3135,7 @@ if (interaction.isModalSubmit()) {
       if (!targetMessage) {
         return interaction.reply({
           content: 'Could not find the original match message to update keywords.',
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       }
 
@@ -3132,7 +3143,7 @@ if (interaction.isModalSubmit()) {
       if (!cached && !parsedTags) {
         return interaction.reply({
           content: 'This match message does not contain searchable tags to update.',
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       }
 
@@ -3159,7 +3170,7 @@ if (interaction.isModalSubmit()) {
         });
         return interaction.reply({
           content: 'Only the uploader or a league admin can edit match keywords.',
-          ephemeral: true,
+          flags: MessageFlags.Ephemeral,
         });
       }
 
@@ -3182,7 +3193,7 @@ if (interaction.isModalSubmit()) {
         } else {
           return interaction.reply({
             content: 'Could not update keywords because no match tag line was found.',
-            ephemeral: true,
+            flags: MessageFlags.Ephemeral,
           });
         }
       }
@@ -3207,7 +3218,7 @@ if (interaction.isModalSubmit()) {
         : 'none';
       await interaction.reply({
         content: `Updated match keywords: ${keywordText}`,
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -3241,7 +3252,7 @@ if (interaction.isModalSubmit()) {
            logger.error('Failed to save augments', e);
         }
 
-        await interaction.reply({ content: `Thank you for uploading augment data!`, ephemeral: true });
+        await interaction.reply({ content: `Thank you for uploading augment data!`, flags: MessageFlags.Ephemeral });
         return;
     }
 
@@ -3251,19 +3262,17 @@ if (interaction.isModalSubmit()) {
 
   // ✅ ACKNOWLEDGE THE INTERACTION IMMEDIATELY
   // This MUST be the first awaited call
-  await interaction.deferReply({ flags: 64 });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   try {
     const input =
       interaction.fields.getTextInputValue('account_input').trim();
 
     const mainRole = normalizeRole(
-      interaction.fields.getTextInputValue('main_role')
+      interaction.fields.getRadioGroup('main_role', false) || 'fill'
     );
 
-    const lfg = parseLFG(
-      interaction.fields.getTextInputValue('lfg_status')
-    );
+    const lfg = interaction.fields.getCheckbox('lfg_status');
 
     logger.info('[LoL Link] Modal submit', {
       user: interaction.user.id,

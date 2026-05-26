@@ -13,7 +13,7 @@ module.exports = {
     ],
     async execute(message, args, extra) {
         var api = extra.api;
-        const Discord = require('discord.js');
+        const { EmbedBuilder } = require('discord.js');
         var respChamps;
         this.logger.info("[update_champ] Execute called", { userId: message.member?.id, argsLength: args.length });
 
@@ -57,7 +57,7 @@ module.exports = {
                 data[args[2]] = updatedValue;
                 var respUpdate = await api.put("league_champion" , data);
                 if(respUpdate && respUpdate.ok === true){
-                    const ListEmbed = new Discord.EmbedBuilder()
+                    const ListEmbed = new EmbedBuilder()
                         .setColor("#f92f03")
                         .setTitle("Here's what changed: ");
                     this.logger.info("[update_champ] Building change summary embed", { champion: respChamps.league_champions[0].name, field: args[2] });

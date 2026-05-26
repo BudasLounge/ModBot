@@ -12,7 +12,7 @@ module.exports = {
 
         this.logger.info(">>add_server_gui");
         if(message.member.roles.cache.find(r => r.id === "586313447965327365") || message.author.id === "185223223892377611" || message.author.id === "195677170432081920"){
-            const { ActionRowBuilder, ButtonBuilder, EmbedBuilder, SelectMenuBuilder, ButtonStyle } = require('discord.js'); // Updated imports
+            const { ActionRowBuilder, ButtonBuilder, EmbedBuilder, ButtonStyle } = require('discord.js');
             const modalStarter = new ActionRowBuilder() // Updated to ActionRowBuilder
             .addComponents(
                 new ButtonBuilder() // Updated to ButtonBuilder

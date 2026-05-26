@@ -30,6 +30,7 @@ const {
     ButtonStyle,
     ComponentType,
     AttachmentBuilder,
+    MessageFlags,
 } = require('discord.js');
 require('dotenv').config();
 const ApiClient = require('../../../core/js/APIClient.js');
@@ -618,11 +619,11 @@ async function sendPaginatedResults(channel, summonerName, rows, headerDesc, dis
 
     const collector = listMessage.createMessageComponentCollector({
         componentType: ComponentType.Button,
+        filter: (interaction) => interaction.customId.endsWith(pagerId),
         time: PAGINATOR_COLLECTOR_TIME_MS,
     });
 
     collector.on('collect', async (interaction) => {
-        if (!interaction.customId.endsWith(pagerId)) return;
         if (interaction.customId.startsWith('CHAMPSTATS_PREV_')) {
             page = Math.max(0, page - 1);
         } else if (interaction.customId.startsWith('CHAMPSTATS_NEXT_')) {
@@ -1764,11 +1765,11 @@ async function sendDeepResults(channel, summonerName, rows, deepStatsMap, header
 
     const collector = listMessage.createMessageComponentCollector({
         componentType: ComponentType.Button,
+        filter: (interaction) => interaction.customId.endsWith(pagerId),
         time: PAGINATOR_COLLECTOR_TIME_MS,
     });
 
     collector.on('collect', async (interaction) => {
-        if (!interaction.customId.endsWith(pagerId)) return;
         const prevPage = page;
         if (interaction.customId.startsWith('CHAMPSTATS_PREV_')) {
             page = Math.max(0, page - 1);
@@ -1794,7 +1795,7 @@ async function sendDeepResults(channel, summonerName, rows, deepStatsMap, header
             try {
                 await interaction.followUp({
                     content: `Failed to render page ${page + 1}: ${err.message || 'unknown error'}`,
-                    ephemeral: true,
+                    flags: MessageFlags.Ephemeral,
                 });
             } catch (_) { /* ignore */ }
         }
@@ -1989,11 +1990,11 @@ async function sendInsightsResults(channel, summonerName, rows, insightsMap, hea
 
     const collector = msg.createMessageComponentCollector({
         componentType: ComponentType.Button,
+        filter: (interaction) => interaction.customId.endsWith(pagerId),
         time: PAGINATOR_COLLECTOR_TIME_MS,
     });
 
     collector.on('collect', async (interaction) => {
-        if (!interaction.customId.endsWith(pagerId)) return;
         const prev = page;
         if (interaction.customId.startsWith('CHAMPSTATS_PREV_')) page = Math.max(0, page - 1);
         else if (interaction.customId.startsWith('CHAMPSTATS_NEXT_')) page = Math.min(totalPages - 1, page + 1);
@@ -2403,11 +2404,11 @@ async function sendRoleResults(channel, summonerName, rows, roleStatsMap, header
 
     const collector = msg.createMessageComponentCollector({
         componentType: ComponentType.Button,
+        filter: (interaction) => interaction.customId.endsWith(pagerId),
         time: PAGINATOR_COLLECTOR_TIME_MS,
     });
 
     collector.on('collect', async (interaction) => {
-        if (!interaction.customId.endsWith(pagerId)) return;
         const prev = page;
         if (interaction.customId.startsWith('CHAMPSTATS_PREV_')) page = Math.max(0, page - 1);
         else if (interaction.customId.startsWith('CHAMPSTATS_NEXT_')) page = Math.min(totalPages - 1, page + 1);

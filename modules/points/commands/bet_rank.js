@@ -9,7 +9,7 @@ module.exports = {
     options: [],
     async execute(message, args, extra) {
         var api = extra.api;
-        const Discord = require('discord.js');
+        const { EmbedBuilder } = require('discord.js');
         var server_id = message.guild.id;
         var respUsers;
         var pointUsers = [];
@@ -47,7 +47,7 @@ module.exports = {
                 }
                 //var outputTitle = "Let\'s see who is in the lead:\n";
                 var output = "";
-                const ListEmbed2 = new Discord.EmbedBuilder()
+                const ListEmbed2 = new EmbedBuilder()
                 .setColor("#f92f03")
                 .setTitle("Let\'s see who is in the lead: ");
 

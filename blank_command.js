@@ -11,11 +11,13 @@ module.exports = {
     }
 }
 
+/*
 //Send a message with:
 message.channel.send({ content: ""});
 
 //Use This to send a message with more than 2000 characters(Create your string and then name it 'output'):
-const messageChunks = Util.splitMessage(output, {
+const { splitMessage } = require('./core/js/text_utils.js');
+const messageChunks = splitMessage(output, {
     maxLength: 2000,
     char:'\n'
 });
@@ -49,3 +51,4 @@ if(respAdminID.discord_servers[0]){
     message.channel.send({ content: "This command requires an admin role but no main admin role has been selected for this server."});
     return;
 }
+*/

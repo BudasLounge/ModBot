@@ -2,7 +2,7 @@
 
 const fetch = require("node-fetch");
 const http = require("http");
-const { Util } = require("discord.js");
+const { splitMessage } = require("../../../core/js/text_utils.js");
 
 // ─── Configurable static facts ───────────────────────────────────────────────
 const STATIC_SYSTEM_MESSAGES = [
@@ -254,7 +254,7 @@ Now process THIS user message:`
                         }
 
                         await botNotice.delete();
-                        for (const chunk of Util.splitMessage(reply, { maxLength: 1950, char: ' ' })) {
+                        for (const chunk of splitMessage(reply, { maxLength: 1950, char: ' ' })) {
                             await message.reply(chunk);
                         }
 
