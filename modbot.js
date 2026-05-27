@@ -72,9 +72,10 @@ async function botInit() {
         logger.error('[SlashCommands] Startup registration failed: ' + err.message);
     }
 
-    var channel = await client.channels.fetch(config.default_channel);
-
-    if (fs.existsSync("updated.txt")) {
+    var channel = await client.channels.fetch(config.default_channel).catch(() => null);
+    if (!channel) {
+        logger.error('[botInit] Could not fetch default channel: ' + config.default_channel);
+    } else if (fs.existsSync("updated.txt")) {
         channel.send({ content: config.startup_messages.update });
         fs.unlinkSync("updated.txt");
     } else {
@@ -94,7 +95,12 @@ async function botInit() {
             _limit: 200
         })
     } catch (err) {
-        logger.error(err.message);
+        logger.error("Failed to fetch DnD campaigns, skipping scheduling: " + err.message);
+        return;
+    }
+    if (!respDNDCampaigns || !respDNDCampaigns.dnd_campaigns) {
+        logger.error("DnD campaigns response was empty or malformed, skipping scheduling.");
+        return;
     }
     const sessions = respDNDCampaigns.dnd_campaigns;
     sessions.forEach(session => {
@@ -143,7 +149,13 @@ async function botInit() {
     logger.info(jobList);
 }
 
-client.on('ready', botInit);
+client.on('ready', async () => {
+    try {
+        await botInit();
+    } catch (err) {
+        logger.error('[botInit] Fatal initialization error: ' + err.message + '\n' + err.stack);
+    }
+});
 
 function authClient() {
     var token;
@@ -239,5 +251,7 @@ client.on('messageCreate', (message) => {
         return; // Don't process as a regular command if it was handled by auto-chat
     }
 
-    modules.handle_command(message);
+    modules.handle_command(message).catch(err => {
+        logger.error('[messageCreate] Unhandled error in handle_command: ' + err.message);
+    });
 });

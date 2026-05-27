@@ -187,6 +187,7 @@ class ModuleHandler {
      * @param {external:Discord.Message} message - The {@link external:Discord.Message} passed to us by the discord.js event handler
      */
     async handle_command(message) {
+        try {
         this.logger.info("Got command: " + message.content);
         var api = new APIClient();
         if (message.author.bot) return; //Ignore messages from bots
@@ -305,6 +306,10 @@ class ModuleHandler {
             }
         } else { //Not enough arguments provided
             this.invalid_syntax(current_module, command_args[0], message);
+        }
+        } catch (err) {
+            this.logger.error('[handle_command] Unhandled error: ' + err.message);
+            try { message.channel.send('Sorry, an internal error occurred.'); } catch (_) {}
         }
     }
 
