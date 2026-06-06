@@ -51,6 +51,8 @@ const AUGMENT_ID_FILE = path.join(__dirname, 'augment_ids.json');
 const RIOT_API_KEY = process.env.RIOT_API_KEY;
 let logger;
 const pendingMatches = new Map();
+// partyId -> timestamp (ms) of the last invite we posted, for debouncing.
+const recentLobbyInvites = new Map();
 
 const MATCH_WEBHOOK_PORT = parseInt(process.env.MATCH_WEBHOOK_PORT || '38900', 10);
 const MATCH_WEBHOOK_HOST = process.env.MATCH_WEBHOOK_HOST || '0.0.0.0';
@@ -58,6 +60,13 @@ const MATCH_WEBHOOK_PATH = process.env.MATCH_WEBHOOK_PATH || '/lol/match';
 const MATCH_WEBHOOK_SECRET = process.env.MATCH_WEBHOOK_SECRET;
 const MATCH_WEBHOOK_CHANNEL = process.env.MATCH_WEBHOOK_CHANNEL;
 const MATCH_DEBOUNCE_MS = 10000;
+
+// --- Lobby invite ingest ---
+// Suppress duplicate invite posts for the same partyId within this window. The
+// client fires once per lobby session, but may retry; we also guard against the
+// same payload arriving while a lobby is still open in the match-data channel.
+const LOBBY_INVITE_DEBOUNCE_MS = 5 * 60 * 1000; // 5 minutes
+
 const LEAGUE_EDIT_KEYWORDS_PREFIX = 'LEAGUE_EDIT_KEYWORDS_';
 const LEAGUE_KEYWORDS_MODAL_PREFIX = 'LEAGUE_KW_MODAL_';
 const LEAGUE_KEYWORDS_FIELD_ID = 'match_keywords';
@@ -2015,6 +2024,166 @@ async function handleMatchPayload(payload, client, uploaderInfos = [], placehold
   }
 }
 
+/* =====================================================
+   Lobby invite ingest
+===================================================== */
+
+// Map common Riot queueIds to readable labels for matchmade lobbies. Custom
+// lobbies (queueId 0) are handled separately via lobbyName/gameMode.
+const LOBBY_QUEUE_LABELS = {
+  400: 'Normal Draft',
+  420: 'Ranked Solo/Duo',
+  430: 'Normal Blind',
+  440: 'Ranked Flex',
+  450: 'ARAM',
+  490: 'Quickplay',
+  700: 'Clash',
+  900: 'ARURF',
+  1700: 'Arena',
+  1900: 'URF',
+};
+
+/**
+ * Build a short human-readable label describing the lobby's mode/queue.
+ */
+function describeLobbyMode(payload) {
+  const lobbyName = String(payload?.lobbyName || '').trim();
+  if (payload?.isCustom) {
+      return lobbyName ? `Custom — ${lobbyName}` : 'Custom Lobby';
+  }
+
+  const queueId = Number(payload?.queueId);
+  if (Number.isFinite(queueId) && LOBBY_QUEUE_LABELS[queueId]) {
+    return LOBBY_QUEUE_LABELS[queueId];
+  }
+
+  const gameMode = String(payload?.gameMode || '').trim();
+  if (gameMode) {
+    // Title-case raw enum-ish strings (CLASSIC -> Classic).
+    return gameMode.charAt(0).toUpperCase() + gameMode.slice(1).toLowerCase();
+  }
+
+  return lobbyName || 'Lobby';
+}
+
+function buildLobbyInviteEmbed(payload) {
+  const smartUrl = String(payload?.smartUrl || '').trim();
+  const owner = String(payload?.ownerName || '').trim() || 'Unknown';
+  const modeLabel = describeLobbyMode(payload);
+
+  const embed = new EmbedBuilder()
+    .setColor(0x1e90ff)
+    .setTitle('League Lobby Open')
+    .setURL(smartUrl || null)
+    .setDescription(
+      `${owner} opened a lobby — click below to join.\n\n**[Join Lobby](${smartUrl})**`
+    )
+    .addFields(
+      { name: 'Host', value: owner, inline: true },
+      { name: 'Mode', value: modeLabel, inline: true }
+    )
+    .setFooter({ text: 'League of Legends Lobby Invite' })
+    .setTimestamp(new Date());
+
+  return embed;
+}
+
+/**
+ * Handle an inbound lobby-invite payload: debounce by partyId, then post an
+ * invite embed to the same channel the match scoreboard/data outputs use.
+ */
+async function postLobbyInvite(payload, client) {
+  const partyId = String(payload?.partyId || '').trim();
+  const smartUrl = String(payload?.smartUrl || '').trim();
+
+  logger.info('[LoL Lobby Invite] Received lobby invite payload', {
+    partyId: partyId || null,
+    isCustom: Boolean(payload?.isCustom),
+    gameMode: payload?.gameMode || null,
+  });
+
+  if (!smartUrl) {
+    logger.warn('[LoL Lobby Invite] Missing smartUrl; dropping payload', { partyId: partyId || null });
+    return;
+  }
+
+  const now = Date.now();
+  if (partyId) {
+    const last = recentLobbyInvites.get(partyId);
+    if (last && now - last < LOBBY_INVITE_DEBOUNCE_MS) {
+      logger.info('[LoL Lobby Invite] Debounced duplicate partyId; skipping post', {
+        partyId,
+        sinceMs: now - last,
+      });
+      return;
+    }
+    recentLobbyInvites.set(partyId, now);
+
+    // Prune stale entries so the map does not grow unbounded.
+    for (const [id, ts] of recentLobbyInvites) {
+      if (now - ts > LOBBY_INVITE_DEBOUNCE_MS) recentLobbyInvites.delete(id);
+    }
+  }
+
+  if (!MATCH_WEBHOOK_CHANNEL) {
+    logger.error('[LoL Lobby Invite] MATCH_WEBHOOK_CHANNEL not configured; dropping invite');
+    return;
+  }
+
+  let channel;
+  try {
+    channel = await client.channels.fetch(MATCH_WEBHOOK_CHANNEL);
+  } catch (err) {
+    logger.error('[LoL Lobby Invite] Failed to fetch invite channel', {
+      MATCH_WEBHOOK_CHANNEL,
+      err: err?.message,
+    });
+    return;
+  }
+
+  if (!channel) {
+    logger.error('[LoL Lobby Invite] Invite channel not found', { MATCH_WEBHOOK_CHANNEL });
+    return;
+  }
+
+  const embed = buildLobbyInviteEmbed(payload);
+  const components = [
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setStyle(ButtonStyle.Link)
+        .setLabel('Join Lobby')
+        .setURL(smartUrl)
+    ),
+  ];
+
+  try {
+    const msg = await channel.send({ embeds: [embed], components });
+    logger.info('[LoL Lobby Invite] Posted lobby invite', {
+      partyId: partyId || null,
+      messageId: msg.id,
+    });
+  } catch (err) {
+    logger.error('[LoL Lobby Invite] Failed to post lobby invite', {
+      partyId: partyId || null,
+      err: err?.message,
+    });
+  }
+}
+
+/**
+ * Distinguish a lobby-invite payload from a post-match payload. Lobby invites
+ * carry a smartUrl/partyId and never include match teams/gameId.
+ */
+function isLobbyInvitePayload(payload) {
+  if (!payload || typeof payload !== 'object') return false;
+  // Primary discriminator per integration spec: presence of partyId + smartUrl.
+  // Match result payloads carry gameId/teams and never include partyId+smartUrl.
+  const hasPartyId = typeof payload.partyId === 'string' && payload.partyId.trim().length > 0;
+  const hasInviteUrl = typeof payload.smartUrl === 'string' && payload.smartUrl.trim().length > 0;
+  const hasMatchData = Boolean(payload.gameId || payload.reportGameId || payload.teams);
+  return hasPartyId && hasInviteUrl && !hasMatchData;
+}
+
 function startMatchWebhook(event_registry) {
   if (matchServerStarted) return;
   matchServerStarted = true;
@@ -2064,6 +2233,24 @@ function startMatchWebhook(event_registry) {
       } catch (err) {
         res.statusCode = 400;
         res.end('invalid json');
+        return;
+      }
+
+      // Lobby-invite payloads share the match path but carry a smartUrl/partyId
+      // and no match data. Route them to the invite handler instead.
+      if (isLobbyInvitePayload(payload)) {
+        postLobbyInvite(payload, client)
+          .then(() => {
+            res.writeHead(200, { 'content-type': 'application/json' });
+            res.end(JSON.stringify({ ok: true }));
+            logger.info('[LoL Lobby Invite] Invite accepted');
+          })
+          .catch((err) => {
+            logger.error('[LoL Lobby Invite] Handler error', err);
+            res.statusCode = 503;
+            res.setHeader('Retry-After', '5');
+            res.end('error');
+          });
         return;
       }
 
