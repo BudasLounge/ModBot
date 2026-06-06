@@ -2066,26 +2066,15 @@ function describeLobbyMode(payload) {
   return lobbyName || 'Lobby';
 }
 
-function buildLobbyInviteEmbed(payload) {
+function buildLobbyInviteContent(payload) {
+  // Sending the smartUrl as plain content (not inside an embed) lets Discord
+  // unfurl the Riot link, showing the native splash art and Launch Game button.
+  // Bot-provided embeds suppress that unfurl, so we use formatted text instead.
   const smartUrl = String(payload?.smartUrl || '').trim();
   const owner = String(payload?.ownerName || '').trim() || 'Unknown';
   const modeLabel = describeLobbyMode(payload);
 
-  const embed = new EmbedBuilder()
-    .setColor(0x1e90ff)
-    .setTitle('League Lobby Open')
-    .setURL(smartUrl || null)
-    .setDescription(
-      `${owner} opened a lobby — click below to join.\n\n**[Join Lobby](${smartUrl})**`
-    )
-    .addFields(
-      { name: 'Host', value: owner, inline: true },
-      { name: 'Mode', value: modeLabel, inline: true }
-    )
-    .setFooter({ text: 'League of Legends Lobby Invite' })
-    .setTimestamp(new Date());
-
-  return embed;
+  return `**${owner}** opened a **${modeLabel}** lobby\n${smartUrl}`;
 }
 
 /**
@@ -2146,18 +2135,10 @@ async function postLobbyInvite(payload, client) {
     return;
   }
 
-  const embed = buildLobbyInviteEmbed(payload);
-  const components = [
-    new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setStyle(ButtonStyle.Link)
-        .setLabel('Join Lobby')
-        .setURL(smartUrl)
-    ),
-  ];
+  const content = buildLobbyInviteContent(payload);
 
   try {
-    const msg = await channel.send({ embeds: [embed], components });
+    const msg = await channel.send({ content });
     logger.info('[LoL Lobby Invite] Posted lobby invite', {
       partyId: partyId || null,
       messageId: msg.id,
