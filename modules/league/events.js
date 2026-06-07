@@ -62,10 +62,18 @@ const MATCH_WEBHOOK_CHANNEL = process.env.MATCH_WEBHOOK_CHANNEL;
 const MATCH_DEBOUNCE_MS = 10000;
 
 // --- Lobby invite ingest ---
-// Suppress duplicate invite posts for the same partyId within this window. The
-// client fires once per lobby session, but may retry; we also guard against the
-// same payload arriving while a lobby is still open in the match-data channel.
-const LOBBY_INVITE_DEBOUNCE_MS = 5 * 60 * 1000; // 5 minutes
+// How long to wait before applying a debounced embed edit when rapid
+// join/leave payloads arrive for the same partyId.
+const LOBBY_INVITE_EDIT_DEBOUNCE_MS = 5000; // 5 seconds
+// After this much inactivity the in-memory tracking entry is discarded.
+// The posted Discord message is NOT deleted; only the Map entry is freed.
+const LOBBY_INVITE_TTL_MS = 30 * 60 * 1000; // 30 minutes
+// Lobby capacity for the "spaces left" calculation.
+// Custom games seat a full SR custom (2×5 = 10); Arena uses 2×8 = 16;
+// every other matchmade queue caps the premade party at 5.
+const LOBBY_SLOTS_CUSTOM = 10;
+const LOBBY_SLOTS_ARENA = 16;
+const LOBBY_SLOTS_DEFAULT = 5;
 
 const LEAGUE_EDIT_KEYWORDS_PREFIX = 'LEAGUE_EDIT_KEYWORDS_';
 const LEAGUE_KEYWORDS_MODAL_PREFIX = 'LEAGUE_KW_MODAL_';
@@ -2044,6 +2052,17 @@ const LOBBY_QUEUE_LABELS = {
 };
 
 /**
+ * Resolve the maximum number of players a lobby can hold. Custom games are
+ * treated as full SR customs (2×5 = 10); non-custom Arena uses its 16-player
+ * format; every other matchmade queue caps the premade party at 5.
+ */
+function getLobbyMaxSlots(payload) {
+  if (payload?.isCustom) return LOBBY_SLOTS_CUSTOM;
+  if (isArenaMatch(payload)) return LOBBY_SLOTS_ARENA;
+  return LOBBY_SLOTS_DEFAULT;
+}
+
+/**
  * Build a short human-readable label describing the lobby's mode/queue.
  */
 function describeLobbyMode(payload) {
@@ -2066,29 +2085,57 @@ function describeLobbyMode(payload) {
   return lobbyName || 'Lobby';
 }
 
-function buildLobbyInviteContent(payload) {
-  // Sending the smartUrl as plain content (not inside an embed) lets Discord
-  // unfurl the Riot link, showing the native splash art and Launch Game button.
-  // Bot-provided embeds suppress that unfurl, so we use formatted text instead.
+function buildLobbyInviteEmbed(payload) {
   const smartUrl = String(payload?.smartUrl || '').trim();
   const owner = String(payload?.ownerName || '').trim() || 'Unknown';
   const modeLabel = describeLobbyMode(payload);
 
-  return `**${owner}** opened a **${modeLabel}** lobby\n${smartUrl}`;
+  const maxSlots = getLobbyMaxSlots(payload);
+  const rawCount = Number(payload?.playerCount);
+  const playerCount = Number.isFinite(rawCount) && rawCount >= 0 ? rawCount : null;
+  const spacesLeft = playerCount !== null ? Math.max(0, maxSlots - playerCount) : null;
+
+  const playersValue = playerCount !== null
+    ? (spacesLeft === 0
+        ? `${playerCount}/${maxSlots} — Full`
+        : `${playerCount}/${maxSlots} — ${spacesLeft} space${spacesLeft === 1 ? '' : 's'} left`)
+    : `Up to ${maxSlots}`;
+
+  return new EmbedBuilder()
+    .setColor(0x1e90ff)
+    .setTitle('League Lobby Open')
+    .setURL(smartUrl || null)
+    .setDescription(`**[Join Lobby](${smartUrl})**`)
+    .addFields(
+      { name: 'Host', value: owner, inline: true },
+      { name: 'Mode', value: modeLabel, inline: true },
+      { name: 'Players', value: playersValue, inline: true },
+    )
+    .setFooter({ text: 'League of Legends Lobby Invite' })
+    .setTimestamp(new Date());
 }
 
 /**
- * Handle an inbound lobby-invite payload: debounce by partyId, then post an
- * invite embed to the same channel the match scoreboard/data outputs use.
+ * Handle an inbound lobby-invite payload.
+ *
+ * First payload for a partyId → post embed immediately and track the message.
+ * Subsequent payloads for the same partyId → validate ownerName matches the
+ * original post (non-leaders are rejected server-side), then debounce an edit
+ * so rapid join/leave events are batched into a single Discord API call.
+ * Tracking entries expire after LOBBY_INVITE_TTL_MS of inactivity; the posted
+ * Discord message is NOT deleted, only the in-memory state is freed.
  */
 async function postLobbyInvite(payload, client) {
-  const partyId = String(payload?.partyId || '').trim();
-  const smartUrl = String(payload?.smartUrl || '').trim();
+  const partyId  = String(payload?.partyId   || '').trim();
+  const smartUrl = String(payload?.smartUrl  || '').trim();
+  const incomingOwner = String(payload?.ownerName || '').trim().toLowerCase();
 
   logger.info('[LoL Lobby Invite] Received lobby invite payload', {
-    partyId: partyId || null,
-    isCustom: Boolean(payload?.isCustom),
-    gameMode: payload?.gameMode || null,
+    partyId:     partyId || null,
+    isCustom:    Boolean(payload?.isCustom),
+    gameMode:    payload?.gameMode || null,
+    playerCount: payload?.playerCount ?? null,
+    ownerName:   payload?.ownerName  || null,
   });
 
   if (!smartUrl) {
@@ -2096,29 +2143,53 @@ async function postLobbyInvite(payload, client) {
     return;
   }
 
-  const now = Date.now();
-  if (partyId) {
-    const last = recentLobbyInvites.get(partyId);
-    if (last && now - last < LOBBY_INVITE_DEBOUNCE_MS) {
-      logger.info('[LoL Lobby Invite] Debounced duplicate partyId; skipping post', {
-        partyId,
-        sinceMs: now - last,
-      });
-      return;
-    }
-    recentLobbyInvites.set(partyId, now);
-
-    // Prune stale entries so the map does not grow unbounded.
-    for (const [id, ts] of recentLobbyInvites) {
-      if (now - ts > LOBBY_INVITE_DEBOUNCE_MS) recentLobbyInvites.delete(id);
-    }
-  }
-
   if (!MATCH_WEBHOOK_CHANNEL) {
     logger.error('[LoL Lobby Invite] MATCH_WEBHOOK_CHANNEL not configured; dropping invite');
     return;
   }
 
+  // ── Update path: partyId already tracked ──────────────────────────────────
+  if (partyId && recentLobbyInvites.has(partyId)) {
+    const entry = recentLobbyInvites.get(partyId);
+
+    // Only the original lobby owner's app may push updates.
+    const storedOwner = String(entry.ownerName || '').toLowerCase();
+    if (storedOwner && incomingOwner && incomingOwner !== storedOwner) {
+      logger.warn('[LoL Lobby Invite] Update rejected: ownerName mismatch (non-leader payload)', {
+        partyId,
+        expected: storedOwner,
+        received: incomingOwner,
+      });
+      return;
+    }
+
+    // Refresh TTL and store latest payload.
+    clearTimeout(entry.cleanupTimer);
+    entry.cleanupTimer  = setTimeout(() => recentLobbyInvites.delete(partyId), LOBBY_INVITE_TTL_MS);
+    entry.latestPayload = payload;
+
+    // Debounce the edit so rapid join/leave events are batched.
+    clearTimeout(entry.editTimer);
+    entry.editTimer = setTimeout(async () => {
+      try {
+        // If the initial post is still in-flight, wait for it.
+        const msg = entry.message ?? (entry.postPromise ? await entry.postPromise : null);
+        if (!msg) {
+          logger.warn('[LoL Lobby Invite] No message to edit for partyId', { partyId });
+          return;
+        }
+        const embed = buildLobbyInviteEmbed(entry.latestPayload);
+        await msg.edit({ embeds: [embed] });
+        logger.info('[LoL Lobby Invite] Edited lobby invite', { partyId, messageId: msg.id });
+      } catch (err) {
+        logger.error('[LoL Lobby Invite] Failed to edit lobby invite', { partyId, err: err?.message });
+      }
+    }, LOBBY_INVITE_EDIT_DEBOUNCE_MS);
+
+    return;
+  }
+
+  // ── Initial post path ─────────────────────────────────────────────────────
   let channel;
   try {
     channel = await client.channels.fetch(MATCH_WEBHOOK_CHANNEL);
@@ -2135,19 +2206,52 @@ async function postLobbyInvite(payload, client) {
     return;
   }
 
-  const content = buildLobbyInviteContent(payload);
+  const embed = buildLobbyInviteEmbed(payload);
+  const components = [
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setStyle(ButtonStyle.Link)
+        .setLabel('Join Lobby')
+        .setURL(smartUrl)
+    ),
+  ];
 
-  try {
-    const msg = await channel.send({ content });
-    logger.info('[LoL Lobby Invite] Posted lobby invite', {
-      partyId: partyId || null,
-      messageId: msg.id,
-    });
-  } catch (err) {
-    logger.error('[LoL Lobby Invite] Failed to post lobby invite', {
-      partyId: partyId || null,
-      err: err?.message,
-    });
+  if (partyId) {
+    // Register the entry before awaiting the send so that any payload that
+    // arrives while the POST is in-flight is routed to the update path.
+    const entry = {
+      ownerName:      incomingOwner,
+      message:        null,
+      postPromise:    null,
+      editTimer:      null,
+      cleanupTimer:   null,
+      latestPayload:  payload,
+    };
+    recentLobbyInvites.set(partyId, entry);
+
+    entry.postPromise = channel.send({ embeds: [embed], components })
+      .then((msg) => {
+        entry.message     = msg;
+        entry.postPromise = null;
+        logger.info('[LoL Lobby Invite] Posted lobby invite', { partyId, messageId: msg.id });
+        return msg;
+      })
+      .catch((err) => {
+        entry.postPromise = null;
+        logger.error('[LoL Lobby Invite] Failed to post lobby invite', { partyId, err: err?.message });
+        return null;
+      });
+
+    entry.cleanupTimer = setTimeout(() => recentLobbyInvites.delete(partyId), LOBBY_INVITE_TTL_MS);
+    await entry.postPromise;
+  } else {
+    // No partyId — post without tracking; updates will not be possible.
+    try {
+      const msg = await channel.send({ embeds: [embed], components });
+      logger.info('[LoL Lobby Invite] Posted lobby invite (untracked, no partyId)', { messageId: msg.id });
+    } catch (err) {
+      logger.error('[LoL Lobby Invite] Failed to post lobby invite', { err: err?.message });
+    }
   }
 }
 
