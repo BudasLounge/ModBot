@@ -69,6 +69,8 @@ const LOBBY_INVITE_EDIT_DEBOUNCE_MS = 5000; // 5 seconds
 // After this much inactivity the in-memory tracking entry is discarded.
 // The posted Discord message is NOT deleted; only the Map entry is freed.
 const LOBBY_INVITE_TTL_MS = 30 * 60 * 1000; // 30 minutes
+// How long after a lobby-closed edit before the message is deleted from the channel.
+const LOBBY_CLOSED_DELETE_DELAY_MS = 10 * 60 * 1000; // 10 minutes
 // Lobby capacity for the "spaces left" calculation.
 // Custom games seat a full SR custom (2×5 = 10); Arena uses 2×8 = 16;
 // every other matchmade queue caps the premade party at 5.
@@ -2193,6 +2195,15 @@ async function postLobbyInvite(payload, client) {
 
         await msg.edit({ embeds: [closedEmbed], components: [] });
         logger.info('[LoL Lobby Invite] Marked lobby as closed', { partyId, messageId: msg.id });
+
+        setTimeout(async () => {
+          try {
+            await msg.delete();
+            logger.info('[LoL Lobby Invite] Deleted closed lobby message', { partyId, messageId: msg.id });
+          } catch (err) {
+            logger.warn('[LoL Lobby Invite] Failed to delete closed lobby message', { partyId, messageId: msg.id, err: err?.message });
+          }
+        }, LOBBY_CLOSED_DELETE_DELAY_MS);
       } catch (err) {
         logger.error('[LoL Lobby Invite] Failed to mark lobby as closed', { partyId, err: err?.message });
       }
