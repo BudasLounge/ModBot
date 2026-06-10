@@ -59,6 +59,7 @@ const MATCH_WEBHOOK_HOST = process.env.MATCH_WEBHOOK_HOST || '0.0.0.0';
 const MATCH_WEBHOOK_PATH = process.env.MATCH_WEBHOOK_PATH || '/lol/match';
 const MATCH_WEBHOOK_SECRET = process.env.MATCH_WEBHOOK_SECRET;
 const MATCH_WEBHOOK_CHANNEL = process.env.MATCH_WEBHOOK_CHANNEL;
+const LOBBY_INVITE_CHANNEL = process.env.LOBBY_INVITE_CHANNEL || '1140019871736938537';
 const MATCH_DEBOUNCE_MS = 10000;
 
 // --- Lobby invite ingest ---
@@ -2143,8 +2144,8 @@ async function postLobbyInvite(payload, client) {
     return;
   }
 
-  if (!MATCH_WEBHOOK_CHANNEL) {
-    logger.error('[LoL Lobby Invite] MATCH_WEBHOOK_CHANNEL not configured; dropping invite');
+  if (!LOBBY_INVITE_CHANNEL) {
+    logger.error('[LoL Lobby Invite] LOBBY_INVITE_CHANNEL not configured; dropping invite');
     return;
   }
 
@@ -2192,17 +2193,17 @@ async function postLobbyInvite(payload, client) {
   // ── Initial post path ─────────────────────────────────────────────────────
   let channel;
   try {
-    channel = await client.channels.fetch(MATCH_WEBHOOK_CHANNEL);
+    channel = await client.channels.fetch(LOBBY_INVITE_CHANNEL);
   } catch (err) {
     logger.error('[LoL Lobby Invite] Failed to fetch invite channel', {
-      MATCH_WEBHOOK_CHANNEL,
+      LOBBY_INVITE_CHANNEL,
       err: err?.message,
     });
     return;
   }
 
   if (!channel) {
-    logger.error('[LoL Lobby Invite] Invite channel not found', { MATCH_WEBHOOK_CHANNEL });
+    logger.error('[LoL Lobby Invite] Invite channel not found', { LOBBY_INVITE_CHANNEL });
     return;
   }
 
