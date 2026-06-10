@@ -2065,23 +2065,36 @@ function getLobbyMaxSlots(payload) {
 
 /**
  * Build a short human-readable label describing the lobby's mode/queue.
+ * Uses the same predicates as the scoreboard generator so raw Riot codenames
+ * (KIWI, CHERRY, CLASSIC, etc.) resolve to the same display strings.
  */
 function describeLobbyMode(payload) {
   const lobbyName = String(payload?.lobbyName || '').trim();
   if (payload?.isCustom) {
-      return lobbyName ? `Custom — ${lobbyName}` : 'Custom Lobby';
+    return lobbyName ? `Custom — ${lobbyName}` : 'Custom Lobby';
   }
 
+  // Run the same predicates the scoreboard uses before any string fallback.
+  if (isAramMayhem(payload)) return 'ARAM Mayhem';
+  if (isArenaMatch(payload))  return 'Arena';
+
+  // Numeric queueId lookup (fastest path for well-known matchmade queues).
   const queueId = Number(payload?.queueId);
   if (Number.isFinite(queueId) && LOBBY_QUEUE_LABELS[queueId]) {
     return LOBBY_QUEUE_LABELS[queueId];
   }
 
-  const gameMode = String(payload?.gameMode || '').trim();
-  if (gameMode) {
-    // Title-case raw enum-ish strings (CLASSIC -> Classic).
-    return gameMode.charAt(0).toUpperCase() + gameMode.slice(1).toLowerCase();
-  }
+  // String-based fallback mirroring the scoreboard's queueType resolution.
+  // Lobby payloads carry gameMode rather than queueType, so we read from both.
+  const qt = String(payload?.queueType || payload?.gameMode || '').toUpperCase();
+  if (qt === 'CLASH')               return 'Clash';
+  if (qt.includes('RANKED_SOLO'))   return 'Ranked Solo';
+  if (qt.includes('RANKED_FLEX'))   return 'Ranked Flex';
+  if (qt.includes('RANKED'))        return 'Ranked Match';
+  if (qt === 'ARAM' || qt.includes('ARAM')) return 'ARAM';
+  if (qt.includes('NORMAL'))        return 'Normal';
+  if (qt.includes('BOT'))           return 'Co-op vs AI';
+  if (qt === 'CLASSIC')             return 'Normal';
 
   return lobbyName || 'Lobby';
 }
@@ -2139,7 +2152,7 @@ async function postLobbyInvite(payload, client) {
     ownerName:   payload?.ownerName  || null,
   });
 
-  if (!smartUrl) {
+  if (!smartUrl && payload?.closed !== true) {
     logger.warn('[LoL Lobby Invite] Missing smartUrl; dropping payload', { partyId: partyId || null });
     return;
   }
@@ -2152,6 +2165,39 @@ async function postLobbyInvite(payload, client) {
   // ── Update path: partyId already tracked ──────────────────────────────────
   if (partyId && recentLobbyInvites.has(partyId)) {
     const entry = recentLobbyInvites.get(partyId);
+
+    // ── Closed path ──────────────────────────────────────────────────────────
+    if (payload?.closed === true) {
+      // Cancel any pending edit so the closed state is never overwritten.
+      clearTimeout(entry.editTimer);
+      clearTimeout(entry.cleanupTimer);
+      recentLobbyInvites.delete(partyId);
+
+      try {
+        const msg = entry.message ?? (entry.postPromise ? await entry.postPromise : null);
+        if (!msg) {
+          logger.warn('[LoL Lobby Invite] Closed payload received but no message to edit', { partyId });
+          return;
+        }
+
+        const closedEmbed = new EmbedBuilder()
+          .setColor(0x5c5c5c)
+          .setTitle('League Lobby Closed')
+          .setDescription('This lobby is no longer open.')
+          .addFields(
+            { name: 'Host', value: String(entry.latestPayload?.ownerName || entry.ownerName || 'Unknown'), inline: true },
+            { name: 'Mode', value: describeLobbyMode(entry.latestPayload || {}), inline: true },
+          )
+          .setFooter({ text: 'League of Legends Lobby Invite' })
+          .setTimestamp(new Date());
+
+        await msg.edit({ embeds: [closedEmbed], components: [] });
+        logger.info('[LoL Lobby Invite] Marked lobby as closed', { partyId, messageId: msg.id });
+      } catch (err) {
+        logger.error('[LoL Lobby Invite] Failed to mark lobby as closed', { partyId, err: err?.message });
+      }
+      return;
+    }
 
     // Only the original lobby owner's app may push updates.
     const storedOwner = String(entry.ownerName || '').toLowerCase();
@@ -2187,6 +2233,12 @@ async function postLobbyInvite(payload, client) {
       }
     }, LOBBY_INVITE_EDIT_DEBOUNCE_MS);
 
+    return;
+  }
+
+  // ── Closed payload with no tracked entry (e.g. after bot restart) ─────────
+  if (payload?.closed === true) {
+    logger.warn('[LoL Lobby Invite] Closed payload received for untracked partyId; nothing to update', { partyId });
     return;
   }
 
@@ -2259,15 +2311,18 @@ async function postLobbyInvite(payload, client) {
 /**
  * Distinguish a lobby-invite payload from a post-match payload. Lobby invites
  * carry a smartUrl/partyId and never include match teams/gameId.
+ * Lobby-closed payloads carry partyId + closed:true with no other fields.
  */
 function isLobbyInvitePayload(payload) {
   if (!payload || typeof payload !== 'object') return false;
-  // Primary discriminator per integration spec: presence of partyId + smartUrl.
-  // Match result payloads carry gameId/teams and never include partyId+smartUrl.
   const hasPartyId = typeof payload.partyId === 'string' && payload.partyId.trim().length > 0;
-  const hasInviteUrl = typeof payload.smartUrl === 'string' && payload.smartUrl.trim().length > 0;
   const hasMatchData = Boolean(payload.gameId || payload.reportGameId || payload.teams);
-  return hasPartyId && hasInviteUrl && !hasMatchData;
+  if (hasMatchData) return false;
+  // Closed-lobby signal: partyId present, closed flag set, no smartUrl required.
+  if (hasPartyId && payload.closed === true) return true;
+  // Normal invite: partyId + smartUrl both present.
+  const hasInviteUrl = typeof payload.smartUrl === 'string' && payload.smartUrl.trim().length > 0;
+  return hasPartyId && hasInviteUrl;
 }
 
 function startMatchWebhook(event_registry) {
