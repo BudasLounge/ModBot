@@ -92,51 +92,57 @@ module.exports = {
       }
     });
 
-    await Promise.all(serverPromises);
+    // Fetch Palworld data in parallel with Minecraft pings
+    let palworldData = null;
+    const palworldPromise = (async () => {
+      try {
+        const [metricsResp, playersResp] = await Promise.all([
+          axios.get(`${PALWORLD_API}/metrics`, { auth: palworldAuth, timeout: 10000 }),
+          axios.get(`${PALWORLD_API}/players`, { auth: palworldAuth, timeout: 10000 }),
+        ]);
+        palworldData = { metrics: metricsResp.data, players: playersResp.data.players };
+      } catch (error) {
+        palworldData = { error: error.message };
+      }
+    })();
+
+    await Promise.all([Promise.all(serverPromises), palworldPromise]);
     
-    // Add fields in correct order
+    // Add Minecraft fields in correct order
     serverFields.forEach(field => {
-      if (field) { // Check if field exists
+      if (field) {
         ListEmbed.addFields({ name: field.name, value: field.value, inline: field.inline });
       }
     });
     
-    await message.channel.send({ embeds: [ListEmbed] });
-    
-    // Send a placeholder we can edit in-place once Palworld data is ready
-    const palworldMsg = await message.channel.send({ content: `Now getting Palworld status...` });
-    
-    // Create Palworld embed
+    // Build Palworld embed
     const PalworldEmbed = new EmbedBuilder()
       .setColor('#0a74da')
       .setTitle('Palworld Server Status');
 
-    try {
-      const [metricsResp, playersResp] = await Promise.all([
-        axios.get(`${PALWORLD_API}/metrics`, { auth: palworldAuth, timeout: 10000 }),
-        axios.get(`${PALWORLD_API}/players`, { auth: palworldAuth, timeout: 10000 }),
-      ]);
+    if (palworldData) {
+      if (palworldData.error) {
+        this.logger.error(`Palworld server error: ${palworldData.error}`);
+        PalworldEmbed.setDescription('❌ **OFFLINE**\n\nIf the server should be online, please contact a server admin.\nThe server should auto-restart within 5 minutes if it crashed.');
+      } else {
+        const m = palworldData.metrics;
+        const players = palworldData.players;
 
-      const m = metricsResp.data;
-      const players = playersResp.data.players;
+        let status = `✅ **ONLINE**`;
+        status += `\nPlayers: ${m.currentplayernum}/${m.maxplayernum}`;
+        status += `\nServer FPS: ${m.serverfps}`;
 
-      let status = `✅ **ONLINE**`;
-      status += `\nPlayers: ${m.currentplayernum}/${m.maxplayernum}`;
-      status += `\nServer FPS: ${m.serverfps}`;
+        PalworldEmbed.setDescription(status);
 
-      PalworldEmbed.setDescription(status);
-
-      if (players && players.length > 0) {
-        const playerNames = players.map(p => `• ${p.name}`).join('\n');
-        PalworldEmbed.addFields({ name: 'Players Online', value: playerNames });
+        if (players && players.length > 0) {
+          const playerNames = players.map(p => `• ${p.name}`).join('\n');
+          PalworldEmbed.addFields({ name: 'Players Online', value: playerNames });
+        }
       }
-    } catch (error) {
-      this.logger.error(`Palworld server error: ${error.message}`);
-      PalworldEmbed.setDescription('❌ **OFFLINE**\n\nIf the server should be online, please contact a server admin.\nThe server should auto-restart within 5 minutes if it crashed.');
     }
 
-    // Edit the placeholder in-place rather than delete+resend (avoids deleting wrong message)
-    await palworldMsg.edit({ content: '', embeds: [PalworldEmbed] });
+    // Send both embeds in a single message
+    await message.channel.send({ embeds: [ListEmbed, PalworldEmbed] });
 
     this.logger.info('<<display_all_servers_status');
   },
