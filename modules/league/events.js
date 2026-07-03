@@ -2120,61 +2120,73 @@ function sortRoleAssignments(assignments) {
 /**
  * Build the role assignment section of the embed description (layout 5a).
  *
- * Custom lobbies with `teams` data:
+ * Lobbies with `teams` data (custom 100/200 OR Arena subteams 1..8):
  *   - Uses `teams` as the source of truth (includes players with no role set).
  *   - Looks up each member's role from `roleAssignments`; shows [?] if absent.
- *   - Splits into 🔵 Blue Team / 🔴 Red Team sections.
- *   - Within each section: role-assigned players first (sorted by role order),
- *     then roleless players at the bottom.
+ *   - Renders one section per team: 🔵 Blue / 🔴 Red for 100/200,
+ *     ⚔️ Team N for Arena-style subteams.
+ *   - Roleless lobbies (Arena, ARAM Mayhem) render plain names — no [?] spam.
  *
  * Custom lobbies with role team tags but no `teams` field:
  *   - Falls back to splitting roleAssignments by team tag.
  *
- * All other cases (matchmade):
+ * Matchmade lobbies with roles:
  *   - Single sorted list from roleAssignments.
+ *
+ * Roleless, teamless lobbies (e.g. ARAM Mayhem):
+ *   - Falls back to the plain `members` roster list when provided.
  *
  * Returns null if there is nothing to display.
  */
 function buildRoleDescription(payload) {
   const assignments  = Array.isArray(payload?.roleAssignments) ? payload.roleAssignments : [];
-  // The client sends `teams` as an array of { teamId, players: [riotIds] };
-  // older payloads used a dict keyed by teamId ('100'/'200'). Normalize both
-  // into { '100': [...], '200': [...] } and treat "no members" as no data so
-  // the roleAssignments fallback below still gets a chance to run.
-  let teamsData = null;
-  if (payload?.isCustom && payload?.teams && typeof payload.teams === 'object') {
-    const normalized = { 100: [], 200: [] };
+
+  // Normalize `teams` — client sends an array of { teamId, players: [riotIds] }
+  // (older payloads used a dict keyed by teamId). Accept ANY teamId: custom
+  // lobbies use 100/200, Arena lobbies use 1-based subteam indices (1..8).
+  // Empty rosters are dropped so the fallbacks below still get a chance.
+  const grouped = new Map();
+  if (payload?.teams && typeof payload.teams === 'object') {
+    const push = (teamId, players) => {
+      const id = String(teamId ?? '').trim();
+      if (!id || !Array.isArray(players)) return;
+      if (!grouped.has(id)) grouped.set(id, []);
+      grouped.get(id).push(...players.filter(Boolean));
+    };
     if (Array.isArray(payload.teams)) {
-      for (const team of payload.teams) {
-        const teamId = String(team?.teamId ?? '');
-        if ((teamId === '100' || teamId === '200') && Array.isArray(team?.players)) {
-          normalized[teamId].push(...team.players.filter(Boolean));
-        }
-      }
+      for (const team of payload.teams) push(team?.teamId, team?.players);
     } else {
-      if (Array.isArray(payload.teams['100'])) normalized[100] = payload.teams['100'];
-      if (Array.isArray(payload.teams['200'])) normalized[200] = payload.teams['200'];
-    }
-    if (normalized[100].length || normalized[200].length) {
-      teamsData = normalized;
+      for (const [id, players] of Object.entries(payload.teams)) push(id, players);
     }
   }
+  const teamsData = [...grouped.entries()]
+    .filter(([, players]) => players.length > 0)
+    .sort(([a], [b]) => Number(a) - Number(b));
 
-  // ── Custom lobby with `teams` field (canonical path) ──────────────────────
-  if (teamsData) {
-    // Build riotId (lowercase) → role map from roleAssignments for fast lookup.
-    const roleByRiotId = new Map();
-    for (const { riotId, role } of assignments) {
-      if (riotId) roleByRiotId.set(String(riotId).toLowerCase(), role);
-    }
+  // Build riotId (lowercase) → role map from roleAssignments for fast lookup.
+  const roleByRiotId = new Map();
+  for (const { riotId, role } of assignments) {
+    if (riotId && role) roleByRiotId.set(String(riotId).toLowerCase(), role);
+  }
+  const hasAnyRole = roleByRiotId.size > 0;
 
-    const fmtMember = (riotId) => {
-      const role  = roleByRiotId.get(String(riotId).toLowerCase());
-      const label = role ? (ROLE_LABEL[role] ?? role) : '?';
-      return `**[${label}]** ${riotId}`;
-    };
+  const fmtMember = (riotId) => {
+    // Roleless lobby (Arena, ARAM Mayhem): plain names, no [?] tags.
+    if (!hasAnyRole) return String(riotId);
+    const role  = roleByRiotId.get(String(riotId).toLowerCase());
+    const label = role ? (ROLE_LABEL[role] ?? role) : '?';
+    return `**[${label}]** ${riotId}`;
+  };
 
+  const teamHeader = (teamId) =>
+    teamId === '100' ? '**🔵 Blue Team**'
+    : teamId === '200' ? '**🔴 Red Team**'
+    : `**⚔️ Team ${teamId}**`;
+
+  // ── Lobby with `teams` data (custom or Arena subteams) ────────────────────
+  if (teamsData.length > 0) {
     const sortMembers = (members) => {
+      if (!hasAnyRole) return members;
       const withRole    = members.filter(id => roleByRiotId.has(String(id).toLowerCase()));
       const withoutRole = members.filter(id => !roleByRiotId.has(String(id).toLowerCase()));
       withRole.sort((a, b) => {
@@ -2185,15 +2197,10 @@ function buildRoleDescription(payload) {
       return [...withRole, ...withoutRole];
     };
 
-    const blue = teamsData['100'];
-    const red  = teamsData['200'];
-    const sections = [];
-    if (blue.length) sections.push(`**🔵 Blue Team**\n${sortMembers(blue).map(fmtMember).join('\n')}`);
-    if (red.length)  sections.push(`**🔴 Red Team**\n${sortMembers(red).map(fmtMember).join('\n')}`);
-    return sections.length ? sections.join('\n\n') : null;
+    const sections = teamsData.map(([teamId, members]) =>
+      `${teamHeader(teamId)}\n${sortMembers(members).map(fmtMember).join('\n')}`);
+    return sections.join('\n\n');
   }
-
-  if (assignments.length === 0) return null;
 
   // ── Custom lobby — team tags on roleAssignments but no `teams` field ──────
   const hasTeamTags = payload?.isCustom &&
@@ -2209,13 +2216,23 @@ function buildRoleDescription(payload) {
     const sections = [];
     if (blue.length) sections.push(`**🔵 Blue Team**\n${fmt(blue)}`);
     if (red.length)  sections.push(`**🔴 Red Team**\n${fmt(red)}`);
-    return sections.length ? sections.join('\n\n') : null;
+    if (sections.length) return sections.join('\n\n');
   }
 
-  // ── Matchmade / no team data — single sorted list ─────────────────────────
-  return sortRoleAssignments(assignments)
-    .map(({ riotId, role }) => `**[${ROLE_LABEL[role] ?? role}]** ${riotId}`)
-    .join('\n');
+  // ── Matchmade / no team data — single sorted role list ────────────────────
+  if (assignments.length > 0) {
+    return sortRoleAssignments(assignments)
+      .map(({ riotId, role }) => `**[${ROLE_LABEL[role] ?? role}]** ${riotId}`)
+      .join('\n');
+  }
+
+  // ── Roleless, teamless lobby (ARAM Mayhem etc.) — plain member roster ─────
+  const members = Array.isArray(payload?.members) ? payload.members.filter(Boolean) : [];
+  if (members.length > 0) {
+    return `**Players**\n${members.join('\n')}`;
+  }
+
+  return null;
 }
 
 function buildLobbyInviteEmbed(payload) {
