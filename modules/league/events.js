@@ -2137,9 +2137,28 @@ function sortRoleAssignments(assignments) {
  */
 function buildRoleDescription(payload) {
   const assignments  = Array.isArray(payload?.roleAssignments) ? payload.roleAssignments : [];
-  const teamsData    = (payload?.isCustom && payload?.teams && typeof payload.teams === 'object')
-    ? payload.teams
-    : null;
+  // The client sends `teams` as an array of { teamId, players: [riotIds] };
+  // older payloads used a dict keyed by teamId ('100'/'200'). Normalize both
+  // into { '100': [...], '200': [...] } and treat "no members" as no data so
+  // the roleAssignments fallback below still gets a chance to run.
+  let teamsData = null;
+  if (payload?.isCustom && payload?.teams && typeof payload.teams === 'object') {
+    const normalized = { 100: [], 200: [] };
+    if (Array.isArray(payload.teams)) {
+      for (const team of payload.teams) {
+        const teamId = String(team?.teamId ?? '');
+        if ((teamId === '100' || teamId === '200') && Array.isArray(team?.players)) {
+          normalized[teamId].push(...team.players.filter(Boolean));
+        }
+      }
+    } else {
+      if (Array.isArray(payload.teams['100'])) normalized[100] = payload.teams['100'];
+      if (Array.isArray(payload.teams['200'])) normalized[200] = payload.teams['200'];
+    }
+    if (normalized[100].length || normalized[200].length) {
+      teamsData = normalized;
+    }
+  }
 
   // ── Custom lobby with `teams` field (canonical path) ──────────────────────
   if (teamsData) {
@@ -2166,8 +2185,8 @@ function buildRoleDescription(payload) {
       return [...withRole, ...withoutRole];
     };
 
-    const blue = Array.isArray(teamsData['100']) ? teamsData['100'] : [];
-    const red  = Array.isArray(teamsData['200']) ? teamsData['200'] : [];
+    const blue = teamsData['100'];
+    const red  = teamsData['200'];
     const sections = [];
     if (blue.length) sections.push(`**🔵 Blue Team**\n${sortMembers(blue).map(fmtMember).join('\n')}`);
     if (red.length)  sections.push(`**🔴 Red Team**\n${sortMembers(red).map(fmtMember).join('\n')}`);
@@ -2424,19 +2443,25 @@ async function postLobbyInvite(payload, client) {
 
 /**
  * Distinguish a lobby-invite payload from a post-match payload. Lobby invites
- * carry a smartUrl/partyId and never include match teams/gameId.
+ * carry a smartUrl/partyId and never include a gameId; post-match payloads
+ * always carry gameId/reportGameId and never partyId/smartUrl.
  * Lobby-closed payloads carry partyId + closed:true with no other fields.
+ *
+ * NOTE: invite payloads DO include a `teams` key (custom-lobby team lists,
+ * empty array otherwise), so the presence of `teams` must NOT be used to
+ * classify a payload as match data.
  */
 function isLobbyInvitePayload(payload) {
   if (!payload || typeof payload !== 'object') return false;
   const hasPartyId = typeof payload.partyId === 'string' && payload.partyId.trim().length > 0;
-  const hasMatchData = Boolean(payload.gameId || payload.reportGameId || payload.teams);
-  if (hasMatchData) return false;
+  if (!hasPartyId) return false;
+  // Real post-match payloads always carry a game identifier; invites never do.
+  if (payload.gameId || payload.reportGameId) return false;
   // Closed-lobby signal: partyId present, closed flag set, no smartUrl required.
-  if (hasPartyId && payload.closed === true) return true;
+  if (payload.closed === true) return true;
   // Normal invite: partyId + smartUrl both present.
   const hasInviteUrl = typeof payload.smartUrl === 'string' && payload.smartUrl.trim().length > 0;
-  return hasPartyId && hasInviteUrl;
+  return hasInviteUrl;
 }
 
 function startMatchWebhook(event_registry) {
