@@ -2101,6 +2101,104 @@ function describeLobbyMode(payload) {
   return lobbyName || 'Lobby';
 }
 
+const ROLE_LABEL = {
+  TOP:     'Top',
+  JUNGLE:  'Jg',
+  MIDDLE:  'Mid',
+  BOTTOM:  'Bot',
+  UTILITY: 'Sup',
+  FILL:    'Fill',
+};
+const ROLE_ORDER = ['TOP', 'JUNGLE', 'MIDDLE', 'BOTTOM', 'UTILITY', 'FILL'];
+
+function sortRoleAssignments(assignments) {
+  return [...assignments].sort(
+    (a, b) => (ROLE_ORDER.indexOf(a.role) ?? 99) - (ROLE_ORDER.indexOf(b.role) ?? 99)
+  );
+}
+
+/**
+ * Build the role assignment section of the embed description (layout 5a).
+ *
+ * Custom lobbies with `teams` data:
+ *   - Uses `teams` as the source of truth (includes players with no role set).
+ *   - Looks up each member's role from `roleAssignments`; shows [?] if absent.
+ *   - Splits into 🔵 Blue Team / 🔴 Red Team sections.
+ *   - Within each section: role-assigned players first (sorted by role order),
+ *     then roleless players at the bottom.
+ *
+ * Custom lobbies with role team tags but no `teams` field:
+ *   - Falls back to splitting roleAssignments by team tag.
+ *
+ * All other cases (matchmade):
+ *   - Single sorted list from roleAssignments.
+ *
+ * Returns null if there is nothing to display.
+ */
+function buildRoleDescription(payload) {
+  const assignments  = Array.isArray(payload?.roleAssignments) ? payload.roleAssignments : [];
+  const teamsData    = (payload?.isCustom && payload?.teams && typeof payload.teams === 'object')
+    ? payload.teams
+    : null;
+
+  // ── Custom lobby with `teams` field (canonical path) ──────────────────────
+  if (teamsData) {
+    // Build riotId (lowercase) → role map from roleAssignments for fast lookup.
+    const roleByRiotId = new Map();
+    for (const { riotId, role } of assignments) {
+      if (riotId) roleByRiotId.set(String(riotId).toLowerCase(), role);
+    }
+
+    const fmtMember = (riotId) => {
+      const role  = roleByRiotId.get(String(riotId).toLowerCase());
+      const label = role ? (ROLE_LABEL[role] ?? role) : '?';
+      return `**[${label}]** ${riotId}`;
+    };
+
+    const sortMembers = (members) => {
+      const withRole    = members.filter(id => roleByRiotId.has(String(id).toLowerCase()));
+      const withoutRole = members.filter(id => !roleByRiotId.has(String(id).toLowerCase()));
+      withRole.sort((a, b) => {
+        const ra = roleByRiotId.get(String(a).toLowerCase());
+        const rb = roleByRiotId.get(String(b).toLowerCase());
+        return (ROLE_ORDER.indexOf(ra) ?? 99) - (ROLE_ORDER.indexOf(rb) ?? 99);
+      });
+      return [...withRole, ...withoutRole];
+    };
+
+    const blue = Array.isArray(teamsData['100']) ? teamsData['100'] : [];
+    const red  = Array.isArray(teamsData['200']) ? teamsData['200'] : [];
+    const sections = [];
+    if (blue.length) sections.push(`**🔵 Blue Team**\n${sortMembers(blue).map(fmtMember).join('\n')}`);
+    if (red.length)  sections.push(`**🔴 Red Team**\n${sortMembers(red).map(fmtMember).join('\n')}`);
+    return sections.length ? sections.join('\n\n') : null;
+  }
+
+  if (assignments.length === 0) return null;
+
+  // ── Custom lobby — team tags on roleAssignments but no `teams` field ──────
+  const hasTeamTags = payload?.isCustom &&
+    assignments.some(r => r.team === '100' || r.team === '200');
+
+  if (hasTeamTags) {
+    const fmt  = list =>
+      sortRoleAssignments(list)
+        .map(({ riotId, role }) => `**[${ROLE_LABEL[role] ?? role}]** ${riotId}`)
+        .join('\n');
+    const blue = assignments.filter(r => r.team === '100');
+    const red  = assignments.filter(r => r.team === '200');
+    const sections = [];
+    if (blue.length) sections.push(`**🔵 Blue Team**\n${fmt(blue)}`);
+    if (red.length)  sections.push(`**🔴 Red Team**\n${fmt(red)}`);
+    return sections.length ? sections.join('\n\n') : null;
+  }
+
+  // ── Matchmade / no team data — single sorted list ─────────────────────────
+  return sortRoleAssignments(assignments)
+    .map(({ riotId, role }) => `**[${ROLE_LABEL[role] ?? role}]** ${riotId}`)
+    .join('\n');
+}
+
 function buildLobbyInviteEmbed(payload) {
   const smartUrl = String(payload?.smartUrl || '').trim();
   const owner = String(payload?.ownerName || '').trim() || 'Unknown';
@@ -2117,15 +2215,20 @@ function buildLobbyInviteEmbed(payload) {
         : `${playerCount}/${maxSlots} — ${spacesLeft} space${spacesLeft === 1 ? '' : 's'} left`)
     : `Up to ${maxSlots}`;
 
+  const roleDesc = buildRoleDescription(payload);
+  const description = roleDesc
+    ? `**[Join Lobby](${smartUrl})**\n\n${roleDesc}`
+    : `**[Join Lobby](${smartUrl})**`;
+
   return new EmbedBuilder()
     .setColor(0x1e90ff)
     .setTitle('League Lobby Open')
     .setURL(smartUrl || null)
-    .setDescription(`**[Join Lobby](${smartUrl})**`)
+    .setDescription(description)
     .addFields(
-      { name: 'Host', value: owner, inline: true },
-      { name: 'Mode', value: modeLabel, inline: true },
-      { name: 'Players', value: playersValue, inline: true },
+      { name: 'Host',    value: owner,         inline: true },
+      { name: 'Mode',    value: modeLabel,      inline: true },
+      { name: 'Players', value: playersValue,   inline: true },
     )
     .setFooter({ text: 'League of Legends Lobby Invite' })
     .setTimestamp(new Date());
