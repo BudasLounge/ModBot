@@ -1,7 +1,6 @@
 /**
  * test_role_layouts.js
- * Posts 5 different roleAssignment layout variants to the lobby invite channel
- * so you can pick the one you want.
+ * Posts role layout variants to the lobby invite channel for review.
  *
  * Run from the ModBot directory:
  *   node test_role_layouts.js
@@ -16,10 +15,10 @@ const path = require('path');
 const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
 
 // ── Config ─────────────────────────────────────────────────────────────────
-const TOKEN_FILE       = path.join(__dirname, '..', 'token.txt');
-const CHANNEL_ID       = '1140019871736938537';
+const TOKEN_FILE = path.join(__dirname, '..', 'token.txt');
+const CHANNEL_ID = '1140019871736938537';
 
-// ── Dummy payload (mirrors the Custom Lobby example from the doc) ──────────
+// ── Dummy payload — custom 5v5, 7 players, team assignments ───────────────
 const DUMMY = {
   smartUrl:    'https://gg.riotgames.com/LOL?joinCode=NRro-5mLA-Tn24',
   ownerName:   'BigBuda#buda',
@@ -29,13 +28,13 @@ const DUMMY = {
   queueId:     3130,
   gameMode:    'CLASSIC',
   roleAssignments: [
-    { riotId: 'BigBuda#buda',           role: 'BOTTOM'  },
-    { riotId: 'xNullx#1337',            role: 'TOP'     },
-    { riotId: 'Type C Cable#NA1',       role: 'MIDDLE'  },
-    { riotId: 'Pyke Wazowski#LEGGO',    role: 'JUNGLE'  },
-    { riotId: 'uncoolbi#yeet',          role: 'UTILITY' },
-    { riotId: 'SpectatorGuy#NA1',       role: 'FILL'    }, // extra to fill to 7 shown
-    { riotId: 'LastGuy#EUW',            role: 'TOP'     }, // duplicate role to stress-test
+    { riotId: 'BigBuda#buda',        role: 'BOTTOM',  team: '100' },
+    { riotId: 'xNullx#1337',         role: 'TOP',     team: '100' },
+    { riotId: 'Type C Cable#NA1',    role: 'MIDDLE',  team: '200' },
+    { riotId: 'Pyke Wazowski#LEGGO', role: 'JUNGLE',  team: '100' },
+    { riotId: 'uncoolbi#yeet',       role: 'UTILITY', team: '200' },
+    { riotId: 'SpectatorGuy#NA1',    role: 'FILL',    team: '200' },
+    { riotId: 'LastGuy#EUW',         role: 'TOP',     team: '200' },
   ],
 };
 
@@ -57,10 +56,10 @@ function sortRoles(assignments) {
   );
 }
 
-function baseEmbed(label) {
+function baseEmbed(title) {
   return new EmbedBuilder()
     .setColor(0x1e90ff)
-    .setTitle(`League Lobby Open — Layout ${label}`)
+    .setTitle(`League Lobby Open — ${title}`)
     .setURL(DUMMY.smartUrl)
     .addFields(
       { name: 'Host',    value: DUMMY.ownerName,                            inline: true },
@@ -71,70 +70,44 @@ function baseEmbed(label) {
     .setTimestamp();
 }
 
-// ── Layout builders ────────────────────────────────────────────────────────
-
-/**
- * Layout 1: One inline embed field per role assignment.
- * Renders as a wrapping grid — up to 3 per row in Discord.
- */
-function layout1() {
-  const embed = baseEmbed('1 — One field per role');
-  for (const { riotId, role } of sortRoles(DUMMY.roleAssignments)) {
-    embed.addFields({ name: ROLE_LABEL[role] ?? role, value: riotId, inline: true });
-  }
-  return embed;
-}
-
-/**
- * Layout 2: Single "Party" field, one line per player — role · name.
- */
-function layout2() {
-  const embed = baseEmbed('2 — Single field, role · name');
-  const lines = sortRoles(DUMMY.roleAssignments)
-    .map(({ riotId, role }) => `**${ROLE_LABEL[role] ?? role}** · ${riotId}`);
-  embed.addFields({ name: 'Party', value: lines.join('\n') });
-  return embed;
-}
-
-/**
- * Layout 3: Two side-by-side inline fields — Role column | Player column.
- * Relies on Discord rendering inline fields 2-per-row when exactly two are present.
- */
-function layout3() {
-  const sorted = sortRoles(DUMMY.roleAssignments);
-  const embed = baseEmbed('3 — Two columns: Role | Player');
-  embed.addFields(
-    { name: 'Role',   value: sorted.map(({ role }) => ROLE_LABEL[role] ?? role).join('\n'), inline: true },
-    { name: 'Player', value: sorted.map(({ riotId }) => riotId).join('\n'),                 inline: true },
-  );
-  return embed;
-}
-
-/**
- * Layout 4: Monospace code block table inside a single field.
- */
+// ── Layout 4 — Monospace code block, single list ───────────────────────────
 function layout4() {
   const sorted = sortRoles(DUMMY.roleAssignments);
-  const COL = 5; // width of role column
-  const rows = sorted.map(({ riotId, role }) => {
-    const label = (ROLE_LABEL[role] ?? role).padEnd(COL);
-    return `${label}  ${riotId}`;
-  });
-  const embed = baseEmbed('4 — Code block table');
+  const COL = 5;
+  const rows = sorted.map(({ riotId, role }) =>
+    `${(ROLE_LABEL[role] ?? role).padEnd(COL)}  ${riotId}`
+  );
+  const embed = baseEmbed('4 — Code block, single list');
   embed.addFields({ name: 'Party', value: `\`\`\`\n${rows.join('\n')}\n\`\`\`` });
   return embed;
 }
 
-/**
- * Layout 5: Roles embedded in the description — bold role tag followed by name,
- * separated by newlines. No extra field needed.
- */
+// ── Layout 4a — Code block, Blue / Red team split ─────────────────────────
+function layout4a() {
+  const blue = sortRoles(DUMMY.roleAssignments.filter(r => r.team === '100'));
+  const red  = sortRoles(DUMMY.roleAssignments.filter(r => r.team === '200'));
+  const COL  = 5;
+
+  const fmt = list =>
+    list.length
+      ? list.map(({ riotId, role }) => `${(ROLE_LABEL[role] ?? role).padEnd(COL)}  ${riotId}`).join('\n')
+      : '(empty)';
+
+  const embed = baseEmbed('4a — Code block, team split');
+  embed.addFields(
+    { name: '🔵 Blue Team', value: `\`\`\`\n${fmt(blue)}\n\`\`\``, inline: true },
+    { name: '🔴 Red Team',  value: `\`\`\`\n${fmt(red)}\n\`\`\``,  inline: true },
+  );
+  return embed;
+}
+
+// ── Layout 5 — Roles in description, single list ──────────────────────────
 function layout5() {
   const sorted = sortRoles(DUMMY.roleAssignments);
-  const lines = sorted.map(({ riotId, role }) => `**[${ROLE_LABEL[role] ?? role}]** ${riotId}`);
+  const lines  = sorted.map(({ riotId, role }) => `**[${ROLE_LABEL[role] ?? role}]** ${riotId}`);
   return new EmbedBuilder()
     .setColor(0x1e90ff)
-    .setTitle('League Lobby Open — Layout 5 — Roles in description')
+    .setTitle('League Lobby Open — 5 — Roles in description')
     .setURL(DUMMY.smartUrl)
     .setDescription(lines.join('\n'))
     .addFields(
@@ -146,28 +119,54 @@ function layout5() {
     .setTimestamp();
 }
 
+// ── Layout 5a — Roles in description, Blue / Red team split ───────────────
+function layout5a() {
+  const blue = sortRoles(DUMMY.roleAssignments.filter(r => r.team === '100'));
+  const red  = sortRoles(DUMMY.roleAssignments.filter(r => r.team === '200'));
+
+  const section = (header, list) => {
+    if (!list.length) return null;
+    const lines = list.map(({ riotId, role }) => `**[${ROLE_LABEL[role] ?? role}]** ${riotId}`);
+    return `**${header}**\n${lines.join('\n')}`;
+  };
+
+  const sections = [
+    section('🔵 Blue Team', blue),
+    section('🔴 Red Team',  red),
+  ].filter(Boolean);
+
+  return new EmbedBuilder()
+    .setColor(0x1e90ff)
+    .setTitle('League Lobby Open — 5a — Description, team split')
+    .setURL(DUMMY.smartUrl)
+    .setDescription(sections.join('\n\n'))
+    .addFields(
+      { name: 'Host',    value: DUMMY.ownerName,                            inline: true },
+      { name: 'Mode',    value: `Custom — ${DUMMY.lobbyName}`,              inline: true },
+      { name: 'Players', value: `${DUMMY.playerCount}/10 — 3 spaces left`, inline: true },
+    )
+    .setFooter({ text: 'League of Legends Lobby Invite' })
+    .setTimestamp();
+}
+
 // ── Main ───────────────────────────────────────────────────────────────────
 async function main() {
-  const token = fs.readFileSync(TOKEN_FILE, 'utf8').replace(/\s+/g, '');
-
+  const token  = fs.readFileSync(TOKEN_FILE, 'utf8').replace(/\s+/g, '');
   const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
   client.once('ready', async () => {
     console.log(`Logged in as ${client.user.tag}`);
-
     try {
       const channel = await client.channels.fetch(CHANNEL_ID);
       if (!channel) throw new Error('Channel not found');
 
-      const layouts = [layout1, layout2, layout3, layout4, layout5];
+      const layouts = [layout4, layout4a, layout5, layout5a];
       for (const fn of layouts) {
         await channel.send({ embeds: [fn()] });
         console.log(`Posted: ${fn.name}`);
-        // Small delay to preserve ordering in the channel.
         await new Promise(r => setTimeout(r, 800));
       }
-
-      console.log('Done — all 5 layouts posted.');
+      console.log('Done — all 4 layouts posted.');
     } catch (err) {
       console.error('Error:', err.message);
     } finally {
