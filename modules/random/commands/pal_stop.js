@@ -8,7 +8,7 @@ module.exports = {
     has_state: false,
     options: [],
     async execute(message, args) {
-      if(!message.member.roles.cache.some(role => role.name === "PalworldAdmin")){
+      if(!message.member.roles.cache.some(role => role.name === "Moderator")){
         message.channel.send({ content: "You don't have permission to use that command!"});
         return;
       }

@@ -21,6 +21,7 @@ module.exports = {
         { name: 'save — Force save the world',                value: 'save'     },
         { name: 'shutdown — Graceful shutdown with countdown',value: 'shutdown' },
         { name: 'stop — Immediately force stop the server',   value: 'stop'     },
+        { name: 'reboot — Save, stop, wait for auto-restart', value: 'reboot'   },
       ],
     },
     {
@@ -226,6 +227,74 @@ module.exports = {
         }
       }
 
+      // Save, force-stop, wait 10s, then poll every 5s up to 3× for auto-restart
+      case 'reboot': {
+        let saveStatus = '✅ World saved.';
+        try {
+          await apiPost('save', {});
+          this.logger.info(`[palworld] ${message.author.tag} reboot: world saved`);
+        } catch (err) {
+          this.logger.warn(`[palworld] reboot save failed: ${err.message}`);
+          saveStatus = '⚠️ Save failed, continuing anyway.';
+        }
+
+        try {
+          await apiPost('stop', {});
+          this.logger.info(`[palworld] ${message.author.tag} reboot: server stopped`);
+        } catch (err) {
+          this.logger.error(`[palworld] reboot stop failed: ${err.message}`);
+          return message.reply({ content: `${saveStatus}\n❌ Failed to stop server. Is it already offline?` });
+        }
+
+        const statusMsg = await message.reply({ content: `${saveStatus}\n✅ Server stopped. Waiting 10 seconds, then checking for restart...` });
+
+        await new Promise(resolve => setTimeout(resolve, 10000));
+
+        let online = false;
+        let metricsData = null;
+        let playersData = null;
+
+        for (let attempt = 1; attempt <= 3; attempt++) {
+          try {
+            const [metricsResp, playersResp] = await Promise.all([
+              axios.get(`${PALWORLD_API}/metrics`, { auth, timeout: 5000 }),
+              axios.get(`${PALWORLD_API}/players`, { auth, timeout: 5000 }),
+            ]);
+            metricsData = metricsResp.data;
+            playersData = playersResp.data.players;
+            online = true;
+            break;
+          } catch (err) {
+            if (attempt < 3) {
+              await new Promise(resolve => setTimeout(resolve, 5000));
+            }
+          }
+        }
+
+        if (online) {
+          const embed = new EmbedBuilder()
+            .setColor('#0a74da')
+            .setTitle('Palworld Server — Reboot Complete')
+            .setDescription(`✅ **ONLINE**\nPlayers: ${metricsData.currentplayernum}/${metricsData.maxplayernum}\nServer FPS: ${metricsData.serverfps}`);
+
+          if (playersData && playersData.length > 0) {
+            const playerNames = playersData.map(p => `• ${p.name}`).join('\n');
+            embed.addFields({ name: 'Players Online', value: playerNames });
+          }
+
+          this.logger.info(`[palworld] ${message.author.tag} reboot completed successfully`);
+          return statusMsg.edit({ content: null, embeds: [embed] });
+        } else {
+          const embed = new EmbedBuilder()
+            .setColor('#f92f03')
+            .setTitle('Palworld Server — Reboot Failed')
+            .setDescription('❌ **Server did not come back online** after 3 checks (15 seconds).\n\nThe server should auto-restart within 5 minutes. Please contact a server admin if it remains offline.');
+
+          this.logger.warn(`[palworld] ${message.author.tag} reboot: server not online after polling`);
+          return statusMsg.edit({ content: null, embeds: [embed] });
+        }
+      }
+
       // No action / unknown — show help
       default: {
         const embed = new EmbedBuilder()
@@ -241,6 +310,7 @@ module.exports = {
             { name: 'save',                          value: 'Force save the world' },
             { name: 'shutdown [seconds] [message]',  value: 'Graceful shutdown with countdown (default 10s)' },
             { name: 'stop',                          value: 'Immediately force stop the server' },
+            { name: 'reboot',                        value: 'Save, force-stop, then confirm auto-restart' },
           );
         return message.channel.send({ embeds: [embed] });
       }
