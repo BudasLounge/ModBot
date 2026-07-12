@@ -1,6 +1,6 @@
 module.exports = {
     name: 'pal_status',
-    description: 'Shows the status of the Palworld server (internal API + external port check)',
+    description: 'Shows the status of the Palworld server',
     syntax: 'pal_status',
     num_args: 0,
     args_to_lower: false,
@@ -14,7 +14,6 @@ module.exports = {
 
         const axios = require('axios');
         const fs = require('fs');
-        const net = require('net');
         const { EmbedBuilder } = require('discord.js');
 
         let password;
@@ -26,14 +25,12 @@ module.exports = {
 
         const PALWORLD_API = 'http://192.168.1.4:8212/v1/api';
         const auth = { username: 'admin', password };
-        const EXTERNAL_IP = '68.224.159.205';
-        const EXTERNAL_PORT = 8211;
 
         const embed = new EmbedBuilder()
             .setColor('#0a74da')
             .setTitle('Palworld Server Status');
 
-        let internalOnline = false;
+        let online = false;
         let metricsData = null;
         let playersData = null;
 
@@ -44,30 +41,15 @@ module.exports = {
             ]);
             metricsData = metricsResp.data;
             playersData = playersResp.data.players;
-            internalOnline = true;
+            online = true;
         } catch (err) {
-            // server is offline internally
+            // server is offline
         }
 
-        let externalOnline = false;
-        try {
-            externalOnline = await new Promise((resolve) => {
-                const socket = new net.Socket();
-                socket.setTimeout(5000);
-                socket.on('connect', () => { socket.destroy(); resolve(true); });
-                socket.on('error', () => { socket.destroy(); resolve(false); });
-                socket.on('timeout', () => { socket.destroy(); resolve(false); });
-                socket.connect(EXTERNAL_PORT, EXTERNAL_IP);
-            });
-        } catch (err) {
-            externalOnline = false;
-        }
-
-        if (internalOnline) {
+        if (online) {
             let status = `✅ **ONLINE**`;
             status += `\nPlayers: ${metricsData.currentplayernum}/${metricsData.maxplayernum}`;
             status += `\nServer FPS: ${metricsData.serverfps}`;
-            status += `\n\nExternal (${EXTERNAL_IP}:${EXTERNAL_PORT}): ${externalOnline ? '✅ Reachable' : '⚠️ Unreachable'}`;
 
             embed.setDescription(status);
 
@@ -77,7 +59,6 @@ module.exports = {
             }
         } else {
             let status = `❌ **OFFLINE**`;
-            status += `\n\nExternal (${EXTERNAL_IP}:${EXTERNAL_PORT}): ${externalOnline ? '⚠️ Port open but API unresponsive' : '❌ Unreachable'}`;
             status += `\n\nIf the server should be online, please contact a server admin.\nThe server should auto-restart within 5 minutes if it crashed.`;
 
             embed.setDescription(status);
