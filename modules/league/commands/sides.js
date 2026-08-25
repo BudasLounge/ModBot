@@ -217,7 +217,7 @@ async function getLastMatches(username, numberOfGames, api, logger, userId) {
 module.exports = {
     name: 'sides',
     description: 'Shows how many times you played on Red or Blue side',
-    syntax: 'sides [summoner name] [number of games up to 1000](optional)',
+    syntax: 'sides [summoner name] [number of games up to 1000](optional) [queue](optional)',
     num_args: 1,
     args_to_lower: true,
     needs_api: true,
@@ -225,11 +225,33 @@ module.exports = {
     options: [
         { name: 'summoner_name', description: 'Summoner name',                             type: 'STRING',  required: true  },
         { name: 'game_count',   description: 'Number of games to look back (up to 1000)', type: 'INTEGER', required: false },
+        { name: 'queue',        description: 'Filter to a specific queue',                type: 'STRING',  required: false, autocomplete: true },
     ],
+    async autocomplete(interaction) {
+        try {
+            if (Object.keys(queueTypeMapping).length === 0) {
+                await fetchQueueMapping(this.logger);
+            }
+            const focused = interaction.options.getFocused().toLowerCase();
+            const choices = Object.entries(queueTypeMapping)
+                .map(([id, name]) => ({ name: String(name), value: String(id) }))
+                .filter(c => c.name.toLowerCase().includes(focused))
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .slice(0, 25);
+            await interaction.respond(choices);
+        } catch (err) {
+            if (this.logger) this.logger.error('[sides] Autocomplete error', { error: err?.message || err });
+            try { await interaction.respond([]); } catch (_) {}
+        }
+    },
     async execute(message, args, extra) {
       const api = extra.api;
       this.logger.info('[sides] Execute called', { userId: message.author?.id, argsLength: args.length });
         args.shift();
+
+        if (Object.keys(queueTypeMapping).length === 0) {
+            await fetchQueueMapping(this.logger);
+        }
 
         // Drop null/empty positional slots that slash command options produce when
         // the user omits an optional option, and split space-containing positions
@@ -245,6 +267,26 @@ module.exports = {
             }
         }
         args = flatArgs;
+
+        // Optional queue filter. The autocomplete value is the queueId string, so
+        // detect a trailing known queueId (or a case-insensitive queue name) first.
+        var queueFilter = null;
+        if (args.length > 0) {
+            const tail = args[args.length - 1];
+            if (queueTypeMapping[tail]) {
+                queueFilter = String(tail);
+                args.pop();
+            } else {
+                const lowerTail = String(tail).toLowerCase();
+                const match = Object.entries(queueTypeMapping).find(([, name]) =>
+                    String(name).toLowerCase() === lowerTail
+                );
+                if (match) {
+                    queueFilter = String(match[0]);
+                    args.pop();
+                }
+            }
+        }
 
         var gameCount = 25;
         if (args.length > 0) {
@@ -268,11 +310,22 @@ module.exports = {
         message.channel.send(`Analyzing matches for ${summonerName}, please wait...`);
         try {
           const queueStats = await getLastMatches(summonerName, gameCount, api, this.logger, message.author.id);
+            const filteredEntries = Object.entries(queueStats).filter(([queueId]) =>
+                queueFilter === null || String(queueId) === queueFilter
+            );
+
+            if (filteredEntries.length === 0) {
+                const queueName = queueFilter !== null ? queueTypeMapping[queueFilter] : 'that queue';
+                message.channel.send(`No games found for ${queueName}.`);
+                return;
+            }
+
+            const filterLabel = queueFilter !== null ? ` - ${queueTypeMapping[queueFilter] || `Queue ${queueFilter}`}` : '';
             let embed = new EmbedBuilder()
-                .setTitle(`Side Counts and Winrates for ${summonerName}`)
+                .setTitle(`Side Counts and Winrates for ${summonerName}${filterLabel}`)
                 .setColor('#0099ff');
         
-            for (const [queueId, stats] of Object.entries(queueStats)) {
+            for (const [queueId, stats] of filteredEntries) {
               if (queueId === 'ARENA_QUEUE_ID') { // Replace with actual Arena queue ID
                 // Skip processing for Arena
                 continue;
