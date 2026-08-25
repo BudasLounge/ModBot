@@ -57,10 +57,20 @@ async function acquireRiotRequestSlot(logger, context) {
   }
 }
 
+// Queue IDs that are missing from Riot's static queues.json (names sourced from
+// CommunityDragon's live game data). Used as a fallback so these don't render as
+// "Queue <id>". Riot's static data still takes precedence when a key is present.
+const QUEUE_TYPE_FALLBACK = {
+  710: 'Ranked 5s',
+  1740: 'Bravery Arena',
+  1750: 'Arena 3x6',
+  3100: 'SR Blind Pick Custom',
+};
+
 async function fetchQueueMapping(logger) {
   try {
     const response = await axios.get('https://static.developer.riotgames.com/docs/lol/queues.json');
-    queueTypeMapping = response.data.reduce((acc, queue) => {
+    const fromApi = response.data.reduce((acc, queue) => {
       // Check if description exists and is a string before replacing
       if (queue.description && typeof queue.description === 'string') {
         acc[queue.queueId] = queue.description.replace(' games', ''); // Clean up the description
@@ -70,8 +80,10 @@ async function fetchQueueMapping(logger) {
       }
       return acc;
     }, {});
+    queueTypeMapping = Object.assign({}, QUEUE_TYPE_FALLBACK, fromApi);
   } catch (error) {
     logger.error('[sides] Error fetching queue types', { error: error?.message || error });
+    queueTypeMapping = { ...QUEUE_TYPE_FALLBACK };
   }
 }
 
