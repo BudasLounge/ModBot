@@ -2,7 +2,7 @@ const axios = require('axios');
 const { EmbedBuilder } = require('discord.js');
 require('dotenv').config();
 const RIOT_API_KEY = process.env.RIOT_API_KEY;
-const RIOT_ACCOUNT_BASE_URL = 'https://na1.api.riotgames.com/lol/summoner/v4/summoners/by-name/';
+const RIOT_ACCOUNT_BASE_URL = 'https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id';
 const RIOT_API_BASE_URL = 'https://americas.api.riotgames.com/lol/match/v5/matches/';
 const RIOT_SHORT_LIMIT = 500;
 const RIOT_SHORT_WINDOW_MS = 10 * 1000;
@@ -172,13 +172,28 @@ async function getLastMatches(username, numberOfGames, api, logger, userId, queu
   
     if (!puuid) {
       logger.info('[sides] No PUUID found in database, resolving via Riot API', { username, userId });
-        await acquireRiotRequestSlot(logger, 'summoner-by-name');
-      const summonerResponse = await axios.get(`${RIOT_ACCOUNT_BASE_URL}${encodeURIComponent(username)}`, {
-        headers: { "X-Riot-Token": RIOT_API_KEY }
-      });
-      puuid = summonerResponse.data.puuid;
-      await storePuuidInDatabase(userId, puuid, api, logger);
-      logger.info('[sides] Resolved and stored PUUID', { username, userId });
+      try {
+        const idx = username.lastIndexOf('#');
+        if (idx === -1) {
+          throw new Error('Riot ID must be in Name#TAG format');
+        }
+        const gameName = username.slice(0, idx);
+        const tag = username.slice(idx + 1);
+        await acquireRiotRequestSlot(logger, 'account-by-riot-id');
+        const accountResponse = await axios.get(
+          `${RIOT_ACCOUNT_BASE_URL}/${encodeURIComponent(gameName)}/${encodeURIComponent(tag)}`,
+          { headers: { "X-Riot-Token": RIOT_API_KEY } }
+        );
+        puuid = accountResponse.data.puuid;
+        await storePuuidInDatabase(userId, puuid, api, logger);
+        logger.info('[sides] Resolved and stored PUUID', { username, userId });
+      } catch (error) {
+        logger.error('[sides] Error resolving PUUID via Account-V1', {
+          error: error?.response?.data || error?.message || error,
+          username,
+        });
+        throw error;
+      }
     } else {
       logger.info('[sides] Found PUUID in database', { username, userId });
     }
@@ -227,13 +242,13 @@ async function getLastMatches(username, numberOfGames, api, logger, userId, queu
             continue;
           }
 
-          collectedCount++;
-
           // Skip processing if the match is an Arena match
           if (queueTypeMapping[queueId] === 'Arena') { 
             logger.info('[sides] Skipping arena match', { matchId, queueId });
             continue;
           }
+
+          collectedCount++;
 
           // Initialize the queueStats object for each queueId
           if (!queueStats[queueId]) {
@@ -254,6 +269,12 @@ async function getLastMatches(username, numberOfGames, api, logger, userId, queu
             queueStats[queueId][`${side}Wins`]++;
           } else {
             queueStats[queueId][`${side}Losses`]++;
+          }
+
+          // Stop once we've collected the requested number of matches (important
+          // when scanning full pages while filtering to a specific queue).
+          if (targetReached()) {
+            break;
           }
         }
       }
