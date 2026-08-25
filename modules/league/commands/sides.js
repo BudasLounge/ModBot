@@ -67,6 +67,32 @@ const QUEUE_TYPE_FALLBACK = {
   3100: 'SR Blind Pick Custom',
 };
 
+// Curated list of currently active queue types, exposed as autocomplete choices.
+// Kept separate from QUEUE_TYPE_FALLBACK so we control exactly what users can
+// pick (no deprecated/legacy IDs, no duplicate names).
+const ACTIVE_QUEUES = [
+  { id: 400,  name: '5v5 Normal Draft' },
+  { id: 420,  name: '5v5 Ranked Solo' },
+  { id: 440,  name: '5v5 Ranked Flex' },
+  { id: 450,  name: 'ARAM' },
+  { id: 480,  name: 'Swiftplay' },
+  { id: 490,  name: 'Quickplay' },
+  { id: 700,  name: 'Clash' },
+  { id: 720,  name: 'ARAM Clash' },
+  { id: 870,  name: 'Co-op vs AI (Intro)' },
+  { id: 880,  name: 'Co-op vs AI (Beginner)' },
+  { id: 890,  name: 'Co-op vs AI (Intermediate)' },
+  { id: 900,  name: 'ARURF' },
+  { id: 1020, name: 'One for All' },
+  { id: 1400, name: 'Ultimate Spellbook' },
+  { id: 1700, name: 'Arena' },
+  { id: 1710, name: 'Arena (16 Player)' },
+  { id: 1740, name: 'Bravery Arena' },
+  { id: 1750, name: 'Arena 3x6' },
+  { id: 1900, name: 'URF' },
+  { id: 2400, name: 'ARAM Mayhem' },
+];
+
 async function fetchQueueMapping(logger) {
   try {
     const response = await axios.get('https://static.developer.riotgames.com/docs/lol/queues.json');
@@ -229,14 +255,10 @@ module.exports = {
     ],
     async autocomplete(interaction) {
         try {
-            if (Object.keys(queueTypeMapping).length === 0) {
-                await fetchQueueMapping(this.logger);
-            }
             const focused = interaction.options.getFocused().toLowerCase();
-            const choices = Object.entries(queueTypeMapping)
-                .map(([id, name]) => ({ name: String(name), value: String(id) }))
+            const choices = ACTIVE_QUEUES
+                .map(q => ({ name: q.name, value: String(q.id) }))
                 .filter(c => c.name.toLowerCase().includes(focused))
-                .sort((a, b) => a.name.localeCompare(b.name))
                 .slice(0, 25);
             await interaction.respond(choices);
         } catch (err) {
@@ -278,12 +300,18 @@ module.exports = {
                 args.pop();
             } else {
                 const lowerTail = String(tail).toLowerCase();
-                const match = Object.entries(queueTypeMapping).find(([, name]) =>
-                    String(name).toLowerCase() === lowerTail
-                );
-                if (match) {
-                    queueFilter = String(match[0]);
+                const activeMatch = ACTIVE_QUEUES.find(q => q.name.toLowerCase() === lowerTail);
+                if (activeMatch) {
+                    queueFilter = String(activeMatch.id);
                     args.pop();
+                } else {
+                    const match = Object.entries(queueTypeMapping).find(([, name]) =>
+                        String(name).toLowerCase() === lowerTail
+                    );
+                    if (match) {
+                        queueFilter = String(match[0]);
+                        args.pop();
+                    }
                 }
             }
         }
