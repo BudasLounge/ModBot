@@ -163,11 +163,11 @@ async function fetchMatchDetails(matchId, puuid, logger) {
   }
 }
 
-async function getLastMatches(username, numberOfGames, api, logger, userId) {
+async function getLastMatches(username, numberOfGames, api, logger, userId, queueFilter = null) {
     if (Object.keys(queueTypeMapping).length === 0) {
       await fetchQueueMapping(logger);
     }
-    logger.info('[sides] Fetching match history window', { username, numberOfGames });
+    logger.info('[sides] Fetching match history window', { username, numberOfGames, queueFilter });
     let puuid = await getPuuidFromDatabase(userId, api, logger);
   
     if (!puuid) {
@@ -186,18 +186,34 @@ async function getLastMatches(username, numberOfGames, api, logger, userId) {
     let queueStats = {};
     let startIndex = 0;
     const MAX_MATCHES_PER_REQUEST = 100;
-  
-    while (numberOfGames > 0) {
-      const count = Math.min(numberOfGames, MAX_MATCHES_PER_REQUEST);
+    const MAX_IDS_SCANNED = 4000;
+    let fetchedCount = 0;   // total match IDs fetched
+    let collectedCount = 0; // matches counted toward the target
+
+    // When a queue filter is set, `numberOfGames` means "the last N matches OF THAT
+    // QUEUE", so we keep scanning history until we've collected N matching matches
+    // (or run out of history). Without a filter, it means "the last N match IDs",
+    // preserving the original behaviour.
+    const targetReached = () => queueFilter !== null
+        ? collectedCount >= numberOfGames
+        : fetchedCount >= numberOfGames;
+
+    while (!targetReached() && fetchedCount < MAX_IDS_SCANNED) {
+      const count = queueFilter !== null
+        ? MAX_MATCHES_PER_REQUEST
+        : Math.min(numberOfGames - fetchedCount, MAX_MATCHES_PER_REQUEST);
       await acquireRiotRequestSlot(logger, 'match-id-page');
       const matchIdsResponse = await axios.get(`${RIOT_API_BASE_URL}by-puuid/${puuid}/ids?start=${startIndex}&count=${count}`, {
         headers: { "X-Riot-Token": RIOT_API_KEY }
       });
       const matchIds = matchIdsResponse.data;
-      startIndex += count;
-      numberOfGames -= count;
-  
+      if (!matchIds || matchIds.length === 0) {
+        break;
+      }
+      startIndex += matchIds.length;
+
       for (const matchId of matchIds) {
+        fetchedCount++;
         const matchDetails = await fetchMatchDetails(matchId, puuid, logger);
         if (matchDetails && matchDetails.info && Array.isArray(matchDetails.info.participants)) {
           const participant = matchDetails.info.participants.find(p => p.puuid === puuid);
@@ -205,7 +221,14 @@ async function getLastMatches(username, numberOfGames, api, logger, userId) {
             continue;
           }
           const queueId = matchDetails.info.queueId;
-          
+
+          // When filtering to a specific queue, ignore matches from other queues.
+          if (queueFilter !== null && String(queueId) !== String(queueFilter)) {
+            continue;
+          }
+
+          collectedCount++;
+
           // Skip processing if the match is an Arena match
           if (queueTypeMapping[queueId] === 'Arena') { 
             logger.info('[sides] Skipping arena match', { matchId, queueId });
@@ -236,7 +259,12 @@ async function getLastMatches(username, numberOfGames, api, logger, userId) {
       }
     }
 
-    logger.info('[sides] Completed queue stats aggregation', { queueCount: Object.keys(queueStats).length });
+    logger.info('[sides] Completed queue stats aggregation', {
+      queueCount: Object.keys(queueStats).length,
+      collectedCount,
+      fetchedCount,
+      queueFilter
+    });
   
     return queueStats;
 }
@@ -337,13 +365,13 @@ module.exports = {
         var summonerName = args.join(' ').trim();
         message.channel.send(`Analyzing matches for ${summonerName}, please wait...`);
         try {
-          const queueStats = await getLastMatches(summonerName, gameCount, api, this.logger, message.author.id);
+          const queueStats = await getLastMatches(summonerName, gameCount, api, this.logger, message.author.id, queueFilter);
             const filteredEntries = Object.entries(queueStats).filter(([queueId]) =>
                 queueFilter === null || String(queueId) === queueFilter
             );
 
             if (filteredEntries.length === 0) {
-                const queueName = queueFilter !== null ? queueTypeMapping[queueFilter] : 'that queue';
+                const queueName = queueFilter !== null ? (queueTypeMapping[queueFilter] || `Queue ${queueFilter}`) : 'that queue';
                 message.channel.send(`No games found for ${queueName}.`);
                 return;
             }
