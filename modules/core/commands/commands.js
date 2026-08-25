@@ -14,7 +14,7 @@ module.exports = {
         var mod_handler = extra.module_handler;
 
         var output = '```';
-        if(args.length > 1) {
+        if(args.length > 1 && args[1]) {
             var module_name = args[1];
             
             var respGetModule = await api.get('module', {

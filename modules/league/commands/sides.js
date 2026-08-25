@@ -219,11 +219,29 @@ module.exports = {
       this.logger.info('[sides] Execute called', { userId: message.author?.id, argsLength: args.length });
         args.shift();
 
-        var gameCount = parseInt(args[args.length - 1]);
-        if (!isNaN(gameCount)) {
-            args.pop();
-        } else {
-            gameCount = 25;
+        // Drop null/empty positional slots that slash command options produce when
+        // the user omits an optional option, and split space-containing positions
+        // so a user who pasted "Name#TAG 100" into the summoner_name slash field
+        // still gets sensible parsing.
+        const flatArgs = [];
+        for (const a of args) {
+            if (a === null || a === undefined) continue;
+            const s = String(a).trim();
+            if (!s) continue;
+            for (const piece of s.split(/\s+/)) {
+                if (piece) flatArgs.push(piece);
+            }
+        }
+        args = flatArgs;
+
+        var gameCount = 25;
+        if (args.length > 0) {
+            const tail = args[args.length - 1];
+            const parsed = Number(tail);
+            if (!Number.isNaN(parsed) && Number.isFinite(parsed) && String(tail).trim() !== '') {
+                gameCount = Math.floor(parsed);
+                args.pop();
+            }
         }
         if (gameCount > 1000) {
             message.channel.send('You can only request up to 1000 games at a time.');
@@ -234,7 +252,7 @@ module.exports = {
             return;
         }
 
-        var summonerName = args.join(' ');
+        var summonerName = args.join(' ').trim();
         message.channel.send(`Analyzing matches for ${summonerName}, please wait...`);
         try {
           const queueStats = await getLastMatches(summonerName, gameCount, api, this.logger, message.author.id);
@@ -249,8 +267,11 @@ module.exports = {
               }
         
               const queueName = queueTypeMapping[queueId] || `Queue ${queueId}`;
-              const blueSideWinrate = ((stats.blueSideWins / (stats.blueSideWins + stats.blueSideLosses)) * 100).toFixed(2);
-              const redSideWinrate = ((stats.redSideWins / (stats.redSideWins + stats.redSideLosses)) * 100).toFixed(2);              let queueFieldText = `Blue Side: ${stats.blueSideCount} (${blueSideWinrate}%) | Red Side: ${stats.redSideCount} (${redSideWinrate}%)`;
+              const blueGames = stats.blueSideWins + stats.blueSideLosses;
+              const redGames = stats.redSideWins + stats.redSideLosses;
+              const blueSideWinrate = blueGames > 0 ? ((stats.blueSideWins / blueGames) * 100).toFixed(2) : '0.00';
+              const redSideWinrate = redGames > 0 ? ((stats.redSideWins / redGames) * 100).toFixed(2) : '0.00';
+              let queueFieldText = `Blue Side: ${stats.blueSideCount} (${blueSideWinrate}%) | Red Side: ${stats.redSideCount} (${redSideWinrate}%)`;
               embed.addFields({ name: queueName, value: queueFieldText, inline: false });
             }
         
