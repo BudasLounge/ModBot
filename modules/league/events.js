@@ -2073,6 +2073,7 @@ const LOBBY_QUEUE_LABELS = {
   900: 'ARURF',
   1700: 'Arena',
   1900: 'URF',
+  3140: 'Practice Tool',
 };
 
 /**

@@ -45,6 +45,7 @@ const QUEUE_LABELS = {
   900: 'ARURF',
   1700: 'Arena',
   1900: 'URF',
+  3140: 'Practice Tool',
 };
 
 const MAX_PLAYERS_PER_TEAM = 20;
@@ -228,6 +229,7 @@ function describeMode(event) {
   if (queueType.includes('RANKED')) return 'Ranked';
   if (queueType.includes('ARAM') || queueType === 'KIWI') return 'ARAM';
   if (queueType.includes('CHERRY') || queueType === 'ARENA') return 'Arena';
+  if (queueType.includes('PRACTICETOOL')) return 'Practice Tool';
   if (queueType.includes('NORMAL')) return 'Normal';
   if (queueType.includes('BOT')) return 'Co-op vs AI';
   if (queueType === 'CLASSIC') return 'Normal';
