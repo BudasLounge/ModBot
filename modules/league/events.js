@@ -31,6 +31,14 @@ const {
 } = require('./lib/match_tags.js');
 const MatchArchive = require('./lib/match_archive.js');
 const { prepareArenaScoreboardData } = require('./lib/arena_scoreboard.js');
+const {
+  isMatchEventPayload,
+  normalizeMatchEvent,
+  sessionKey,
+  buildLiveScoreboardData,
+  buildMatchEventEmbedData,
+  buildMatchEventContent,
+} = require('./lib/live_events.js');
 
 // Persistent on-disk archive of final post-match payloads. Instantiated in
 // register_handlers once the module logger is available so the archive can
@@ -53,6 +61,12 @@ let logger;
 const pendingMatches = new Map();
 // partyId -> timestamp (ms) of the last invite we posted, for debouncing.
 const recentLobbyInvites = new Map();
+// sessionId (or partyId fallback) -> tracked match-event message.
+const recentMatchEvents = new Map();
+// Bound concurrent puppeteer renders so a burst of games cannot exhaust the host.
+const MATCH_EVENT_RENDER_MAX_CONCURRENT = 2;
+const MATCH_EVENT_RENDER_TIMEOUT_MS = 20000;
+let liveRenderInFlight = 0;
 
 const MATCH_WEBHOOK_PORT = parseInt(process.env.MATCH_WEBHOOK_PORT || '38900', 10);
 const MATCH_WEBHOOK_HOST = process.env.MATCH_WEBHOOK_HOST || '0.0.0.0';
@@ -77,6 +91,13 @@ const LOBBY_CLOSED_DELETE_DELAY_MS = 10 * 60 * 1000; // 10 minutes
 const LOBBY_SLOTS_CUSTOM = 10;
 const LOBBY_SLOTS_ARENA = 16;
 const LOBBY_SLOTS_DEFAULT = 5;
+
+// --- Match event stream (in queue / in game / live scoreboard) ---
+// Tracking entries expire after this much inactivity. The message itself is
+// only deleted after an explicit `ended` event.
+const MATCH_EVENT_TTL_MS = 3 * 60 * 60 * 1000; // 3 hours
+// Keep the final scoreboard visible briefly after the game ends.
+const MATCH_EVENT_DELETE_DELAY_MS = 10 * 60 * 1000; // 10 minutes
 
 const LEAGUE_EDIT_KEYWORDS_PREFIX = 'LEAGUE_EDIT_KEYWORDS_';
 const LEAGUE_KEYWORDS_MODAL_PREFIX = 'LEAGUE_KW_MODAL_';
@@ -2303,6 +2324,14 @@ async function postLobbyInvite(payload, client) {
     return;
   }
 
+  // A match-event session owns the message once the queue starts. Ignore
+  // late invite posts/edits for that party so they cannot overwrite the
+  // in-queue/in-game embed.
+  if (partyId && findActiveMatchEventForParty(partyId)) {
+    logger.info('[LoL Lobby Invite] Ignoring invite: match event owns this party', { partyId });
+    return;
+  }
+
   // ── Update path: partyId already tracked ──────────────────────────────────
   if (partyId && recentLobbyInvites.has(partyId)) {
     const entry = recentLobbyInvites.get(partyId);
@@ -2458,6 +2487,423 @@ async function postLobbyInvite(payload, client) {
   }
 }
 
+/* =====================================================
+   Match event stream (in queue / in game / live scoreboard)
+===================================================== */
+
+/** Return the live match-event entry currently owning a party, if any. */
+function findActiveMatchEventForParty(partyId) {
+  if (!partyId) return null;
+  for (const entry of recentMatchEvents.values()) {
+    if (entry.partyId === partyId && !entry.ended) return entry;
+  }
+  return null;
+}
+
+function clearMatchEventEntry(entry) {
+  if (!entry) return;
+  clearTimeout(entry.cleanupTimer);
+  clearTimeout(entry.deleteTimer);
+  entry.cleanupTimer = null;
+  entry.deleteTimer = null;
+  if (recentMatchEvents.get(entry.key) === entry) {
+    recentMatchEvents.delete(entry.key);
+  }
+}
+
+function scheduleMatchEventCleanup(entry) {
+  clearTimeout(entry.cleanupTimer);
+  entry.cleanupTimer = setTimeout(() => {
+    if (recentMatchEvents.get(entry.key) === entry) {
+      recentMatchEvents.delete(entry.key);
+      logger.info('[LoL Match Event] Tracking entry expired', { key: entry.key });
+    }
+  }, MATCH_EVENT_TTL_MS);
+  if (entry.cleanupTimer.unref) entry.cleanupTimer.unref();
+}
+
+function scheduleMatchEventDeletion(entry) {
+  clearTimeout(entry.cleanupTimer);
+  clearTimeout(entry.deleteTimer);
+  entry.deleteTimer = setTimeout(async () => {
+    try {
+      if (entry.message) {
+        await entry.message.delete();
+        logger.info('[LoL Match Event] Deleted finished match message', {
+          key: entry.key,
+          messageId: entry.message.id,
+        });
+      }
+    } catch (err) {
+      logger.warn('[LoL Match Event] Failed to delete finished match message', {
+        key: entry.key,
+        err: err?.message,
+      });
+    } finally {
+      if (recentMatchEvents.get(entry.key) === entry) {
+        recentMatchEvents.delete(entry.key);
+      }
+    }
+  }, MATCH_EVENT_DELETE_DELAY_MS);
+  if (entry.deleteTimer.unref) entry.deleteTimer.unref();
+}
+
+function buildMatchEventEmbed(event) {
+  const data = buildMatchEventEmbedData(event, describeLobbyMode(event));
+  const embed = new EmbedBuilder()
+    .setColor(data.color)
+    .setTitle(data.title)
+    .setDescription(data.description)
+    .setFooter({ text: 'League of Legends Match Events' })
+    .setTimestamp(new Date());
+  if (data.fields.length > 0) {
+    embed.addFields(data.fields);
+  }
+  return embed;
+}
+
+function buildMatchEventCreatePayload(event, imageBuffer) {
+  const content = buildMatchEventContent(event);
+  if (imageBuffer) {
+    return {
+      content,
+      files: [new AttachmentBuilder(imageBuffer, { name: 'live-scoreboard.png' })],
+    };
+  }
+  return { content, embeds: [buildMatchEventEmbed(event)] };
+}
+
+function buildMatchEventEditPayload(event, imageBuffer) {
+  const content = buildMatchEventContent(event);
+  if (imageBuffer) {
+    // `attachments: []` drops the previous minute's image before adding the new one.
+    return {
+      content,
+      files: [new AttachmentBuilder(imageBuffer, { name: 'live-scoreboard.png' })],
+      attachments: [],
+      embeds: [],
+      components: [],
+    };
+  }
+  return {
+    content,
+    embeds: [buildMatchEventEmbed(event)],
+    attachments: [],
+    components: [],
+  };
+}
+
+/**
+ * Render the live scoreboard image. Returns a null buffer on any failure so
+ * callers can fall back to the plain embed instead of dropping the update.
+ */
+async function renderLiveScoreboardImage(event) {
+  if (!Array.isArray(event?.teams) || !event.teams.some((team) => team.players?.length)) {
+    return { imageBuffer: null, errorMessage: 'no team data' };
+  }
+  if (liveRenderInFlight >= MATCH_EVENT_RENDER_MAX_CONCURRENT) {
+    return { imageBuffer: null, errorMessage: 'renderer busy' };
+  }
+
+  liveRenderInFlight += 1;
+  let timeoutHandle = null;
+  try {
+    const template = fs.readFileSync(path.join(__dirname, 'match-template-live.html'), 'utf8');
+    const ddVersion = await getLatestDDVersion();
+    const data = buildLiveScoreboardData(event, ddVersion, describeLobbyMode(event));
+    const timeoutPromise = new Promise((_, reject) => {
+      timeoutHandle = setTimeout(
+        () => reject(new Error('live scoreboard render timed out')),
+        MATCH_EVENT_RENDER_TIMEOUT_MS
+      );
+    });
+    const imageBuffer = await Promise.race([
+      nodeHtmlToImage({
+        html: template,
+        content: data,
+        puppeteerArgs: { args: ['--no-sandbox', '--disable-setuid-sandbox'] },
+      }),
+      timeoutPromise,
+    ]);
+    logger.info('[LoL Match Event] Rendered live scoreboard', {
+      key: event.sessionId || event.partyId,
+      gameTime: event.gameTime,
+    });
+    return { imageBuffer, errorMessage: null };
+  } catch (err) {
+    logger.warn('[LoL Match Event] Live scoreboard render failed; using embed fallback', {
+      key: event.sessionId || event.partyId,
+      err: err?.message,
+    });
+    return { imageBuffer: null, errorMessage: err?.message || 'unknown error' };
+  } finally {
+    if (timeoutHandle) clearTimeout(timeoutHandle);
+    liveRenderInFlight = Math.max(0, liveRenderInFlight - 1);
+  }
+}
+
+async function createMatchEventMessage(entry, event, client, imageBuffer) {
+  let channel;
+  try {
+    channel = await client.channels.fetch(LOBBY_INVITE_CHANNEL);
+  } catch (err) {
+    logger.error('[LoL Match Event] Failed to fetch event channel', {
+      LOBBY_INVITE_CHANNEL,
+      err: err?.message,
+    });
+    return null;
+  }
+  if (!channel) {
+    logger.error('[LoL Match Event] Event channel not found', { LOBBY_INVITE_CHANNEL });
+    return null;
+  }
+  try {
+    const msg = await channel.send(buildMatchEventCreatePayload(event, imageBuffer));
+    entry.message = msg;
+    logger.info('[LoL Match Event] Posted match event message', {
+      key: entry.key,
+      messageId: msg.id,
+      event: event.event,
+    });
+    return msg;
+  } catch (err) {
+    logger.error('[LoL Match Event] Failed to post match event message', {
+      key: entry.key,
+      err: err?.message,
+    });
+    return null;
+  }
+}
+
+async function applyMatchEvent(entry, event, client) {
+  if (entry.ended && event.event !== 'ended') return;
+  if (!client) return;
+  if (!LOBBY_INVITE_CHANNEL) {
+    logger.error('[LoL Match Event] LOBBY_INVITE_CHANNEL not configured; dropping event');
+    return;
+  }
+
+  const shouldRender =
+    event.event === 'scoreboard' ||
+    (event.event === 'ended' && Array.isArray(event.teams) && event.teams.length > 0);
+  const rendered = shouldRender
+    ? await renderLiveScoreboardImage(event)
+    : { imageBuffer: null };
+
+  let message = entry.message;
+  if (!message) {
+    if (entry.postPromise) {
+      try {
+        message = await entry.postPromise;
+      } catch (err) {
+        logger.warn('[LoL Match Event] Initial post failed while applying update', {
+          key: entry.key,
+          err: err?.message,
+        });
+      }
+    } else {
+      message = await createMatchEventMessage(entry, event, client, rendered.imageBuffer);
+      if (message) {
+        entry.latestEvent = event;
+        entry.lastEventAt = Date.now();
+        if (event.event === 'ended') {
+          entry.ended = true;
+          scheduleMatchEventDeletion(entry);
+        } else {
+          scheduleMatchEventCleanup(entry);
+        }
+      }
+      return;
+    }
+  }
+
+  if (!message) {
+    logger.warn('[LoL Match Event] No message available; dropping update', {
+      key: entry.key,
+      event: event.event,
+    });
+    return;
+  }
+
+  try {
+    await message.edit(buildMatchEventEditPayload(event, rendered.imageBuffer));
+    entry.latestEvent = event;
+    entry.lastEventAt = Date.now();
+    logger.info('[LoL Match Event] Edited match event message', {
+      key: entry.key,
+      event: event.event,
+      messageId: message.id,
+      image: Boolean(rendered.imageBuffer),
+    });
+    if (event.event === 'ended') {
+      entry.ended = true;
+      scheduleMatchEventDeletion(entry);
+    } else {
+      scheduleMatchEventCleanup(entry);
+    }
+  } catch (err) {
+    if (err?.code === 10008) {
+      logger.warn('[LoL Match Event] Message no longer exists; clearing tracking', {
+        key: entry.key,
+      });
+      clearMatchEventEntry(entry);
+    } else {
+      logger.error('[LoL Match Event] Failed to edit match event message', {
+        key: entry.key,
+        event: event.event,
+        err: err?.message,
+      });
+      // Keep tracking and retry on the next event; schedule cleanup anyway.
+      scheduleMatchEventCleanup(entry);
+    }
+  }
+}
+
+/**
+ * Handle a match-event payload. Events are validated/normalised here and then
+ * serialised per session so concurrent HTTP requests cannot reorder edits.
+ * The first event reuses an existing lobby-invite message when possible.
+ */
+async function postMatchEvent(payload, client) {
+  const event = normalizeMatchEvent(payload);
+  if (!event) {
+    logger.warn('[LoL Match Event] Invalid match event payload; dropping', {
+      eventType: payload?.eventType,
+      event: payload?.event,
+    });
+    return { accepted: false };
+  }
+
+  const key = sessionKey(event);
+  logger.info('[LoL Match Event] Received match event', {
+    key,
+    event: event.event,
+    sequence: event.sequence,
+    queueId: event.queueId,
+    gameId: event.gameId,
+    playerCount: event.playerCount,
+  });
+
+  let entry = recentMatchEvents.get(key);
+
+  if (!entry) {
+    if (event.event === 'ended') {
+      logger.warn('[LoL Match Event] Ended event for untracked session; nothing to update', {
+        key,
+      });
+      return { accepted: true, ignored: true };
+    }
+
+    // If the client restarted mid-game it will use a new sessionId for the
+    // same party. Adopt the existing message instead of posting a duplicate.
+    let invite = null;
+    const activeForParty = event.partyId
+      ? findActiveMatchEventForParty(event.partyId)
+      : null;
+    if (activeForParty && activeForParty.key !== key) {
+      clearMatchEventEntry(activeForParty);
+      invite = {
+        message: activeForParty.message,
+        postPromise: activeForParty.postPromise,
+        ownerName: activeForParty.ownerName,
+        partyId: activeForParty.partyId,
+      };
+      logger.info('[LoL Match Event] Adopted message from previous session for party', {
+        key,
+        previousKey: activeForParty.key,
+        partyId: event.partyId,
+      });
+    }
+
+    // Reuse the lobby invite message when one is already tracked for this
+    // party. This is the preferred "one message per lobby" lifecycle.
+    if (!invite && event.partyId && recentLobbyInvites.has(event.partyId)) {
+      invite = recentLobbyInvites.get(event.partyId);
+      clearTimeout(invite.editTimer);
+      clearTimeout(invite.cleanupTimer);
+      recentLobbyInvites.delete(event.partyId);
+      logger.info('[LoL Match Event] Reusing lobby invite message', {
+        key,
+        partyId: event.partyId,
+        hasMessage: Boolean(invite.message),
+      });
+    }
+
+    entry = {
+      key,
+      sessionId: event.sessionId,
+      partyId: event.partyId || invite?.partyId || '',
+      ownerName: event.ownerName || invite?.ownerName || '',
+      message: invite?.message ?? null,
+      postPromise: null,
+      chain: Promise.resolve(),
+      latestEvent: event,
+      lastSequence: 0,
+      lastEventAt: Date.now(),
+      cleanupTimer: null,
+      deleteTimer: null,
+      ended: false,
+    };
+    if (invite?.postPromise) {
+      entry.postPromise = invite.postPromise.then((msg) => {
+        entry.message = msg;
+        entry.postPromise = null;
+        return msg;
+      });
+    }
+    recentMatchEvents.set(key, entry);
+  }
+
+  if (entry.ended && event.event !== 'ended') {
+    logger.info('[LoL Match Event] Ignoring late event for finished session', {
+      key,
+      event: event.event,
+    });
+    return { accepted: true, ignored: true };
+  }
+
+  if (
+    event.sequence !== null &&
+    entry.lastSequence > 0 &&
+    event.sequence <= entry.lastSequence
+  ) {
+    logger.info('[LoL Match Event] Ignoring duplicate/out-of-order event', {
+      key,
+      sequence: event.sequence,
+      lastSequence: entry.lastSequence,
+    });
+    return { accepted: true, ignored: true };
+  }
+
+  if (
+    entry.ownerName &&
+    event.ownerName &&
+    entry.ownerName.toLowerCase() !== event.ownerName.toLowerCase()
+  ) {
+    logger.warn('[LoL Match Event] ownerName mismatch; ignoring event', {
+      key,
+      expected: entry.ownerName,
+      received: event.ownerName,
+    });
+    return { accepted: false, conflict: true };
+  }
+
+  if (!entry.ownerName && event.ownerName) entry.ownerName = event.ownerName;
+  if (!entry.partyId && event.partyId) entry.partyId = event.partyId;
+  if (event.sequence !== null) {
+    entry.lastSequence = Math.max(entry.lastSequence, event.sequence);
+  }
+  entry.lastEventAt = Date.now();
+  scheduleMatchEventCleanup(entry);
+
+  entry.chain = entry.chain
+    .then(() => applyMatchEvent(entry, event, client))
+    .catch((err) => {
+      logger.error('[LoL Match Event] Handler error', { key, err: err?.message });
+    });
+  return { accepted: true };
+}
+
 /**
  * Distinguish a lobby-invite payload from a post-match payload. Lobby invites
  * carry a smartUrl/partyId and never include a gameId; post-match payloads
@@ -2530,6 +2976,25 @@ function startMatchWebhook(event_registry) {
       } catch (err) {
         res.statusCode = 400;
         res.end('invalid json');
+        return;
+      }
+
+      // Match-event payloads (in queue / in game / live scoreboard) are
+      // explicitly discriminated by eventType; route before the invite check
+      // because they also carry a partyId but never a smartUrl.
+      if (isMatchEventPayload(payload)) {
+        postMatchEvent(payload, client)
+          .then((result) => {
+            res.writeHead(result?.conflict ? 409 : 200, { 'content-type': 'application/json' });
+            res.end(JSON.stringify({ ok: !result?.conflict }));
+            logger.info('[LoL Match Event] Event accepted');
+          })
+          .catch((err) => {
+            logger.error('[LoL Match Event] Handler error', err);
+            res.statusCode = 503;
+            res.setHeader('Retry-After', '5');
+            res.end('error');
+          });
         return;
       }
 
@@ -3871,5 +4336,8 @@ register_handlers.generatePlayerStatsImage = generatePlayerStatsImage;
 register_handlers.getAllPlayersOrdered = getAllPlayersOrdered;
 register_handlers.buildPlayerSelectorRows = buildPlayerSelectorRows;
 register_handlers.getMatchArchive = () => matchArchive;
+// Exposed for targeted integration checks (CLI harness / future commands).
+register_handlers.postMatchEvent = postMatchEvent;
+register_handlers.postLobbyInvite = postLobbyInvite;
 
 module.exports = register_handlers;

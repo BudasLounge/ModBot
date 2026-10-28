@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 1100px;
+      min-height: 420px;
+      background-color: #010a13;
+      font-family: 'Roboto', sans-serif;
+      color: #a09b8c;
+      padding: 24px 28px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #1e2328;
+    }
+    .event {
+      font-size: 34px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+    .live { color: #c8aa6e; text-shadow: 0 0 10px rgba(200, 170, 110, 0.3); }
+    .victory { color: #0acbe6; text-shadow: 0 0 10px rgba(10, 203, 230, 0.3); }
+    .defeat { color: #e84057; text-shadow: 0 0 10px rgba(232, 64, 87, 0.3); }
+    .neutral { color: #c8aa6e; text-shadow: 0 0 10px rgba(200, 170, 110, 0.25); }
+    .meta { font-size: 15px; color: #939a9e; text-align: right; }
+    .clock { color: #fff; font-weight: 700; font-size: 20px; }
+
+    .scoreline {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 14px 0 12px 0;
+      padding: 10px 16px;
+      background: #0f1216;
+      border: 1px solid #1e2328;
+      border-radius: 6px;
+    }
+    .team-score { display: flex; align-items: baseline; gap: 10px; }
+    .blue-text { color: #0acbe6; }
+    .red-text { color: #e84057; }
+    .kills { font-size: 30px; font-weight: 700; }
+    .team-label { font-size: 13px; letter-spacing: 1px; text-transform: uppercase; color: #939a9e; }
+    .objectives { font-size: 13px; color: #939a9e; text-align: center; line-height: 1.5; }
+
+    .table-header {
+      display: grid;
+      grid-template-columns: 58px 250px 110px 90px 80px 240px;
+      padding: 0 10px 5px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #5c5b57;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .team-block { margin-bottom: 12px; }
+    .team-head {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .team-head.blue { color: #0acbe6; border-left: 4px solid #0acbe6; background: #0b1419; }
+    .team-head.red { color: #e84057; border-left: 4px solid #e84057; background: #190b0e; }
+
+    .player-row {
+      display: grid;
+      grid-template-columns: 58px 250px 110px 90px 80px 240px;
+      align-items: center;
+      height: 50px;
+      padding: 0 10px;
+      background: #0f1216;
+      border-bottom: 1px solid #1e2328;
+    }
+    .player-row.is-local { background: #262118; border: 1px solid #c8aa6e; }
+
+    .col-champ { position: relative; display: flex; justify-content: center; align-items: center; }
+    .champ-img { width: 38px; height: 38px; border-radius: 50%; border: 2px solid #333; background: #1e2328; }
+    .level-badge {
+      position: absolute; bottom: 0; right: 4px; background: #000; color: #fff;
+      font-size: 10px; width: 16px; height: 16px; border-radius: 50%;
+      text-align: center; line-height: 16px; border: 1px solid #c8aa6e;
+    }
+
+    .col-name { display: flex; flex-direction: column; overflow: hidden; padding-right: 8px; }
+    .summoner-name {
+      color: #fff; font-weight: 700; font-size: 14px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .champion-name { color: #939a9e; font-size: 11px; }
+
+    .col-kda { font-size: 14px; color: #fff; text-align: center; }
+    .kda-sub { display: block; font-size: 10px; color: #666; }
+    .col-cs, .col-wards { font-size: 13px; color: #939a9e; text-align: right; }
+    .col-items { display: flex; gap: 3px; justify-content: flex-end; }
+    .item-icon { width: 26px; height: 26px; border-radius: 3px; background: #141619; border: 1px solid #333; }
+
+    .empty-note { color: #5c5b57; font-size: 13px; padding: 12px; text-align: center; }
+
+    .footer {
+      margin-top: 12px; padding-top: 10px; border-top: 1px solid #1e2328;
+      display: flex; justify-content: space-between;
+      color: #5c5b57; font-size: 11px; font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="event {{resultClass}}">{{eventLabel}}</div>
+    <div class="meta">
+      <div class="clock">{{clock}}</div>
+      <div>{{mode}}</div>
+    </div>
+  </div>
+
+  <div class="scoreline">
+    <div class="team-score">
+      <span class="team-label">Blue</span>
+      <span class="kills blue-text">{{t100.kills}}</span>
+    </div>
+    <div class="objectives">
+      <div>
+        <span class="blue-text">🔵 {{t100.towers}} towers · {{t100.dragons}} dragons · {{t100.barons}} barons · {{t100.inhibitors}} inhibs</span>
+        &nbsp;|&nbsp;
+        <span class="red-text">🔴 {{t200.towers}} towers · {{t200.dragons}} dragons · {{t200.barons}} barons · {{t200.inhibitors}} inhibs</span>
+      </div>
+      <div>Kills &nbsp; {{t100.kills}} / {{t100.deaths}} / {{t100.assists}} &nbsp;—&nbsp; {{t200.kills}} / {{t200.deaths}} / {{t200.assists}}</div>
+    </div>
+    <div class="team-score">
+      <span class="kills red-text">{{t200.kills}}</span>
+      <span class="team-label">Red</span>
+    </div>
+  </div>
+
+  <div class="table-header">
+    <div></div>
+    <div>Player</div>
+    <div style="text-align:center;">KDA</div>
+    <div style="text-align:right;">CS</div>
+    <div style="text-align:right;">Wards</div>
+    <div style="text-align:right;">Items</div>
+  </div>
+
+  <div class="team-block">
+    <div class="team-head blue">
+      <span>🔵 Blue Team</span>
+      <span>{{t100.kills}} / {{t100.deaths}} / {{t100.assists}}</span>
+    </div>
+    {{#if hasBluePlayers}}
+      {{#each team100.players}}
+        <div class="player-row {{#if isLocal}}is-local{{/if}}">
+          <div class="col-champ">
+            <img src="{{championIcon}}" class="champ-img">
+            <div class="level-badge">{{level}}</div>
+          </div>
+          <div class="col-name">
+            <div class="summoner-name">{{riotId}}</div>
+            <div class="champion-name">{{championName}}</div>
+          </div>
+          <div class="col-kda">{{kda}}<span class="kda-sub">{{kdaRatio}}</span></div>
+          <div class="col-cs">{{cs}}</div>
+          <div class="col-wards">{{wardScore}}</div>
+          <div class="col-items">
+            {{#each itemIcons}}
+              <img src="{{url}}" class="item-icon">
+            {{/each}}
+          </div>
+        </div>
+      {{/each}}
+    {{else}}
+      <div class="empty-note">Waiting for blue team data…</div>
+    {{/if}}
+  </div>
+
+  <div class="team-block">
+    <div class="team-head red">
+      <span>🔴 Red Team</span>
+      <span>{{t200.kills}} / {{t200.deaths}} / {{t200.assists}}</span>
+    </div>
+    {{#if hasRedPlayers}}
+      {{#each team200.players}}
+        <div class="player-row {{#if isLocal}}is-local{{/if}}">
+          <div class="col-champ">
+            <img src="{{championIcon}}" class="champ-img">
+            <div class="level-badge">{{level}}</div>
+          </div>
+          <div class="col-name">
+            <div class="summoner-name">{{riotId}}</div>
+            <div class="champion-name">{{championName}}</div>
+          </div>
+          <div class="col-kda">{{kda}}<span class="kda-sub">{{kdaRatio}}</span></div>
+          <div class="col-cs">{{cs}}</div>
+          <div class="col-wards">{{wardScore}}</div>
+          <div class="col-items">
+            {{#each itemIcons}}
+              <img src="{{url}}" class="item-icon">
+            {{/each}}
+          </div>
+        </div>
+      {{/each}}
+    {{else}}
+      <div class="empty-note">Waiting for red team data…</div>
+    {{/if}}
+  </div>
+
+  <div class="footer">
+    <span>Live data from the League client</span>
+    <span>Updates every minute</span>
+  </div>
+</body>
+</html>
