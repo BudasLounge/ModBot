@@ -6,10 +6,11 @@
  * The desktop client posts a small event stream to the same `/lol/match`
  * endpoint used by lobby invites and post-match uploads:
  *
- *   in_queue  -> player joined matchmaking
- *   in_game   -> game client started
- *   scoreboard -> live snapshot, sent once per minute while in game
- *   ended     -> game finished / queue cancelled / client disconnected
+ *   in_queue     -> player joined matchmaking
+ *   champ_select -> pick/ban phase with picks, bans, roles and timer
+ *   in_game      -> game client started
+ *   scoreboard   -> live snapshot, sent once per minute while in game
+ *   ended        -> game finished / queue cancelled / client disconnected
  *
  * This module is deliberately dependency-free (no discord.js, no axios) so it
  * can be unit-checked in isolation and reused by any renderer. It validates
@@ -17,7 +18,13 @@
  */
 
 const MATCH_EVENT_TYPE = 'match_event';
-const VALID_MATCH_EVENTS = new Set(['in_queue', 'in_game', 'scoreboard', 'ended']);
+const VALID_MATCH_EVENTS = new Set([
+  'in_queue',
+  'champ_select',
+  'in_game',
+  'scoreboard',
+  'ended',
+]);
 
 const CHAMPION_FILE_OVERRIDES = {
   Wukong: 'MonkeyKing',
@@ -52,6 +59,15 @@ const MAX_PLAYERS_PER_TEAM = 20;
 const MAX_ITEMS = 7;
 const FIELD_LIMIT = 1024;
 const DESCRIPTION_LIMIT = 4096;
+
+const POSITION_LABELS = {
+  TOP: 'Top',
+  JUNGLE: 'Jg',
+  MIDDLE: 'Mid',
+  BOTTOM: 'Bot',
+  UTILITY: 'Sup',
+  FILL: 'Fill',
+};
 
 function isMatchEventPayload(payload) {
   return Boolean(
@@ -149,6 +165,54 @@ function normalizeTeam(team, index) {
   };
 }
 
+function normalizeChampSelectPlayer(player) {
+  if (!player || typeof player !== 'object') return null;
+  return {
+    cellId: asInt(player.cellId, -1),
+    championId: Math.max(0, asInt(player.championId, 0)),
+    championName: asString(player.championName, 48),
+    pickIntentName: asString(player.pickIntentName, 48),
+    assignedPosition: asString(player.assignedPosition, 16).toUpperCase(),
+    riotId: asString(player.riotId, 80),
+    isLocal: Boolean(player.isLocal),
+    isLocked: Boolean(player.isLocked),
+  };
+}
+
+function normalizeChampSelectBans(bans) {
+  if (!Array.isArray(bans)) return [];
+  return bans
+    .slice(0, 10)
+    .map((ban) => {
+      if (ban && typeof ban === 'object') {
+        return {
+          championId: Math.max(0, asInt(ban.championId, 0)),
+          championName: asString(ban.championName, 48),
+        };
+      }
+      return { championId: Math.max(0, asInt(ban, 0)), championName: '' };
+    })
+    .filter((ban) => ban.championId > 0);
+}
+
+function normalizeChampSelect(champSelect) {
+  if (!champSelect || typeof champSelect !== 'object') return null;
+  const mapTeam = (team) =>
+    Array.isArray(team)
+      ? team.slice(0, 5).map(normalizeChampSelectPlayer).filter(Boolean)
+      : [];
+  return {
+    phase: asString(champSelect.phase, 24).toUpperCase(),
+    timeLeft: Math.max(0, asNumber(champSelect.timeLeft, 0)),
+    totalTime: Math.max(0, asNumber(champSelect.totalTime, 0)),
+    localPlayerCellId: asInt(champSelect.localPlayerCellId, -1),
+    myTeam: mapTeam(champSelect.myTeam),
+    theirTeam: mapTeam(champSelect.theirTeam),
+    myTeamBans: normalizeChampSelectBans(champSelect.myTeamBans),
+    theirTeamBans: normalizeChampSelectBans(champSelect.theirTeamBans),
+  };
+}
+
 /**
  * Validate and normalise an untrusted match-event payload.
  * Returns null for payloads that are not match events.
@@ -195,6 +259,8 @@ function normalizeMatchEvent(payload) {
     reason: asString(payload.reason, 32),
     localPlayer: asString(payload.localPlayer, 80),
     teams,
+    champSelect:
+      event === 'champ_select' ? normalizeChampSelect(payload.champSelect) : null,
   };
 }
 
@@ -342,6 +408,53 @@ function teamFieldValue(team) {
   return truncate(players ? `${header}\n${players}` : header, FIELD_LIMIT);
 }
 
+function formatChampPhase(phase) {
+  const labels = {
+    PLANNING: 'Planning',
+    BAN_PICK: 'Ban/Pick',
+    FINALIZATION: 'Finalization',
+    GAME_STARTING: 'Starting',
+  };
+  return labels[String(phase || '').toUpperCase()] || 'Champ Select';
+}
+
+function champSelectPlayerLine(player, isEnemy) {
+  const role =
+    POSITION_LABELS[player.assignedPosition] || player.assignedPosition || 'Fill';
+  let champion = player.championName;
+  if (!champion && !isEnemy && player.pickIntentName) {
+    champion = `${player.pickIntentName}?`;
+  }
+  if (!champion) champion = isEnemy ? 'Hidden' : '—';
+  const name = player.riotId ? ` — ${player.riotId}` : '';
+  const lock = player.isLocked ? ' ✓' : '';
+  return `**${role}** ${champion}${name}${lock}`;
+}
+
+function champSelectTeamValue(team, isEnemy) {
+  if (!Array.isArray(team) || team.length === 0) {
+    return isEnemy ? 'No enemy picks revealed yet' : 'Waiting for picks…';
+  }
+  return truncate(
+    team.map((player) => champSelectPlayerLine(player, isEnemy)).join('\n'),
+    FIELD_LIMIT
+  );
+}
+
+function champSelectBansValue(champSelect) {
+  const myBans = (champSelect.myTeamBans || []).map(
+    (ban) => ban.championName || `#${ban.championId}`
+  );
+  const theirBans = (champSelect.theirTeamBans || []).map(
+    (ban) => ban.championName || `#${ban.championId}`
+  );
+  if (myBans.length === 0 && theirBans.length === 0) return '';
+  return truncate(
+    `**Yours:** ${myBans.join(', ') || 'None'}\n**Enemy:** ${theirBans.join(', ') || 'None'}`,
+    FIELD_LIMIT
+  );
+}
+
 /**
  * Plain-data embed fallback used when image rendering is unavailable.
  * events.js turns this into an EmbedBuilder, keeping this module dependency-free.
@@ -352,12 +465,14 @@ function buildMatchEventEmbedData(event, modeLabel) {
   const result = String(event?.result || '').toLowerCase();
   const titleByEvent = {
     in_queue: 'League — In Queue',
+    champ_select: 'League — Champ Select',
     in_game: 'League — In Game',
     scoreboard: 'League — Live Scoreboard',
     ended: 'League — Match Ended',
   };
   const colorByEvent = {
     in_queue: 0x1e90ff,
+    champ_select: 0x9b59b6,
     in_game: 0xffaa00,
     scoreboard: 0xffaa00,
     ended: result === 'victory' ? 0x0acbe6 : result === 'defeat' ? 0xe84057 : 0x5c5c5c,
@@ -365,6 +480,41 @@ function buildMatchEventEmbedData(event, modeLabel) {
 
   const fields = [];
   const owner = event?.ownerName || 'Unknown';
+
+  if (event?.event === 'champ_select') {
+    const champSelect = event.champSelect || {};
+    const timeLeft = champSelect.timeLeft
+      ? ` • ${Math.ceil(champSelect.timeLeft)}s`
+      : '';
+    fields.push({ name: 'Mode', value: truncate(mode, 256), inline: true });
+    fields.push({
+      name: 'Phase',
+      value: `${formatChampPhase(champSelect.phase)}${timeLeft}`,
+      inline: true,
+    });
+    fields.push({ name: 'Local Player', value: truncate(owner, 256), inline: true });
+    fields.push({
+      name: 'Your Team',
+      value: champSelectTeamValue(champSelect.myTeam, false),
+      inline: false,
+    });
+    fields.push({
+      name: 'Enemy Team',
+      value: champSelectTeamValue(champSelect.theirTeam, true),
+      inline: false,
+    });
+    const bansValue = champSelectBansValue(champSelect);
+    if (bansValue) {
+      fields.push({ name: 'Bans', value: bansValue, inline: false });
+    }
+    return {
+      title: 'League — Champ Select',
+      color: 0x9b59b6,
+      description: truncate(`Champ select • ${mode}`, DESCRIPTION_LIMIT),
+      fields,
+    };
+  }
+
   if (event?.event === 'in_queue') {
     fields.push({ name: 'Host', value: truncate(owner, 256), inline: true });
     fields.push({ name: 'Mode', value: truncate(mode, 256), inline: true });
@@ -424,6 +574,12 @@ function buildMatchEventContent(event) {
   const mode = describeMode(event);
   if (event?.event === 'in_queue') {
     return truncate(`League — In Queue • ${mode}`, 200);
+  }
+  if (event?.event === 'champ_select') {
+    const timeLeft = event?.champSelect?.timeLeft
+      ? ` • ${Math.ceil(event.champSelect.timeLeft)}s`
+      : '';
+    return truncate(`Champ select • ${mode}${timeLeft}`, 200);
   }
   if (event?.event === 'scoreboard') {
     return truncate(`Live scoreboard • ${mode} • ${formatClock(event?.gameTime)}`, 200);
