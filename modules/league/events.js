@@ -93,11 +93,10 @@ const LOBBY_SLOTS_ARENA = 16;
 const LOBBY_SLOTS_DEFAULT = 5;
 
 // --- Match event stream (in queue / in game / live scoreboard) ---
-// Tracking entries expire after this much inactivity. The message itself is
-// only deleted after an explicit `ended` event.
+// Tracking entries expire after this much inactivity. The message is deleted
+// immediately on an explicit `ended` event; the final scoreboard is posted by
+// the separate match-webhook channel.
 const MATCH_EVENT_TTL_MS = 3 * 60 * 60 * 1000; // 3 hours
-// Keep the final scoreboard visible briefly after the game ends.
-const MATCH_EVENT_DELETE_DELAY_MS = 10 * 60 * 1000; // 10 minutes
 
 const LEAGUE_EDIT_KEYWORDS_PREFIX = 'LEAGUE_EDIT_KEYWORDS_';
 const LEAGUE_KEYWORDS_MODAL_PREFIX = 'LEAGUE_KW_MODAL_';
@@ -2504,9 +2503,7 @@ function findActiveMatchEventForParty(partyId) {
 function clearMatchEventEntry(entry) {
   if (!entry) return;
   clearTimeout(entry.cleanupTimer);
-  clearTimeout(entry.deleteTimer);
   entry.cleanupTimer = null;
-  entry.deleteTimer = null;
   if (recentMatchEvents.get(entry.key) === entry) {
     recentMatchEvents.delete(entry.key);
   }
@@ -2521,32 +2518,6 @@ function scheduleMatchEventCleanup(entry) {
     }
   }, MATCH_EVENT_TTL_MS);
   if (entry.cleanupTimer.unref) entry.cleanupTimer.unref();
-}
-
-function scheduleMatchEventDeletion(entry) {
-  clearTimeout(entry.cleanupTimer);
-  clearTimeout(entry.deleteTimer);
-  entry.deleteTimer = setTimeout(async () => {
-    try {
-      if (entry.message) {
-        await entry.message.delete();
-        logger.info('[LoL Match Event] Deleted finished match message', {
-          key: entry.key,
-          messageId: entry.message.id,
-        });
-      }
-    } catch (err) {
-      logger.warn('[LoL Match Event] Failed to delete finished match message', {
-        key: entry.key,
-        err: err?.message,
-      });
-    } finally {
-      if (recentMatchEvents.get(entry.key) === entry) {
-        recentMatchEvents.delete(entry.key);
-      }
-    }
-  }, MATCH_EVENT_DELETE_DELAY_MS);
-  if (entry.deleteTimer.unref) entry.deleteTimer.unref();
 }
 
 function buildMatchEventEmbed(event) {
@@ -2684,9 +2655,55 @@ async function applyMatchEvent(entry, event, client) {
     return;
   }
 
-  const shouldRender =
-    event.event === 'scoreboard' ||
-    (event.event === 'ended' && Array.isArray(event.teams) && event.teams.length > 0);
+  // The post-match scoreboard already goes to the match channel. Delete the
+  // event message as soon as the game ends instead of keeping a duplicate
+  // final scoreboard (and instead of relying on a restart-lost timer).
+  if (event.event === 'ended') {
+    let message = entry.message;
+    if (!message && entry.postPromise) {
+      try {
+        message = await entry.postPromise;
+      } catch (err) {
+        logger.warn('[LoL Match Event] Initial post failed before ended cleanup', {
+          key: entry.key,
+          err: err?.message,
+        });
+      }
+    }
+    if (message) {
+      try {
+        await message.delete();
+        logger.info('[LoL Match Event] Deleted ended match message', {
+          key: entry.key,
+          messageId: message.id,
+        });
+      } catch (err) {
+        if (err?.code === 10008) {
+          logger.info('[LoL Match Event] Ended message was already deleted', {
+            key: entry.key,
+          });
+        } else {
+          logger.warn('[LoL Match Event] Failed to delete ended match message', {
+            key: entry.key,
+            err: err?.message,
+          });
+        }
+      }
+    } else {
+      logger.info('[LoL Match Event] Ended event had no posted message', {
+        key: entry.key,
+      });
+    }
+    // Keep a tombstone until TTL so late/out-of-order events for this session
+    // cannot create a fresh message after cleanup.
+    entry.ended = true;
+    entry.message = null;
+    entry.postPromise = null;
+    scheduleMatchEventCleanup(entry);
+    return;
+  }
+
+  const shouldRender = event.event === 'scoreboard';
   const rendered = shouldRender
     ? await renderLiveScoreboardImage(event)
     : { imageBuffer: null };
@@ -2707,12 +2724,7 @@ async function applyMatchEvent(entry, event, client) {
       if (message) {
         entry.latestEvent = event;
         entry.lastEventAt = Date.now();
-        if (event.event === 'ended') {
-          entry.ended = true;
-          scheduleMatchEventDeletion(entry);
-        } else {
-          scheduleMatchEventCleanup(entry);
-        }
+        scheduleMatchEventCleanup(entry);
       }
       return;
     }
@@ -2736,12 +2748,7 @@ async function applyMatchEvent(entry, event, client) {
       messageId: message.id,
       image: Boolean(rendered.imageBuffer),
     });
-    if (event.event === 'ended') {
-      entry.ended = true;
-      scheduleMatchEventDeletion(entry);
-    } else {
-      scheduleMatchEventCleanup(entry);
-    }
+    scheduleMatchEventCleanup(entry);
   } catch (err) {
     if (err?.code === 10008) {
       logger.warn('[LoL Match Event] Message no longer exists; clearing tracking', {
@@ -2842,7 +2849,6 @@ async function postMatchEvent(payload, client) {
       lastSequence: 0,
       lastEventAt: Date.now(),
       cleanupTimer: null,
-      deleteTimer: null,
       ended: false,
     };
     if (invite?.postPromise) {
