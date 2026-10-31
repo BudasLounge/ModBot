@@ -105,7 +105,10 @@ function normalizeItemIds(items) {
   if (!Array.isArray(items)) return [];
   const out = [];
   for (const item of items) {
-    const id = asInt(item, 0);
+    const id =
+      item && typeof item === 'object'
+        ? asInt(item.itemID ?? item.itemId ?? item.id, 0)
+        : asInt(item, 0);
     if (id > 0) out.push(id);
     if (out.length >= MAX_ITEMS) break;
   }
