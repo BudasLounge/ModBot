@@ -31,6 +31,7 @@ const {
 } = require('./lib/match_tags.js');
 const MatchArchive = require('./lib/match_archive.js');
 const { prepareArenaScoreboardData, buildChampionIdMap } = require('./lib/arena_scoreboard.js');
+const { ensureMayhemAugmentIndexForPayload } = require('./lib/mayhem_augment_refresh.js');
 const {
   isMatchEventPayload,
   normalizeMatchEvent,
@@ -1700,6 +1701,19 @@ async function prepareScoreboardData(payload, uploaderInfos = [], rankedLpEntrie
 
 async function generateInfographicImage(payload, uploaderInfos, rankedLpEntries = []) {
   try {
+    if (isAramMayhem(payload)) {
+      const refresh = await ensureMayhemAugmentIndexForPayload(payload, logger);
+      if (refresh.updated) {
+        logger.info('[Infographic] Refreshed Mayhem augment index for new patch', {
+          version: refresh.version,
+          patch: refresh.patch,
+        });
+      } else if (refresh.error) {
+        logger.warn('[Infographic] Mayhem augment refresh failed; using cached index', {
+          error: refresh.error,
+        });
+      }
+    }
     const arena = isArenaMatch(payload);
     const templateFile = arena
       ? 'match-template-arena.html'

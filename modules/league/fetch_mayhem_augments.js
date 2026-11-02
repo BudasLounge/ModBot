@@ -2,6 +2,12 @@ const axios = require('axios');
 const fs = require('fs');
 const fsp = require('fs/promises');
 const path = require('path');
+const {
+  getLiveVersion,
+  readIndexVersion,
+  isNewerPatch,
+  refreshMayhemAugmentIndex,
+} = require('./lib/mayhem_augment_refresh.js');
 
 const WIKI_URL = 'https://wiki.leagueoflegends.com/en-us/Module:MayhemAugmentData/data?action=raw';
 const OUTPUT_FILE = path.join(__dirname, 'mayhem_wiki_data.json');
@@ -180,8 +186,23 @@ async function fetchAndParseWiki() {
 
 async function main() {
   try {
+    const force = process.argv.includes('--force');
+    const liveVersion = await getLiveVersion();
+    const cachedVersion = readIndexVersion();
+    if (!force && cachedVersion && liveVersion && !isNewerPatch(liveVersion, cachedVersion)) {
+      console.log(`Mayhem augment data is current (${cachedVersion}); use --force to refresh.`);
+      return;
+    }
+
     await ensureIconDirectory();
     await fetchAndParseWiki();
+    const refreshed = await refreshMayhemAugmentIndex({ force: true, logger: console });
+    if (refreshed.updated) {
+      console.log(`Updated augment index for ${refreshed.version} (${refreshed.patch}).`);
+    } else {
+      console.warn(`Augment index refresh failed: ${refreshed.error || 'unknown error'}`);
+      process.exitCode = 1;
+    }
   } catch (error) {
     console.error('Error fetching/parsing wiki data:', error?.message || error);
     process.exitCode = 1;

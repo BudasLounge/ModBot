@@ -1,253 +1,11 @@
 {
-  "version": "latest",
-  "generatedAt": "2026-11-02T04:32:18Z",
+  "version": "16.21.8342754+branch.releases-16-21.content.release",
+  "patch": "16.21",
+  "generatedAt": "2026-11-02T04:39:05.526Z",
   "source": "CommunityDragon cherry-augments.json + augment-lists.json; wiki names joined locally",
   "modes": {
     "CHERRY": {
       "byId": {
-        "1322": {
-          "id": 1322,
-          "name": "Get Excited!",
-          "nameId": "ARAM_GetExcited",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GetExcited_small.png",
-          "rarity": "Gold",
-          "wikiName": "Get Excited",
-          "mode": "CHERRY"
-        },
-        "1324": {
-          "id": 1324,
-          "name": "Protein Shake",
-          "nameId": "ARAM_ProteinShake",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/ProteinShake_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Protein Shake",
-          "mode": "CHERRY"
-        },
-        "1320": {
-          "id": 1320,
-          "name": "Upgrade Collector",
-          "nameId": "ARAM_Upgrade_Collector",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/UpgradeCollector_small.png",
-          "rarity": "Silver",
-          "wikiName": "Upgrade Collector",
-          "mode": "CHERRY"
-        },
-        "1034": {
-          "id": 1034,
-          "name": "Veil of Warding",
-          "nameId": "VeilOfWarding",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Poltergeist_small.png",
-          "rarity": "Silver",
-          "wikiName": "Veil of Warding",
-          "mode": "CHERRY"
-        },
-        "1327": {
-          "id": 1327,
-          "name": "Adamant",
-          "nameId": "Adamant",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Adamant_small.png",
-          "rarity": "Silver",
-          "wikiName": "Adamant",
-          "mode": "CHERRY"
-        },
-        "1316": {
-          "id": 1316,
-          "name": "Wind Beneath Blade",
-          "nameId": "WindBeneathBlade",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/WindBeneathBlade_small.png",
-          "rarity": "Silver",
-          "wikiName": null,
-          "mode": "CHERRY"
-        },
-        "1332": {
-          "id": 1332,
-          "name": "Ominous Pact",
-          "nameId": "OminousPact",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/WisdomOfAges_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Ominous Pact",
-          "mode": "CHERRY"
-        },
-        "1328": {
-          "id": 1328,
-          "name": "Critical Rhythm",
-          "nameId": "CriticalRhythm",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/CriticalRhythm_small.png",
-          "rarity": "Gold",
-          "wikiName": "Critical Rhythm",
-          "mode": "CHERRY"
-        },
-        "1333": {
-          "id": 1333,
-          "name": "Escape Plan",
-          "nameId": "EscapePlan",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/EscapePlan_small.png",
-          "rarity": "Silver",
-          "wikiName": "Escape Plan",
-          "mode": "CHERRY"
-        },
-        "1325": {
-          "id": 1325,
-          "name": "Glass Cannon",
-          "nameId": "GlassCannon",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GlassCannon_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Glass Cannon",
-          "mode": "CHERRY"
-        },
-        "1344": {
-          "id": 1344,
-          "name": "Final Form",
-          "nameId": "FinalForm",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/FinalForm_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Final Form",
-          "mode": "CHERRY"
-        },
-        "393": {
-          "id": 393,
-          "name": "Icathia's Fall",
-          "nameId": "Quest_VoidImmolation",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Quest_VoidImmolation_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Quest: Icathia's Fall",
-          "mode": "CHERRY"
-        },
-        "1358": {
-          "id": 1358,
-          "name": "Pinball",
-          "nameId": "PinballSnowball",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/PinballSnowball_small.png",
-          "rarity": "Gold",
-          "wikiName": "Pinball",
-          "mode": "CHERRY"
-        },
-        "1373": {
-          "id": 1373,
-          "name": "Shrink Engine",
-          "nameId": "ShrinkEngine",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/ShrinkEngine_small.png",
-          "rarity": "Gold",
-          "wikiName": "Shrink Engine",
-          "mode": "CHERRY"
-        },
-        "1386": {
-          "id": 1386,
-          "name": "Spin Me Right Round",
-          "nameId": "YouSpinMeRightRound",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/YouSpinMeRightRound_small.png",
-          "rarity": "Silver",
-          "wikiName": "Spin Me Right Round",
-          "mode": "CHERRY"
-        },
-        "1401": {
-          "id": 1401,
-          "name": "Growth Spurt",
-          "nameId": "GrowthSpurt",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GrowthSpurt_small.png",
-          "rarity": "Gold",
-          "wikiName": "Growth Spurt",
-          "mode": "CHERRY"
-        },
-        "1413": {
-          "id": 1413,
-          "name": "Stuck In Here With Me",
-          "nameId": "ARAM_StuckInHereWithMe",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/StuckInHereWithMe_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Stuck in Here With Me",
-          "mode": "CHERRY"
-        },
-        "1405": {
-          "id": 1405,
-          "name": "Speed Demon",
-          "nameId": "ARAM_SpeedDemon",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/SpeedDemon_small.png",
-          "rarity": "Silver",
-          "wikiName": null,
-          "mode": "CHERRY"
-        },
-        "1416": {
-          "id": 1416,
-          "name": "Hextech Soul",
-          "nameId": "HextechSoul",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/InfernalSoul_small.png",
-          "rarity": "Silver",
-          "wikiName": "Hextech Soul",
-          "mode": "CHERRY"
-        },
-        "1418": {
-          "id": 1418,
-          "name": "Crack Open That Egg",
-          "nameId": "ARAM_CrackOpenThatEgg",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/CrackOpenThatEgg_small.png",
-          "rarity": "Silver",
-          "wikiName": null,
-          "mode": "CHERRY"
-        },
-        "2008": {
-          "id": 2008,
-          "name": "Weighted Popoffs",
-          "nameId": "ARAM_WeightedPopoffs",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/WeightedPopoffs_small.png",
-          "rarity": "Silver",
-          "wikiName": null,
-          "mode": "CHERRY"
-        },
-        "2026": {
-          "id": 2026,
-          "name": "Kill Secured",
-          "nameId": "KillSecured",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/KillSecure_small.png",
-          "rarity": "Silver",
-          "wikiName": "Kill Secured",
-          "mode": "CHERRY"
-        },
-        "2007": {
-          "id": 2007,
-          "name": "Devil on Your Shoulder",
-          "nameId": "ARAM_LittleDevil",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/LittleDevil_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Devil on Your Shoulder",
-          "mode": "CHERRY"
-        },
-        "2009": {
-          "id": 2009,
-          "name": "Zealot",
-          "nameId": "ARAM_Zealot",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Zealot_small.png",
-          "rarity": "Silver",
-          "wikiName": "Zealot",
-          "mode": "CHERRY"
-        },
-        "2018": {
-          "id": 2018,
-          "name": "Purist - Caster",
-          "nameId": "ARAM_Purist_Caster",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/PuristCaster_small.png",
-          "rarity": "Silver",
-          "wikiName": "Purist - Caster",
-          "mode": "CHERRY"
-        },
-        "1379": {
-          "id": 1379,
-          "name": "Upgrade Sword of Blossoming Dawn",
-          "nameId": "Upgrade_SwordOfBlossom",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/UpgradeMikaelsBlessing_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Upgrade Sword of Blossoming Dawn",
-          "mode": "CHERRY"
-        },
-        "2010": {
-          "id": 2010,
-          "name": "Double Tap",
-          "nameId": "ARAM_DoubleTap",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/DualWield_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Double Tap",
-          "mode": "CHERRY"
-        },
         "374": {
           "id": 374,
           "name": "Rice and Chicken",
@@ -374,15 +132,6 @@
           "wikiName": null,
           "mode": "CHERRY"
         },
-        "2016": {
-          "id": 2016,
-          "name": "Juiced",
-          "nameId": "ARAM_Juiced",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Juiced_small.png",
-          "rarity": "Silver",
-          "wikiName": "Juiced",
-          "mode": "CHERRY"
-        },
         "391": {
           "id": 391,
           "name": "Rags to Riches",
@@ -390,6 +139,15 @@
           "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Rags_to_Riches_small.png",
           "rarity": "Silver",
           "wikiName": null,
+          "mode": "CHERRY"
+        },
+        "393": {
+          "id": 393,
+          "name": "Icathia's Fall",
+          "nameId": "Quest_VoidImmolation",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Quest_VoidImmolation_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Quest: Icathia's Fall",
           "mode": "CHERRY"
         },
         "394": {
@@ -419,22 +177,13 @@
           "wikiName": null,
           "mode": "CHERRY"
         },
-        "2132": {
-          "id": 2132,
-          "name": "Warlock Juicebox",
-          "nameId": "WarlockJuicebox",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/WarlockJuicebox_small.png",
-          "rarity": "Gold",
-          "wikiName": "Warlock Juicebox",
-          "mode": "CHERRY"
-        },
-        "2043": {
-          "id": 2043,
-          "name": "Nature is Healing",
-          "nameId": "NatureIsHealing",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/NatureIsHealing_small.png",
-          "rarity": "Gold",
-          "wikiName": "Nature is Healing",
+        "1001": {
+          "id": 1001,
+          "name": "Titan's Resolve",
+          "nameId": "ARAM_ImTheJuggernaut",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/IAmTheJuggernaut_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Titan's Resolve",
           "mode": "CHERRY"
         },
         "1005": {
@@ -446,31 +195,184 @@
           "wikiName": "Wee Woo Wee Woo",
           "mode": "CHERRY"
         },
-        "2032": {
-          "id": 2032,
-          "name": "Shark Bait",
-          "nameId": "FishBait",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/FishBait_small.png",
+        "1034": {
+          "id": 1034,
+          "name": "Veil of Warding",
+          "nameId": "VeilOfWarding",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Poltergeist_small.png",
+          "rarity": "Silver",
+          "wikiName": "Veil of Warding",
+          "mode": "CHERRY"
+        },
+        "1316": {
+          "id": 1316,
+          "name": "Wind Beneath Blade",
+          "nameId": "WindBeneathBlade",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/WindBeneathBlade_small.png",
+          "rarity": "Silver",
+          "wikiName": null,
+          "mode": "CHERRY"
+        },
+        "1320": {
+          "id": 1320,
+          "name": "Upgrade Collector",
+          "nameId": "ARAM_Upgrade_Collector",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/UpgradeCollector_small.png",
+          "rarity": "Silver",
+          "wikiName": "Upgrade Collector",
+          "mode": "CHERRY"
+        },
+        "1322": {
+          "id": 1322,
+          "name": "Get Excited!",
+          "nameId": "ARAM_GetExcited",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GetExcited_small.png",
           "rarity": "Gold",
-          "wikiName": "Shark Bait",
+          "wikiName": "Get Excited",
           "mode": "CHERRY"
         },
-        "2087": {
-          "id": 2087,
-          "name": "Archmage",
-          "nameId": "ARAM_Archmage",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Eureka_small.png",
+        "1324": {
+          "id": 1324,
+          "name": "Protein Shake",
+          "nameId": "ARAM_ProteinShake",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/ProteinShake_small.png",
           "rarity": "Prismatic",
-          "wikiName": "Archmage",
+          "wikiName": "Protein Shake",
           "mode": "CHERRY"
         },
-        "2134": {
-          "id": 2134,
-          "name": "Surge Field",
-          "nameId": "SurgeField",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/SurgeField_small.png",
+        "1325": {
+          "id": 1325,
+          "name": "Glass Cannon",
+          "nameId": "GlassCannon",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GlassCannon_small.png",
           "rarity": "Prismatic",
-          "wikiName": "Surge Field",
+          "wikiName": "Glass Cannon",
+          "mode": "CHERRY"
+        },
+        "1327": {
+          "id": 1327,
+          "name": "Adamant",
+          "nameId": "Adamant",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Adamant_small.png",
+          "rarity": "Silver",
+          "wikiName": "Adamant",
+          "mode": "CHERRY"
+        },
+        "1328": {
+          "id": 1328,
+          "name": "Critical Rhythm",
+          "nameId": "CriticalRhythm",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/CriticalRhythm_small.png",
+          "rarity": "Gold",
+          "wikiName": "Critical Rhythm",
+          "mode": "CHERRY"
+        },
+        "1332": {
+          "id": 1332,
+          "name": "Ominous Pact",
+          "nameId": "OminousPact",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/WisdomOfAges_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Ominous Pact",
+          "mode": "CHERRY"
+        },
+        "1333": {
+          "id": 1333,
+          "name": "Escape Plan",
+          "nameId": "EscapePlan",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/EscapePlan_small.png",
+          "rarity": "Silver",
+          "wikiName": "Escape Plan",
+          "mode": "CHERRY"
+        },
+        "1344": {
+          "id": 1344,
+          "name": "Final Form",
+          "nameId": "FinalForm",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/FinalForm_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Final Form",
+          "mode": "CHERRY"
+        },
+        "1358": {
+          "id": 1358,
+          "name": "Pinball",
+          "nameId": "PinballSnowball",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/PinballSnowball_small.png",
+          "rarity": "Gold",
+          "wikiName": "Pinball",
+          "mode": "CHERRY"
+        },
+        "1373": {
+          "id": 1373,
+          "name": "Shrink Engine",
+          "nameId": "ShrinkEngine",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/ShrinkEngine_small.png",
+          "rarity": "Gold",
+          "wikiName": "Shrink Engine",
+          "mode": "CHERRY"
+        },
+        "1379": {
+          "id": 1379,
+          "name": "Upgrade Sword of Blossoming Dawn",
+          "nameId": "Upgrade_SwordOfBlossom",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/UpgradeMikaelsBlessing_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Upgrade Sword of Blossoming Dawn",
+          "mode": "CHERRY"
+        },
+        "1386": {
+          "id": 1386,
+          "name": "Spin Me Right Round",
+          "nameId": "YouSpinMeRightRound",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/YouSpinMeRightRound_small.png",
+          "rarity": "Silver",
+          "wikiName": "Spin Me Right Round",
+          "mode": "CHERRY"
+        },
+        "1401": {
+          "id": 1401,
+          "name": "Growth Spurt",
+          "nameId": "GrowthSpurt",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GrowthSpurt_small.png",
+          "rarity": "Gold",
+          "wikiName": "Growth Spurt",
+          "mode": "CHERRY"
+        },
+        "1405": {
+          "id": 1405,
+          "name": "Speed Demon",
+          "nameId": "ARAM_SpeedDemon",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/SpeedDemon_small.png",
+          "rarity": "Silver",
+          "wikiName": null,
+          "mode": "CHERRY"
+        },
+        "1413": {
+          "id": 1413,
+          "name": "Stuck In Here With Me",
+          "nameId": "ARAM_StuckInHereWithMe",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/StuckInHereWithMe_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Stuck in Here With Me",
+          "mode": "CHERRY"
+        },
+        "1416": {
+          "id": 1416,
+          "name": "Hextech Soul",
+          "nameId": "HextechSoul",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/InfernalSoul_small.png",
+          "rarity": "Silver",
+          "wikiName": "Hextech Soul",
+          "mode": "CHERRY"
+        },
+        "1418": {
+          "id": 1418,
+          "name": "Crack Open That Egg",
+          "nameId": "ARAM_CrackOpenThatEgg",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/CrackOpenThatEgg_small.png",
+          "rarity": "Silver",
+          "wikiName": null,
           "mode": "CHERRY"
         },
         "1420": {
@@ -482,22 +384,58 @@
           "wikiName": "Sonata",
           "mode": "CHERRY"
         },
-        "2107": {
-          "id": 2107,
-          "name": "Hellbent",
-          "nameId": "ARAM_Hellbent",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Hellbent_small.png",
+        "2007": {
+          "id": 2007,
+          "name": "Devil on Your Shoulder",
+          "nameId": "ARAM_LittleDevil",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/LittleDevil_small.png",
           "rarity": "Prismatic",
-          "wikiName": "Hellbent",
+          "wikiName": "Devil on Your Shoulder",
           "mode": "CHERRY"
         },
-        "2099": {
-          "id": 2099,
-          "name": "Rite of Ascension",
-          "nameId": "ARAM_DivineDomain",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GlassCannon_small.png",
+        "2008": {
+          "id": 2008,
+          "name": "Weighted Popoffs",
+          "nameId": "ARAM_WeightedPopoffs",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/WeightedPopoffs_small.png",
+          "rarity": "Silver",
+          "wikiName": null,
+          "mode": "CHERRY"
+        },
+        "2009": {
+          "id": 2009,
+          "name": "Zealot",
+          "nameId": "ARAM_Zealot",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Zealot_small.png",
+          "rarity": "Silver",
+          "wikiName": "Zealot",
+          "mode": "CHERRY"
+        },
+        "2010": {
+          "id": 2010,
+          "name": "Double Tap",
+          "nameId": "ARAM_DoubleTap",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/DualWield_small.png",
           "rarity": "Prismatic",
-          "wikiName": "Rite of Ascension",
+          "wikiName": "Double Tap",
+          "mode": "CHERRY"
+        },
+        "2016": {
+          "id": 2016,
+          "name": "Juiced",
+          "nameId": "ARAM_Juiced",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Juiced_small.png",
+          "rarity": "Silver",
+          "wikiName": "Juiced",
+          "mode": "CHERRY"
+        },
+        "2018": {
+          "id": 2018,
+          "name": "Purist - Caster",
+          "nameId": "ARAM_Purist_Caster",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/PuristCaster_small.png",
+          "rarity": "Silver",
+          "wikiName": "Purist - Caster",
           "mode": "CHERRY"
         },
         "2024": {
@@ -509,6 +447,82 @@
           "wikiName": null,
           "mode": "CHERRY"
         },
+        "2026": {
+          "id": 2026,
+          "name": "Kill Secured",
+          "nameId": "KillSecured",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/KillSecure_small.png",
+          "rarity": "Silver",
+          "wikiName": "Kill Secured",
+          "mode": "CHERRY"
+        },
+        "2032": {
+          "id": 2032,
+          "name": "Shark Bait",
+          "nameId": "FishBait",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/FishBait_small.png",
+          "rarity": "Gold",
+          "wikiName": "Shark Bait",
+          "mode": "CHERRY"
+        },
+        "2043": {
+          "id": 2043,
+          "name": "Nature is Healing",
+          "nameId": "NatureIsHealing",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/NatureIsHealing_small.png",
+          "rarity": "Gold",
+          "wikiName": "Nature is Healing",
+          "mode": "CHERRY"
+        },
+        "2087": {
+          "id": 2087,
+          "name": "Archmage",
+          "nameId": "ARAM_Archmage",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Eureka_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Archmage",
+          "mode": "CHERRY"
+        },
+        "2099": {
+          "id": 2099,
+          "name": "Rite of Ascension",
+          "nameId": "ARAM_DivineDomain",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GlassCannon_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Rite of Ascension",
+          "mode": "CHERRY"
+        },
+        "2107": {
+          "id": 2107,
+          "name": "Hellbent",
+          "nameId": "ARAM_Hellbent",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Hellbent_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Hellbent",
+          "mode": "CHERRY"
+        },
+        "2132": {
+          "id": 2132,
+          "name": "Warlock Juicebox",
+          "nameId": "WarlockJuicebox",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/WarlockJuicebox_small.png",
+          "rarity": "Gold",
+          "wikiName": "Warlock Juicebox",
+          "mode": "CHERRY"
+        },
+        "2134": {
+          "id": 2134,
+          "name": "Surge Field",
+          "nameId": "SurgeField",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/SurgeField_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Surge Field",
+          "mode": "CHERRY"
+        }
+      }
+    },
+    "KIWI": {
+      "byId": {
         "1001": {
           "id": 1001,
           "name": "Titan's Resolve",
@@ -516,28 +530,6 @@
           "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/IAmTheJuggernaut_small.png",
           "rarity": "Prismatic",
           "wikiName": "Titan's Resolve",
-          "mode": "CHERRY"
-        }
-      }
-    },
-    "KIWI": {
-      "byId": {
-        "1180": {
-          "id": 1180,
-          "name": "Big Brain",
-          "nameId": "ARAM_BigBrain",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/BigBrain_small.png",
-          "rarity": "Gold",
-          "wikiName": "Big Brain",
-          "mode": "KIWI"
-        },
-        "1141": {
-          "id": 1141,
-          "name": "All For You",
-          "nameId": "ARAM_AllForYou",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/AllForYou_small.png",
-          "rarity": "Gold",
-          "wikiName": "All For You",
           "mode": "KIWI"
         },
         "1002": {
@@ -558,6 +550,24 @@
           "wikiName": "Back to Basics",
           "mode": "KIWI"
         },
+        "1005": {
+          "id": 1005,
+          "name": "Wee Woo Wee Woo",
+          "nameId": "ARAM_WeeWooWeeWoo",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/WeeWooWeeWoo_small.png",
+          "rarity": "Gold",
+          "wikiName": "Wee Woo Wee Woo",
+          "mode": "KIWI"
+        },
+        "1006": {
+          "id": 1006,
+          "name": "Blade Waltz",
+          "nameId": "ARAM_BladeWaltz",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/BladeWaltz_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Blade Waltz",
+          "mode": "KIWI"
+        },
         "1007": {
           "id": 1007,
           "name": "Blunt Force",
@@ -565,33 +575,6 @@
           "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/BluntForce_small.png",
           "rarity": "Silver",
           "wikiName": "Blunt Force",
-          "mode": "KIWI"
-        },
-        "1103": {
-          "id": 1103,
-          "name": "Bread And Butter",
-          "nameId": "ARAM_BreadAndButter",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Gold.png",
-          "rarity": "Gold",
-          "wikiName": "Bread And Butter",
-          "mode": "KIWI"
-        },
-        "1151": {
-          "id": 1151,
-          "name": "Bread and Cheese",
-          "nameId": "ARAM_BreadAndCheese",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Gold.png",
-          "rarity": "Gold",
-          "wikiName": "Bread And Cheese",
-          "mode": "KIWI"
-        },
-        "1150": {
-          "id": 1150,
-          "name": "Bread And Jam",
-          "nameId": "ARAM_BreadAndJam",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Gold.png",
-          "rarity": "Gold",
-          "wikiName": "Bread And Jam",
           "mode": "KIWI"
         },
         "1011": {
@@ -628,15 +611,6 @@
           "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/CourageOfTheColossus_small.png",
           "rarity": "Prismatic",
           "wikiName": "Courage of the Colossus",
-          "mode": "KIWI"
-        },
-        "1118": {
-          "id": 1118,
-          "name": "Critical Healing",
-          "nameId": "ARAM_CriticalHealing",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/CriticalHealing_small.png",
-          "rarity": "Gold",
-          "wikiName": "Critical Healing",
           "mode": "KIWI"
         },
         "1019": {
@@ -684,6 +658,24 @@
           "wikiName": "Don't Blink",
           "mode": "KIWI"
         },
+        "1027": {
+          "id": 1027,
+          "name": "Earthwake",
+          "nameId": "ARAM_Earthwake",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Earthwake_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Earthwake",
+          "mode": "KIWI"
+        },
+        "1028": {
+          "id": 1028,
+          "name": "Erosion",
+          "nameId": "ARAM_Erosion",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Erosion_small.png",
+          "rarity": "Silver",
+          "wikiName": "Erosion",
+          "mode": "KIWI"
+        },
         "1029": {
           "id": 1029,
           "name": "Ethereal Weapon",
@@ -700,6 +692,15 @@
           "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Eureka_small.png",
           "rarity": "Prismatic",
           "wikiName": "Eureka",
+          "mode": "KIWI"
+        },
+        "1034": {
+          "id": 1034,
+          "name": "Veil of Warding",
+          "nameId": "VeilOfWarding",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Poltergeist_small.png",
+          "rarity": "Silver",
+          "wikiName": "Veil of Warding",
           "mode": "KIWI"
         },
         "1036": {
@@ -720,22 +721,13 @@
           "wikiName": "First-Aid Kit",
           "mode": "KIWI"
         },
-        "1116": {
-          "id": 1116,
-          "name": "Flashy",
-          "nameId": "ARAM_Flashy",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Flashy_small.png",
+        "1038": {
+          "id": 1038,
+          "name": "From Beginning To End",
+          "nameId": "ARAM_FromBeginningToEnd",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/FromBeginningToEnd_small.png",
           "rarity": "Gold",
-          "wikiName": "Flashy",
-          "mode": "KIWI"
-        },
-        "1322": {
-          "id": 1322,
-          "name": "Get Excited!",
-          "nameId": "ARAM_GetExcited",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GetExcited_small.png",
-          "rarity": "Gold",
-          "wikiName": "Get Excited",
+          "wikiName": "From Beginning to End",
           "mode": "KIWI"
         },
         "1041": {
@@ -745,24 +737,6 @@
           "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Goliath_small.png",
           "rarity": "Prismatic",
           "wikiName": "Goliath",
-          "mode": "KIWI"
-        },
-        "1138": {
-          "id": 1138,
-          "name": "Goredrink",
-          "nameId": "ARAM_Goredrink",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/GoreDrink_small.png",
-          "rarity": "Silver",
-          "wikiName": "Goredrink",
-          "mode": "KIWI"
-        },
-        "1181": {
-          "id": 1181,
-          "name": "Heavy Hitter",
-          "nameId": "ARAM_HeavyHitter",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/HeavyHitter_small.png",
-          "rarity": "Silver",
-          "wikiName": "Heavy Hitter",
           "mode": "KIWI"
         },
         "1044": {
@@ -810,13 +784,13 @@
           "wikiName": "Jeweled Gauntlet",
           "mode": "KIWI"
         },
-        "1305": {
-          "id": 1305,
-          "name": "Leg Day",
-          "nameId": "ARAM_LegDay",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/LegDay_small.png",
+        "1051": {
+          "id": 1051,
+          "name": "Light 'Em Up!",
+          "nameId": "ARAM_LightemUp",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/LightEmUp_small.png",
           "rarity": "Silver",
-          "wikiName": "Leg Day",
+          "wikiName": "Light 'em Up!",
           "mode": "KIWI"
         },
         "1053": {
@@ -826,15 +800,6 @@
           "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/MadScientist_small.png",
           "rarity": "Prismatic",
           "wikiName": "Mad Scientist",
-          "mode": "KIWI"
-        },
-        "1129": {
-          "id": 1129,
-          "name": "Marksmage",
-          "nameId": "ARAM_Marksmage",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Marksmage_small.png",
-          "rarity": "Gold",
-          "wikiName": "Marksmage",
           "mode": "KIWI"
         },
         "1054": {
@@ -853,15 +818,6 @@
           "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/MindToMatter_small.png",
           "rarity": "Silver",
           "wikiName": "Mind to Matter",
-          "mode": "KIWI"
-        },
-        "1104": {
-          "id": 1104,
-          "name": "Minionmancer",
-          "nameId": "ARAM_Minionmancer",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Minionmancer_small.png",
-          "rarity": "Gold",
-          "wikiName": "Minionmancer",
           "mode": "KIWI"
         },
         "1057": {
@@ -891,6 +847,15 @@
           "wikiName": "Ocean Soul",
           "mode": "KIWI"
         },
+        "1061": {
+          "id": 1061,
+          "name": "Ok Boomerang",
+          "nameId": "ARAM_OkBoomerang",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/OKBoomerang_small.png",
+          "rarity": "Gold",
+          "wikiName": "OK Boomerang",
+          "mode": "KIWI"
+        },
         "1062": {
           "id": 1062,
           "name": "Omni Soul",
@@ -909,15 +874,6 @@
           "wikiName": "Outlaw's Grit",
           "mode": "KIWI"
         },
-        "1311": {
-          "id": 1311,
-          "name": "Overflow",
-          "nameId": "ARAM_Overflow",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Overflow_small.png",
-          "rarity": "Gold",
-          "wikiName": "Overflow",
-          "mode": "KIWI"
-        },
         "1064": {
           "id": 1064,
           "name": "Perseverance",
@@ -927,31 +883,13 @@
           "wikiName": "Perseverance",
           "mode": "KIWI"
         },
-        "1324": {
-          "id": 1324,
-          "name": "Protein Shake",
-          "nameId": "ARAM_ProteinShake",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/ProteinShake_small.png",
+        "1066": {
+          "id": 1066,
+          "name": "Quantum Computing",
+          "nameId": "ARAM_QuantumComputing",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/QuantumComputing_small.png",
           "rarity": "Prismatic",
-          "wikiName": "Protein Shake",
-          "mode": "KIWI"
-        },
-        "1154": {
-          "id": 1154,
-          "name": "Urf's Champion",
-          "nameId": "ARAM_Quest_UrfsChampion",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Quest_UrfsChampion_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Quest: Urf's Champion",
-          "mode": "KIWI"
-        },
-        "1156": {
-          "id": 1156,
-          "name": "Wooglet's Witchcap",
-          "nameId": "ARAM_Quest_WoogletsWitchcap",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Quest_WoogletsWitchcap_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Quest: Wooglet's Witchcap",
+          "wikiName": "Quantum Computing",
           "mode": "KIWI"
         },
         "1067": {
@@ -972,15 +910,6 @@
           "wikiName": "Recursion",
           "mode": "KIWI"
         },
-        "1170": {
-          "id": 1170,
-          "name": "Scoped Weapons",
-          "nameId": "ARAM_ScopedWeapons",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/ScopedWeapons_small.png",
-          "rarity": "Silver",
-          "wikiName": "Scoped Weapons",
-          "mode": "KIWI"
-        },
         "1071": {
           "id": 1071,
           "name": "Scopier Weapons",
@@ -990,31 +919,31 @@
           "wikiName": "Scopier Weapons",
           "mode": "KIWI"
         },
-        "1115": {
-          "id": 1115,
-          "name": "Scopiest Weapons",
-          "nameId": "ARAM_ScopiestWeapons",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/ScopiestWeapons_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Scopiest Weapons",
-          "mode": "KIWI"
-        },
-        "1113": {
-          "id": 1113,
-          "name": "Skilled Sniper",
-          "nameId": "ARAM_SkilledSniper",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/SkilledSniper_small.png",
+        "1072": {
+          "id": 1072,
+          "name": "Searing Dawn",
+          "nameId": "ARAM_SearingDawn",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/SearingDawn_small.png",
           "rarity": "Gold",
-          "wikiName": "Skilled Sniper",
+          "wikiName": "Searing Dawn",
           "mode": "KIWI"
         },
-        "1136": {
-          "id": 1136,
-          "name": "Slap Around",
-          "nameId": "ARAM_SlapAround",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/SlapAround_small.png",
+        "1073": {
+          "id": 1073,
+          "name": "Shadow Runner",
+          "nameId": "ARAM_ShadowRunner",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/ShadowRunner_small.png",
           "rarity": "Silver",
-          "wikiName": "Slap Around",
+          "wikiName": "Shadow Runner",
+          "mode": "KIWI"
+        },
+        "1074": {
+          "id": 1074,
+          "name": "Shrink Ray",
+          "nameId": "ARAM_ShrinkRay",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/ShrinkRay_small.png",
+          "rarity": "Gold",
+          "wikiName": "Shrink Ray",
           "mode": "KIWI"
         },
         "1076": {
@@ -1035,22 +964,13 @@
           "wikiName": "Soul Siphon",
           "mode": "KIWI"
         },
-        "1214": {
-          "id": 1214,
-          "name": "Spin To Win",
-          "nameId": "ARAM_SpinToWin",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/SpinToWin_small.png",
-          "rarity": "Silver",
-          "wikiName": "Spin To Win",
-          "mode": "KIWI"
-        },
-        "1353": {
-          "id": 1353,
-          "name": "Tank Engine",
-          "nameId": "ARAM_TankEngine",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Tank_Engine_Small.png",
-          "rarity": "Gold",
-          "wikiName": "Tank Engine",
+        "1079": {
+          "id": 1079,
+          "name": "Symphony of War",
+          "nameId": "ARAM_SymphonyofWar",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/SymphonyOfWar_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Symphony of War",
           "mode": "KIWI"
         },
         "1080": {
@@ -1080,40 +1000,22 @@
           "wikiName": "Thread the Needle",
           "mode": "KIWI"
         },
-        "1320": {
-          "id": 1320,
-          "name": "Upgrade Collector",
-          "nameId": "ARAM_Upgrade_Collector",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/UpgradeCollector_small.png",
+        "1087": {
+          "id": 1087,
+          "name": "Typhoon",
+          "nameId": "ARAM_Typhoon",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Typhoon_small.png",
           "rarity": "Silver",
-          "wikiName": "Upgrade Collector",
+          "wikiName": "Typhoon",
           "mode": "KIWI"
         },
-        "1336": {
-          "id": 1336,
-          "name": "Upgrade Infinity Edge",
-          "nameId": "ARAM_Upgrade_IE",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/UpgradeIE_small.png",
-          "rarity": "Gold",
-          "wikiName": "Upgrade Infinity Edge",
-          "mode": "KIWI"
-        },
-        "1319": {
-          "id": 1319,
-          "name": "Upgrade Immolate",
-          "nameId": "ARAM_Upgrade_Immolate",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/UpgradeImmolate_small.png",
-          "rarity": "Silver",
-          "wikiName": "Upgrade Immolate",
-          "mode": "KIWI"
-        },
-        "1318": {
-          "id": 1318,
-          "name": "Upgrade Zhonya's",
-          "nameId": "ARAM_Upgrade_ZH",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/UpgradeZH_small.png",
-          "rarity": "Silver",
-          "wikiName": "Upgrade Zhonya's",
+        "1088": {
+          "id": 1088,
+          "name": "Ultimate Revolution",
+          "nameId": "ARAM_UltimateRevolution",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/UltimateRevolution_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Ultimate Revolution",
           "mode": "KIWI"
         },
         "1092": {
@@ -1123,6 +1025,15 @@
           "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Vulnerability_small.png",
           "rarity": "Gold",
           "wikiName": "Vulnerability",
+          "mode": "KIWI"
+        },
+        "1095": {
+          "id": 1095,
+          "name": "Windspeaker's Blessing",
+          "nameId": "ARAM_WindspeakersBlessing",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/WindspeakersBlessing_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Windspeaker's Blessing",
           "mode": "KIWI"
         },
         "1097": {
@@ -1143,40 +1054,22 @@
           "wikiName": "With Haste",
           "mode": "KIWI"
         },
-        "1326": {
-          "id": 1326,
-          "name": "Nightstalking",
-          "nameId": "Nightstalking",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Nightstalking_small.png",
+        "1103": {
+          "id": 1103,
+          "name": "Bread And Butter",
+          "nameId": "ARAM_BreadAndButter",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Gold.png",
           "rarity": "Gold",
-          "wikiName": "Nightstalking",
+          "wikiName": "Bread And Butter",
           "mode": "KIWI"
         },
-        "1028": {
-          "id": 1028,
-          "name": "Erosion",
-          "nameId": "ARAM_Erosion",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Erosion_small.png",
-          "rarity": "Silver",
-          "wikiName": "Erosion",
-          "mode": "KIWI"
-        },
-        "1034": {
-          "id": 1034,
-          "name": "Veil of Warding",
-          "nameId": "VeilOfWarding",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Poltergeist_small.png",
-          "rarity": "Silver",
-          "wikiName": "Veil of Warding",
-          "mode": "KIWI"
-        },
-        "1211": {
-          "id": 1211,
-          "name": "It's Killing Time",
-          "nameId": "ARAM_ItsKillingTime",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/ItsKillingTime_small.png",
+        "1104": {
+          "id": 1104,
+          "name": "Minionmancer",
+          "nameId": "ARAM_Minionmancer",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Minionmancer_small.png",
           "rarity": "Gold",
-          "wikiName": "It's Killing Time",
+          "wikiName": "Minionmancer",
           "mode": "KIWI"
         },
         "1105": {
@@ -1188,60 +1081,6 @@
           "wikiName": "Homeguard",
           "mode": "KIWI"
         },
-        "1051": {
-          "id": 1051,
-          "name": "Light 'Em Up!",
-          "nameId": "ARAM_LightemUp",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/LightEmUp_small.png",
-          "rarity": "Silver",
-          "wikiName": "Light 'em Up!",
-          "mode": "KIWI"
-        },
-        "1072": {
-          "id": 1072,
-          "name": "Searing Dawn",
-          "nameId": "ARAM_SearingDawn",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/SearingDawn_small.png",
-          "rarity": "Gold",
-          "wikiName": "Searing Dawn",
-          "mode": "KIWI"
-        },
-        "1073": {
-          "id": 1073,
-          "name": "Shadow Runner",
-          "nameId": "ARAM_ShadowRunner",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/ShadowRunner_small.png",
-          "rarity": "Silver",
-          "wikiName": "Shadow Runner",
-          "mode": "KIWI"
-        },
-        "1327": {
-          "id": 1327,
-          "name": "Adamant",
-          "nameId": "Adamant",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Adamant_small.png",
-          "rarity": "Silver",
-          "wikiName": "Adamant",
-          "mode": "KIWI"
-        },
-        "1087": {
-          "id": 1087,
-          "name": "Typhoon",
-          "nameId": "ARAM_Typhoon",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Typhoon_small.png",
-          "rarity": "Silver",
-          "wikiName": "Typhoon",
-          "mode": "KIWI"
-        },
-        "1095": {
-          "id": 1095,
-          "name": "Windspeaker's Blessing",
-          "nameId": "ARAM_WindspeakersBlessing",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/WindspeakersBlessing_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Windspeaker's Blessing",
-          "mode": "KIWI"
-        },
         "1112": {
           "id": 1112,
           "name": "Ultimate Unstoppable",
@@ -1251,58 +1090,49 @@
           "wikiName": "Ultimate Unstoppable",
           "mode": "KIWI"
         },
-        "1301": {
-          "id": 1301,
-          "name": "Divine Intervention",
-          "nameId": "ARAM_DivineIntervention",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/SlowActingPainkillers_small.png",
+        "1113": {
+          "id": 1113,
+          "name": "Skilled Sniper",
+          "nameId": "ARAM_SkilledSniper",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/SkilledSniper_small.png",
           "rarity": "Gold",
-          "wikiName": "Divine Intervention",
+          "wikiName": "Skilled Sniper",
           "mode": "KIWI"
         },
-        "1134": {
-          "id": 1134,
-          "name": "Draw Your Sword",
-          "nameId": "ARAM_DrawYourSword",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/DrawYourSword_small.png",
+        "1115": {
+          "id": 1115,
+          "name": "Scopiest Weapons",
+          "nameId": "ARAM_ScopiestWeapons",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/ScopiestWeapons_small.png",
           "rarity": "Prismatic",
-          "wikiName": "Draw Your Sword",
+          "wikiName": "Scopiest Weapons",
           "mode": "KIWI"
         },
-        "1225": {
-          "id": 1225,
-          "name": "Dual Wield",
-          "nameId": "ARAM_DualWield",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/DualWield_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Dual Wield",
+        "1116": {
+          "id": 1116,
+          "name": "Flashy",
+          "nameId": "ARAM_Flashy",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Flashy_small.png",
+          "rarity": "Gold",
+          "wikiName": "Flashy",
           "mode": "KIWI"
         },
-        "1194": {
-          "id": 1194,
-          "name": "Fey Magic",
-          "nameId": "ARAM_FeyMagic",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/FeyMagic_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Fey Magic",
+        "1118": {
+          "id": 1118,
+          "name": "Critical Healing",
+          "nameId": "ARAM_CriticalHealing",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/CriticalHealing_small.png",
+          "rarity": "Gold",
+          "wikiName": "Critical Healing",
           "mode": "KIWI"
         },
-        "1187": {
-          "id": 1187,
-          "name": "Flashbang",
-          "nameId": "ARAM_Flashbang",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Flashbang_small.png",
-          "rarity": "Silver",
-          "wikiName": "Flashbang",
-          "mode": "KIWI"
-        },
-        "1088": {
-          "id": 1088,
-          "name": "Ultimate Revolution",
-          "nameId": "ARAM_UltimateRevolution",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/UltimateRevolution_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Ultimate Revolution",
+        "1129": {
+          "id": 1129,
+          "name": "Marksmage",
+          "nameId": "ARAM_Marksmage",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Marksmage_small.png",
+          "rarity": "Gold",
+          "wikiName": "Marksmage",
           "mode": "KIWI"
         },
         "1133": {
@@ -1314,31 +1144,40 @@
           "wikiName": "Magic Missile",
           "mode": "KIWI"
         },
-        "1061": {
-          "id": 1061,
-          "name": "Ok Boomerang",
-          "nameId": "ARAM_OkBoomerang",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/OKBoomerang_small.png",
-          "rarity": "Gold",
-          "wikiName": "OK Boomerang",
-          "mode": "KIWI"
-        },
-        "1066": {
-          "id": 1066,
-          "name": "Quantum Computing",
-          "nameId": "ARAM_QuantumComputing",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/QuantumComputing_small.png",
+        "1134": {
+          "id": 1134,
+          "name": "Draw Your Sword",
+          "nameId": "ARAM_DrawYourSword",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/DrawYourSword_small.png",
           "rarity": "Prismatic",
-          "wikiName": "Quantum Computing",
+          "wikiName": "Draw Your Sword",
           "mode": "KIWI"
         },
-        "1038": {
-          "id": 1038,
-          "name": "From Beginning To End",
-          "nameId": "ARAM_FromBeginningToEnd",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/FromBeginningToEnd_small.png",
+        "1136": {
+          "id": 1136,
+          "name": "Slap Around",
+          "nameId": "ARAM_SlapAround",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/SlapAround_small.png",
+          "rarity": "Silver",
+          "wikiName": "Slap Around",
+          "mode": "KIWI"
+        },
+        "1138": {
+          "id": 1138,
+          "name": "Goredrink",
+          "nameId": "ARAM_Goredrink",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/GoreDrink_small.png",
+          "rarity": "Silver",
+          "wikiName": "Goredrink",
+          "mode": "KIWI"
+        },
+        "1141": {
+          "id": 1141,
+          "name": "All For You",
+          "nameId": "ARAM_AllForYou",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/AllForYou_small.png",
           "rarity": "Gold",
-          "wikiName": "From Beginning to End",
+          "wikiName": "All For You",
           "mode": "KIWI"
         },
         "1149": {
@@ -1350,49 +1189,22 @@
           "wikiName": "Impassable",
           "mode": "KIWI"
         },
-        "1079": {
-          "id": 1079,
-          "name": "Symphony of War",
-          "nameId": "ARAM_SymphonyofWar",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/SymphonyOfWar_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Symphony of War",
-          "mode": "KIWI"
-        },
-        "1332": {
-          "id": 1332,
-          "name": "Ominous Pact",
-          "nameId": "OminousPact",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/WisdomOfAges_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Ominous Pact",
-          "mode": "KIWI"
-        },
-        "1328": {
-          "id": 1328,
-          "name": "Critical Rhythm",
-          "nameId": "CriticalRhythm",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/CriticalRhythm_small.png",
+        "1150": {
+          "id": 1150,
+          "name": "Bread And Jam",
+          "nameId": "ARAM_BreadAndJam",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Gold.png",
           "rarity": "Gold",
-          "wikiName": "Critical Rhythm",
+          "wikiName": "Bread And Jam",
           "mode": "KIWI"
         },
-        "1333": {
-          "id": 1333,
-          "name": "Escape Plan",
-          "nameId": "EscapePlan",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/EscapePlan_small.png",
-          "rarity": "Silver",
-          "wikiName": "Escape Plan",
-          "mode": "KIWI"
-        },
-        "1325": {
-          "id": 1325,
-          "name": "Glass Cannon",
-          "nameId": "GlassCannon",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GlassCannon_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Glass Cannon",
+        "1151": {
+          "id": 1151,
+          "name": "Bread and Cheese",
+          "nameId": "ARAM_BreadAndCheese",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Gold.png",
+          "rarity": "Gold",
+          "wikiName": "Bread And Cheese",
           "mode": "KIWI"
         },
         "1152": {
@@ -1404,40 +1216,85 @@
           "wikiName": "Quest: Steel Your Heart",
           "mode": "KIWI"
         },
-        "1334": {
-          "id": 1334,
-          "name": "Snowball Upgrade",
-          "nameId": "SnowballUpgrade",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/SnowballUpgrade_small.png",
+        "1154": {
+          "id": 1154,
+          "name": "Urf's Champion",
+          "nameId": "ARAM_Quest_UrfsChampion",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Quest_UrfsChampion_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Quest: Urf's Champion",
+          "mode": "KIWI"
+        },
+        "1156": {
+          "id": 1156,
+          "name": "Wooglet's Witchcap",
+          "nameId": "ARAM_Quest_WoogletsWitchcap",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Quest_WoogletsWitchcap_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Quest: Wooglet's Witchcap",
+          "mode": "KIWI"
+        },
+        "1170": {
+          "id": 1170,
+          "name": "Scoped Weapons",
+          "nameId": "ARAM_ScopedWeapons",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/ScopedWeapons_small.png",
+          "rarity": "Silver",
+          "wikiName": "Scoped Weapons",
+          "mode": "KIWI"
+        },
+        "1180": {
+          "id": 1180,
+          "name": "Big Brain",
+          "nameId": "ARAM_BigBrain",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/BigBrain_small.png",
           "rarity": "Gold",
-          "wikiName": "Snowball Upgrade",
+          "wikiName": "Big Brain",
           "mode": "KIWI"
         },
-        "1329": {
-          "id": 1329,
-          "name": "Biggest Snowball Ever",
-          "nameId": "BiggestSnowballEver",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/BiggestSnowballEver_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Biggest Snowball Ever",
+        "1181": {
+          "id": 1181,
+          "name": "Heavy Hitter",
+          "nameId": "ARAM_HeavyHitter",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/HeavyHitter_small.png",
+          "rarity": "Silver",
+          "wikiName": "Heavy Hitter",
           "mode": "KIWI"
         },
-        "1337": {
-          "id": 1337,
-          "name": "King Me",
-          "nameId": "KingMe",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/KingMe_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "King Me",
+        "1187": {
+          "id": 1187,
+          "name": "Flashbang",
+          "nameId": "ARAM_Flashbang",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Flashbang_small.png",
+          "rarity": "Silver",
+          "wikiName": "Flashbang",
           "mode": "KIWI"
         },
-        "1335": {
-          "id": 1335,
-          "name": "Goldrend",
-          "nameId": "Goldrend",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Goldrend_small.png",
+        "1194": {
+          "id": 1194,
+          "name": "Fey Magic",
+          "nameId": "ARAM_FeyMagic",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/FeyMagic_small.png",
           "rarity": "Prismatic",
-          "wikiName": "Goldrend",
+          "wikiName": "Fey Magic",
+          "mode": "KIWI"
+        },
+        "1195": {
+          "id": 1195,
+          "name": "Giant Slayer",
+          "nameId": "ARAM_GiantSlayer",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/GiantSlayer_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Giant Slayer",
+          "mode": "KIWI"
+        },
+        "1204": {
+          "id": 1204,
+          "name": "Stackosaurus Rex",
+          "nameId": "ARAM_StackosaurusRex",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/StackosaurusRex_small.png",
+          "rarity": "Silver",
+          "wikiName": "Stackosaurus Rex",
           "mode": "KIWI"
         },
         "1205": {
@@ -1458,40 +1315,40 @@
           "wikiName": "EscAPADe",
           "mode": "KIWI"
         },
-        "1331": {
-          "id": 1331,
-          "name": "Empyrean Promise",
-          "nameId": "EmpyreanPromise",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/EmpyreamPromise_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Empyrean Promise",
+        "1211": {
+          "id": 1211,
+          "name": "It's Killing Time",
+          "nameId": "ARAM_ItsKillingTime",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/ItsKillingTime_small.png",
+          "rarity": "Gold",
+          "wikiName": "It's Killing Time",
           "mode": "KIWI"
         },
-        "1195": {
-          "id": 1195,
-          "name": "Giant Slayer",
-          "nameId": "ARAM_GiantSlayer",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/GiantSlayer_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Giant Slayer",
+        "1214": {
+          "id": 1214,
+          "name": "Spin To Win",
+          "nameId": "ARAM_SpinToWin",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/SpinToWin_small.png",
+          "rarity": "Silver",
+          "wikiName": "Spin To Win",
           "mode": "KIWI"
         },
-        "1323": {
-          "id": 1323,
-          "name": "Cruelty",
-          "nameId": "ARAM_Cruelty",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Cruelty_small.png",
+        "1225": {
+          "id": 1225,
+          "name": "Dual Wield",
+          "nameId": "ARAM_DualWield",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/DualWield_small.png",
           "rarity": "Prismatic",
-          "wikiName": "Cruelty",
+          "wikiName": "Dual Wield",
           "mode": "KIWI"
         },
-        "1343": {
-          "id": 1343,
-          "name": "Sneakerhead",
-          "nameId": "Quest_Sneakerhead",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Sneakerhead_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Quest: Sneakerhead",
+        "1237": {
+          "id": 1237,
+          "name": "Transmute: Gold",
+          "nameId": "ARAM_TransmuteGold",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/TransmuteGold_small.png",
+          "rarity": "Silver",
+          "wikiName": "Transmute: Gold",
           "mode": "KIWI"
         },
         "1238": {
@@ -1512,49 +1369,49 @@
           "wikiName": "Transmute: Chaos",
           "mode": "KIWI"
         },
-        "1344": {
-          "id": 1344,
-          "name": "Final Form",
-          "nameId": "FinalForm",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/FinalForm_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Final Form",
-          "mode": "KIWI"
-        },
-        "1347": {
-          "id": 1347,
-          "name": "Poltergeist",
-          "nameId": "Poltergeist",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Poltergeist_small.png",
-          "rarity": "Silver",
-          "wikiName": "Poltergeist",
-          "mode": "KIWI"
-        },
-        "1348": {
-          "id": 1348,
-          "name": "Flash 2",
-          "nameId": "Flash2",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Flash2_small.png",
-          "rarity": "Silver",
-          "wikiName": "Flash 2",
-          "mode": "KIWI"
-        },
-        "1996": {
-          "id": 1996,
-          "name": "Upgrade Sheen",
-          "nameId": "ARAM_Upgrade_Sheen",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/UpgradeSheen_small.png",
+        "1301": {
+          "id": 1301,
+          "name": "Divine Intervention",
+          "nameId": "ARAM_DivineIntervention",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/SlowActingPainkillers_small.png",
           "rarity": "Gold",
-          "wikiName": "Upgrade Sheen",
+          "wikiName": "Divine Intervention",
           "mode": "KIWI"
         },
-        "1349": {
-          "id": 1349,
-          "name": "Ultimate Awakening",
-          "nameId": "UltimateAwakening",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/ZeroHour_small.png",
+        "1305": {
+          "id": 1305,
+          "name": "Leg Day",
+          "nameId": "ARAM_LegDay",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/LegDay_small.png",
+          "rarity": "Silver",
+          "wikiName": "Leg Day",
+          "mode": "KIWI"
+        },
+        "1308": {
+          "id": 1308,
+          "name": "FireFox",
+          "nameId": "ARAM_Firefox",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Firfox_small.png",
+          "rarity": "Silver",
+          "wikiName": "Firefox",
+          "mode": "KIWI"
+        },
+        "1310": {
+          "id": 1310,
+          "name": "Clown College",
+          "nameId": "ARAM_ClownCollege",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/ClownCollege_small.png",
           "rarity": "Prismatic",
-          "wikiName": "Ultimate Awakening",
+          "wikiName": "Clown College",
+          "mode": "KIWI"
+        },
+        "1311": {
+          "id": 1311,
+          "name": "Overflow",
+          "nameId": "ARAM_Overflow",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Overflow_small.png",
+          "rarity": "Gold",
+          "wikiName": "Overflow",
           "mode": "KIWI"
         },
         "1314": {
@@ -1575,6 +1432,186 @@
           "wikiName": "Swift and Safe",
           "mode": "KIWI"
         },
+        "1318": {
+          "id": 1318,
+          "name": "Upgrade Zhonya's",
+          "nameId": "ARAM_Upgrade_ZH",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/UpgradeZH_small.png",
+          "rarity": "Silver",
+          "wikiName": "Upgrade Zhonya's",
+          "mode": "KIWI"
+        },
+        "1319": {
+          "id": 1319,
+          "name": "Upgrade Immolate",
+          "nameId": "ARAM_Upgrade_Immolate",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/UpgradeImmolate_small.png",
+          "rarity": "Silver",
+          "wikiName": "Upgrade Immolate",
+          "mode": "KIWI"
+        },
+        "1320": {
+          "id": 1320,
+          "name": "Upgrade Collector",
+          "nameId": "ARAM_Upgrade_Collector",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/UpgradeCollector_small.png",
+          "rarity": "Silver",
+          "wikiName": "Upgrade Collector",
+          "mode": "KIWI"
+        },
+        "1322": {
+          "id": 1322,
+          "name": "Get Excited!",
+          "nameId": "ARAM_GetExcited",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GetExcited_small.png",
+          "rarity": "Gold",
+          "wikiName": "Get Excited",
+          "mode": "KIWI"
+        },
+        "1323": {
+          "id": 1323,
+          "name": "Cruelty",
+          "nameId": "ARAM_Cruelty",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Cruelty_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Cruelty",
+          "mode": "KIWI"
+        },
+        "1324": {
+          "id": 1324,
+          "name": "Protein Shake",
+          "nameId": "ARAM_ProteinShake",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/ProteinShake_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Protein Shake",
+          "mode": "KIWI"
+        },
+        "1325": {
+          "id": 1325,
+          "name": "Glass Cannon",
+          "nameId": "GlassCannon",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GlassCannon_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Glass Cannon",
+          "mode": "KIWI"
+        },
+        "1326": {
+          "id": 1326,
+          "name": "Nightstalking",
+          "nameId": "Nightstalking",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Nightstalking_small.png",
+          "rarity": "Gold",
+          "wikiName": "Nightstalking",
+          "mode": "KIWI"
+        },
+        "1327": {
+          "id": 1327,
+          "name": "Adamant",
+          "nameId": "Adamant",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Adamant_small.png",
+          "rarity": "Silver",
+          "wikiName": "Adamant",
+          "mode": "KIWI"
+        },
+        "1328": {
+          "id": 1328,
+          "name": "Critical Rhythm",
+          "nameId": "CriticalRhythm",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/CriticalRhythm_small.png",
+          "rarity": "Gold",
+          "wikiName": "Critical Rhythm",
+          "mode": "KIWI"
+        },
+        "1329": {
+          "id": 1329,
+          "name": "Biggest Snowball Ever",
+          "nameId": "BiggestSnowballEver",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/BiggestSnowballEver_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Biggest Snowball Ever",
+          "mode": "KIWI"
+        },
+        "1331": {
+          "id": 1331,
+          "name": "Empyrean Promise",
+          "nameId": "EmpyreanPromise",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/EmpyreamPromise_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Empyrean Promise",
+          "mode": "KIWI"
+        },
+        "1332": {
+          "id": 1332,
+          "name": "Ominous Pact",
+          "nameId": "OminousPact",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/WisdomOfAges_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Ominous Pact",
+          "mode": "KIWI"
+        },
+        "1333": {
+          "id": 1333,
+          "name": "Escape Plan",
+          "nameId": "EscapePlan",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/EscapePlan_small.png",
+          "rarity": "Silver",
+          "wikiName": "Escape Plan",
+          "mode": "KIWI"
+        },
+        "1334": {
+          "id": 1334,
+          "name": "Snowball Upgrade",
+          "nameId": "SnowballUpgrade",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/SnowballUpgrade_small.png",
+          "rarity": "Gold",
+          "wikiName": "Snowball Upgrade",
+          "mode": "KIWI"
+        },
+        "1335": {
+          "id": 1335,
+          "name": "Goldrend",
+          "nameId": "Goldrend",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Goldrend_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Goldrend",
+          "mode": "KIWI"
+        },
+        "1336": {
+          "id": 1336,
+          "name": "Upgrade Infinity Edge",
+          "nameId": "ARAM_Upgrade_IE",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/UpgradeIE_small.png",
+          "rarity": "Gold",
+          "wikiName": "Upgrade Infinity Edge",
+          "mode": "KIWI"
+        },
+        "1337": {
+          "id": 1337,
+          "name": "King Me",
+          "nameId": "KingMe",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/KingMe_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "King Me",
+          "mode": "KIWI"
+        },
+        "1343": {
+          "id": 1343,
+          "name": "Sneakerhead",
+          "nameId": "Quest_Sneakerhead",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Sneakerhead_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Quest: Sneakerhead",
+          "mode": "KIWI"
+        },
+        "1344": {
+          "id": 1344,
+          "name": "Final Form",
+          "nameId": "FinalForm",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/FinalForm_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Final Form",
+          "mode": "KIWI"
+        },
         "1346": {
           "id": 1346,
           "name": "Vampirism",
@@ -1584,40 +1621,40 @@
           "wikiName": "Vampirism",
           "mode": "KIWI"
         },
-        "1027": {
-          "id": 1027,
-          "name": "Earthwake",
-          "nameId": "ARAM_Earthwake",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Earthwake_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Earthwake",
+        "1347": {
+          "id": 1347,
+          "name": "Poltergeist",
+          "nameId": "Poltergeist",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Poltergeist_small.png",
+          "rarity": "Silver",
+          "wikiName": "Poltergeist",
           "mode": "KIWI"
         },
-        "1074": {
-          "id": 1074,
-          "name": "Shrink Ray",
-          "nameId": "ARAM_ShrinkRay",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/ShrinkRay_small.png",
+        "1348": {
+          "id": 1348,
+          "name": "Flash 2",
+          "nameId": "Flash2",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Flash2_small.png",
+          "rarity": "Silver",
+          "wikiName": "Flash 2",
+          "mode": "KIWI"
+        },
+        "1349": {
+          "id": 1349,
+          "name": "Ultimate Awakening",
+          "nameId": "UltimateAwakening",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/ZeroHour_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Ultimate Awakening",
+          "mode": "KIWI"
+        },
+        "1353": {
+          "id": 1353,
+          "name": "Tank Engine",
+          "nameId": "ARAM_TankEngine",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Tank_Engine_Small.png",
           "rarity": "Gold",
-          "wikiName": "Shrink Ray",
-          "mode": "KIWI"
-        },
-        "1402": {
-          "id": 1402,
-          "name": "Stats on Stats on Stats!",
-          "nameId": "ARAM_StatsOnStatsOnStats",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/StatsOnStatsOnStats_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Stats on Stats on Stats!",
-          "mode": "KIWI"
-        },
-        "12317": {
-          "id": 12317,
-          "name": "Pandora's Box",
-          "nameId": "ARAM_PandorasBox",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Pandoras_Box_Small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Pandora's Box",
+          "wikiName": "Tank Engine",
           "mode": "KIWI"
         },
         "1358": {
@@ -1638,42 +1675,6 @@
           "wikiName": "Quest: Icathia's Fall",
           "mode": "KIWI"
         },
-        "1403": {
-          "id": 1403,
-          "name": "Stats on Stats!",
-          "nameId": "ARAM_StatsOnStats",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/StatsOnStats_small.png",
-          "rarity": "Gold",
-          "wikiName": "Stats on Stats!",
-          "mode": "KIWI"
-        },
-        "1388": {
-          "id": 1388,
-          "name": "Infinite Recursion",
-          "nameId": "InfiniteRecursion",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/InfiniteRecursion_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Infinite Recursion",
-          "mode": "KIWI"
-        },
-        "1404": {
-          "id": 1404,
-          "name": "Stats!",
-          "nameId": "ARAM_Stats",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Stats_small.png",
-          "rarity": "Silver",
-          "wikiName": "Stats!",
-          "mode": "KIWI"
-        },
-        "1384": {
-          "id": 1384,
-          "name": "Donation",
-          "nameId": "Donation",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Donation_small.png",
-          "rarity": "Gold",
-          "wikiName": "Donation",
-          "mode": "KIWI"
-        },
         "1373": {
           "id": 1373,
           "name": "Shrink Engine",
@@ -1681,24 +1682,6 @@
           "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/ShrinkEngine_small.png",
           "rarity": "Gold",
           "wikiName": "Shrink Engine",
-          "mode": "KIWI"
-        },
-        "1006": {
-          "id": 1006,
-          "name": "Blade Waltz",
-          "nameId": "ARAM_BladeWaltz",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/BladeWaltz_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Blade Waltz",
-          "mode": "KIWI"
-        },
-        "1386": {
-          "id": 1386,
-          "name": "Spin Me Right Round",
-          "nameId": "YouSpinMeRightRound",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/YouSpinMeRightRound_small.png",
-          "rarity": "Silver",
-          "wikiName": "Spin Me Right Round",
           "mode": "KIWI"
         },
         "1375": {
@@ -1710,13 +1693,49 @@
           "wikiName": "Soul Eater",
           "mode": "KIWI"
         },
-        "1401": {
-          "id": 1401,
-          "name": "Growth Spurt",
-          "nameId": "GrowthSpurt",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GrowthSpurt_small.png",
+        "1379": {
+          "id": 1379,
+          "name": "Upgrade Sword of Blossoming Dawn",
+          "nameId": "Upgrade_SwordOfBlossom",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/UpgradeMikaelsBlessing_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Upgrade Sword of Blossoming Dawn",
+          "mode": "KIWI"
+        },
+        "1384": {
+          "id": 1384,
+          "name": "Donation",
+          "nameId": "Donation",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Donation_small.png",
           "rarity": "Gold",
-          "wikiName": "Growth Spurt",
+          "wikiName": "Donation",
+          "mode": "KIWI"
+        },
+        "1386": {
+          "id": 1386,
+          "name": "Spin Me Right Round",
+          "nameId": "YouSpinMeRightRound",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/YouSpinMeRightRound_small.png",
+          "rarity": "Silver",
+          "wikiName": "Spin Me Right Round",
+          "mode": "KIWI"
+        },
+        "1388": {
+          "id": 1388,
+          "name": "Infinite Recursion",
+          "nameId": "InfiniteRecursion",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/InfiniteRecursion_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Infinite Recursion",
+          "mode": "KIWI"
+        },
+        "1389": {
+          "id": 1389,
+          "name": "Hand of Baron",
+          "nameId": "HandOfBaron",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/HandofBaron_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Hand of Baron",
           "mode": "KIWI"
         },
         "1390": {
@@ -1737,6 +1756,42 @@
           "wikiName": "Holy Snowball",
           "mode": "KIWI"
         },
+        "1401": {
+          "id": 1401,
+          "name": "Growth Spurt",
+          "nameId": "GrowthSpurt",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GrowthSpurt_small.png",
+          "rarity": "Gold",
+          "wikiName": "Growth Spurt",
+          "mode": "KIWI"
+        },
+        "1402": {
+          "id": 1402,
+          "name": "Stats on Stats on Stats!",
+          "nameId": "ARAM_StatsOnStatsOnStats",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/StatsOnStatsOnStats_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Stats on Stats on Stats!",
+          "mode": "KIWI"
+        },
+        "1403": {
+          "id": 1403,
+          "name": "Stats on Stats!",
+          "nameId": "ARAM_StatsOnStats",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/StatsOnStats_small.png",
+          "rarity": "Gold",
+          "wikiName": "Stats on Stats!",
+          "mode": "KIWI"
+        },
+        "1404": {
+          "id": 1404,
+          "name": "Stats!",
+          "nameId": "ARAM_Stats",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Stats_small.png",
+          "rarity": "Silver",
+          "wikiName": "Stats!",
+          "mode": "KIWI"
+        },
         "1413": {
           "id": 1413,
           "name": "Stuck In Here With Me",
@@ -1744,15 +1799,6 @@
           "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/StuckInHereWithMe_small.png",
           "rarity": "Prismatic",
           "wikiName": "Stuck in Here With Me",
-          "mode": "KIWI"
-        },
-        "2004": {
-          "id": 2004,
-          "name": "Empowered By The Faithful",
-          "nameId": "ARAM_EmpoweredByTheFaithful",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/EmpoweredByTheFaithful_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Empowered By The Faithful",
           "mode": "KIWI"
         },
         "1415": {
@@ -1773,33 +1819,6 @@
           "wikiName": "Hextech Soul",
           "mode": "KIWI"
         },
-        "2005": {
-          "id": 2005,
-          "name": "Triggered Inferno",
-          "nameId": "ARAM_InfernoTriggered",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/MadScientist_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Triggered Inferno",
-          "mode": "KIWI"
-        },
-        "1237": {
-          "id": 1237,
-          "name": "Transmute: Gold",
-          "nameId": "ARAM_TransmuteGold",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/TransmuteGold_small.png",
-          "rarity": "Silver",
-          "wikiName": "Transmute: Gold",
-          "mode": "KIWI"
-        },
-        "1389": {
-          "id": 1389,
-          "name": "Hand of Baron",
-          "nameId": "HandOfBaron",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/HandofBaron_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Hand of Baron",
-          "mode": "KIWI"
-        },
         "1420": {
           "id": 1420,
           "name": "Sonata",
@@ -1818,22 +1837,31 @@
           "wikiName": "Prom Queen",
           "mode": "KIWI"
         },
-        "2026": {
-          "id": 2026,
-          "name": "Kill Secured",
-          "nameId": "KillSecured",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/KillSecure_small.png",
-          "rarity": "Silver",
-          "wikiName": "Kill Secured",
+        "1996": {
+          "id": 1996,
+          "name": "Upgrade Sheen",
+          "nameId": "ARAM_Upgrade_Sheen",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/UpgradeSheen_small.png",
+          "rarity": "Gold",
+          "wikiName": "Upgrade Sheen",
           "mode": "KIWI"
         },
-        "1308": {
-          "id": 1308,
-          "name": "FireFox",
-          "nameId": "ARAM_Firefox",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Firfox_small.png",
-          "rarity": "Silver",
-          "wikiName": "Firefox",
+        "2004": {
+          "id": 2004,
+          "name": "Empowered By The Faithful",
+          "nameId": "ARAM_EmpoweredByTheFaithful",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/EmpoweredByTheFaithful_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Empowered By The Faithful",
+          "mode": "KIWI"
+        },
+        "2005": {
+          "id": 2005,
+          "name": "Triggered Inferno",
+          "nameId": "ARAM_InfernoTriggered",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/MadScientist_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Triggered Inferno",
           "mode": "KIWI"
         },
         "2007": {
@@ -1854,15 +1882,6 @@
           "wikiName": "Zealot",
           "mode": "KIWI"
         },
-        "2018": {
-          "id": 2018,
-          "name": "Purist - Caster",
-          "nameId": "ARAM_Purist_Caster",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/PuristCaster_small.png",
-          "rarity": "Silver",
-          "wikiName": "Purist - Caster",
-          "mode": "KIWI"
-        },
         "2010": {
           "id": 2010,
           "name": "Double Tap",
@@ -1881,13 +1900,22 @@
           "wikiName": "Juiced",
           "mode": "KIWI"
         },
-        "1379": {
-          "id": 1379,
-          "name": "Upgrade Sword of Blossoming Dawn",
-          "nameId": "Upgrade_SwordOfBlossom",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/UpgradeMikaelsBlessing_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Upgrade Sword of Blossoming Dawn",
+        "2018": {
+          "id": 2018,
+          "name": "Purist - Caster",
+          "nameId": "ARAM_Purist_Caster",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/PuristCaster_small.png",
+          "rarity": "Silver",
+          "wikiName": "Purist - Caster",
+          "mode": "KIWI"
+        },
+        "2026": {
+          "id": 2026,
+          "name": "Kill Secured",
+          "nameId": "KillSecured",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/KillSecure_small.png",
+          "rarity": "Silver",
+          "wikiName": "Kill Secured",
           "mode": "KIWI"
         },
         "2032": {
@@ -1935,13 +1963,13 @@
           "wikiName": "Multishot",
           "mode": "KIWI"
         },
-        "2065": {
-          "id": 2065,
-          "name": "Terror",
-          "nameId": "ARAM_Terror",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Desecrator_large.png",
-          "rarity": "Gold",
-          "wikiName": "Terror",
+        "2062": {
+          "id": 2062,
+          "name": "Echo Cast",
+          "nameId": "Ability_SelfAOE_DoubleCast",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Prismatic.png",
+          "rarity": "Prismatic",
+          "wikiName": "Echo Cast",
           "mode": "KIWI"
         },
         "2064": {
@@ -1951,6 +1979,15 @@
           "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Gold.png",
           "rarity": "Gold",
           "wikiName": "Quickstep",
+          "mode": "KIWI"
+        },
+        "2065": {
+          "id": 2065,
+          "name": "Terror",
+          "nameId": "ARAM_Terror",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Desecrator_large.png",
+          "rarity": "Gold",
+          "wikiName": "Terror",
           "mode": "KIWI"
         },
         "2072": {
@@ -1980,6 +2017,15 @@
           "wikiName": "Stay Resolute",
           "mode": "KIWI"
         },
+        "2077": {
+          "id": 2077,
+          "name": "Ravenous Bind",
+          "nameId": "DarkWind",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/UpgradeHubris_small.png",
+          "rarity": "Gold",
+          "wikiName": "Ravenous Bind",
+          "mode": "KIWI"
+        },
         "2078": {
           "id": 2078,
           "name": "Chain Reaction",
@@ -1989,13 +2035,13 @@
           "wikiName": "Chain Reaction",
           "mode": "KIWI"
         },
-        "2077": {
-          "id": 2077,
-          "name": "Ravenous Bind",
-          "nameId": "DarkWind",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/UpgradeHubris_small.png",
+        "2080": {
+          "id": 2080,
+          "name": "Snowblast",
+          "nameId": "Snowbomb",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Snowbomb_small.png",
           "rarity": "Gold",
-          "wikiName": "Ravenous Bind",
+          "wikiName": "Snowblast",
           "mode": "KIWI"
         },
         "2083": {
@@ -2007,13 +2053,13 @@
           "wikiName": "Tooth Fairy",
           "mode": "KIWI"
         },
-        "1001": {
-          "id": 1001,
-          "name": "Titan's Resolve",
-          "nameId": "ARAM_ImTheJuggernaut",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/IAmTheJuggernaut_small.png",
+        "2087": {
+          "id": 2087,
+          "name": "Archmage",
+          "nameId": "ARAM_Archmage",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Eureka_small.png",
           "rarity": "Prismatic",
-          "wikiName": "Titan's Resolve",
+          "wikiName": "Archmage",
           "mode": "KIWI"
         },
         "2088": {
@@ -2025,15 +2071,6 @@
           "wikiName": "Snowday",
           "mode": "KIWI"
         },
-        "2062": {
-          "id": 2062,
-          "name": "Echo Cast",
-          "nameId": "Ability_SelfAOE_DoubleCast",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Prismatic.png",
-          "rarity": "Prismatic",
-          "wikiName": "Echo Cast",
-          "mode": "KIWI"
-        },
         "2091": {
           "id": 2091,
           "name": "Endless Decimation",
@@ -2041,33 +2078,6 @@
           "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/EndlessDecimate_small.png",
           "rarity": "Gold",
           "wikiName": "Endless Decimation",
-          "mode": "KIWI"
-        },
-        "1005": {
-          "id": 1005,
-          "name": "Wee Woo Wee Woo",
-          "nameId": "ARAM_WeeWooWeeWoo",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/WeeWooWeeWoo_small.png",
-          "rarity": "Gold",
-          "wikiName": "Wee Woo Wee Woo",
-          "mode": "KIWI"
-        },
-        "2087": {
-          "id": 2087,
-          "name": "Archmage",
-          "nameId": "ARAM_Archmage",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Eureka_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Archmage",
-          "mode": "KIWI"
-        },
-        "1204": {
-          "id": 1204,
-          "name": "Stackosaurus Rex",
-          "nameId": "ARAM_StackosaurusRex",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/StackosaurusRex_small.png",
-          "rarity": "Silver",
-          "wikiName": "Stackosaurus Rex",
           "mode": "KIWI"
         },
         "2096": {
@@ -2088,13 +2098,13 @@
           "wikiName": "Void Dash",
           "mode": "KIWI"
         },
-        "2100": {
-          "id": 2100,
-          "name": "Pursuit of Haste",
-          "nameId": "ARAM_SpecializedRecursion",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Gold.png",
-          "rarity": "Gold",
-          "wikiName": "Pursuit of Haste",
+        "2098": {
+          "id": 2098,
+          "name": "En Passant",
+          "nameId": "ARAM_EndlessHunt",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Dashing_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "En Passant",
           "mode": "KIWI"
         },
         "2099": {
@@ -2104,6 +2114,24 @@
           "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GlassCannon_small.png",
           "rarity": "Prismatic",
           "wikiName": "Rite of Ascension",
+          "mode": "KIWI"
+        },
+        "2100": {
+          "id": 2100,
+          "name": "Pursuit of Haste",
+          "nameId": "ARAM_SpecializedRecursion",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Gold.png",
+          "rarity": "Gold",
+          "wikiName": "Pursuit of Haste",
+          "mode": "KIWI"
+        },
+        "2102": {
+          "id": 2102,
+          "name": "Pressure Cooker",
+          "nameId": "PressureCooker",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/QuestPressureCooker_small.png",
+          "rarity": "Gold",
+          "wikiName": null,
           "mode": "KIWI"
         },
         "2103": {
@@ -2133,30 +2161,12 @@
           "wikiName": "Hellbent",
           "mode": "KIWI"
         },
-        "2098": {
-          "id": 2098,
-          "name": "En Passant",
-          "nameId": "ARAM_EndlessHunt",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Dashing_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "En Passant",
-          "mode": "KIWI"
-        },
-        "2080": {
-          "id": 2080,
-          "name": "Snowblast",
-          "nameId": "Snowbomb",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Snowbomb_small.png",
-          "rarity": "Gold",
-          "wikiName": "Snowblast",
-          "mode": "KIWI"
-        },
-        "2102": {
-          "id": 2102,
-          "name": "Pressure Cooker",
-          "nameId": "PressureCooker",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/QuestPressureCooker_small.png",
-          "rarity": "Gold",
+        "2108": {
+          "id": 2108,
+          "name": "Support Main",
+          "nameId": "SupportMain",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/QuestSupportMain_small.png",
+          "rarity": "Silver",
           "wikiName": null,
           "mode": "KIWI"
         },
@@ -2167,6 +2177,24 @@
           "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Gold.png",
           "rarity": "Gold",
           "wikiName": "Snap Back",
+          "mode": "KIWI"
+        },
+        "2111": {
+          "id": 2111,
+          "name": "BONK!",
+          "nameId": "Bonk",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Bonk_large.png",
+          "rarity": "Gold",
+          "wikiName": "BONK!",
+          "mode": "KIWI"
+        },
+        "2115": {
+          "id": 2115,
+          "name": "Squishy Slappy Grab",
+          "nameId": "SquishySlappyGrab",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/SquishySlappyGrab_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Squishy Slappy Grab",
           "mode": "KIWI"
         },
         "2116": {
@@ -2185,24 +2213,6 @@
           "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Overextender_small.png",
           "rarity": "Gold",
           "wikiName": "Overextender",
-          "mode": "KIWI"
-        },
-        "2115": {
-          "id": 2115,
-          "name": "Squishy Slappy Grab",
-          "nameId": "SquishySlappyGrab",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/SquishySlappyGrab_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Squishy Slappy Grab",
-          "mode": "KIWI"
-        },
-        "2111": {
-          "id": 2111,
-          "name": "BONK!",
-          "nameId": "Bonk",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Bonk_large.png",
-          "rarity": "Gold",
-          "wikiName": "BONK!",
           "mode": "KIWI"
         },
         "2123": {
@@ -2232,6 +2242,15 @@
           "wikiName": "Reload",
           "mode": "KIWI"
         },
+        "2127": {
+          "id": 2127,
+          "name": "Forged By The Master",
+          "nameId": "ForgedByTheMaster",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/ForgedByTheMaster_small.png",
+          "rarity": "Silver",
+          "wikiName": "Forged By The Master",
+          "mode": "KIWI"
+        },
         "2129": {
           "id": 2129,
           "name": "Terrain'd",
@@ -2250,6 +2269,15 @@
           "wikiName": "Don't Change the Channel",
           "mode": "KIWI"
         },
+        "2132": {
+          "id": 2132,
+          "name": "Warlock Juicebox",
+          "nameId": "WarlockJuicebox",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/WarlockJuicebox_small.png",
+          "rarity": "Gold",
+          "wikiName": "Warlock Juicebox",
+          "mode": "KIWI"
+        },
         "2133": {
           "id": 2133,
           "name": "Mercy's Strike",
@@ -2257,15 +2285,6 @@
           "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Gold.png",
           "rarity": "Gold",
           "wikiName": "Mercy's Strike",
-          "mode": "KIWI"
-        },
-        "2127": {
-          "id": 2127,
-          "name": "Forged By The Master",
-          "nameId": "ForgedByTheMaster",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/ForgedByTheMaster_small.png",
-          "rarity": "Silver",
-          "wikiName": "Forged By The Master",
           "mode": "KIWI"
         },
         "2134": {
@@ -2277,24 +2296,6 @@
           "wikiName": "Surge Field",
           "mode": "KIWI"
         },
-        "2136": {
-          "id": 2136,
-          "name": "Trusty Weapon",
-          "nameId": "TrustyWeapon",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Silver.png",
-          "rarity": "Silver",
-          "wikiName": "Trusty Weapon",
-          "mode": "KIWI"
-        },
-        "2132": {
-          "id": 2132,
-          "name": "Warlock Juicebox",
-          "nameId": "WarlockJuicebox",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/WarlockJuicebox_small.png",
-          "rarity": "Gold",
-          "wikiName": "Warlock Juicebox",
-          "mode": "KIWI"
-        },
         "2135": {
           "id": 2135,
           "name": "Pin Cushion",
@@ -2302,6 +2303,15 @@
           "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/SymphonyOfWar_small.png",
           "rarity": "Prismatic",
           "wikiName": "Pin Cushion",
+          "mode": "KIWI"
+        },
+        "2136": {
+          "id": 2136,
+          "name": "Trusty Weapon",
+          "nameId": "TrustyWeapon",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Silver.png",
+          "rarity": "Silver",
+          "wikiName": "Trusty Weapon",
           "mode": "KIWI"
         },
         "2137": {
@@ -2313,24 +2323,6 @@
           "wikiName": "Pat On The Back",
           "mode": "KIWI"
         },
-        "2139": {
-          "id": 2139,
-          "name": "Porcupine",
-          "nameId": "PinCushion",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/PinCushion_small.png",
-          "rarity": "Gold",
-          "wikiName": "Porcupine",
-          "mode": "KIWI"
-        },
-        "2144": {
-          "id": 2144,
-          "name": "Bolstered",
-          "nameId": "DoubleDefense",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Silver.png",
-          "rarity": "Silver",
-          "wikiName": "Bolstered",
-          "mode": "KIWI"
-        },
         "2138": {
           "id": 2138,
           "name": "Adaptive Ward",
@@ -2340,31 +2332,13 @@
           "wikiName": "Adaptive Ward",
           "mode": "KIWI"
         },
-        "2148": {
-          "id": 2148,
-          "name": "Double Strike",
-          "nameId": "DoubleStrike",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Adamant_small.png",
-          "rarity": "Silver",
-          "wikiName": "Double Strike",
-          "mode": "KIWI"
-        },
-        "2108": {
-          "id": 2108,
-          "name": "Support Main",
-          "nameId": "SupportMain",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/QuestSupportMain_small.png",
-          "rarity": "Silver",
-          "wikiName": null,
-          "mode": "KIWI"
-        },
-        "2143": {
-          "id": 2143,
-          "name": "Upgrade Sundered Sky",
-          "nameId": "Upgrade_SunderedSky",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/UpgradeIE_small.png",
+        "2139": {
+          "id": 2139,
+          "name": "Porcupine",
+          "nameId": "PinCushion",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/PinCushion_small.png",
           "rarity": "Gold",
-          "wikiName": "Upgrade Sundered Sky",
+          "wikiName": "Porcupine",
           "mode": "KIWI"
         },
         "2140": {
@@ -2376,6 +2350,78 @@
           "wikiName": "Upgrade Ravenous Hydra",
           "mode": "KIWI"
         },
+        "2141": {
+          "id": 2141,
+          "name": "Ultra Hydra",
+          "nameId": "Quest_UltraHydra",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/UltraHydra_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Ultra Hydra",
+          "mode": "KIWI"
+        },
+        "2143": {
+          "id": 2143,
+          "name": "Upgrade Sundered Sky",
+          "nameId": "Upgrade_SunderedSky",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/UpgradeIE_small.png",
+          "rarity": "Gold",
+          "wikiName": "Upgrade Sundered Sky",
+          "mode": "KIWI"
+        },
+        "2144": {
+          "id": 2144,
+          "name": "Bolstered",
+          "nameId": "DoubleDefense",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Silver.png",
+          "rarity": "Silver",
+          "wikiName": "Bolstered",
+          "mode": "KIWI"
+        },
+        "2148": {
+          "id": 2148,
+          "name": "Double Strike",
+          "nameId": "DoubleStrike",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Adamant_small.png",
+          "rarity": "Silver",
+          "wikiName": "Double Strike",
+          "mode": "KIWI"
+        },
+        "2157": {
+          "id": 2157,
+          "name": "Upgrade Death's Dance",
+          "nameId": "Upgrade_DeathDance",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/UpgradeDeathDance_small.png",
+          "rarity": "Silver",
+          "wikiName": "Upgrade Death's Dance",
+          "mode": "KIWI"
+        },
+        "3004": {
+          "id": 3004,
+          "name": "Get Jinxed",
+          "nameId": "GetJinxed",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Overextender_small.png",
+          "rarity": "Gold",
+          "wikiName": "Get Jinxed",
+          "mode": "KIWI"
+        },
+        "3016": {
+          "id": 3016,
+          "name": "Third Times the Harm",
+          "nameId": "ThirdTimesTheHarm",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/SilverBeats_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Third Times the Harm",
+          "mode": "KIWI"
+        },
+        "3018": {
+          "id": 3018,
+          "name": "Big Shot",
+          "nameId": "BigShot",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/BigShot_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Big Shot",
+          "mode": "KIWI"
+        },
         "3025": {
           "id": 3025,
           "name": "Sound Barrier",
@@ -2383,6 +2429,15 @@
           "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/SwiftandSafe_small.png",
           "rarity": "Silver",
           "wikiName": "Sound Barrier",
+          "mode": "KIWI"
+        },
+        "3036": {
+          "id": 3036,
+          "name": "Double Time",
+          "nameId": "DoubleTime",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/ARAM_PhenomenalEvil_large.png",
+          "rarity": "Gold",
+          "wikiName": "Double Time",
           "mode": "KIWI"
         },
         "3039": {
@@ -2394,13 +2449,40 @@
           "wikiName": "Salvation",
           "mode": "KIWI"
         },
-        "3071": {
-          "id": 3071,
-          "name": "Brass Blast",
-          "nameId": "BrassBlast",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Camo_large.png",
+        "3048": {
+          "id": 3048,
+          "name": "Bouncing Bees",
+          "nameId": "BouncingBees",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/KingMe_large.png",
+          "rarity": "Prismatic",
+          "wikiName": "Bouncing Bees",
+          "mode": "KIWI"
+        },
+        "3049": {
+          "id": 3049,
+          "name": "Armored Impact",
+          "nameId": "ArmoredImpact",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/ArmoredImpact_small.png",
           "rarity": "Gold",
-          "wikiName": "Brass Blast",
+          "wikiName": "Armored Impact",
+          "mode": "KIWI"
+        },
+        "3051": {
+          "id": 3051,
+          "name": "Blue Barrier",
+          "nameId": "BlueBarrier",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/BlueNote_small.png",
+          "rarity": "Silver",
+          "wikiName": "Blue Barrier",
+          "mode": "KIWI"
+        },
+        "3052": {
+          "id": 3052,
+          "name": "Hands off the Talent",
+          "nameId": "HandsOffTheTalent",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Bonk_large.png",
+          "rarity": "Silver",
+          "wikiName": "Hands off the Talent",
           "mode": "KIWI"
         },
         "3053": {
@@ -2412,31 +2494,13 @@
           "wikiName": "Mosh Monster",
           "mode": "KIWI"
         },
-        "3075": {
-          "id": 3075,
-          "name": "Recoil",
-          "nameId": "Recoil",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Gold.png",
-          "rarity": "Gold",
-          "wikiName": "Recoil",
-          "mode": "KIWI"
-        },
-        "3079": {
-          "id": 3079,
-          "name": "Totentanz",
-          "nameId": "Totentanz",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Totentanz_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Totentanz",
-          "mode": "KIWI"
-        },
-        "2141": {
-          "id": 2141,
-          "name": "Ultra Hydra",
-          "nameId": "Quest_UltraHydra",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/UltraHydra_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Ultra Hydra",
+        "3055": {
+          "id": 3055,
+          "name": "Ultimate Recursion",
+          "nameId": "UltimateRecursion",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Zealot_large.png",
+          "rarity": "Silver",
+          "wikiName": "Ultimate Recursion",
           "mode": "KIWI"
         },
         "3058": {
@@ -2466,76 +2530,22 @@
           "wikiName": "Gift of the Drowned",
           "mode": "KIWI"
         },
-        "3094": {
-          "id": 3094,
-          "name": "Lich Brain",
-          "nameId": "LichBrain",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/LichBrain_small.png",
-          "rarity": "Silver",
-          "wikiName": "Lich Brain",
-          "mode": "KIWI"
-        },
-        "3018": {
-          "id": 3018,
-          "name": "Big Shot",
-          "nameId": "BigShot",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/BigShot_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Big Shot",
-          "mode": "KIWI"
-        },
-        "3048": {
-          "id": 3048,
-          "name": "Bouncing Bees",
-          "nameId": "BouncingBees",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/KingMe_large.png",
-          "rarity": "Prismatic",
-          "wikiName": "Bouncing Bees",
-          "mode": "KIWI"
-        },
-        "3036": {
-          "id": 3036,
-          "name": "Double Time",
-          "nameId": "DoubleTime",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/ARAM_PhenomenalEvil_large.png",
+        "3071": {
+          "id": 3071,
+          "name": "Brass Blast",
+          "nameId": "BrassBlast",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Camo_large.png",
           "rarity": "Gold",
-          "wikiName": "Double Time",
+          "wikiName": "Brass Blast",
           "mode": "KIWI"
         },
-        "3016": {
-          "id": 3016,
-          "name": "Third Times the Harm",
-          "nameId": "ThirdTimesTheHarm",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/SilverBeats_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Third Times the Harm",
-          "mode": "KIWI"
-        },
-        "2157": {
-          "id": 2157,
-          "name": "Upgrade Death's Dance",
-          "nameId": "Upgrade_DeathDance",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/UpgradeDeathDance_small.png",
-          "rarity": "Silver",
-          "wikiName": "Upgrade Death's Dance",
-          "mode": "KIWI"
-        },
-        "3086": {
-          "id": 3086,
-          "name": "BEES!!!",
-          "nameId": "BEES",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Bees_small.png",
+        "3075": {
+          "id": 3075,
+          "name": "Recoil",
+          "nameId": "Recoil",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Gold.png",
           "rarity": "Gold",
-          "wikiName": "BEES!!!",
-          "mode": "KIWI"
-        },
-        "1310": {
-          "id": 1310,
-          "name": "Clown College",
-          "nameId": "ARAM_ClownCollege",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/ClownCollege_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Clown College",
+          "wikiName": "Recoil",
           "mode": "KIWI"
         },
         "3078": {
@@ -2547,94 +2557,13 @@
           "wikiName": "The Boom and the Bass",
           "mode": "KIWI"
         },
-        "3116": {
-          "id": 3116,
-          "name": "Take'em Down Down Down",
-          "nameId": "TakeemDownDownDown",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/TakeEmDownDownDown_small.png",
-          "rarity": "Gold",
-          "wikiName": "Take'em Down Down Down",
-          "mode": "KIWI"
-        },
-        "3049": {
-          "id": 3049,
-          "name": "Armored Impact",
-          "nameId": "ArmoredImpact",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/ArmoredImpact_small.png",
-          "rarity": "Gold",
-          "wikiName": "Armored Impact",
-          "mode": "KIWI"
-        },
-        "3121": {
-          "id": 3121,
-          "name": "Fruitify",
-          "nameId": "Fruitify",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/FruitSeason_small.png",
-          "rarity": "Silver",
-          "wikiName": "Fruitify",
-          "mode": "KIWI"
-        },
-        "3123": {
-          "id": 3123,
-          "name": "Jeweled Bracelet",
-          "nameId": "JeweledBracelet",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Gold.png",
-          "rarity": "Gold",
-          "wikiName": "Jeweled Bracelet",
-          "mode": "KIWI"
-        },
-        "3004": {
-          "id": 3004,
-          "name": "Get Jinxed",
-          "nameId": "GetJinxed",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Overextender_small.png",
-          "rarity": "Gold",
-          "wikiName": "Get Jinxed",
-          "mode": "KIWI"
-        },
-        "3131": {
-          "id": 3131,
-          "name": "Still Here",
-          "nameId": "StillHere",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/StillHere_small.png",
-          "rarity": "Gold",
-          "wikiName": "Still Here",
-          "mode": "KIWI"
-        },
-        "3129": {
-          "id": 3129,
-          "name": "Sap Magic",
-          "nameId": "SapMagic",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/MercysStrike_small.png",
-          "rarity": "Gold",
-          "wikiName": "Sap Magic",
-          "mode": "KIWI"
-        },
-        "3132": {
-          "id": 3132,
-          "name": "Heavy Is The Crown",
-          "nameId": "HeavyIsTheCrown",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/HeavyIsTheCrown_small.png",
-          "rarity": "Gold",
-          "wikiName": "Heavy Is The Crown",
-          "mode": "KIWI"
-        },
-        "3051": {
-          "id": 3051,
-          "name": "Blue Barrier",
-          "nameId": "BlueBarrier",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/BlueNote_small.png",
-          "rarity": "Silver",
-          "wikiName": "Blue Barrier",
-          "mode": "KIWI"
-        },
-        "3088": {
-          "id": 3088,
-          "name": "CRIMSON COBALT",
-          "nameId": "CrimsonCobalt",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Gold.png",
-          "rarity": "Gold",
-          "wikiName": "CRIMSON COBALT",
+        "3079": {
+          "id": 3079,
+          "name": "Totentanz",
+          "nameId": "Totentanz",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Totentanz_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Totentanz",
           "mode": "KIWI"
         },
         "3081": {
@@ -2655,40 +2584,94 @@
           "wikiName": "Flow of Spirit",
           "mode": "KIWI"
         },
-        "3149": {
-          "id": 3149,
-          "name": "Group Hug",
-          "nameId": "GroupHug",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/EmpyreamPromise_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Group Hug",
-          "mode": "KIWI"
-        },
-        "3163": {
-          "id": 3163,
-          "name": "Enchanting Butterflies",
-          "nameId": "EnchantingButterflies",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/EnchantedButtery_small.png",
+        "3086": {
+          "id": 3086,
+          "name": "BEES!!!",
+          "nameId": "BEES",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Bees_small.png",
           "rarity": "Gold",
-          "wikiName": "Enchanting Butterflies",
+          "wikiName": "BEES!!!",
           "mode": "KIWI"
         },
-        "3055": {
-          "id": 3055,
-          "name": "Ultimate Recursion",
-          "nameId": "UltimateRecursion",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Zealot_large.png",
-          "rarity": "Silver",
-          "wikiName": "Ultimate Recursion",
+        "3088": {
+          "id": 3088,
+          "name": "CRIMSON COBALT",
+          "nameId": "CrimsonCobalt",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Gold.png",
+          "rarity": "Gold",
+          "wikiName": "CRIMSON COBALT",
           "mode": "KIWI"
         },
-        "3052": {
-          "id": 3052,
-          "name": "Hands off the Talent",
-          "nameId": "HandsOffTheTalent",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Bonk_large.png",
+        "3094": {
+          "id": 3094,
+          "name": "Lich Brain",
+          "nameId": "LichBrain",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/LichBrain_small.png",
           "rarity": "Silver",
-          "wikiName": "Hands off the Talent",
+          "wikiName": "Lich Brain",
+          "mode": "KIWI"
+        },
+        "3116": {
+          "id": 3116,
+          "name": "Take'em Down Down Down",
+          "nameId": "TakeemDownDownDown",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/TakeEmDownDownDown_small.png",
+          "rarity": "Gold",
+          "wikiName": "Take'em Down Down Down",
+          "mode": "KIWI"
+        },
+        "3118": {
+          "id": 3118,
+          "name": "Arcane Axiom",
+          "nameId": "ArcaneAxiom",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/ArcaneAxiom_small.png",
+          "rarity": "Gold",
+          "wikiName": "Arcane Axiom",
+          "mode": "KIWI"
+        },
+        "3121": {
+          "id": 3121,
+          "name": "Fruitify",
+          "nameId": "Fruitify",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/FruitSeason_small.png",
+          "rarity": "Silver",
+          "wikiName": "Fruitify",
+          "mode": "KIWI"
+        },
+        "3123": {
+          "id": 3123,
+          "name": "Jeweled Bracelet",
+          "nameId": "JeweledBracelet",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Gold.png",
+          "rarity": "Gold",
+          "wikiName": "Jeweled Bracelet",
+          "mode": "KIWI"
+        },
+        "3129": {
+          "id": 3129,
+          "name": "Sap Magic",
+          "nameId": "SapMagic",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/MercysStrike_small.png",
+          "rarity": "Gold",
+          "wikiName": "Sap Magic",
+          "mode": "KIWI"
+        },
+        "3131": {
+          "id": 3131,
+          "name": "Still Here",
+          "nameId": "StillHere",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/StillHere_small.png",
+          "rarity": "Gold",
+          "wikiName": "Still Here",
+          "mode": "KIWI"
+        },
+        "3132": {
+          "id": 3132,
+          "name": "Heavy Is The Crown",
+          "nameId": "HeavyIsTheCrown",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/HeavyIsTheCrown_small.png",
+          "rarity": "Gold",
+          "wikiName": "Heavy Is The Crown",
           "mode": "KIWI"
         },
         "3134": {
@@ -2698,6 +2681,33 @@
           "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Adamant_small.png",
           "rarity": "Silver",
           "wikiName": "Lonely Warrior",
+          "mode": "KIWI"
+        },
+        "3149": {
+          "id": 3149,
+          "name": "Group Hug",
+          "nameId": "GroupHug",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/EmpyreamPromise_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Group Hug",
+          "mode": "KIWI"
+        },
+        "3150": {
+          "id": 3150,
+          "name": "Upgrade Stormsurge",
+          "nameId": "Upgrade_Stormsurge",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/UpgradeHubris_small.png",
+          "rarity": "Gold",
+          "wikiName": "Upgrade Stormsurge",
+          "mode": "KIWI"
+        },
+        "3163": {
+          "id": 3163,
+          "name": "Enchanting Butterflies",
+          "nameId": "EnchantingButterflies",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/EnchantedButtery_small.png",
+          "rarity": "Gold",
+          "wikiName": "Enchanting Butterflies",
           "mode": "KIWI"
         },
         "3170": {
@@ -2736,15 +2746,6 @@
           "wikiName": "Pentakill: DOOM",
           "mode": "KIWI"
         },
-        "3118": {
-          "id": 3118,
-          "name": "Arcane Axiom",
-          "nameId": "ArcaneAxiom",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/ArcaneAxiom_small.png",
-          "rarity": "Gold",
-          "wikiName": "Arcane Axiom",
-          "mode": "KIWI"
-        },
         "3176": {
           "id": 3176,
           "name": "Pentakill Augment",
@@ -2754,35 +2755,44 @@
           "wikiName": null,
           "mode": "KIWI"
         },
-        "3150": {
-          "id": 3150,
-          "name": "Upgrade Stormsurge",
-          "nameId": "Upgrade_Stormsurge",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/UpgradeHubris_small.png",
-          "rarity": "Gold",
-          "wikiName": "Upgrade Stormsurge",
+        "12317": {
+          "id": 12317,
+          "name": "Pandora's Box",
+          "nameId": "ARAM_PandorasBox",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Pandoras_Box_Small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Pandora's Box",
           "mode": "KIWI"
         }
       }
     },
     "KIWI_JADE": {
       "byId": {
-        "1180": {
-          "id": 1180,
-          "name": "Big Brain",
-          "nameId": "ARAM_BigBrain",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/BigBrain_small.png",
-          "rarity": "Gold",
-          "wikiName": "Big Brain",
+        "1001": {
+          "id": 1001,
+          "name": "Titan's Resolve",
+          "nameId": "ARAM_ImTheJuggernaut",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/IAmTheJuggernaut_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Titan's Resolve",
           "mode": "KIWI_JADE"
         },
-        "1141": {
-          "id": 1141,
-          "name": "All For You",
-          "nameId": "ARAM_AllForYou",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/AllForYou_small.png",
+        "1005": {
+          "id": 1005,
+          "name": "Wee Woo Wee Woo",
+          "nameId": "ARAM_WeeWooWeeWoo",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/WeeWooWeeWoo_small.png",
           "rarity": "Gold",
-          "wikiName": "All For You",
+          "wikiName": "Wee Woo Wee Woo",
+          "mode": "KIWI_JADE"
+        },
+        "1006": {
+          "id": 1006,
+          "name": "Blade Waltz",
+          "nameId": "ARAM_BladeWaltz",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/BladeWaltz_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Blade Waltz",
           "mode": "KIWI_JADE"
         },
         "1007": {
@@ -2821,15 +2831,6 @@
           "wikiName": "Circle of Death",
           "mode": "KIWI_JADE"
         },
-        "1310": {
-          "id": 1310,
-          "name": "Clown College",
-          "nameId": "ARAM_ClownCollege",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/ClownCollege_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Clown College",
-          "mode": "KIWI_JADE"
-        },
         "1018": {
           "id": 1018,
           "name": "Courage of the Colossus",
@@ -2837,15 +2838,6 @@
           "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/CourageOfTheColossus_small.png",
           "rarity": "Prismatic",
           "wikiName": "Courage of the Colossus",
-          "mode": "KIWI_JADE"
-        },
-        "1118": {
-          "id": 1118,
-          "name": "Critical Healing",
-          "nameId": "ARAM_CriticalHealing",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/CriticalHealing_small.png",
-          "rarity": "Gold",
-          "wikiName": "Critical Healing",
           "mode": "KIWI_JADE"
         },
         "1020": {
@@ -2884,6 +2876,24 @@
           "wikiName": "Don't Blink",
           "mode": "KIWI_JADE"
         },
+        "1027": {
+          "id": 1027,
+          "name": "Earthwake",
+          "nameId": "ARAM_Earthwake",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Earthwake_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Earthwake",
+          "mode": "KIWI_JADE"
+        },
+        "1028": {
+          "id": 1028,
+          "name": "Erosion",
+          "nameId": "ARAM_Erosion",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Erosion_small.png",
+          "rarity": "Silver",
+          "wikiName": "Erosion",
+          "mode": "KIWI_JADE"
+        },
         "1029": {
           "id": 1029,
           "name": "Ethereal Weapon",
@@ -2891,6 +2901,15 @@
           "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/EtherealWeapon_small.png",
           "rarity": "Gold",
           "wikiName": "Ethereal Weapon",
+          "mode": "KIWI_JADE"
+        },
+        "1034": {
+          "id": 1034,
+          "name": "Veil of Warding",
+          "nameId": "VeilOfWarding",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Poltergeist_small.png",
+          "rarity": "Silver",
+          "wikiName": "Veil of Warding",
           "mode": "KIWI_JADE"
         },
         "1036": {
@@ -2911,24 +2930,6 @@
           "wikiName": "First-Aid Kit",
           "mode": "KIWI_JADE"
         },
-        "1116": {
-          "id": 1116,
-          "name": "Flashy",
-          "nameId": "ARAM_Flashy",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Flashy_small.png",
-          "rarity": "Gold",
-          "wikiName": "Flashy",
-          "mode": "KIWI_JADE"
-        },
-        "1322": {
-          "id": 1322,
-          "name": "Get Excited!",
-          "nameId": "ARAM_GetExcited",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GetExcited_small.png",
-          "rarity": "Gold",
-          "wikiName": "Get Excited",
-          "mode": "KIWI_JADE"
-        },
         "1041": {
           "id": 1041,
           "name": "Goliath",
@@ -2936,24 +2937,6 @@
           "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Goliath_small.png",
           "rarity": "Prismatic",
           "wikiName": "Goliath",
-          "mode": "KIWI_JADE"
-        },
-        "1138": {
-          "id": 1138,
-          "name": "Goredrink",
-          "nameId": "ARAM_Goredrink",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/GoreDrink_small.png",
-          "rarity": "Silver",
-          "wikiName": "Goredrink",
-          "mode": "KIWI_JADE"
-        },
-        "1181": {
-          "id": 1181,
-          "name": "Heavy Hitter",
-          "nameId": "ARAM_HeavyHitter",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/HeavyHitter_small.png",
-          "rarity": "Silver",
-          "wikiName": "Heavy Hitter",
           "mode": "KIWI_JADE"
         },
         "1044": {
@@ -2992,22 +2975,13 @@
           "wikiName": "Jeweled Gauntlet",
           "mode": "KIWI_JADE"
         },
-        "1305": {
-          "id": 1305,
-          "name": "Leg Day",
-          "nameId": "ARAM_LegDay",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/LegDay_small.png",
+        "1051": {
+          "id": 1051,
+          "name": "Light 'Em Up!",
+          "nameId": "ARAM_LightemUp",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/LightEmUp_small.png",
           "rarity": "Silver",
-          "wikiName": "Leg Day",
-          "mode": "KIWI_JADE"
-        },
-        "1129": {
-          "id": 1129,
-          "name": "Marksmage",
-          "nameId": "ARAM_Marksmage",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Marksmage_small.png",
-          "rarity": "Gold",
-          "wikiName": "Marksmage",
+          "wikiName": "Light 'em Up!",
           "mode": "KIWI_JADE"
         },
         "1054": {
@@ -3028,15 +3002,6 @@
           "wikiName": "Mind to Matter",
           "mode": "KIWI_JADE"
         },
-        "1104": {
-          "id": 1104,
-          "name": "Minionmancer",
-          "nameId": "ARAM_Minionmancer",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Minionmancer_small.png",
-          "rarity": "Gold",
-          "wikiName": "Minionmancer",
-          "mode": "KIWI_JADE"
-        },
         "1058": {
           "id": 1058,
           "name": "Mystic Punch",
@@ -3044,6 +3009,15 @@
           "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/MysticPunch_small.png",
           "rarity": "Prismatic",
           "wikiName": "Mystic Punch",
+          "mode": "KIWI_JADE"
+        },
+        "1061": {
+          "id": 1061,
+          "name": "Ok Boomerang",
+          "nameId": "ARAM_OkBoomerang",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/OKBoomerang_small.png",
+          "rarity": "Gold",
+          "wikiName": "OK Boomerang",
           "mode": "KIWI_JADE"
         },
         "1063": {
@@ -3055,15 +3029,6 @@
           "wikiName": "Outlaw's Grit",
           "mode": "KIWI_JADE"
         },
-        "1311": {
-          "id": 1311,
-          "name": "Overflow",
-          "nameId": "ARAM_Overflow",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Overflow_small.png",
-          "rarity": "Gold",
-          "wikiName": "Overflow",
-          "mode": "KIWI_JADE"
-        },
         "1064": {
           "id": 1064,
           "name": "Perseverance",
@@ -3073,13 +3038,13 @@
           "wikiName": "Perseverance",
           "mode": "KIWI_JADE"
         },
-        "1324": {
-          "id": 1324,
-          "name": "Protein Shake",
-          "nameId": "ARAM_ProteinShake",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/ProteinShake_small.png",
+        "1066": {
+          "id": 1066,
+          "name": "Quantum Computing",
+          "nameId": "ARAM_QuantumComputing",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/QuantumComputing_small.png",
           "rarity": "Prismatic",
-          "wikiName": "Protein Shake",
+          "wikiName": "Quantum Computing",
           "mode": "KIWI_JADE"
         },
         "1067": {
@@ -3091,15 +3056,6 @@
           "wikiName": "Rejuvenation",
           "mode": "KIWI_JADE"
         },
-        "1170": {
-          "id": 1170,
-          "name": "Scoped Weapons",
-          "nameId": "ARAM_ScopedWeapons",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/ScopedWeapons_small.png",
-          "rarity": "Silver",
-          "wikiName": "Scoped Weapons",
-          "mode": "KIWI_JADE"
-        },
         "1071": {
           "id": 1071,
           "name": "Scopier Weapons",
@@ -3109,31 +3065,31 @@
           "wikiName": "Scopier Weapons",
           "mode": "KIWI_JADE"
         },
-        "1115": {
-          "id": 1115,
-          "name": "Scopiest Weapons",
-          "nameId": "ARAM_ScopiestWeapons",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/ScopiestWeapons_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Scopiest Weapons",
-          "mode": "KIWI_JADE"
-        },
-        "1113": {
-          "id": 1113,
-          "name": "Skilled Sniper",
-          "nameId": "ARAM_SkilledSniper",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/SkilledSniper_small.png",
+        "1072": {
+          "id": 1072,
+          "name": "Searing Dawn",
+          "nameId": "ARAM_SearingDawn",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/SearingDawn_small.png",
           "rarity": "Gold",
-          "wikiName": "Skilled Sniper",
+          "wikiName": "Searing Dawn",
           "mode": "KIWI_JADE"
         },
-        "1136": {
-          "id": 1136,
-          "name": "Slap Around",
-          "nameId": "ARAM_SlapAround",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/SlapAround_small.png",
+        "1073": {
+          "id": 1073,
+          "name": "Shadow Runner",
+          "nameId": "ARAM_ShadowRunner",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/ShadowRunner_small.png",
           "rarity": "Silver",
-          "wikiName": "Slap Around",
+          "wikiName": "Shadow Runner",
+          "mode": "KIWI_JADE"
+        },
+        "1074": {
+          "id": 1074,
+          "name": "Shrink Ray",
+          "nameId": "ARAM_ShrinkRay",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/ShrinkRay_small.png",
+          "rarity": "Gold",
+          "wikiName": "Shrink Ray",
           "mode": "KIWI_JADE"
         },
         "1076": {
@@ -3152,15 +3108,6 @@
           "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/SoulSiphon_small.png",
           "rarity": "Gold",
           "wikiName": "Soul Siphon",
-          "mode": "KIWI_JADE"
-        },
-        "1353": {
-          "id": 1353,
-          "name": "Tank Engine",
-          "nameId": "ARAM_TankEngine",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Tank_Engine_Small.png",
-          "rarity": "Gold",
-          "wikiName": "Tank Engine",
           "mode": "KIWI_JADE"
         },
         "1080": {
@@ -3190,96 +3137,6 @@
           "wikiName": "Thread the Needle",
           "mode": "KIWI_JADE"
         },
-        "1092": {
-          "id": 1092,
-          "name": "Vulnerability",
-          "nameId": "ARAM_Vulnerability",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Vulnerability_small.png",
-          "rarity": "Gold",
-          "wikiName": "Vulnerability",
-          "mode": "KIWI_JADE"
-        },
-        "1097": {
-          "id": 1097,
-          "name": "Witchful Thinking",
-          "nameId": "ARAM_WitchfulThinking",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/WitchfulThinking_small.png",
-          "rarity": "Silver",
-          "wikiName": "Witchful Thinking",
-          "mode": "KIWI_JADE"
-        },
-        "1326": {
-          "id": 1326,
-          "name": "Nightstalking",
-          "nameId": "Nightstalking",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Nightstalking_small.png",
-          "rarity": "Gold",
-          "wikiName": "Nightstalking",
-          "mode": "KIWI_JADE"
-        },
-        "1028": {
-          "id": 1028,
-          "name": "Erosion",
-          "nameId": "ARAM_Erosion",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Erosion_small.png",
-          "rarity": "Silver",
-          "wikiName": "Erosion",
-          "mode": "KIWI_JADE"
-        },
-        "1034": {
-          "id": 1034,
-          "name": "Veil of Warding",
-          "nameId": "VeilOfWarding",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Poltergeist_small.png",
-          "rarity": "Silver",
-          "wikiName": "Veil of Warding",
-          "mode": "KIWI_JADE"
-        },
-        "1211": {
-          "id": 1211,
-          "name": "It's Killing Time",
-          "nameId": "ARAM_ItsKillingTime",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/ItsKillingTime_small.png",
-          "rarity": "Gold",
-          "wikiName": "It's Killing Time",
-          "mode": "KIWI_JADE"
-        },
-        "1051": {
-          "id": 1051,
-          "name": "Light 'Em Up!",
-          "nameId": "ARAM_LightemUp",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/LightEmUp_small.png",
-          "rarity": "Silver",
-          "wikiName": "Light 'em Up!",
-          "mode": "KIWI_JADE"
-        },
-        "1072": {
-          "id": 1072,
-          "name": "Searing Dawn",
-          "nameId": "ARAM_SearingDawn",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/SearingDawn_small.png",
-          "rarity": "Gold",
-          "wikiName": "Searing Dawn",
-          "mode": "KIWI_JADE"
-        },
-        "1073": {
-          "id": 1073,
-          "name": "Shadow Runner",
-          "nameId": "ARAM_ShadowRunner",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/ShadowRunner_small.png",
-          "rarity": "Silver",
-          "wikiName": "Shadow Runner",
-          "mode": "KIWI_JADE"
-        },
-        "1327": {
-          "id": 1327,
-          "name": "Adamant",
-          "nameId": "Adamant",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Adamant_small.png",
-          "rarity": "Silver",
-          "wikiName": "Adamant",
-          "mode": "KIWI_JADE"
-        },
         "1087": {
           "id": 1087,
           "name": "Typhoon",
@@ -3287,69 +3144,6 @@
           "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Typhoon_small.png",
           "rarity": "Silver",
           "wikiName": "Typhoon",
-          "mode": "KIWI_JADE"
-        },
-        "1095": {
-          "id": 1095,
-          "name": "Windspeaker's Blessing",
-          "nameId": "ARAM_WindspeakersBlessing",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/WindspeakersBlessing_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Windspeaker's Blessing",
-          "mode": "KIWI_JADE"
-        },
-        "1112": {
-          "id": 1112,
-          "name": "Ultimate Unstoppable",
-          "nameId": "ARAM_UltimateUnstoppable",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/UltimateUnstoppable_small.png",
-          "rarity": "Silver",
-          "wikiName": "Ultimate Unstoppable",
-          "mode": "KIWI_JADE"
-        },
-        "1301": {
-          "id": 1301,
-          "name": "Divine Intervention",
-          "nameId": "ARAM_DivineIntervention",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/SlowActingPainkillers_small.png",
-          "rarity": "Gold",
-          "wikiName": "Divine Intervention",
-          "mode": "KIWI_JADE"
-        },
-        "1134": {
-          "id": 1134,
-          "name": "Draw Your Sword",
-          "nameId": "ARAM_DrawYourSword",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/DrawYourSword_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Draw Your Sword",
-          "mode": "KIWI_JADE"
-        },
-        "1225": {
-          "id": 1225,
-          "name": "Dual Wield",
-          "nameId": "ARAM_DualWield",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/DualWield_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Dual Wield",
-          "mode": "KIWI_JADE"
-        },
-        "1194": {
-          "id": 1194,
-          "name": "Fey Magic",
-          "nameId": "ARAM_FeyMagic",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/FeyMagic_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Fey Magic",
-          "mode": "KIWI_JADE"
-        },
-        "1187": {
-          "id": 1187,
-          "name": "Flashbang",
-          "nameId": "ARAM_Flashbang",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Flashbang_small.png",
-          "rarity": "Silver",
-          "wikiName": "Flashbang",
           "mode": "KIWI_JADE"
         },
         "1088": {
@@ -3361,6 +3155,96 @@
           "wikiName": "Ultimate Revolution",
           "mode": "KIWI_JADE"
         },
+        "1092": {
+          "id": 1092,
+          "name": "Vulnerability",
+          "nameId": "ARAM_Vulnerability",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Vulnerability_small.png",
+          "rarity": "Gold",
+          "wikiName": "Vulnerability",
+          "mode": "KIWI_JADE"
+        },
+        "1095": {
+          "id": 1095,
+          "name": "Windspeaker's Blessing",
+          "nameId": "ARAM_WindspeakersBlessing",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/WindspeakersBlessing_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Windspeaker's Blessing",
+          "mode": "KIWI_JADE"
+        },
+        "1097": {
+          "id": 1097,
+          "name": "Witchful Thinking",
+          "nameId": "ARAM_WitchfulThinking",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/WitchfulThinking_small.png",
+          "rarity": "Silver",
+          "wikiName": "Witchful Thinking",
+          "mode": "KIWI_JADE"
+        },
+        "1104": {
+          "id": 1104,
+          "name": "Minionmancer",
+          "nameId": "ARAM_Minionmancer",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Minionmancer_small.png",
+          "rarity": "Gold",
+          "wikiName": "Minionmancer",
+          "mode": "KIWI_JADE"
+        },
+        "1112": {
+          "id": 1112,
+          "name": "Ultimate Unstoppable",
+          "nameId": "ARAM_UltimateUnstoppable",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/UltimateUnstoppable_small.png",
+          "rarity": "Silver",
+          "wikiName": "Ultimate Unstoppable",
+          "mode": "KIWI_JADE"
+        },
+        "1113": {
+          "id": 1113,
+          "name": "Skilled Sniper",
+          "nameId": "ARAM_SkilledSniper",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/SkilledSniper_small.png",
+          "rarity": "Gold",
+          "wikiName": "Skilled Sniper",
+          "mode": "KIWI_JADE"
+        },
+        "1115": {
+          "id": 1115,
+          "name": "Scopiest Weapons",
+          "nameId": "ARAM_ScopiestWeapons",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/ScopiestWeapons_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Scopiest Weapons",
+          "mode": "KIWI_JADE"
+        },
+        "1116": {
+          "id": 1116,
+          "name": "Flashy",
+          "nameId": "ARAM_Flashy",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Flashy_small.png",
+          "rarity": "Gold",
+          "wikiName": "Flashy",
+          "mode": "KIWI_JADE"
+        },
+        "1118": {
+          "id": 1118,
+          "name": "Critical Healing",
+          "nameId": "ARAM_CriticalHealing",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/CriticalHealing_small.png",
+          "rarity": "Gold",
+          "wikiName": "Critical Healing",
+          "mode": "KIWI_JADE"
+        },
+        "1129": {
+          "id": 1129,
+          "name": "Marksmage",
+          "nameId": "ARAM_Marksmage",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Marksmage_small.png",
+          "rarity": "Gold",
+          "wikiName": "Marksmage",
+          "mode": "KIWI_JADE"
+        },
         "1133": {
           "id": 1133,
           "name": "Magic Missile",
@@ -3370,85 +3254,103 @@
           "wikiName": "Magic Missile",
           "mode": "KIWI_JADE"
         },
-        "1061": {
-          "id": 1061,
-          "name": "Ok Boomerang",
-          "nameId": "ARAM_OkBoomerang",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/OKBoomerang_small.png",
-          "rarity": "Gold",
-          "wikiName": "OK Boomerang",
-          "mode": "KIWI_JADE"
-        },
-        "1066": {
-          "id": 1066,
-          "name": "Quantum Computing",
-          "nameId": "ARAM_QuantumComputing",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/QuantumComputing_small.png",
+        "1134": {
+          "id": 1134,
+          "name": "Draw Your Sword",
+          "nameId": "ARAM_DrawYourSword",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/DrawYourSword_small.png",
           "rarity": "Prismatic",
-          "wikiName": "Quantum Computing",
+          "wikiName": "Draw Your Sword",
           "mode": "KIWI_JADE"
         },
-        "1332": {
-          "id": 1332,
-          "name": "Ominous Pact",
-          "nameId": "OminousPact",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/WisdomOfAges_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Ominous Pact",
-          "mode": "KIWI_JADE"
-        },
-        "1328": {
-          "id": 1328,
-          "name": "Critical Rhythm",
-          "nameId": "CriticalRhythm",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/CriticalRhythm_small.png",
-          "rarity": "Gold",
-          "wikiName": "Critical Rhythm",
-          "mode": "KIWI_JADE"
-        },
-        "1333": {
-          "id": 1333,
-          "name": "Escape Plan",
-          "nameId": "EscapePlan",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/EscapePlan_small.png",
+        "1136": {
+          "id": 1136,
+          "name": "Slap Around",
+          "nameId": "ARAM_SlapAround",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/SlapAround_small.png",
           "rarity": "Silver",
-          "wikiName": "Escape Plan",
+          "wikiName": "Slap Around",
           "mode": "KIWI_JADE"
         },
-        "1325": {
-          "id": 1325,
-          "name": "Glass Cannon",
-          "nameId": "GlassCannon",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GlassCannon_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Glass Cannon",
+        "1138": {
+          "id": 1138,
+          "name": "Goredrink",
+          "nameId": "ARAM_Goredrink",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/GoreDrink_small.png",
+          "rarity": "Silver",
+          "wikiName": "Goredrink",
           "mode": "KIWI_JADE"
         },
-        "1334": {
-          "id": 1334,
-          "name": "Snowball Upgrade",
-          "nameId": "SnowballUpgrade",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/SnowballUpgrade_small.png",
+        "1141": {
+          "id": 1141,
+          "name": "All For You",
+          "nameId": "ARAM_AllForYou",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/AllForYou_small.png",
           "rarity": "Gold",
-          "wikiName": "Snowball Upgrade",
+          "wikiName": "All For You",
           "mode": "KIWI_JADE"
         },
-        "1329": {
-          "id": 1329,
-          "name": "Biggest Snowball Ever",
-          "nameId": "BiggestSnowballEver",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/BiggestSnowballEver_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Biggest Snowball Ever",
+        "1170": {
+          "id": 1170,
+          "name": "Scoped Weapons",
+          "nameId": "ARAM_ScopedWeapons",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/ScopedWeapons_small.png",
+          "rarity": "Silver",
+          "wikiName": "Scoped Weapons",
           "mode": "KIWI_JADE"
         },
-        "1335": {
-          "id": 1335,
-          "name": "Goldrend",
-          "nameId": "Goldrend",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Goldrend_small.png",
+        "1180": {
+          "id": 1180,
+          "name": "Big Brain",
+          "nameId": "ARAM_BigBrain",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/BigBrain_small.png",
+          "rarity": "Gold",
+          "wikiName": "Big Brain",
+          "mode": "KIWI_JADE"
+        },
+        "1181": {
+          "id": 1181,
+          "name": "Heavy Hitter",
+          "nameId": "ARAM_HeavyHitter",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/HeavyHitter_small.png",
+          "rarity": "Silver",
+          "wikiName": "Heavy Hitter",
+          "mode": "KIWI_JADE"
+        },
+        "1187": {
+          "id": 1187,
+          "name": "Flashbang",
+          "nameId": "ARAM_Flashbang",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Flashbang_small.png",
+          "rarity": "Silver",
+          "wikiName": "Flashbang",
+          "mode": "KIWI_JADE"
+        },
+        "1194": {
+          "id": 1194,
+          "name": "Fey Magic",
+          "nameId": "ARAM_FeyMagic",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/FeyMagic_small.png",
           "rarity": "Prismatic",
-          "wikiName": "Goldrend",
+          "wikiName": "Fey Magic",
+          "mode": "KIWI_JADE"
+        },
+        "1195": {
+          "id": 1195,
+          "name": "Giant Slayer",
+          "nameId": "ARAM_GiantSlayer",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/GiantSlayer_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Giant Slayer",
+          "mode": "KIWI_JADE"
+        },
+        "1204": {
+          "id": 1204,
+          "name": "Stackosaurus Rex",
+          "nameId": "ARAM_StackosaurusRex",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/StackosaurusRex_small.png",
+          "rarity": "Silver",
+          "wikiName": "Stackosaurus Rex",
           "mode": "KIWI_JADE"
         },
         "1205": {
@@ -3469,40 +3371,40 @@
           "wikiName": "EscAPADe",
           "mode": "KIWI_JADE"
         },
-        "1331": {
-          "id": 1331,
-          "name": "Empyrean Promise",
-          "nameId": "EmpyreanPromise",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/EmpyreamPromise_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Empyrean Promise",
-          "mode": "KIWI_JADE"
-        },
-        "1195": {
-          "id": 1195,
-          "name": "Giant Slayer",
-          "nameId": "ARAM_GiantSlayer",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/GiantSlayer_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Giant Slayer",
-          "mode": "KIWI_JADE"
-        },
-        "1323": {
-          "id": 1323,
-          "name": "Cruelty",
-          "nameId": "ARAM_Cruelty",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Cruelty_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Cruelty",
-          "mode": "KIWI_JADE"
-        },
-        "1345": {
-          "id": 1345,
-          "name": "Spiritual Purification",
-          "nameId": "ARAM_SpiritualPurification",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/SpiritualPurification_small.png",
+        "1211": {
+          "id": 1211,
+          "name": "It's Killing Time",
+          "nameId": "ARAM_ItsKillingTime",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/ItsKillingTime_small.png",
           "rarity": "Gold",
+          "wikiName": "It's Killing Time",
+          "mode": "KIWI_JADE"
+        },
+        "1220": {
+          "id": 1220,
+          "name": "Fan The Hammer",
+          "nameId": "ARAM_FanTheHammer",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/FanTheHammer_small.png",
+          "rarity": "Prismatic",
           "wikiName": null,
+          "mode": "KIWI_JADE"
+        },
+        "1225": {
+          "id": 1225,
+          "name": "Dual Wield",
+          "nameId": "ARAM_DualWield",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/DualWield_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Dual Wield",
+          "mode": "KIWI_JADE"
+        },
+        "1237": {
+          "id": 1237,
+          "name": "Transmute: Gold",
+          "nameId": "ARAM_TransmuteGold",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/TransmuteGold_small.png",
+          "rarity": "Silver",
+          "wikiName": "Transmute: Gold",
           "mode": "KIWI_JADE"
         },
         "1238": {
@@ -3523,31 +3425,49 @@
           "wikiName": "Transmute: Chaos",
           "mode": "KIWI_JADE"
         },
-        "1344": {
-          "id": 1344,
-          "name": "Final Form",
-          "nameId": "FinalForm",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/FinalForm_small.png",
+        "1301": {
+          "id": 1301,
+          "name": "Divine Intervention",
+          "nameId": "ARAM_DivineIntervention",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/SlowActingPainkillers_small.png",
+          "rarity": "Gold",
+          "wikiName": "Divine Intervention",
+          "mode": "KIWI_JADE"
+        },
+        "1305": {
+          "id": 1305,
+          "name": "Leg Day",
+          "nameId": "ARAM_LegDay",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/LegDay_small.png",
+          "rarity": "Silver",
+          "wikiName": "Leg Day",
+          "mode": "KIWI_JADE"
+        },
+        "1308": {
+          "id": 1308,
+          "name": "FireFox",
+          "nameId": "ARAM_Firefox",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Firfox_small.png",
+          "rarity": "Silver",
+          "wikiName": "Firefox",
+          "mode": "KIWI_JADE"
+        },
+        "1310": {
+          "id": 1310,
+          "name": "Clown College",
+          "nameId": "ARAM_ClownCollege",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/ClownCollege_small.png",
           "rarity": "Prismatic",
-          "wikiName": "Final Form",
+          "wikiName": "Clown College",
           "mode": "KIWI_JADE"
         },
-        "1347": {
-          "id": 1347,
-          "name": "Poltergeist",
-          "nameId": "Poltergeist",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Poltergeist_small.png",
-          "rarity": "Silver",
-          "wikiName": "Poltergeist",
-          "mode": "KIWI_JADE"
-        },
-        "1348": {
-          "id": 1348,
-          "name": "Flash 2",
-          "nameId": "Flash2",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Flash2_small.png",
-          "rarity": "Silver",
-          "wikiName": "Flash 2",
+        "1311": {
+          "id": 1311,
+          "name": "Overflow",
+          "nameId": "ARAM_Overflow",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Overflow_small.png",
+          "rarity": "Gold",
+          "wikiName": "Overflow",
           "mode": "KIWI_JADE"
         },
         "1314": {
@@ -3568,6 +3488,159 @@
           "wikiName": "Swift and Safe",
           "mode": "KIWI_JADE"
         },
+        "1322": {
+          "id": 1322,
+          "name": "Get Excited!",
+          "nameId": "ARAM_GetExcited",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GetExcited_small.png",
+          "rarity": "Gold",
+          "wikiName": "Get Excited",
+          "mode": "KIWI_JADE"
+        },
+        "1323": {
+          "id": 1323,
+          "name": "Cruelty",
+          "nameId": "ARAM_Cruelty",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Cruelty_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Cruelty",
+          "mode": "KIWI_JADE"
+        },
+        "1324": {
+          "id": 1324,
+          "name": "Protein Shake",
+          "nameId": "ARAM_ProteinShake",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/ProteinShake_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Protein Shake",
+          "mode": "KIWI_JADE"
+        },
+        "1325": {
+          "id": 1325,
+          "name": "Glass Cannon",
+          "nameId": "GlassCannon",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GlassCannon_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Glass Cannon",
+          "mode": "KIWI_JADE"
+        },
+        "1326": {
+          "id": 1326,
+          "name": "Nightstalking",
+          "nameId": "Nightstalking",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Nightstalking_small.png",
+          "rarity": "Gold",
+          "wikiName": "Nightstalking",
+          "mode": "KIWI_JADE"
+        },
+        "1327": {
+          "id": 1327,
+          "name": "Adamant",
+          "nameId": "Adamant",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Adamant_small.png",
+          "rarity": "Silver",
+          "wikiName": "Adamant",
+          "mode": "KIWI_JADE"
+        },
+        "1328": {
+          "id": 1328,
+          "name": "Critical Rhythm",
+          "nameId": "CriticalRhythm",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/CriticalRhythm_small.png",
+          "rarity": "Gold",
+          "wikiName": "Critical Rhythm",
+          "mode": "KIWI_JADE"
+        },
+        "1329": {
+          "id": 1329,
+          "name": "Biggest Snowball Ever",
+          "nameId": "BiggestSnowballEver",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/BiggestSnowballEver_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Biggest Snowball Ever",
+          "mode": "KIWI_JADE"
+        },
+        "1331": {
+          "id": 1331,
+          "name": "Empyrean Promise",
+          "nameId": "EmpyreanPromise",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/EmpyreamPromise_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Empyrean Promise",
+          "mode": "KIWI_JADE"
+        },
+        "1332": {
+          "id": 1332,
+          "name": "Ominous Pact",
+          "nameId": "OminousPact",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/WisdomOfAges_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Ominous Pact",
+          "mode": "KIWI_JADE"
+        },
+        "1333": {
+          "id": 1333,
+          "name": "Escape Plan",
+          "nameId": "EscapePlan",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/EscapePlan_small.png",
+          "rarity": "Silver",
+          "wikiName": "Escape Plan",
+          "mode": "KIWI_JADE"
+        },
+        "1334": {
+          "id": 1334,
+          "name": "Snowball Upgrade",
+          "nameId": "SnowballUpgrade",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/SnowballUpgrade_small.png",
+          "rarity": "Gold",
+          "wikiName": "Snowball Upgrade",
+          "mode": "KIWI_JADE"
+        },
+        "1335": {
+          "id": 1335,
+          "name": "Goldrend",
+          "nameId": "Goldrend",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Goldrend_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Goldrend",
+          "mode": "KIWI_JADE"
+        },
+        "1339": {
+          "id": 1339,
+          "name": "Laser Heal",
+          "nameId": "LaserHeal",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/LaseHeal_small.png",
+          "rarity": "Prismatic",
+          "wikiName": null,
+          "mode": "KIWI_JADE"
+        },
+        "1342": {
+          "id": 1342,
+          "name": "Snowball Roulette",
+          "nameId": "SnowballRoulette",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/SnowballUpgrade_small.png",
+          "rarity": "Gold",
+          "wikiName": null,
+          "mode": "KIWI_JADE"
+        },
+        "1344": {
+          "id": 1344,
+          "name": "Final Form",
+          "nameId": "FinalForm",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/FinalForm_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Final Form",
+          "mode": "KIWI_JADE"
+        },
+        "1345": {
+          "id": 1345,
+          "name": "Spiritual Purification",
+          "nameId": "ARAM_SpiritualPurification",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/SpiritualPurification_small.png",
+          "rarity": "Gold",
+          "wikiName": null,
+          "mode": "KIWI_JADE"
+        },
         "1346": {
           "id": 1346,
           "name": "Vampirism",
@@ -3577,22 +3650,40 @@
           "wikiName": "Vampirism",
           "mode": "KIWI_JADE"
         },
-        "1027": {
-          "id": 1027,
-          "name": "Earthwake",
-          "nameId": "ARAM_Earthwake",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Earthwake_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Earthwake",
+        "1347": {
+          "id": 1347,
+          "name": "Poltergeist",
+          "nameId": "Poltergeist",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Poltergeist_small.png",
+          "rarity": "Silver",
+          "wikiName": "Poltergeist",
           "mode": "KIWI_JADE"
         },
-        "1074": {
-          "id": 1074,
-          "name": "Shrink Ray",
-          "nameId": "ARAM_ShrinkRay",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/ShrinkRay_small.png",
+        "1348": {
+          "id": 1348,
+          "name": "Flash 2",
+          "nameId": "Flash2",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Flash2_small.png",
+          "rarity": "Silver",
+          "wikiName": "Flash 2",
+          "mode": "KIWI_JADE"
+        },
+        "1353": {
+          "id": 1353,
+          "name": "Tank Engine",
+          "nameId": "ARAM_TankEngine",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Tank_Engine_Small.png",
           "rarity": "Gold",
-          "wikiName": "Shrink Ray",
+          "wikiName": "Tank Engine",
+          "mode": "KIWI_JADE"
+        },
+        "1356": {
+          "id": 1356,
+          "name": "Critical Missile",
+          "nameId": "CriticalMissile",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/CriticalMissile_small.png",
+          "rarity": "Gold",
+          "wikiName": null,
           "mode": "KIWI_JADE"
         },
         "1358": {
@@ -3604,22 +3695,13 @@
           "wikiName": "Pinball",
           "mode": "KIWI_JADE"
         },
-        "1384": {
-          "id": 1384,
-          "name": "Donation",
-          "nameId": "Donation",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Donation_small.png",
-          "rarity": "Gold",
-          "wikiName": "Donation",
-          "mode": "KIWI_JADE"
-        },
-        "1006": {
-          "id": 1006,
-          "name": "Blade Waltz",
-          "nameId": "ARAM_BladeWaltz",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/BladeWaltz_small.png",
+        "1372": {
+          "id": 1372,
+          "name": "I'm a Baby Kitty Where is Mama",
+          "nameId": "BabyKitty",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/BabyKitty_small.png",
           "rarity": "Prismatic",
-          "wikiName": "Blade Waltz",
+          "wikiName": null,
           "mode": "KIWI_JADE"
         },
         "1375": {
@@ -3631,13 +3713,13 @@
           "wikiName": "Soul Eater",
           "mode": "KIWI_JADE"
         },
-        "1401": {
-          "id": 1401,
-          "name": "Growth Spurt",
-          "nameId": "GrowthSpurt",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GrowthSpurt_small.png",
+        "1384": {
+          "id": 1384,
+          "name": "Donation",
+          "nameId": "Donation",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Donation_small.png",
           "rarity": "Gold",
-          "wikiName": "Growth Spurt",
+          "wikiName": "Donation",
           "mode": "KIWI_JADE"
         },
         "1390": {
@@ -3649,11 +3731,47 @@
           "wikiName": "Phenomenal Evil",
           "mode": "KIWI_JADE"
         },
+        "1392": {
+          "id": 1392,
+          "name": "Holy Snowball",
+          "nameId": "GoldenSnowball",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GoldenSnowball_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Holy Snowball",
+          "mode": "KIWI_JADE"
+        },
         "1400": {
           "id": 1400,
           "name": "Final City Transit",
           "nameId": "TrainOfTheDead",
           "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Nightstalking_small.png",
+          "rarity": "Gold",
+          "wikiName": null,
+          "mode": "KIWI_JADE"
+        },
+        "1401": {
+          "id": 1401,
+          "name": "Growth Spurt",
+          "nameId": "GrowthSpurt",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GrowthSpurt_small.png",
+          "rarity": "Gold",
+          "wikiName": "Growth Spurt",
+          "mode": "KIWI_JADE"
+        },
+        "1406": {
+          "id": 1406,
+          "name": "Grandma's Chili Oil",
+          "nameId": "GrandmasChiliOil",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GrandmasChiliOil_small.png",
+          "rarity": "Gold",
+          "wikiName": null,
+          "mode": "KIWI_JADE"
+        },
+        "1409": {
+          "id": 1409,
+          "name": "Poro Blaster",
+          "nameId": "ARAM_Poro_Blast",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/PoroBlast_small.png",
           "rarity": "Gold",
           "wikiName": null,
           "mode": "KIWI_JADE"
@@ -3676,42 +3794,6 @@
           "wikiName": "Twin Fire",
           "mode": "KIWI_JADE"
         },
-        "2005": {
-          "id": 2005,
-          "name": "Triggered Inferno",
-          "nameId": "ARAM_InfernoTriggered",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/MadScientist_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Triggered Inferno",
-          "mode": "KIWI_JADE"
-        },
-        "2006": {
-          "id": 2006,
-          "name": "Dropkick",
-          "nameId": "ARAM_Dropkick",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Dropkick_small.png",
-          "rarity": "Prismatic",
-          "wikiName": null,
-          "mode": "KIWI_JADE"
-        },
-        "1237": {
-          "id": 1237,
-          "name": "Transmute: Gold",
-          "nameId": "ARAM_TransmuteGold",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/TransmuteGold_small.png",
-          "rarity": "Silver",
-          "wikiName": "Transmute: Gold",
-          "mode": "KIWI_JADE"
-        },
-        "1356": {
-          "id": 1356,
-          "name": "Critical Missile",
-          "nameId": "CriticalMissile",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/CriticalMissile_small.png",
-          "rarity": "Gold",
-          "wikiName": null,
-          "mode": "KIWI_JADE"
-        },
         "1420": {
           "id": 1420,
           "name": "Sonata",
@@ -3730,22 +3812,40 @@
           "wikiName": "Prom Queen",
           "mode": "KIWI_JADE"
         },
-        "2026": {
-          "id": 2026,
-          "name": "Kill Secured",
-          "nameId": "KillSecured",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/KillSecure_small.png",
-          "rarity": "Silver",
-          "wikiName": "Kill Secured",
+        "1424": {
+          "id": 1424,
+          "name": "???",
+          "nameId": "ARAM_MissingPingAugment",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/MissingPing_small.png",
+          "rarity": "Prismatic",
+          "wikiName": null,
           "mode": "KIWI_JADE"
         },
-        "1308": {
-          "id": 1308,
-          "name": "FireFox",
-          "nameId": "ARAM_Firefox",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Firfox_small.png",
-          "rarity": "Silver",
-          "wikiName": "Firefox",
+        "2003": {
+          "id": 2003,
+          "name": "Bounce of the Poro King",
+          "nameId": "ARAM_PoroKing",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/PoroKing_small.png",
+          "rarity": "Prismatic",
+          "wikiName": null,
+          "mode": "KIWI_JADE"
+        },
+        "2005": {
+          "id": 2005,
+          "name": "Triggered Inferno",
+          "nameId": "ARAM_InfernoTriggered",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/MadScientist_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "Triggered Inferno",
+          "mode": "KIWI_JADE"
+        },
+        "2006": {
+          "id": 2006,
+          "name": "Dropkick",
+          "nameId": "ARAM_Dropkick",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Dropkick_small.png",
+          "rarity": "Prismatic",
+          "wikiName": null,
           "mode": "KIWI_JADE"
         },
         "2007": {
@@ -3784,13 +3884,13 @@
           "wikiName": "Juiced",
           "mode": "KIWI_JADE"
         },
-        "1220": {
-          "id": 1220,
-          "name": "Fan The Hammer",
-          "nameId": "ARAM_FanTheHammer",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/FanTheHammer_small.png",
-          "rarity": "Prismatic",
-          "wikiName": null,
+        "2026": {
+          "id": 2026,
+          "name": "Kill Secured",
+          "nameId": "KillSecured",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/KillSecure_small.png",
+          "rarity": "Silver",
+          "wikiName": "Kill Secured",
           "mode": "KIWI_JADE"
         },
         "2031": {
@@ -3856,13 +3956,13 @@
           "wikiName": "Multishot",
           "mode": "KIWI_JADE"
         },
-        "2065": {
-          "id": 2065,
-          "name": "Terror",
-          "nameId": "ARAM_Terror",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Desecrator_large.png",
-          "rarity": "Gold",
-          "wikiName": "Terror",
+        "2062": {
+          "id": 2062,
+          "name": "Echo Cast",
+          "nameId": "Ability_SelfAOE_DoubleCast",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Prismatic.png",
+          "rarity": "Prismatic",
+          "wikiName": "Echo Cast",
           "mode": "KIWI_JADE"
         },
         "2063": {
@@ -3881,6 +3981,15 @@
           "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Gold.png",
           "rarity": "Gold",
           "wikiName": "Quickstep",
+          "mode": "KIWI_JADE"
+        },
+        "2065": {
+          "id": 2065,
+          "name": "Terror",
+          "nameId": "ARAM_Terror",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Desecrator_large.png",
+          "rarity": "Gold",
+          "wikiName": "Terror",
           "mode": "KIWI_JADE"
         },
         "2072": {
@@ -3910,6 +4019,15 @@
           "wikiName": "Stay Resolute",
           "mode": "KIWI_JADE"
         },
+        "2077": {
+          "id": 2077,
+          "name": "Ravenous Bind",
+          "nameId": "DarkWind",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/UpgradeHubris_small.png",
+          "rarity": "Gold",
+          "wikiName": "Ravenous Bind",
+          "mode": "KIWI_JADE"
+        },
         "2078": {
           "id": 2078,
           "name": "Chain Reaction",
@@ -3919,13 +4037,13 @@
           "wikiName": "Chain Reaction",
           "mode": "KIWI_JADE"
         },
-        "2077": {
-          "id": 2077,
-          "name": "Ravenous Bind",
-          "nameId": "DarkWind",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/UpgradeHubris_small.png",
+        "2080": {
+          "id": 2080,
+          "name": "Snowblast",
+          "nameId": "Snowbomb",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Snowbomb_small.png",
           "rarity": "Gold",
-          "wikiName": "Ravenous Bind",
+          "wikiName": "Snowblast",
           "mode": "KIWI_JADE"
         },
         "2082": {
@@ -3946,13 +4064,13 @@
           "wikiName": "Tooth Fairy",
           "mode": "KIWI_JADE"
         },
-        "1001": {
-          "id": 1001,
-          "name": "Titan's Resolve",
-          "nameId": "ARAM_ImTheJuggernaut",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/IAmTheJuggernaut_small.png",
+        "2087": {
+          "id": 2087,
+          "name": "Archmage",
+          "nameId": "ARAM_Archmage",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Eureka_small.png",
           "rarity": "Prismatic",
-          "wikiName": "Titan's Resolve",
+          "wikiName": "Archmage",
           "mode": "KIWI_JADE"
         },
         "2088": {
@@ -3962,15 +4080,6 @@
           "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Snowday_small.png",
           "rarity": "Silver",
           "wikiName": "Snowday",
-          "mode": "KIWI_JADE"
-        },
-        "2062": {
-          "id": 2062,
-          "name": "Echo Cast",
-          "nameId": "Ability_SelfAOE_DoubleCast",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Prismatic.png",
-          "rarity": "Prismatic",
-          "wikiName": "Echo Cast",
           "mode": "KIWI_JADE"
         },
         "2089": {
@@ -3991,33 +4100,6 @@
           "wikiName": "Endless Decimation",
           "mode": "KIWI_JADE"
         },
-        "1005": {
-          "id": 1005,
-          "name": "Wee Woo Wee Woo",
-          "nameId": "ARAM_WeeWooWeeWoo",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/WeeWooWeeWoo_small.png",
-          "rarity": "Gold",
-          "wikiName": "Wee Woo Wee Woo",
-          "mode": "KIWI_JADE"
-        },
-        "2087": {
-          "id": 2087,
-          "name": "Archmage",
-          "nameId": "ARAM_Archmage",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Eureka_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Archmage",
-          "mode": "KIWI_JADE"
-        },
-        "1204": {
-          "id": 1204,
-          "name": "Stackosaurus Rex",
-          "nameId": "ARAM_StackosaurusRex",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/StackosaurusRex_small.png",
-          "rarity": "Silver",
-          "wikiName": "Stackosaurus Rex",
-          "mode": "KIWI_JADE"
-        },
         "2096": {
           "id": 2096,
           "name": "Lil' Extra Help",
@@ -4036,6 +4118,15 @@
           "wikiName": "Void Dash",
           "mode": "KIWI_JADE"
         },
+        "2098": {
+          "id": 2098,
+          "name": "En Passant",
+          "nameId": "ARAM_EndlessHunt",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Dashing_small.png",
+          "rarity": "Prismatic",
+          "wikiName": "En Passant",
+          "mode": "KIWI_JADE"
+        },
         "2099": {
           "id": 2099,
           "name": "Rite of Ascension",
@@ -4043,6 +4134,15 @@
           "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GlassCannon_small.png",
           "rarity": "Prismatic",
           "wikiName": "Rite of Ascension",
+          "mode": "KIWI_JADE"
+        },
+        "2102": {
+          "id": 2102,
+          "name": "Pressure Cooker",
+          "nameId": "PressureCooker",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/QuestPressureCooker_small.png",
+          "rarity": "Gold",
+          "wikiName": null,
           "mode": "KIWI_JADE"
         },
         "2103": {
@@ -4072,33 +4172,6 @@
           "wikiName": "Hellbent",
           "mode": "KIWI_JADE"
         },
-        "2098": {
-          "id": 2098,
-          "name": "En Passant",
-          "nameId": "ARAM_EndlessHunt",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Dashing_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "En Passant",
-          "mode": "KIWI_JADE"
-        },
-        "2080": {
-          "id": 2080,
-          "name": "Snowblast",
-          "nameId": "Snowbomb",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Snowbomb_small.png",
-          "rarity": "Gold",
-          "wikiName": "Snowblast",
-          "mode": "KIWI_JADE"
-        },
-        "2102": {
-          "id": 2102,
-          "name": "Pressure Cooker",
-          "nameId": "PressureCooker",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/QuestPressureCooker_small.png",
-          "rarity": "Gold",
-          "wikiName": null,
-          "mode": "KIWI_JADE"
-        },
         "2109": {
           "id": 2109,
           "name": "Snap Back",
@@ -4108,22 +4181,13 @@
           "wikiName": "Snap Back",
           "mode": "KIWI_JADE"
         },
-        "2128": {
-          "id": 2128,
-          "name": "Combusting Interest",
-          "nameId": "BloodMoneyBurn",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/BloodMoney2_small.png",
+        "2111": {
+          "id": 2111,
+          "name": "BONK!",
+          "nameId": "Bonk",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Bonk_large.png",
           "rarity": "Gold",
-          "wikiName": null,
-          "mode": "KIWI_JADE"
-        },
-        "2116": {
-          "id": 2116,
-          "name": "Pursuit of Power",
-          "nameId": "SpecializedEmpowerment",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Marksmage_small.png",
-          "rarity": "Gold",
-          "wikiName": "Pursuit of Power",
+          "wikiName": "BONK!",
           "mode": "KIWI_JADE"
         },
         "2115": {
@@ -4135,13 +4199,13 @@
           "wikiName": "Squishy Slappy Grab",
           "mode": "KIWI_JADE"
         },
-        "2111": {
-          "id": 2111,
-          "name": "BONK!",
-          "nameId": "Bonk",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Bonk_large.png",
+        "2116": {
+          "id": 2116,
+          "name": "Pursuit of Power",
+          "nameId": "SpecializedEmpowerment",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Marksmage_small.png",
           "rarity": "Gold",
-          "wikiName": "BONK!",
+          "wikiName": "Pursuit of Power",
           "mode": "KIWI_JADE"
         },
         "2123": {
@@ -4171,6 +4235,15 @@
           "wikiName": "Reload",
           "mode": "KIWI_JADE"
         },
+        "2128": {
+          "id": 2128,
+          "name": "Combusting Interest",
+          "nameId": "BloodMoneyBurn",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/BloodMoney2_small.png",
+          "rarity": "Gold",
+          "wikiName": null,
+          "mode": "KIWI_JADE"
+        },
         "2131": {
           "id": 2131,
           "name": "Don't Change the Channel",
@@ -4178,15 +4251,6 @@
           "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/DontChangeTheChannel_small.png",
           "rarity": "Silver",
           "wikiName": "Don't Change the Channel",
-          "mode": "KIWI_JADE"
-        },
-        "2136": {
-          "id": 2136,
-          "name": "Trusty Weapon",
-          "nameId": "TrustyWeapon",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Silver.png",
-          "rarity": "Silver",
-          "wikiName": "Trusty Weapon",
           "mode": "KIWI_JADE"
         },
         "2132": {
@@ -4207,6 +4271,15 @@
           "wikiName": "Pin Cushion",
           "mode": "KIWI_JADE"
         },
+        "2136": {
+          "id": 2136,
+          "name": "Trusty Weapon",
+          "nameId": "TrustyWeapon",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Silver.png",
+          "rarity": "Silver",
+          "wikiName": "Trusty Weapon",
+          "mode": "KIWI_JADE"
+        },
         "2137": {
           "id": 2137,
           "name": "Pat On The Back",
@@ -4214,6 +4287,15 @@
           "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/PatOnTheBack_small.png",
           "rarity": "Gold",
           "wikiName": "Pat On The Back",
+          "mode": "KIWI_JADE"
+        },
+        "2138": {
+          "id": 2138,
+          "name": "Adaptive Ward",
+          "nameId": "WardingWeapon",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Silver.png",
+          "rarity": "Silver",
+          "wikiName": "Adaptive Ward",
           "mode": "KIWI_JADE"
         },
         "2139": {
@@ -4234,15 +4316,6 @@
           "wikiName": "Bolstered",
           "mode": "KIWI_JADE"
         },
-        "2138": {
-          "id": 2138,
-          "name": "Adaptive Ward",
-          "nameId": "WardingWeapon",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Silver.png",
-          "rarity": "Silver",
-          "wikiName": "Adaptive Ward",
-          "mode": "KIWI_JADE"
-        },
         "2148": {
           "id": 2148,
           "name": "Double Strike",
@@ -4252,13 +4325,13 @@
           "wikiName": "Double Strike",
           "mode": "KIWI_JADE"
         },
-        "1392": {
-          "id": 1392,
-          "name": "Holy Snowball",
-          "nameId": "GoldenSnowball",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GoldenSnowball_small.png",
-          "rarity": "Prismatic",
-          "wikiName": "Holy Snowball",
+        "7001": {
+          "id": 7001,
+          "name": "Upgrade: Zz'Rot Portal",
+          "nameId": "Upgrade_ZzRotPortal",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Upgrade_ZzrotPortal_Small.png",
+          "rarity": "Silver",
+          "wikiName": null,
           "mode": "KIWI_JADE"
         },
         "7002": {
@@ -4267,15 +4340,6 @@
           "nameId": "DontStopCleavin",
           "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Dont_Stop_Cleaving_Small.png",
           "rarity": "Gold",
-          "wikiName": null,
-          "mode": "KIWI_JADE"
-        },
-        "7001": {
-          "id": 7001,
-          "name": "Upgrade: Zz'Rot Portal",
-          "nameId": "Upgrade_ZzRotPortal",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Upgrade_ZzrotPortal_Small.png",
-          "rarity": "Silver",
           "wikiName": null,
           "mode": "KIWI_JADE"
         },
@@ -4294,15 +4358,6 @@
           "nameId": "DrinkUp",
           "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Drink_Up_Small.png",
           "rarity": "Silver",
-          "wikiName": null,
-          "mode": "KIWI_JADE"
-        },
-        "7010": {
-          "id": 7010,
-          "name": "Time Warp: Heartsteel",
-          "nameId": "FutureSightHeartsteel",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/FS_Heart_Steal_Small.png",
-          "rarity": "Gold",
           "wikiName": null,
           "mode": "KIWI_JADE"
         },
@@ -4333,6 +4388,15 @@
           "wikiName": null,
           "mode": "KIWI_JADE"
         },
+        "7008": {
+          "id": 7008,
+          "name": "Doran's Biggest Fan",
+          "nameId": "DoransBiggestFan",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Dorans_Fan_Small.png",
+          "rarity": "Prismatic",
+          "wikiName": null,
+          "mode": "KIWI_JADE"
+        },
         "7009": {
           "id": 7009,
           "name": "Upgrade: Innervating Locket",
@@ -4342,12 +4406,12 @@
           "wikiName": null,
           "mode": "KIWI_JADE"
         },
-        "7008": {
-          "id": 7008,
-          "name": "Doran's Biggest Fan",
-          "nameId": "DoransBiggestFan",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Dorans_Fan_Small.png",
-          "rarity": "Prismatic",
+        "7010": {
+          "id": 7010,
+          "name": "Time Warp: Heartsteel",
+          "nameId": "FutureSightHeartsteel",
+          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/FS_Heart_Steal_Small.png",
+          "rarity": "Gold",
           "wikiName": null,
           "mode": "KIWI_JADE"
         },
@@ -4384,69 +4448,6 @@
           "nameId": "DipDiveDodge",
           "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Stabby_Stabby_Small.png",
           "rarity": "Silver",
-          "wikiName": null,
-          "mode": "KIWI_JADE"
-        },
-        "2003": {
-          "id": 2003,
-          "name": "Bounce of the Poro King",
-          "nameId": "ARAM_PoroKing",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/PoroKing_small.png",
-          "rarity": "Prismatic",
-          "wikiName": null,
-          "mode": "KIWI_JADE"
-        },
-        "1406": {
-          "id": 1406,
-          "name": "Grandma's Chili Oil",
-          "nameId": "GrandmasChiliOil",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GrandmasChiliOil_small.png",
-          "rarity": "Gold",
-          "wikiName": null,
-          "mode": "KIWI_JADE"
-        },
-        "1339": {
-          "id": 1339,
-          "name": "Laser Heal",
-          "nameId": "LaserHeal",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/LaseHeal_small.png",
-          "rarity": "Prismatic",
-          "wikiName": null,
-          "mode": "KIWI_JADE"
-        },
-        "1342": {
-          "id": 1342,
-          "name": "Snowball Roulette",
-          "nameId": "SnowballRoulette",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/SnowballUpgrade_small.png",
-          "rarity": "Gold",
-          "wikiName": null,
-          "mode": "KIWI_JADE"
-        },
-        "1409": {
-          "id": 1409,
-          "name": "Poro Blaster",
-          "nameId": "ARAM_Poro_Blast",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/PoroBlast_small.png",
-          "rarity": "Gold",
-          "wikiName": null,
-          "mode": "KIWI_JADE"
-        },
-        "1372": {
-          "id": 1372,
-          "name": "I'm a Baby Kitty Where is Mama",
-          "nameId": "BabyKitty",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/BabyKitty_small.png",
-          "rarity": "Prismatic",
-          "wikiName": null,
-          "mode": "KIWI_JADE"
-        },
-        "1424": {
-          "id": 1424,
-          "name": "???",
-          "nameId": "ARAM_MissingPingAugment",
-          "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/MissingPing_small.png",
-          "rarity": "Prismatic",
           "wikiName": null,
           "mode": "KIWI_JADE"
         },
