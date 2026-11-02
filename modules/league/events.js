@@ -918,6 +918,57 @@ function getWikiAugmentEntry(name) {
   return data[name] || lower[String(name).toLowerCase()] || null;
 }
 
+const MAYHEM_AUGMENT_INDEX_FILE = path.join(__dirname, 'mayhem_augment_index.json');
+let mayhemAugmentIndexCache = { mtimeMs: 0, data: { modes: {} } };
+
+function loadMayhemAugmentIndex() {
+  try {
+    const stat = fs.statSync(MAYHEM_AUGMENT_INDEX_FILE);
+    if (stat.mtimeMs !== mayhemAugmentIndexCache.mtimeMs) {
+      mayhemAugmentIndexCache = {
+        mtimeMs: stat.mtimeMs,
+        data: JSON.parse(fs.readFileSync(MAYHEM_AUGMENT_INDEX_FILE, 'utf8')),
+      };
+    }
+  } catch (err) {
+    if (err?.code !== 'ENOENT' && logger) {
+      logger.error('[Infographic] Failed to load mayhem_augment_index.json', err);
+    }
+  }
+  return mayhemAugmentIndexCache.data;
+}
+
+function getMayhemAugmentMode(payload) {
+  if (!payload) return null;
+  const gameMode = String(payload.gameMode || '').toUpperCase();
+  const queueId = Number(payload.queueId);
+  if (gameMode === 'KIWI_JADE') return 'KIWI_JADE';
+  const mutators = Array.isArray(payload.gameModeMutators)
+    ? payload.gameModeMutators.join(' ')
+    : String(payload.gameModeMutators || '');
+  if (mutators.toUpperCase().includes('KIWI_JADE')) return 'KIWI_JADE';
+  if (gameMode === 'KIWI' || queueId === 2400) return 'KIWI';
+  return null;
+}
+
+function getMayhemAugmentEntry(id, mode) {
+  if (!mode || !Number.isFinite(Number(id))) return null;
+  const index = loadMayhemAugmentIndex();
+  const modeData = index?.modes?.[mode];
+  return modeData?.byId?.[String(id)] || null;
+}
+
+function cdragonAugmentIconUrl(iconPath) {
+  if (!iconPath) return null;
+  return (
+    'https://raw.communitydragon.org/latest/game/' +
+    String(iconPath)
+      .replace(/^\/+/, '')
+      .replace(/^lol-game-data\/assets\//i, '')
+      .toLowerCase()
+  );
+}
+
 const AUGMENT_ICON_DIR = path.join(__dirname, 'assets', 'mayhem');
 
 function getAugmentName(id) {
@@ -928,17 +979,28 @@ function getAugmentName(id) {
   return AUGMENT_NAME_MAP[id] || `Augment ${id}`;
 }
 
-function buildAugmentDisplay(id) {
-  const name = getAugmentName(id);
-  
+function augmentShort(name) {
+  const words = String(name || '')
+    .split(/[^A-Za-z0-9]+/)
+    .filter(Boolean);
+  if (words.length >= 2) {
+    return words.slice(0, 3).map((word) => word[0]).join('').toUpperCase().slice(0, 3);
+  }
+  return (words[0] || 'AUG').slice(0, 3).toUpperCase();
+}
+
+function buildAugmentDisplay(id, mode = null) {
+  const entry = getMayhemAugmentEntry(id, mode);
+  let name = entry ? (entry.name || entry.wikiName || `Augment ${id}`) : getAugmentName(id);
+  let wikiEntry = entry
+    ? (entry.wikiName ? getWikiAugmentEntry(entry.wikiName) : getWikiAugmentEntry(name))
+    : getWikiAugmentEntry(name);
+
   let icon = null;
-  const wikiEntry = getWikiAugmentEntry(name);
-  
-  // If we have wiki data for this name, try to resolve the local icon
   if (wikiEntry && wikiEntry.icon) {
     const iconName = wikiEntry.icon;
     const fullPath = path.join(AUGMENT_ICON_DIR, iconName);
-    
+
     if (fs.existsSync(fullPath)) {
       try {
         // Read as base64 to avoid Puppeteer local file permission issues
@@ -947,25 +1009,28 @@ function buildAugmentDisplay(id) {
       } catch (err) {
         if (logger) logger.error(`[Infographic] Failed to read icon file: ${fullPath}`, err);
       }
-    } else {
-      if (logger) logger.warn(`[Infographic] Icon file missing: ${fullPath} (Augment: ${name})`);
+    } else if (logger) {
+      logger.warn(`[Infographic] Icon file missing: ${fullPath} (Augment: ${name})`);
     }
-  } else {
-    // Debug: log if we have a name but no wiki entry
-    // if (name && !name.startsWith('Augment ') && logger) {
-    //   logger.info(`[Infographic] No wiki entry found for augment: ${name}`);
-    // }
   }
+
+  // The Mayhem wiki does not have every new augment yet. Fall back to the
+  // CDragon icon for those entries rather than showing an empty "AUG" tile.
+  if (!icon && entry && entry.icon) {
+    icon = cdragonAugmentIconUrl(entry.icon);
+  }
+
+  if (wikiEntry && wikiEntry.name) name = wikiEntry.name;
 
   return {
     id,
-    name: wikiEntry ? wikiEntry.name : name,
-    short: (name || '').slice(0, 3).toUpperCase() || 'AUG',
-    icon: icon, 
+    name,
+    short: augmentShort(name),
+    icon,
   };
 }
 
-function extractPlayerAugments(player) {
+function extractPlayerAugments(player, mode = null) {
   if (!player) return [];
 
   let ids = [];
@@ -980,7 +1045,7 @@ function extractPlayerAugments(player) {
 
   // Allow Numbers or non-empty Strings
   const unique = Array.from(new Set(ids.filter((v) => Number.isFinite(v) || (typeof v === 'string' && v.length > 0))));
-  return unique.map(buildAugmentDisplay);
+  return unique.map((id) => buildAugmentDisplay(id, mode));
 }
 
 /* =====================================================
@@ -991,7 +1056,7 @@ function extractPlayerAugments(player) {
  * Extracts augments for a player with full wiki details (tier, description).
  * Returns: [{ id, name, tier, description, isUnknown }]
  */
-function extractPlayerAugmentsWithDetails(player) {
+function extractPlayerAugmentsWithDetails(player, mode = null) {
   if (!player) return [];
 
   let ids = [];
@@ -1007,12 +1072,27 @@ function extractPlayerAugmentsWithDetails(player) {
   const unique = Array.from(new Set(ids.filter((v) => Number.isFinite(v) || (typeof v === 'string' && v.length > 0))));
 
   return unique.map((id) => {
+    const entry = getMayhemAugmentEntry(id, mode);
+    if (entry) {
+      const wikiEntry = entry.wikiName
+        ? getWikiAugmentEntry(entry.wikiName)
+        : getWikiAugmentEntry(entry.name);
+      return {
+        id,
+        name: entry.name || entry.wikiName || `Augment ${id}`,
+        tier: wikiEntry?.tier || entry.rarity || null,
+        description: wikiEntry?.description || null,
+        isUnknown: false,
+      };
+    }
+
+    // No mode index entry: keep the legacy/manual path for arena or old data.
     const isNumericId = typeof id === 'number' && Number.isFinite(id);
     const mappedName = isNumericId ? AUGMENT_NAME_MAP[id] : null;
     const resolvedName = typeof id === 'string' ? id : (mappedName || null);
     const wikiEntry = resolvedName ? getWikiAugmentEntry(resolvedName) : null;
     const displayName = wikiEntry ? wikiEntry.name : (resolvedName || `Augment ${id}`);
-    const isUnknown = isNumericId && !mappedName && !wikiEntry;
+    const isUnknown = mode ? true : (isNumericId && !mappedName && !wikiEntry);
 
     return { id, name: displayName, tier: wikiEntry?.tier || null, description: wikiEntry?.description || null, isUnknown };
   });
@@ -1058,7 +1138,7 @@ function stripWikiMarkup(text) {
       .replace(/\{\{tip\|[^|{}]+\|icononly[^{}]*\}\}/gi, '')
       // ── Core existing rules ───────────────────────────────────────────────
       .replace(/\{\{cai\|([^|{}]+)\|[^{}]*\}\}/gi, '$1')            // {{cai|name|champ}}
-      .replace(/\{\{tip\|([^|{}]+)(?:\|[^{}]*)?\}\}/gi, '$1')       // {{tip|text|optional}}
+      .replace(/\{\{tip\|([^|{}]+)(?:\|([^{}]*))?\}\}/gi, (_, first, second) => (second || first)) // {{tip|term|display}}
       .replace(/\{\{tt\|([^|{}]+)(?:\|[^{}]*)?\}\}/gi, '$1')        // {{tt|text|tooltip}}
       .replace(/\{\{ft\|[^{}|]+\|([^{}|]+)\}\}/gi, '$1')            // {{ft|complex|simple}} → keep plain-text last arg
       .replace(/\{\{ft\|([^{}]+)\}\}/gi, firstArg)                   // {{ft|single-arg}} fallback
@@ -1118,12 +1198,12 @@ function stripWikiMarkup(text) {
 /**
  * Builds a paginated EmbedBuilder showing one player's augments using ANSI coloring.
  */
-function buildAugmentPageEmbed(allPlayers, activeIdx, gameId) {
+function buildAugmentPageEmbed(allPlayers, activeIdx, gameId, mode = null) {
   const player = allPlayers[activeIdx];
   const playerName = formatName(player);
   const champName = player.championName || 'Unknown';
   const teamLabel = player.teamId === 100 ? 'Blue' : 'Red';
-  const augments = extractPlayerAugmentsWithDetails(player);
+  const augments = extractPlayerAugmentsWithDetails(player, mode);
 
   let embedColor = 0x7289DA;
   if (augments.some((a) => a.tier === 'Prismatic')) embedColor = TIER_COLORS.Prismatic;
@@ -1183,7 +1263,7 @@ function buildAugmentPageEmbed(allPlayers, activeIdx, gameId) {
 /**
  * Builds ActionRows for the augment view: prev/next navigation + identify buttons for unknowns.
  */
-function buildAugmentPageComponents(allPlayers, gameId, activeIdx) {
+function buildAugmentPageComponents(allPlayers, gameId, activeIdx, mode = null) {
   const rows = [];
   const hasPrev = activeIdx > 0;
   const hasNext = activeIdx < allPlayers.length - 1;
@@ -1209,7 +1289,7 @@ function buildAugmentPageComponents(allPlayers, gameId, activeIdx) {
     rows.push(navRow);
   }
 
-  const augments = extractPlayerAugmentsWithDetails(allPlayers[activeIdx]);
+  const augments = extractPlayerAugmentsWithDetails(allPlayers[activeIdx], mode);
   const unknowns = augments.filter((a) => a.isUnknown).slice(0, 5);
   if (unknowns.length > 0) {
     const identifyRow = new ActionRowBuilder();
@@ -1269,6 +1349,7 @@ function fixChampName(name) {
 async function prepareScoreboardData(payload, uploaderInfos = [], rankedLpEntries = []) {
   const teams = Array.isArray(payload.teams) ? payload.teams : [];
   const isMayhem = isAramMayhem(payload);
+  const augmentMode = getMayhemAugmentMode(payload);
   const fallbackRanked = extractRankedLpInfo(payload);
   const effectiveRankedEntries = Array.isArray(rankedLpEntries) && rankedLpEntries.length > 0
     ? rankedLpEntries
@@ -1456,7 +1537,7 @@ async function prepareScoreboardData(payload, uploaderInfos = [], rankedLpEntrie
       rune2: `${RUNE_CDN}/${runeMap[sStyle]||'7200_Domination'}.png`,
       displayItems,
       badges,
-      augments: isMayhem ? extractPlayerAugments(p) : [],
+      augments: isMayhem ? extractPlayerAugments(p, augmentMode) : [],
       k, d, a,
       kdaRatio: d === 0 ? (k + a).toFixed(2) : ((k + a) / d).toFixed(2),
       totalDamage: dmg.toLocaleString(),
@@ -3310,6 +3391,7 @@ async function fetchRanksNA(puuid, summonerName) {
 async function preparePlayerStatsData(player, payload, allPlayers) {
   const stats = player.stats || {};
   const isMayhem = isAramMayhem(payload);
+  const augmentMode = getMayhemAugmentMode(payload);
   const ver = await getLatestDDVersion();
   const CDN = `https://ddragon.leagueoflegends.com/cdn/${ver}/img`;
   const ITEM_CDN = `${CDN}/item`;
@@ -3342,7 +3424,7 @@ async function preparePlayerStatsData(player, payload, allPlayers) {
     { url: itemIds[6] ? `${ITEM_CDN}/${itemIds[6]}.png` : null, isPlaceholder: !itemIds[6], isTrinket: true }
   ];
 
-  const augments = isMayhem ? extractPlayerAugments(player) : [];
+  const augments = isMayhem ? extractPlayerAugments(player, augmentMode) : [];
 
   const s1Name = spellMap[player.spell1Id] || 'SummonerFlash';
   const s2Name = spellMap[player.spell2Id] || 'SummonerFlash';
@@ -4073,8 +4155,9 @@ async function onInteraction(interaction) {
         return interaction.editReply({ content: 'No player data found for this match.' });
       }
 
-      const embed = buildAugmentPageEmbed(allPlayers, 0, gameId);
-      const components = buildAugmentPageComponents(allPlayers, gameId, 0);
+      const augmentMode = getMayhemAugmentMode(cached.payload);
+      const embed = buildAugmentPageEmbed(allPlayers, 0, gameId, augmentMode);
+      const components = buildAugmentPageComponents(allPlayers, gameId, 0, augmentMode);
 
       logger.info('[AugmentView] View Augments opened', { gameId, userId: interaction.user.id, playerCount: allPlayers.length });
       return interaction.editReply({ embeds: [embed], components });
@@ -4099,8 +4182,9 @@ async function onInteraction(interaction) {
 
       await interaction.deferUpdate();
 
-      const embed = buildAugmentPageEmbed(allPlayers, playerIdx, gameId);
-      const components = buildAugmentPageComponents(allPlayers, gameId, playerIdx);
+      const augmentMode = getMayhemAugmentMode(cached.payload);
+      const embed = buildAugmentPageEmbed(allPlayers, playerIdx, gameId, augmentMode);
+      const components = buildAugmentPageComponents(allPlayers, gameId, playerIdx, augmentMode);
 
       logger.info('[AugmentView] Navigated to player', { gameId, playerIdx, userId: interaction.user.id });
       return interaction.editReply({ embeds: [embed], components });
@@ -4191,8 +4275,9 @@ if (interaction.isModalSubmit()) {
       if (cached) {
         const allPlayers = getAllPlayersOrdered(cached.payload);
         const validIdx = !isNaN(playerIdx) && playerIdx >= 0 && playerIdx < allPlayers.length ? playerIdx : 0;
-        const embed = buildAugmentPageEmbed(allPlayers, validIdx, gameId);
-        const components = buildAugmentPageComponents(allPlayers, gameId, validIdx);
+        const augmentMode = getMayhemAugmentMode(cached.payload);
+        const embed = buildAugmentPageEmbed(allPlayers, validIdx, gameId, augmentMode);
+        const components = buildAugmentPageComponents(allPlayers, gameId, validIdx, augmentMode);
         return interaction.reply({ content: `✅ Augment ID \`${augId}\` identified as **${augName}**.`, embeds: [embed], components, flags: MessageFlags.Ephemeral });
       }
 
@@ -4496,6 +4581,9 @@ register_handlers.getMatchArchive = () => matchArchive;
 register_handlers.postMatchEvent = postMatchEvent;
 register_handlers.postLobbyInvite = postLobbyInvite;
 register_handlers.normalizeMatchPayload = normalizeMatchPayload;
+register_handlers.prepareScoreboardData = prepareScoreboardData;
+register_handlers.extractPlayerAugments = extractPlayerAugments;
+register_handlers.stripWikiMarkup = stripWikiMarkup;
 register_handlers.generateInfographicImage = generateInfographicImage;
 
 module.exports = register_handlers;
