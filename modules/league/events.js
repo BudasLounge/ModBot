@@ -2401,14 +2401,25 @@ async function postLobbyInvite(payload, client) {
         // If the initial post is still in-flight, wait for it.
         const msg = entry.message ?? (entry.postPromise ? await entry.postPromise : null);
         if (!msg) {
-          logger.warn('[LoL Lobby Invite] No message to edit for partyId', { partyId });
+          // Do not keep a dead tracking entry; a later update can repost.
+          recentLobbyInvites.delete(partyId);
+          logger.warn('[LoL Lobby Invite] No message to edit; cleared tracking', { partyId });
           return;
         }
         const embed = buildLobbyInviteEmbed(entry.latestPayload);
         await msg.edit({ embeds: [embed] });
         logger.info('[LoL Lobby Invite] Edited lobby invite', { partyId, messageId: msg.id });
       } catch (err) {
-        logger.error('[LoL Lobby Invite] Failed to edit lobby invite', { partyId, err: err?.message });
+        if (err?.code === 10008) {
+          // The invite was deleted (manually or by moderation). Drop the
+          // stale tracking entry so the next lobby update posts a fresh one.
+          recentLobbyInvites.delete(partyId);
+          logger.warn('[LoL Lobby Invite] Invite message was deleted; cleared tracking for repost', {
+            partyId,
+          });
+        } else {
+          logger.error('[LoL Lobby Invite] Failed to edit lobby invite', { partyId, err: err?.message });
+        }
       }
     }, LOBBY_INVITE_EDIT_DEBOUNCE_MS);
 
@@ -2470,6 +2481,10 @@ async function postLobbyInvite(payload, client) {
       })
       .catch((err) => {
         entry.postPromise = null;
+        clearTimeout(entry.cleanupTimer);
+        if (recentLobbyInvites.get(partyId) === entry) {
+          recentLobbyInvites.delete(partyId);
+        }
         logger.error('[LoL Lobby Invite] Failed to post lobby invite', { partyId, err: err?.message });
         return null;
       });
