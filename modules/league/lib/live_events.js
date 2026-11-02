@@ -164,6 +164,8 @@ function normalizeTeam(team, index) {
     dragons: Math.max(0, asInt(team.dragons, 0)),
     barons: Math.max(0, asInt(team.barons, 0)),
     inhibitors: Math.max(0, asInt(team.inhibitors, 0)),
+    grubs: Math.max(0, asInt(team.grubs, 0)),
+    heralds: Math.max(0, asInt(team.heralds, 0)),
     players,
   };
 }
@@ -317,6 +319,8 @@ function teamView(team, ddVersion, localPlayer) {
     dragons: team.dragons,
     barons: team.barons,
     inhibitors: team.inhibitors,
+    grubs: team.grubs,
+    heralds: team.heralds,
     players: team.players.map((player) => {
       const normalizedName = player.riotId.trim().toLowerCase();
       const kdaRatio =
@@ -375,6 +379,8 @@ function buildLiveScoreboardData(event, ddVersion, modeLabel) {
       dragons: team100.dragons,
       barons: team100.barons,
       inhibitors: team100.inhibitors,
+      grubs: team100.grubs,
+      heralds: team100.heralds,
     },
     t200: {
       kills: team200.kills,
@@ -384,6 +390,8 @@ function buildLiveScoreboardData(event, ddVersion, modeLabel) {
       dragons: team200.dragons,
       barons: team200.barons,
       inhibitors: team200.inhibitors,
+      grubs: team200.grubs,
+      heralds: team200.heralds,
     },
     hasTeams: team100.players.length + team200.players.length > 0,
     hasBluePlayers: team100.players.length > 0,
@@ -406,7 +414,7 @@ function playerLine(player) {
 }
 
 function teamFieldValue(team) {
-  const header = `**${team.kills} / ${team.deaths} / ${team.assists}** · ${team.towers} towers · ${team.dragons} dragons · ${team.barons} barons`;
+  const header = `**${team.kills} / ${team.deaths} / ${team.assists}** · ${team.towers} towers · ${team.dragons} dragons · ${team.barons} barons · ${team.grubs} grubs · ${team.heralds} heralds`;
   const players = team.players.map(playerLine).join('\n');
   return truncate(players ? `${header}\n${players}` : header, FIELD_LIMIT);
 }

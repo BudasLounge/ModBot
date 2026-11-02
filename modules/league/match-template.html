@@ -238,6 +238,11 @@
         <span>{{#if t100Win}}VICTORY{{else}}DEFEAT{{/if}} (Blue Team)</span>
         <span>{{t100Stats.k}} / {{t100Stats.d}} / {{t100Stats.a}} • {{t100Stats.gold}} Gold</span>
     </div>
+    {{#if t100Stats.objectivesKnown}}
+    <div style="padding:0 10px 5px 10px; font-size:11px; color:#939a9e;">
+      {{t100Stats.towers}} towers · {{t100Stats.dragons}} dragons · {{t100Stats.barons}} barons · {{t100Stats.grubs}} grubs · {{t100Stats.heralds}} heralds · {{t100Stats.inhibitors}} inhibs
+    </div>
+    {{/if}}
     
     {{#each team100}}
       <div class="player-row {{#if isLocal}}is-local{{/if}}">
@@ -285,6 +290,11 @@
         <span>{{#if t200Win}}VICTORY{{else}}DEFEAT{{/if}} (Red Team)</span>
         <span>{{t200Stats.k}} / {{t200Stats.d}} / {{t200Stats.a}} • {{t200Stats.gold}} Gold</span>
     </div>
+    {{#if t200Stats.objectivesKnown}}
+    <div style="padding:0 10px 5px 10px; font-size:11px; color:#939a9e;">
+      {{t200Stats.towers}} towers · {{t200Stats.dragons}} dragons · {{t200Stats.barons}} barons · {{t200Stats.grubs}} grubs · {{t200Stats.heralds}} heralds · {{t200Stats.inhibitors}} inhibs
+    </div>
+    {{/if}}
     {{#each team200}}
       <div class="player-row {{#if isLocal}}is-local{{/if}}">
         <div class="col-champ"><img src="{{championIcon}}" class="champ-img" onerror="this.style.background='#1e2328';this.style.border='2px solid #333';this.removeAttribute('src')"><div class="level-badge">{{level}}</div></div>

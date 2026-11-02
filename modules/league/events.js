@@ -30,7 +30,7 @@ const {
   upsertKeywordsInContent,
 } = require('./lib/match_tags.js');
 const MatchArchive = require('./lib/match_archive.js');
-const { prepareArenaScoreboardData } = require('./lib/arena_scoreboard.js');
+const { prepareArenaScoreboardData, buildChampionIdMap } = require('./lib/arena_scoreboard.js');
 const {
   isMatchEventPayload,
   normalizeMatchEvent,
@@ -1292,6 +1292,7 @@ async function prepareScoreboardData(payload, uploaderInfos = [], rankedLpEntrie
   };
   const forfeit = getForfeitDetails(payload);
   const ver = await getLatestDDVersion();
+  const championIdMap = await buildChampionIdMap(ver, logger).catch(() => new Map());
   const CDN = `https://ddragon.leagueoflegends.com/cdn/${ver}/img`;
   const ITEM_CDN = `${CDN}/item`;
   const SPELL_CDN = `${CDN}/spell`;
@@ -1440,10 +1441,14 @@ async function prepareScoreboardData(payload, uploaderInfos = [], rankedLpEntrie
       }
     }
 
+    const resolvedChampionName =
+      p.championName ||
+      championIdMap.get(Number(p.championId))?.name ||
+      'Unknown';
     return {
       name: playerName || 'Unknown',
-      championName: p.championName,
-      championIcon: `${CDN}/champion/${fixChampName(p.championName)}.png`,
+      championName: resolvedChampionName,
+      championIcon: `${CDN}/champion/${fixChampName(resolvedChampionName)}.png`,
       level: stats.LEVEL || 18,
       spell1: `${SPELL_CDN}/${s1}.png`,
       spell2: `${SPELL_CDN}/${s2}.png`,
@@ -1475,7 +1480,21 @@ async function prepareScoreboardData(payload, uploaderInfos = [], rankedLpEntrie
     k: team.players.reduce((a,b) => a + (b.stats.CHAMPIONS_KILLED||0), 0),
     d: team.players.reduce((a,b) => a + (b.stats.NUM_DEATHS||0), 0),
     a: team.players.reduce((a,b) => a + (b.stats.ASSISTS||0), 0),
-    gold: (team.players.reduce((a,b) => a + (b.stats.GOLD_EARNED||0), 0) / 1000).toFixed(1) + 'k'
+    gold: (team.players.reduce((a,b) => a + (b.stats.GOLD_EARNED||0), 0) / 1000).toFixed(1) + 'k',
+    towers: team.towerKills || 0,
+    dragons: team.dragonKills || 0,
+    barons: team.baronKills || 0,
+    grubs: team.hordeKills || 0,
+    heralds: team.riftHeraldKills || 0,
+    inhibitors: team.inhibitorKills || 0,
+    objectivesKnown: [
+      team.towerKills,
+      team.dragonKills,
+      team.baronKills,
+      team.hordeKills,
+      team.riftHeraldKills,
+      team.inhibitorKills,
+    ].some((value) => value !== undefined),
   });
 
   // Build badge winners for the visual awards section
@@ -1675,7 +1694,122 @@ function parseClashSummary(summary) {
   };
 }
 
+/**
+ * The LCU match-history fallback returns raw Match-V5 data (participants +
+ * participantIdentities) instead of the EOG teams[].players shape. Normalise it
+ * so scoreboard rendering works for spectated games and other fallback uploads.
+ */
+function convertMatchHistoryPayload(payload) {
+  if (!payload || !Array.isArray(payload.participants) || payload.participants.length === 0) {
+    return null;
+  }
+
+  const identities = new Map(
+    (payload.participantIdentities || [])
+      .filter((entry) => entry && entry.participantId != null)
+      .map((entry) => [entry.participantId, entry.player || {}])
+  );
+
+  const teamsById = new Map();
+  for (const team of payload.teams || []) {
+    if (!team || team.teamId == null) continue;
+    const teamId = Number(team.teamId);
+    const winValue = String(team.win ?? '').toLowerCase();
+    teamsById.set(teamId, {
+      teamId,
+      isWinningTeam: team.win === true || winValue === 'win' || winValue === 'true',
+      isPlayerTeam: false,
+      bans: team.bans || [],
+      towerKills: team.towerKills || 0,
+      dragonKills: team.dragonKills || 0,
+      baronKills: team.baronKills || 0,
+      hordeKills: team.hordeKills || 0,
+      riftHeraldKills: team.riftHeraldKills || 0,
+      inhibitorKills: team.inhibitorKills || 0,
+      players: [],
+    });
+  }
+
+  for (const participant of payload.participants) {
+    if (!participant) continue;
+    const stats = participant.stats || {};
+    const identity = identities.get(participant.participantId) || {};
+    const team = teamsById.get(Number(participant.teamId));
+    if (!team) continue;
+
+    const itemIds = Array.from({ length: 7 }, (_, index) => Number(stats[`item${index}`]) || 0);
+    const augments = [];
+    for (let slot = 1; slot <= 6; slot += 1) {
+      const augmentId = stats[`playerAugment${slot}`];
+      if (augmentId) augments.push(augmentId);
+    }
+
+    const mappedStats = {
+      CHAMPIONS_KILLED: stats.kills || 0,
+      NUM_DEATHS: stats.deaths || 0,
+      ASSISTS: stats.assists || 0,
+      MINIONS_KILLED: stats.totalMinionsKilled || 0,
+      NEUTRAL_MINIONS_KILLED: stats.neutralMinionsKilled || 0,
+      GOLD_EARNED: stats.goldEarned || 0,
+      TOTAL_DAMAGE_DEALT_TO_CHAMPIONS: stats.totalDamageDealtToChampions || 0,
+      TOTAL_DAMAGE_TAKEN: stats.totalDamageTaken || 0,
+      TOTAL_DAMAGE_SELF_MITIGATED: stats.damageSelfMitigated || 0,
+      TOTAL_HEAL_ON_TEAMMATES: stats.totalHealsOnTeammates || 0,
+      TOTAL_DAMAGE_SHIELDED_ON_TEAMMATES: stats.totalDamageShieldedOnTeammates || 0,
+      LARGEST_KILLING_SPREE: stats.largestKillingSpree || 0,
+      TOTAL_DAMAGE_DEALT_TO_TURRETS: stats.damageDealtToTurrets || 0,
+      TIME_CCING_OTHERS: stats.timeCCingOthers || 0,
+      TOTAL_TIME_SPENT_DEAD: stats.totalTimeSpentDead || 0,
+      VISION_SCORE: stats.visionScore || 0,
+      LEVEL: stats.champLevel || 1,
+      PERK_PRIMARY_STYLE: stats.perkPrimaryStyle || 0,
+      PERK_SUB_STYLE: stats.perkSubStyle || 0,
+      ROLE_BOUND_ITEM: stats.roleBoundItem || 0,
+      ...Object.fromEntries(itemIds.map((id, index) => [`ITEM${index}`, id])),
+      ...Object.fromEntries(augments.map((id, index) => [`PLAYER_AUGMENT_${index + 1}`, id])),
+    };
+
+    team.players.push({
+      puuid: identity.puuid || '',
+      summonerName: identity.summonerName || identity.gameName || '',
+      riotIdGameName: identity.gameName || '',
+      riotIdTagLine: identity.tagLine || '',
+      championId: participant.championId || 0,
+      championName: participant.championName || '',
+      spell1Id: participant.spell1Id || 0,
+      spell2Id: participant.spell2Id || 0,
+      teamId: Number(participant.teamId),
+      items: itemIds,
+      augments,
+      stats: mappedStats,
+    });
+  }
+
+  if (teamsById.size === 0) return null;
+
+  const queueTypeById = {
+    400: 'NORMAL',
+    420: 'RANKED_SOLO_5x5',
+    430: 'NORMAL',
+    440: 'RANKED_FLEX_SR',
+    450: 'ARAM',
+    1700: 'CHERRY',
+    3100: 'NORMAL',
+  };
+
+  return {
+    ...payload,
+    gameLength: payload.gameLength ?? payload.gameDuration ?? 0,
+    queueType:
+      payload.queueType || queueTypeById[Number(payload.queueId)] || '',
+    teams: [...teamsById.values()],
+  };
+}
+
 function normalizeMatchPayload(payload) {
+  const converted = convertMatchHistoryPayload(payload);
+  if (converted) return converted;
+
   if (payload.clashSummary) {
     const derived = parseClashSummary(payload.clashSummary);
     
@@ -4361,5 +4495,7 @@ register_handlers.getMatchArchive = () => matchArchive;
 // Exposed for targeted integration checks (CLI harness / future commands).
 register_handlers.postMatchEvent = postMatchEvent;
 register_handlers.postLobbyInvite = postLobbyInvite;
+register_handlers.normalizeMatchPayload = normalizeMatchPayload;
+register_handlers.generateInfographicImage = generateInfographicImage;
 
 module.exports = register_handlers;

@@ -322,4 +322,5 @@ async function prepareArenaScoreboardData(payload, ddVersion, uploaderInfos = []
 module.exports = {
   prepareArenaScoreboardData,
   extractArenaPlayers,
+  buildChampionIdMap,
 };
