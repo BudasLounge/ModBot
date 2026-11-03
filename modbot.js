@@ -149,7 +149,7 @@ async function botInit() {
     logger.info(jobList);
 }
 
-client.on('ready', async () => {
+client.on('clientReady', async () => {
     try {
         await botInit();
     } catch (err) {
